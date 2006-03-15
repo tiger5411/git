@@ -44,6 +44,23 @@ my $projects_list =	"index/index.aux";
 
 my $snapshots_url = "http://git.xmms.se/snapshot.cgi";
 
+# custom stuff - mantis/commit tags integration
+sub committags($){
+	my $a = shift;
+	$a =~ s!BUG\(([0-9]*)\)!<a href="http://bugs.xmms2.xmms.se/view.php?id=$1">BUG($1)</a>!g;
+	$a =~ s!FEATURE\(([0-9]*)\)!<a href="http://bugs.xmms2.xmms.se/view.php?id=$1">FEATURE($1)</a>!g;
+	$a =~ s!RELEASE: (.*)!RELEASE: <a href="http://wiki.xmms2.xmms.se/index.php/Release:$1">$1</a>!g;
+	return $a;
+}
+sub committags_shortlog($$){
+	my $a = shift;
+	my $href = shift;
+	$a =~ s!BUG\(([0-9]*)\)!</a><a href="http://bugs.xmms2.xmms.se/view.php?id=$1">BUG($1)</a><a class=\"list\" href=\"$href\">!g;
+	$a =~ s!FEATURE\(([0-9]*)\)!</a><a href="http://bugs.xmms2.xmms.se/view.php?id=$1">FEATURE($1)</a><a class=\"list\" href=\"$href\">!g;
+	$a =~ s!RELEASE: (.*)!RELEASE: <a href="http://wiki.xmms2.xmms.se/index.php/Release:$1">$1</a>!g;
+	return $a;
+}
+
 # input validation and dispatch
 my $action = $cgi->param('a');
 if (defined $action) {
@@ -731,7 +748,7 @@ sub format_log_line_html {
 			$line =~ s/$hash_text/$link/;
 		}
 	}
-	return $line;
+	return committags($line);
 }
 
 sub date_str {
@@ -1083,10 +1100,10 @@ sub git_summary {
 			      "<td>";
 			if (length($co{'title_short'}) < length($co{'title'})) {
 				print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list", -title => "$co{'title'}"},
-			              "<b>" . esc_html($co{'title_short'}) . "$ref</b>");
+			              "<b>" . committags_shortlog(esc_html($co{'title_short'}), ("$my_uri?" . esc_param("$my_uri?p=$project;a=commit;h=$commit"))) . "$ref</b>");
 			} else {
 				print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list"},
-				      "<b>" . esc_html($co{'title'}) . "$ref</b>");
+				      "<b>" . committags_shortlog(esc_html($co{'title'}), ("$my_uri?" . esc_param("$my_uri?p=$project;a=commit;h=$commit"))) . "$ref</b>");
 			}
 			print "</td>\n" .
 			      "<td class=\"link\">" .
@@ -2128,7 +2145,7 @@ sub git_history {
 	      "<br/><br/>\n" .
 	      "</div>\n";
 	print "<div>\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, esc_html($co{'title'})) . "\n" .
+	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, committags(esc_html($co{'title'}))) . "\n" .
 	      "</div>\n";
 	print "<div class=\"page_path\"><b>/" . esc_html($file_name) . "</b><br/></div>\n";
 
@@ -2159,7 +2176,7 @@ sub git_history {
 			print "<td title=\"$co{'age_string_age'}\"><i>$co{'age_string_date'}</i></td>\n" .
 			      "<td><i>" . esc_html(chop_str($co{'author_name'}, 15, 3)) . "</i></td>\n" .
 			      "<td>" . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list"}, "<b>" .
-			      esc_html(chop_str($co{'title'}, 50)) . "$ref</b>") . "</td>\n" .
+			      committags(esc_html(chop_str($co{'title'}, 50))) . "$ref</b>") . "</td>\n" .
 			      "<td class=\"link\">" .
 			      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit")}, "commit") .
 			      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$commit")}, "commitdiff") .
@@ -2392,10 +2409,10 @@ sub git_shortlog {
 		      "<td>";
 		if (length($co{'title_short'}) < length($co{'title'})) {
 			print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list", -title => "$co{'title'}"},
-			      "<b>" . esc_html($co{'title_short'}) . "$ref</b>");
+			      "<b>" . committags_shortlog(esc_html($co{'title_short'}), ("$my_uri?" . esc_param("p=$project;a=commit;h=$commit"))) . "$ref</b>");
 		} else {
 			print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list"},
-			      "<b>" . esc_html($co{'title_short'}) . "$ref</b>");
+			      "<b>" . committags_shortlog(esc_html($co{'title_short'}), ("$my_uri?" . esc_param("p=$project;a=commit;h=$commit"))) . "$ref</b>");
 		}
 		print "</td>\n" .
 		      "<td class=\"link\">" .
