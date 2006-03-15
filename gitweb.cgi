@@ -61,6 +61,53 @@ sub committags_shortlog($$){
 	return $a;
 }
 
+# custom stuff - refactored navbar
+sub git_navbar($$$$) {
+	my $project = shift;
+	my $head = shift;
+	my $curSection = shift;
+	my $extraLinks = shift;
+
+	my $sumLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary"}, "summary");
+	my $slogLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog"}, "shortlog");
+	my $logLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log"}, "log");
+	my $comLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head"}, "commit");
+	my $comdifLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head"}, "commitdiff");
+	my $treeLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree"}, "tree");
+	my $snapLink = $cgi->a({-href => "$snapshots_url?tree=$project&commit=HEAD"}, "latest snapshot");
+
+	if ($curSection eq "summary") {
+		$sumLink = "summary";
+	}
+	elsif ($curSection eq "shortlog") {
+		$slogLink = "shortlog";
+	}
+	elsif ($curSection eq "log") {
+		$logLink = "log";
+	}
+	elsif ($curSection eq "commit") {
+		$comLink = "commit";
+	}
+	elsif ($curSection eq "commitdiff") {
+		$comdifLink = "commitdiff";
+	}
+	elsif ($curSection eq "tree") {
+		$treeLink = "tree";
+	}
+
+	my $retVal = "<div class=\"page_nav\">\n" .
+	      $sumLink .
+	      " | " . $slogLink .
+	      " | " . $logLink .
+	      " | " . $comLink .
+	      " | " . $comdifLink .
+	      " | " . $treeLink .
+	      " | " . $snapLink .
+	      "<br/>$extraLinks<br/>\n" .
+	      "</div>\n";
+	return $retVal;
+}
+
 # input validation and dispatch
 my $action = $cgi->param('a');
 if (defined $action) {
@@ -1057,15 +1104,7 @@ sub git_summary {
 
 	my $refs = read_info_ref();
 	git_header_html();
-	print "<div class=\"page_nav\">\n" .
-	      "summary".
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree")}, "tree") .
-	      "<br/><br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $head, "summary", "");
 	print "<div class=\"title\">&nbsp;</div>\n";
 	print "<table cellspacing=\"0\">\n" .
 	      "<tr><td>description</td><td>" . esc_html($descr) . "</td></tr>\n" .
@@ -1214,15 +1253,7 @@ sub git_summary {
 sub git_tag {
 	my $head = git_read_head($project);
 	git_header_html();
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;hb=$head")}, "tree") . "<br/>\n" .
-	      "<br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $head, "tag", "");
 	my %tag = git_read_tag($hash);
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, esc_html($tag{'name'})) . "\n" .
@@ -1253,15 +1284,7 @@ sub git_tag {
 sub git_tags {
 	my $head = git_read_head($project);
 	git_header_html();
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;hb=$head")}, "tree") . "<br/>\n" .
-	      "<br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $head, "tags", "");
 	my $taglist = git_read_refs("refs/tags");
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary"), -class => "title"}, "&nbsp;") .
@@ -1313,15 +1336,7 @@ sub git_tags {
 sub git_heads {
 	my $head = git_read_head($project);
 	git_header_html();
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;hb=$head")}, "tree") . "<br/>\n" .
-	      "<br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $head, "heads", "");
 	my $taglist = git_read_refs("refs/heads");
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary"), -class => "title"}, "&nbsp;") .
@@ -1390,21 +1405,15 @@ sub git_blob {
 	open my $fd, "-|", "$gitbin/git-cat-file blob $hash" or die_error(undef, "Open failed.");
 	git_header_html();
 	if (defined $hash_base && (my %co = git_read_commit($hash_base))) {
-		print "<div class=\"page_nav\">\n" .
-		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash_base")}, "commit") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash_base")}, "commitdiff") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$co{'tree'};hb=$hash_base")}, "tree") . "<br/>\n";
+		my $plainLink;
 		if (defined $file_name) {
-			print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blob_plain;h=$hash;f=$file_name")}, "plain") .
+			$plainLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blob_plain;h=$hash;f=$file_name")}, "plain") .
 			" | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blob;hb=HEAD;f=$file_name")}, "head") . "<br/>\n";
 		} else {
-			print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blob_plain;h=$hash")}, "plain") . "<br/>\n";
+			$plainLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blob_plain;h=$hash")}, "plain") . "<br/>\n";
 		}
-		print "</div>\n".
-		       "<div>" .
+		print git_navbar($project, $hash_base, "blob", $plainLink);
+		print "<div>" .
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash_base"), -class => "title"}, esc_html($co{'title'})) .
 		      "</div>\n";
 	} else {
@@ -1473,15 +1482,7 @@ sub git_tree {
 	my $base = "";
 	if (defined $hash_base && (my %co = git_read_commit($hash_base))) {
 		$base_key = ";hb=$hash_base";
-		print "<div class=\"page_nav\">\n" .
-		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$hash_base")}, "shortlog") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$hash_base")}, "log") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash_base")}, "commit") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash_base")}, "commitdiff") .
-		      " | tree" .
-		      "<br/><br/>\n" .
-		      "</div>\n";
+		print git_navbar($project, $hash_base, "tree", "");
 		print "<div>\n" .
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash_base"), -class => "title"}, esc_html($co{'title'}) . $ref) . "\n" .
 		      "</div>\n";
@@ -1637,38 +1638,30 @@ sub git_log {
 	}
 	my $refs = read_info_ref();
 	git_header_html();
-	print "<div class=\"page_nav\">\n";
-	print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$hash")}, "shortlog") .
-	      " | log" .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$hash;hb=$hash")}, "tree") . "<br/>\n";
-
+	my $navExtra = "";
 	my $limit = sprintf("--max-count=%i", (100 * ($page+1)));
 	open my $fd, "-|", "$gitbin/git-rev-list $limit $hash" or die_error(undef, "Open failed.");
 	my (@revlist) = map { chomp; $_ } <$fd>;
 	close $fd;
 
 	if ($hash ne $head || $page) {
-		print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "HEAD");
+		$navExtra .= $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "HEAD");
 	} else {
-		print "HEAD";
+		$navExtra .= "HEAD";
 	}
 	if ($page > 0) {
-		print " &sdot; " .
+		$navExtra .= " &sdot; " .
 		$cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$hash;pg=" . ($page-1)), -accesskey => "p", -title => "Alt-p"}, "prev");
 	} else {
-		print " &sdot; prev";
+		$navExtra .= " &sdot; prev";
 	}
 	if ($#revlist >= (100 * ($page+1)-1)) {
-		print " &sdot; " .
+		$navExtra .= " &sdot; " .
 		$cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$hash;pg=" . ($page+1)), -accesskey => "n", -title => "Alt-n"}, "next");
 	} else {
-		print " &sdot; next";
+		$navExtra .= " &sdot; next";
 	}
-	print "<br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $hash, "log", $navExtra);
 	if (!@revlist) {
 		print "<div>\n" .
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary"), -class => "title"}, "&nbsp;") .
@@ -1753,6 +1746,7 @@ sub git_commit {
 		$ref = " <span class=\"tag\">" . esc_html($refs->{$co{'id'}}) . "</span>";
 	}
 	git_header_html(undef, $expires);
+	# git_navbar omitted here - commitdiff link a bit weird o_O
 	print "<div class=\"page_nav\">\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
 	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$hash")}, "shortlog") .
@@ -1935,16 +1929,7 @@ sub git_blobdiff {
 	mkdir($git_temp, 0700);
 	git_header_html();
 	if (defined $hash_base && (my %co = git_read_commit($hash_base))) {
-		print "<div class=\"page_nav\">\n" .
-		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash_base")}, "commit") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash_base")}, "commitdiff") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$co{'tree'};hb=$hash_base")}, "tree") .
-		      "<br/>\n";
-		print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blobdiff_plain;h=$hash;hp=$hash_parent")}, "plain") .
-		      "</div>\n";
+		print git_navbar($project, $hash_base, "blobdiff", $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=blobdiff_plain;h=$hash;hp=$hash_parent")}, "plain"));
 		print "<div>\n" .
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash_base"), -class => "title"}, esc_html($co{'title'})) . "\n" .
 		      "</div>\n";
@@ -1997,15 +1982,7 @@ sub git_commitdiff {
 		$ref = " <span class=\"tag\">" . esc_html($refs->{$co{'id'}}) . "</span>";
 	}
 	git_header_html(undef, $expires);
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$hash")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$hash")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, "commit") .
-	      " | commitdiff" .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$co{'tree'};hb=$hash")}, "tree") . "<br/>\n";
-	print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff_plain;h=$hash;hp=$hash_parent")}, "plain") . "\n" .
-	      "</div>\n";
+	print git_navbar($project, $hash, "commitdiff", $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff_plain;h=$hash;hp=$hash_parent")}, "plain"));
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, esc_html($co{'title'}) . $ref) . "\n" .
 	      "</div>\n";
@@ -2135,15 +2112,7 @@ sub git_history {
 	}
 	my $refs = read_info_ref();
 	git_header_html();
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$co{'tree'};hb=$hash")}, "tree") .
-	      "<br/><br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $hash, "history", "");
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, committags(esc_html($co{'title'}))) . "\n" .
 	      "</div>\n";
@@ -2224,15 +2193,7 @@ sub git_search {
 		$pickaxe_search = 1;
 	}
 	git_header_html();
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary;h=$hash")}, "summary") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$hash")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$co{'tree'};hb=$hash")}, "tree") .
-	      "<br/><br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $hash, "search", "");
 
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, esc_html($co{'title'})) . "\n" .
@@ -2353,6 +2314,7 @@ sub git_shortlog {
 	}
 	my $refs = read_info_ref();
 	git_header_html();
+	#---
 	print "<div class=\"page_nav\">\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
 	      " | shortlog" .
@@ -2360,31 +2322,32 @@ sub git_shortlog {
 	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, "commit") .
 	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash")}, "commitdiff") .
 	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$hash;hb=$hash")}, "tree") . "<br/>\n";
+	#---
 
 	my $limit = sprintf("--max-count=%i", (100 * ($page+1)));
 	open my $fd, "-|", "$gitbin/git-rev-list $limit $hash" or die_error(undef, "Open failed.");
 	my (@revlist) = map { chomp; $_ } <$fd>;
 	close $fd;
 
+	my $navExtra = "";
 	if ($hash ne $head || $page) {
-		print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "HEAD");
+		$navExtra .= $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "HEAD");
 	} else {
-		print "HEAD";
+		$navExtra .= "HEAD";
 	}
 	if ($page > 0) {
-		print " &sdot; " .
+		$navExtra .= " &sdot; " .
 		$cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$hash;pg=" . ($page-1)), -accesskey => "p", -title => "Alt-p"}, "prev");
 	} else {
-		print " &sdot; prev";
+		$navExtra .= " &sdot; prev";
 	}
 	if ($#revlist >= (100 * ($page+1)-1)) {
-		print " &sdot; " .
+		$navExtra .= " &sdot; " .
 		$cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$hash;pg=" . ($page+1)), -accesskey => "n", -title => "Alt-n"}, "next");
 	} else {
-		print " &sdot; next";
+		$navExtra .= " &sdot; next";
 	}
-	print "<br/>\n" .
-	      "</div>\n";
+	print git_navbar($project, $hash, "shortlog", $navExtra);
 	print "<div>\n" .
 	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary"), -class => "title"}, "&nbsp;") .
 	      "</div>\n";
