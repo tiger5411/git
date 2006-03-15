@@ -42,6 +42,8 @@ my $home_text =		"indextext.html";
 #my $projects_list =	$projectroot;
 my $projects_list =	"index/index.aux";
 
+my $snapshots_url = "http://git.xmms.se/snapshot.cgi";
+
 # input validation and dispatch
 my $action = $cgi->param('a');
 if (defined $action) {
@@ -920,6 +922,7 @@ sub git_project_list {
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary")}, "summary") .
 		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=shortlog")}, "shortlog") .
 		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=log")}, "log") .
+			  " | " . $cgi->a({-href => "$snapshots_url/$pr->{'path'}-snapshot-HEAD.tar.bz2"}, "latest snapshot") .
 		      "</td>\n" .
 		      "</tr>\n";
 	}
@@ -1089,6 +1092,7 @@ sub git_summary {
 			      "<td class=\"link\">" .
 			      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit")}, "commit") .
 			      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$commit")}, "commitdiff") .
+				  " | " . $cgi->a({-href => "$snapshots_url/$project-snapshot-$commit.tar.bz2"}, "snapshot") .
 			      "</td>\n" .
 			      "</tr>";
 		} else {
@@ -1138,7 +1142,8 @@ sub git_summary {
 				print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=$tag{'reftype'};h=$tag{'refid'}")}, $tag{'reftype'});
 				if ($tag{'reftype'} eq "commit") {
 				      print " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$tag{'name'}")}, "shortlog") .
-				            " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$tag{'refid'}")}, "log");
+				            " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$tag{'refid'}")}, "log") .
+							" | " . $cgi->a({-href => "$snapshots_url/$project-snapshot-$tag{'refid'}.tar.bz2"}, "snapshot");
 				}
 				print "</td>\n" .
 				      "</tr>";
@@ -1277,7 +1282,8 @@ sub git_tags {
 			print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=$tag{'reftype'};h=$tag{'refid'}")}, $tag{'reftype'});
 			if ($tag{'reftype'} eq "commit") {
 			      print " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog;h=$tag{'name'}")}, "shortlog") .
-			            " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$tag{'refid'}")}, "log");
+			            " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$tag{'refid'}")}, "log") .
+						" | " . $cgi->a({-href => "$snapshots_url/$project-snapshot-$tag{'refid'}.tar.bz2"}, "snapshot");
 			}
 			print "</td>\n" .
 			      "</tr>";
@@ -1670,6 +1676,7 @@ sub git_log {
 		      "<div class=\"log_link\">\n" .
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit")}, "commit") .
 		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$commit")}, "commitdiff") .
+			  " | " . $cgi->a({-href => "$snapshots_url/$project-snapshot-$commit.tar.bz2"}, "snapshot") .
 		      "<br/>\n" .
 		      "</div>\n" .
 		      "<i>" . esc_html($co{'author_name'}) .  " [$ad{'rfc2822'}]</i><br/>\n" .
@@ -1782,6 +1789,8 @@ sub git_commit {
 		      "</td>" .
 		      "</tr>\n";
 	}
+	print "<tr><td>snapshot</td>".
+	      "<td><a href=\"$snapshots_url/$project-snapshot-$hash.tar.bz2\">$hash</a></td></tr>";
 	print "</table>". 
 	      "</div>\n";
 	print "<div class=\"page_body\">\n";
@@ -2392,6 +2401,7 @@ sub git_shortlog {
 		      "<td class=\"link\">" .
 		      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit")}, "commit") .
 		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$commit")}, "commitdiff") .
+			  " | " . $cgi->a({-href => "$snapshots_url/$project-snapshot-$commit.tar.bz2"}, "snapshot") .
 		      "</td>\n" .
 		      "</tr>";
 	}
