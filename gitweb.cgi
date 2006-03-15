@@ -1100,10 +1100,10 @@ sub git_summary {
 			      "<td>";
 			if (length($co{'title_short'}) < length($co{'title'})) {
 				print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list", -title => "$co{'title'}"},
-			              "<b>" . committags_shortlog(esc_html($co{'title_short'}), ("$my_uri?" . esc_param("$my_uri?p=$project;a=commit;h=$commit"))) . "$ref</b>");
+			              "<b>" . committags_shortlog(esc_html($co{'title_short'}), ("$my_uri?" . esc_param("p=$project;a=commit;h=$commit"))) . "$ref</b>");
 			} else {
 				print $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$commit"), -class => "list"},
-				      "<b>" . committags_shortlog(esc_html($co{'title'}), ("$my_uri?" . esc_param("$my_uri?p=$project;a=commit;h=$commit"))) . "$ref</b>");
+				      "<b>" . committags_shortlog(esc_html($co{'title'}), ("$my_uri?" . esc_param("p=$project;a=commit;h=$commit"))) . "$ref</b>");
 			}
 			print "</td>\n" .
 			      "<td class=\"link\">" .
