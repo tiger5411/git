@@ -1,5 +1,16 @@
 GIT web Interface
 
+*** NOTE ***
+This version of gitweb was modified for use by the XMMS2 project and is not
+the official version by Kay Sievers. For more info, contact eleusis@xmms.org
+
+Changes incude:
+- Support for commit snapshots
+- Support for commit tags (http://wiki.xmms2.xmms.se/index.php/ChangeLog_Format)
+- Refactored navbar
+
+*** Original README follows ***
+
 The one working on:
   http://www.kernel.org/git/
 
