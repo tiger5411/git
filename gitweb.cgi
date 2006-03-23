@@ -16,31 +16,26 @@ use Encode;
 use Fcntl ':mode';
 binmode STDOUT, ':utf8';
 
+require gitweb_config;
+
 my $cgi = new CGI;
 my $version =		"264";
 my $my_url =		$cgi->url();
 my $my_uri =		$cgi->url(-absolute => 1);
 my $rss_link =		"";
 
-# absolute fs-path which will be prepended to the project path
-#my $projectroot =	"/pub/scm";
-my $projectroot =	"/home/kay/public_html/pub/scm";
-
-# location of the git-core binaries
-my $gitbin =		"/usr/bin";
-
-# location for temporary files needed for diffs
-my $git_temp =		"/tmp/gitweb";
-
 # target of the home link on top of all pages
-my $home_link =		$my_uri;
+my $home_link =	$my_uri;
 
-# html text to include at home page
-my $home_text =		"indextext.html";
+# Get config values or use defaults.
+my $config_opts = gitweb_config::get_config_opts();
+my $gitbin = $config_opts->{gitbin} || "/usr/bin";
+my $git_temp = $config_opts->{git_temp} || "/tmp/gitweb";
+my $projectroot = $config_opts->{projectroot} || "/pub/scm";
+my $home_text =	$config_opts->{home_text} || "indextext.html";
+my $projects_list = $config_opts->{projects_list} || "index/index.aux";
+my $description_len = $config_opts->{description_len} || 25;
 
-# source of projects list
-#my $projects_list =	$projectroot;
-my $projects_list =	"index/index.aux";
 
 # input validation and dispatch
 my $action = $cgi->param('a');
@@ -853,7 +848,7 @@ sub git_project_list {
 		$pr->{'commit'} = \%co;
 		if (!defined $pr->{'descr'}) {
 			my $descr = git_read_description($pr->{'path'}) || "";
-			$pr->{'descr'} = chop_str($descr, 25, 5);
+			$pr->{'descr'} = chop_str($descr, $description_len, 5);
 		}
 		if (!defined $pr->{'owner'}) {
 			$pr->{'owner'} = get_file_owner("$projectroot/$pr->{'path'}") || "";
