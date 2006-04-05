@@ -2314,15 +2314,6 @@ sub git_shortlog {
 	}
 	my $refs = read_info_ref();
 	git_header_html();
-	#---
-	print "<div class=\"page_nav\">\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary") .
-	      " | shortlog" .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log;h=$hash")}, "log") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, "commit") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$hash")}, "commitdiff") .
-	      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree;h=$hash;hb=$hash")}, "tree") . "<br/>\n";
-	#---
 
 	my $limit = sprintf("--max-count=%i", (100 * ($page+1)));
 	open my $fd, "-|", "$gitbin/git-rev-list $limit $hash" or die_error(undef, "Open failed.");
