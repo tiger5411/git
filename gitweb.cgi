@@ -43,6 +43,7 @@ my $home_text =		"indextext.html";
 my $projects_list =	"index/index.aux";
 
 my $snapshots_url = "http://git.xmms.se/snapshot.cgi";
+my $git_base_url = "git://git.xmms.se/xmms2";
 
 # custom stuff - mantis/commit tags integration
 sub committags($){
@@ -1143,6 +1144,7 @@ sub git_summary {
 	      "<tr><td>description</td><td>" . esc_html($descr) . "</td></tr>\n" .
 	      "<tr><td>owner</td><td>$owner</td></tr>\n" .
 	      "<tr><td>last change</td><td>$cd{'rfc2822'}</td></tr>\n" .
+	      "<tr><td>url</td><td>$git_base_url/$project</td></tr>" .
 	      "</table>\n";
 	open my $fd, "-|", "$gitbin/git-rev-list --max-count=17 " . git_read_head($project) or die_error(undef, "Open failed.");
 	my (@revlist) = map { chomp; $_ } <$fd>;
