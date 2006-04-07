@@ -492,14 +492,23 @@ sub git_read_hash {
 	}
 }
 
+sub git_read_file {
+	my $path = shift;
+	open my $fd, "$path" or return undef;
+	my $content = <$fd>;
+	close $fd;
+	chomp $content;
+	return $content;
+}
+
 sub git_read_description {
 	my $path = shift;
+	return git_read_file("$projectroot/$path/description");
+}
 
-	open my $fd, "$projectroot/$path/description" or return undef;
-	my $descr = <$fd>;
-	close $fd;
-	chomp $descr;
-	return $descr;
+sub git_read_category {
+	my $path = shift;
+	return git_read_file("$projectroot/$path/category");
 }
 
 sub git_read_tag {
@@ -902,7 +911,7 @@ sub git_read_projects {
 
 sub git_project_list {
 	my @list = git_read_projects();
-	my @projects;
+	my %projects;
 	if (!@list) {
 		die_error(undef, "No project found.");
 	}
@@ -921,10 +930,20 @@ sub git_project_list {
 			my $descr = git_read_description($pr->{'path'}) || "";
 			$pr->{'descr'} = chop_str($descr, 25, 5);
 		}
+		if (!defined $pr->{'category'}) {
+			my $cat = git_read_category($pr->{'path'}) || "Misc";
+			$pr->{'category'} = $cat;
+		}
 		if (!defined $pr->{'owner'}) {
 			$pr->{'owner'} = get_file_owner("$projectroot/$pr->{'path'}") || "";
 		}
-		push @projects, $pr;
+		if (defined $projects{$pr->{'category'}}) {
+			push @{$projects{$pr->{'category'}}}, $pr;
+		}
+		else {
+			my @catList = ($pr);
+			$projects{$pr->{'category'}} = \@catList;
+		}
 	}
 	git_header_html();
 	if (-f $home_text) {
@@ -936,59 +955,73 @@ sub git_project_list {
 	}
 	print "<table cellspacing=\"0\">\n" .
 	      "<tr>\n";
-	if (!defined($order) || (defined($order) && ($order eq "project"))) {
-		@projects = sort {$a->{'path'} cmp $b->{'path'}} @projects;
-		print "<th>Project</th>\n";
-	} else {
-		print "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=project")}, "Project") . "</th>\n";
-	}
-	if (defined($order) && ($order eq "descr")) {
-		@projects = sort {$a->{'descr'} cmp $b->{'descr'}} @projects;
-		print "<th>Description</th>\n";
-	} else {
-		print "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=descr")}, "Description") . "</th>\n";
-	}
-	if (defined($order) && ($order eq "owner")) {
-		@projects = sort {$a->{'owner'} cmp $b->{'owner'}} @projects;
-		print "<th>Owner</th>\n";
-	} else {
-		print "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=owner")}, "Owner") . "</th>\n";
-	}
-	if (defined($order) && ($order eq "age")) {
-		@projects = sort {$a->{'commit'}{'age'} <=> $b->{'commit'}{'age'}} @projects;
-		print "<th>Last Change</th>\n";
-	} else {
-		print "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=age")}, "Last Change") . "</th>\n";
-	}
 	print "<th></th>\n" .
 	      "</tr>\n";
 	my $alternate = 0;
-	foreach my $pr (@projects) {
-		if ($alternate) {
-			print "<tr class=\"dark\">\n";
+	my $headRow = "";
+	my $headDone = 0;
+	foreach my $cat (sort keys %projects) {
+		my @catList = @{$projects{"$cat"}};
+
+		if (!defined($order) || (defined($order) && ($order eq "project"))) {
+			@catList = sort {$a->{'path'} cmp $b->{'path'}} @catList;
+			$headRow .= "<th>Project</th>\n";
 		} else {
-			print "<tr class=\"light\">\n";
+			$headRow .= "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=project")}, "Project") . "</th>\n";
 		}
-		$alternate ^= 1;
-		print "<td>" . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary"), -class => "list"}, esc_html($pr->{'path'})) . "</td>\n" .
-		      "<td>$pr->{'descr'}</td>\n" .
-		      "<td><i>" . chop_str($pr->{'owner'}, 15) . "</i></td>\n";
-		my $colored_age;
-		if ($pr->{'commit'}{'age'} < 60*60*2) {
-			$colored_age = "<span style =\"color: #009900;\"><b><i>$pr->{'commit'}{'age_string'}</i></b></span>";
-		} elsif ($pr->{'commit'}{'age'} < 60*60*24*2) {
-			$colored_age = "<span style =\"color: #009900;\"><i>$pr->{'commit'}{'age_string'}</i></span>";
+		if (defined($order) && ($order eq "descr")) {
+			@catList = sort {$a->{'descr'} cmp $b->{'descr'}} @catList;
+			$headRow .= "<th>Description</th>\n";
 		} else {
-			$colored_age = "<i>$pr->{'commit'}{'age_string'}</i>";
+			$headRow .= "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=descr")}, "Description") . "</th>\n";
 		}
-		print "<td>$colored_age</td>\n" .
-		      "<td class=\"link\">" .
-		      $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary")}, "summary") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=shortlog")}, "shortlog") .
-		      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=log")}, "log") .
-		      " | " . $cgi->a({-href => "$snapshots_url/$pr->{'path'}-snapshot-HEAD.tar.bz2"}, "latest snapshot") .
-		      "</td>\n" .
-		      "</tr>\n";
+		if (defined($order) && ($order eq "owner")) {
+			@catList = sort {$a->{'owner'} cmp $b->{'owner'}} @catList;
+			$headRow .= "<th>Owner</th>\n";
+		} else {
+			$headRow .= "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=owner")}, "Owner") . "</th>\n";
+		}
+		if (defined($order) && ($order eq "age")) {
+			@catList = sort {$a->{'commit'}{'age'} <=> $b->{'commit'}{'age'}} @catList;
+			$headRow .= "<th>Last Change</th>\n";
+		} else {
+			$headRow .= "<th>" . $cgi->a({-class => "header", -href => "$my_uri?" . esc_param("o=age")}, "Last Change") . "</th>\n";
+		}
+
+		if (!$headDone) {
+			print $headRow;
+			$headDone = 1;
+		}
+
+		print "<tr><td colspan=\"5\"><b>" . $cat . "</b></td><tr>";
+
+		foreach my $pr (@catList) {
+			if ($alternate) {
+				print "<tr class=\"dark\">\n";
+			} else {
+				print "<tr class=\"light\">\n";
+			}
+			$alternate ^= 1;
+			print "<td>" . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary"), -class => "list"}, esc_html($pr->{'path'})) . "</td>\n" .
+			      "<td>$pr->{'descr'}</td>\n" .
+			      "<td><i>" . chop_str($pr->{'owner'}, 15) . "</i></td>\n";
+			my $colored_age;
+			if ($pr->{'commit'}{'age'} < 60*60*2) {
+				$colored_age = "<span style =\"color: #009900;\"><b><i>$pr->{'commit'}{'age_string'}</i></b></span>";
+			} elsif ($pr->{'commit'}{'age'} < 60*60*24*2) {
+				$colored_age = "<span style =\"color: #009900;\"><i>$pr->{'commit'}{'age_string'}</i></span>";
+			} else {
+				$colored_age = "<i>$pr->{'commit'}{'age_string'}</i>";
+			}
+			print "<td>$colored_age</td>\n" .
+			      "<td class=\"link\">" .
+			      $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary")}, "summary") .
+			      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=shortlog")}, "shortlog") .
+			      " | " . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=log")}, "log") .
+			      " | " . $cgi->a({-href => "$snapshots_url/$pr->{'path'}-snapshot-HEAD.tar.bz2"}, "latest snapshot") .
+			      "</td>\n" .
+			      "</tr>\n";
+		}
 	}
 	print "</table>\n";
 	git_footer_html();
