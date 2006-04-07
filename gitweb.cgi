@@ -68,12 +68,12 @@ sub git_navbar($$$$) {
 	my $curSection = shift;
 	my $extraLinks = shift;
 
-	my $sumLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary"}, "summary");
-	my $slogLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog"}, "shortlog");
-	my $logLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log"}, "log");
-	my $comLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head"}, "commit");
-	my $comdifLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head"}, "commitdiff");
-	my $treeLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree"}, "tree");
+	my $sumLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=summary")}, "summary");
+	my $slogLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=shortlog")}, "shortlog");
+	my $logLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=log")}, "log");
+	my $comLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$head")}, "commit");
+	my $comdifLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff;h=$head")}, "commitdiff");
+	my $treeLink = $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=tree")}, "tree");
 	my $snapLink = $cgi->a({-href => "$snapshots_url?tree=$project&commit=HEAD"}, "latest snapshot");
 
 	if ($curSection eq "summary") {
