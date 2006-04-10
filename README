@@ -8,6 +8,8 @@ Changes incude:
 - Support for commit snapshots
 - Support for commit tags (http://wiki.xmms2.xmms.se/index.php/ChangeLog_Format)
 - Refactored navbar
+- Grouping of projects by category in the project list (via $GIT_DIR/category)
+- Code syntax highlighting (requires 'highlight' utility by André Simon - http://www.andre-simon.de/doku/highlight/en/highlight.html)
 
 *** Original README follows ***
 
