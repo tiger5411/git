@@ -45,6 +45,19 @@ my $projects_list =	"index/index.aux";
 my $snapshots_url = "http://git.xmms.se/snapshot.cgi";
 my $git_base_url = "git://git.xmms.se/xmms2";
 
+# syntax highlighting
+my %highlight = ( 
+	"SConstruct" => "py",
+	"Program" => "py",
+	"Library" => "py",
+	"\.py\$" => "py",
+	"\.c\$" => "c",
+	"\.h\$" => "c",
+	"\.cpp\$" => "cpp",
+	"\.rb\$" => "ruby",
+	"\.java\$" => "java",
+);
+
 # custom stuff - mantis/commit tags integration
 sub committags($){
 	my $a = shift;
@@ -385,6 +398,19 @@ span.tag {
 	padding:0px 4px; font-size:10px; font-weight:normal;
 	background-color:#ffffaa; border:1px solid; border-color:#ffffcc #ffee00 #ffee00 #ffffcc;
 }
+.num { color:#2928ff; }
+.esc { color:#ff00ff; }
+.str { color:#ff0000; }
+.dstr { color:#818100; }
+.slc { color:#838183; font-style:italic; }
+.com { color:#838183; font-style:italic; }
+.dir { color:#008200; }
+.sym { color:#000000; }
+.line { color:#555555; }
+.kwa { color:#000000; font-weight:bold; }
+.kwb { color:#830000; }
+.kwc { color:#000000; font-weight:bold; }
+
 </style>
 </head>
 <body>
@@ -1437,7 +1463,15 @@ sub git_blob {
 		my $base = $hash_base || git_read_head($project);
 		$hash = git_get_hash_by_path($base, $file_name, "blob") || die_error(undef, "Error lookup file.");
 	}
-	open my $fd, "-|", "$gitbin/git-cat-file blob $hash" or die_error(undef, "Open failed.");
+	my $syntax = "txt";
+	foreach my $key (keys %highlight) {
+		if ($file_name =~ /$key/) {
+			$syntax = $highlight{$key};
+			last;
+		}
+	}
+	
+	open my $fd, "-|", "$gitbin/git-cat-file blob $hash | highlight -t 4 -l -a -f -I --syntax $syntax" or die_error(undef, "Open failed.");
 	git_header_html();
 	if (defined $hash_base && (my %co = git_read_commit($hash_base))) {
 		my $plainLink;
@@ -1459,18 +1493,11 @@ sub git_blob {
 	if (defined $file_name) {
 		print "<div class=\"page_path\"><b>" . esc_html($file_name) . "</b></div>\n";
 	}
-	print "<div class=\"page_body\">\n";
-	my $nr;
+	print "<div class=\"pre\">\n";
 	while (my $line = <$fd>) {
 		chomp $line;
-		$nr++;
-		while ((my $pos = index($line, "\t")) != -1) {
-			if (my $count = (8 - ($pos % 8))) {
-				my $spaces = ' ' x $count;
-				$line =~ s/\t/$spaces/;
-			}
-		}
-		printf "<div class=\"pre\"><a id=\"l%i\" href=\"#l%i\" class=\"linenr\">%4i</a> %s</div>\n", $nr, $nr, $nr, esc_html($line);
+		$line =~ s/<a name=\"(.+?)\">/<a name=\"\1\" href=\"#\1\" class=\"linenr\">/;
+		printf "%s\n", $line;
 	}
 	close $fd or print "Reading blob failed.\n";
 	print "</div>";
