@@ -1429,9 +1429,13 @@ sub git_blob {
 		print "<div class=\"page_path\"><b>" . esc_html($file_name) . "</b></div>\n";
 	}
 	print "<div class=\"pre\">\n";
+	my $nr = 0;
 	while (my $line = <$fd>) {
 		chomp $line;
 		$line =~ s/<a name=\"(.+?)\">/<a name=\"\1\" href=\"#\1\" class=\"linenr\">/;
+		if ($syntax == "txt") {
+			$line = "<a name=\"l_$nr\" href=\"#l_$nr\" class=\"linenr\">$nr</a> $line";
+		}
 		printf "%s\n", $line;
 	}
 	close $fd or print "Reading blob failed.\n";
