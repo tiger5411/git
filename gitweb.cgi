@@ -56,6 +56,13 @@ my %highlight = (
 	"\.cpp\$" => "cpp",
 	"\.rb\$" => "ruby",
 	"\.java\$" => "java",
+	"\.cgi\$" => "pl",
+	"\.css\$" => "css",
+	"\.cfg\$" => "ini",
+	"\.kid\$" => "html",
+	"Makefile" => "make",
+	"\.pyx\$" => "pyx",
+	"\.js\$" => "js",
 );
 
 # custom stuff - mantis/commit tags integration
