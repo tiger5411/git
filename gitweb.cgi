@@ -1431,10 +1431,13 @@ sub git_blob {
 	print "<div class=\"pre\">\n";
 	my $nr = 0;
 	while (my $line = <$fd>) {
+		$nr++;
 		chomp $line;
-		$line =~ s/<a name=\"(.+?)\">/<a name=\"\1\" href=\"#\1\" class=\"linenr\">/;
-		if ($syntax == "txt") {
+		if ($syntax =~ /txt/) {
 			$line = "<a name=\"l_$nr\" href=\"#l_$nr\" class=\"linenr\">$nr</a> $line";
+		}
+		else {
+			$line =~ s/<a name=\"(.+?)\">/<a name=\"\1\" href=\"#\1\" class=\"linenr\">/;
 		}
 		printf "%s\n", $line;
 	}
