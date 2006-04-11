@@ -957,7 +957,7 @@ sub git_project_list {
 				print "<tr class=\"light\">\n";
 			}
 			$alternate ^= 1;
-			print "<td>" . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary"), -class => "list"}, esc_html($pr->{'path'})) . "</td>\n" .
+			print "<td style=\"padding-left: 1em;\">" . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary"), -class => "list"}, esc_html($pr->{'path'})) . "</td>\n" .
 			      "<td>$pr->{'descr'}</td>\n" .
 			      "<td><i>" . chop_str($pr->{'owner'}, 15) . "</i></td>\n";
 			my $colored_age;
