@@ -951,7 +951,7 @@ sub git_project_list {
 		}
 
 		if (!$headDone) {
-			print $headRow;
+			print '<tr>'.$headRow.'</tr>';
 			$headDone = 1;
 		}
 
