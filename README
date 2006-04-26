@@ -6,6 +6,8 @@ the official version by Kay Sievers. For more info, contact eleusis@xmms.org
 
 Changes incude:
 - Support for commit snapshots
+  - You need to set the appropriate configuration variables in
+    snapshot.cgi in order to use that script.
 - Support for commit tags (http://wiki.xmms2.xmms.se/index.php/ChangeLog_Format)
 - Refactored navbar
 - Grouping of projects by category in the project list (via $GIT_DIR/category)
