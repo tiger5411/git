@@ -14,6 +14,7 @@ use CGI::Util qw(unescape);
 use CGI::Carp qw(fatalsToBrowser);
 use Encode;
 use Fcntl ':mode';
+use File::Temp qw(tempfile);
 binmode STDOUT, ':utf8';
 
 my $cgi = new CGI;
@@ -41,6 +42,9 @@ my $home_text =		"indextext.html";
 # source of projects list
 #my $projects_list =	$projectroot;
 my $projects_list =	"index/index.aux";
+
+# where to find etags
+my $etagsbin = "etags";
 
 my $snapshots_url = "http://git.xmms.se/snapshot.cgi";
 my $git_base_url = "git://git.xmms.se/xmms2";
@@ -1399,14 +1403,52 @@ sub git_blob {
 		$hash = git_get_hash_by_path($base, $file_name, "blob") || die_error(undef, "Error lookup file.");
 	}
 	my $syntax = "txt";
+	my $ext;
 	foreach my $key (keys %highlight) {
 		if ($file_name =~ /$key/) {
 			$syntax = $highlight{$key};
+			$ext = $key;
 			last;
 		}
 	}
-	
-	open my $fd, "-|", "$gitbin/git-cat-file blob $hash | highlight -t 4 -l -a -f -I --syntax $syntax" or die_error(undef, "Open failed.");
+
+	my %tags;
+	my $etagged = 0;
+	my $tmpname;
+	my $readBlob = "$gitbin/git-cat-file blob $hash | highlight -t 4 -l -a -f -I --syntax $syntax";
+	if ($etagsbin ne "" and $ext =~ /^\./) {
+		$etagged = 1;
+		my $suffix = $ext;
+		$suffix =~ s/\$//;
+		my ($prefix) = $file_name =~ m/(.*)$ext/;
+		my $tmpfh;
+		($tmpfh, $tmpname) = tempfile($prefix."XXXXXX", SUFFIX => $suffix, UNLINK => 1, DIR => $git_temp);
+		close $tmpfh;
+		$readBlob = "$gitbin/git-cat-file blob $hash | tee $tmpname | highlight -t 4 -l -a -f -I --syntax $syntax";
+	}
+
+	open my $fd, "-|", $readBlob or die_error(undef, "Open failed.");
+
+	if ($etagged) {
+		open my $tmpfd, "-|", "echo '$tmpname' | $etagsbin --filter=yes" or die_error(undef, "Could not read tags for $file_name");
+		my $count = 0;
+		while (my $line = <$tmpfd>) {
+			# discard first 2 lines
+			if ($count < 2) {
+				$count++;
+				next;
+			}
+			my ($tag, $location) = $line =~ m/\x7f(.*)\x01(\d+),/;
+			if (defined $tags{$location}) {
+				push @{$tags{$location}}, $tag;
+			}
+			else {
+				$tags{$location} = [$tag];
+			}
+		}
+		close $tmpfd;
+	}
+
 	git_header_html();
 	if (defined $hash_base && (my %co = git_read_commit($hash_base))) {
 		my $plainLink;
@@ -1439,6 +1481,14 @@ sub git_blob {
 		else {
 			$line =~ s/<a name=\"(.+?)\">/<a name=\"\1\" href=\"#\1\" class=\"linenr\">/;
 		}
+
+		if (defined $tags{$nr}) {
+			my @tagList = @{$tags{$nr}};
+			foreach my $tag (@tagList) {
+				$line =~ s/$tag/<a name=\"$tag\" href=\"#$tag\">$tag<\/a>/;
+			}
+		}
+
 		printf "%s\n", $line;
 	}
 	close $fd or print "Reading blob failed.\n";
