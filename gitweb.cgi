@@ -1413,23 +1413,18 @@ sub git_blob {
 	}
 
 	my %tags;
-	my $etagged = 0;
-	my $tmpname;
-	my $readBlob = "$gitbin/git-cat-file blob $hash | highlight -t 4 -l -a -f -I --syntax $syntax";
-	if ($etagsbin ne "" and $ext =~ /^\./) {
-		$etagged = 1;
-		my $suffix = $ext;
-		$suffix =~ s/\$//;
-		my ($prefix) = $file_name =~ m/(.*)$ext/;
-		my $tmpfh;
-		($tmpfh, $tmpname) = tempfile($prefix."XXXXXX", SUFFIX => $suffix, UNLINK => 1, DIR => $git_temp);
-		close $tmpfh;
-		$readBlob = "$gitbin/git-cat-file blob $hash | tee $tmpname | highlight -t 4 -l -a -f -I --syntax $syntax";
+	my $suffix = $ext;
+	$suffix =~ s/\$//;
+	my ($dpath, $prefix) = $file_name =~ m/(.*\/)?(.*)$ext/;
+	my ($tmpfh, $tmpname) = tempfile($prefix."XXXXXX", SUFFIX => $suffix, UNLINK => 1, DIR => $git_temp) or die_error(undef, "Could not get tempfile");
+	close $tmpfh;
+
+	my $gcExit = system "$gitbin/git-cat-file blob $hash > $tmpname";
+	if ($gcExit != 0) {
+		die_error(undef, "Cannot read blob: git-cat-file returned $gcExit");
 	}
 
-	open my $fd, "-|", $readBlob or die_error(undef, "Open failed.");
-
-	if ($etagged) {
+	if ($etagsbin ne "" and $ext =~ /^\./) {
 		open my $tmpfd, "-|", "echo '$tmpname' | $etagsbin --filter=yes" or die_error(undef, "Could not read tags for $file_name");
 		my $count = 0;
 		while (my $line = <$tmpfd>) {
@@ -1449,6 +1444,7 @@ sub git_blob {
 		close $tmpfd;
 	}
 
+	open my $fd, "-|", "highlight -t 4 -l -a -f -I --syntax $syntax $tmpname" or die_error(undef, "Open failed.");
 	git_header_html();
 	if (defined $hash_base && (my %co = git_read_commit($hash_base))) {
 		my $plainLink;
