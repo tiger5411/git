@@ -1475,7 +1475,7 @@ sub git_blob {
 			$line = "<a name=\"l_$nr\" href=\"#l_$nr\" class=\"linenr\">$nr</a> $line";
 		}
 		else {
-			$line =~ s/<a name=\"(.+?)\">/<a name=\"\1\" href=\"#\1\" class=\"linenr\">/;
+			$line =~ s/<a name=\"(.+?)\">/<a name=\"$1\" href=\"#$1\" class=\"linenr\">/;
 		}
 
 		if (defined $tags{$nr}) {
