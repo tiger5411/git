@@ -970,7 +970,7 @@ sub git_project_list {
 			$alternate ^= 1;
 			print "<td style=\"padding-left: 1em;\">" . $cgi->a({-href => "$my_uri?" . esc_param("p=$pr->{'path'};a=summary"), -class => "list"}, esc_html($pr->{'path'})) . "</td>\n" .
 			      "<td>$pr->{'descr'}</td>\n" .
-			      "<td><i>" . chop_str($pr->{'owner'}, 15) . "</i></td>\n";
+			      "<td><i>" . chop_str(esc_html($pr->{'owner'}), 15) . "</i></td>\n";
 			my $colored_age;
 			if ($pr->{'commit'}{'age'} < 60*60*2) {
 				$colored_age = "<span style =\"color: #009900;\"><b><i>$pr->{'commit'}{'age_string'}</i></b></span>";
@@ -1107,7 +1107,7 @@ sub git_summary {
 	print "<div class=\"title\">&nbsp;</div>\n";
 	print "<table cellspacing=\"0\">\n" .
 	      "<tr><td>description</td><td>" . esc_html($descr) . "</td></tr>\n" .
-	      "<tr><td>owner</td><td>$owner</td></tr>\n" .
+	      "<tr><td>owner</td><td>" . esc_html($owner) . "</td></tr>\n" .
 	      "<tr><td>last change</td><td>$cd{'rfc2822'}</td></tr>\n" .
 	      "<tr><td>url</td><td>$git_base_url/$project</td></tr>" .
 	      "</table>\n";
