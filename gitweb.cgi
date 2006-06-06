@@ -2034,7 +2034,7 @@ sub git_commitdiff {
 	git_header_html(undef, $expires);
 	print git_navbar($project, $hash, "commitdiff", $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff_plain;h=$hash;hp=$hash_parent")}, "plain"));
 	print "<div>\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, esc_html($co{'title'}) . $ref) . "\n" .
+	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, committags(esc_html($co{'title'})) . $ref) . "\n" .
 	      "</div>\n";
 	print "<div class=\"page_body\">\n";
 	my $comment = $co{'comment'};
