@@ -70,20 +70,33 @@ my %highlight = (
 );
 
 # custom stuff - mantis/commit tags integration
+sub committags_real {
+	my $a = shift;
+	my $href = shift || undef;
+	my $class = shift || "";
+	my $aStart = "";
+	my $aEnd = "";
+	if (defined $href) {
+		$aStart = "</a>";
+		if ($class ne "") {
+			$class = "class=\"$class\"";
+		}
+		$aEnd = "<a $class href=\"$href\">";
+	}
+	$a =~ s!BUG\(([0-9]*)\)!$aStart<a href="http://bugs.xmms2.xmms.se/view.php?id=$1">BUG($1)</a>$aEnd!g;
+	$a =~ s!FEATURE\(([0-9]*)\)!$aStart<a href="http://bugs.xmms2.xmms.se/view.php?id=$1">FEATURE($1)</a>$aEnd!g;
+	$a =~ s!RELEASE: (.*)!RELEASE: $aStart<a href="http://wiki.xmms2.xmms.se/index.php/Release:$1">$1</a>$aEnd!g;
+	return $a;
+}
+
 sub committags($){
 	my $a = shift;
-	$a =~ s!BUG\(([0-9]*)\)!<a href="http://bugs.xmms2.xmms.se/view.php?id=$1">BUG($1)</a>!g;
-	$a =~ s!FEATURE\(([0-9]*)\)!<a href="http://bugs.xmms2.xmms.se/view.php?id=$1">FEATURE($1)</a>!g;
-	$a =~ s!RELEASE: (.*)!RELEASE: <a href="http://wiki.xmms2.xmms.se/index.php/Release:$1">$1</a>!g;
-	return $a;
+	return committags_real($a);
 }
 sub committags_shortlog($$){
 	my $a = shift;
 	my $href = shift;
-	$a =~ s!BUG\(([0-9]*)\)!</a><a href="http://bugs.xmms2.xmms.se/view.php?id=$1">BUG($1)</a><a class=\"list\" href=\"$href\">!g;
-	$a =~ s!FEATURE\(([0-9]*)\)!</a><a href="http://bugs.xmms2.xmms.se/view.php?id=$1">FEATURE($1)</a><a class=\"list\" href=\"$href\">!g;
-	$a =~ s!RELEASE: (.*)!RELEASE: <a href="http://wiki.xmms2.xmms.se/index.php/Release:$1">$1</a>!g;
-	return $a;
+	return committags_real($a, $href, "list");
 }
 
 # custom stuff - refactored navbar
@@ -2033,8 +2046,8 @@ sub git_commitdiff {
 	}
 	git_header_html(undef, $expires);
 	print git_navbar($project, $hash, "commitdiff", $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commitdiff_plain;h=$hash;hp=$hash_parent")}, "plain"));
-	print "<div>\n" .
-	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), -class => "title"}, committags(esc_html($co{'title'})) . $ref) . "\n" .
+	print "<div class=\"title\">\n" .
+	      $cgi->a({-href => "$my_uri?" . esc_param("p=$project;a=commit;h=$hash")}, committags_real(esc_html($co{'title'}), "$my_uri?" . esc_param("p=$project;a=commit;h=$hash"), "title_cdiff") . $ref) . "\n" .
 	      "</div>\n";
 	print "<div class=\"page_body\">\n";
 	my $comment = $co{'comment'};
