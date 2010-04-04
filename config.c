@@ -7,6 +7,7 @@
  */
 #include "cache.h"
 #include "exec_cmd.h"
+#include "dir.h"
 
 #define MAXNAME (256)
 
@@ -701,7 +702,7 @@ int git_config_global(void)
 
 int git_config(config_fn_t fn, void *data)
 {
-	int ret = 0, found = 0;
+	int i, ret = 0, found = 0;
 	char *repo_config = NULL;
 	const char *home = NULL;
 
@@ -722,6 +723,24 @@ int git_config(config_fn_t fn, void *data)
 			found += 1;
 		}
 		free(user_config);
+
+		/* ~/.gitconfig.d/* files */
+		char *user_config_d = xstrdup(mkpath("%s/.gitconfig.d", home));
+
+		if (!access(user_config_d, R_OK)) {
+			struct dir_struct dir;
+			memset(&dir, 0, sizeof(dir));
+
+			read_directory(&dir, user_config_d, strlen(user_config_d), NULL);
+			for (i = 0; i < dir.nr; i++) {
+				struct dir_entry *ent = dir.entries[i];
+				puts(ent->name);
+			}
+
+			ret += git_config_from_file(fn, user_config_d, data);
+			found += 1;
+		}
+		free(user_config_d);
 	}
 
 	repo_config = git_pathdup("config");
