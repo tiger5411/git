@@ -131,6 +131,12 @@ OPTIONS
 	from making such a commit.  This option bypasses the safety, and
 	is primarily for use by foreign scm interface scripts.
 
+--allow-empty-message::
+       Like --allow-empty this command is primarily for use by foreign
+       scm interface scripts. It allows you to create a commit with an
+       empty commit message without using plumbing commands like
+       linkgit:git-commit-tree[1].
+
 --cleanup=<mode>::
 	This option sets how the commit message is cleaned up.
 	The  '<mode>' can be one of 'verbatim', 'whitespace', 'strip',
