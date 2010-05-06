@@ -7,6 +7,7 @@
  */
 #include "cache.h"
 #include "exec_cmd.h"
+#include <glob.h>
 
 #define MAXNAME (256)
 
@@ -111,6 +112,52 @@ static inline int iskeychar(int c)
 	return isalnum(c) || c == '-';
 }
 
+static void glob_include_config(config_fn_t fn, void *data, char *pattern)
+{
+	glob_t globber;
+	int glob_ret;
+	int conf_ret;
+	size_t i = 0;
+	char *cfile = NULL;
+	FILE *saved_config_file;
+	char *saved_config_file_name;
+	int saved_config_linenr;
+	int saved_config_file_eof;
+#ifdef GLOB_TILDE
+	int glob_flags = GLOB_TILDE;
+#else
+	/* XXX: Non-GNU support for ~ expansion */
+	int glob_flags = 0;
+#endif
+
+	glob_ret = glob(pattern, glob_flags, NULL, &globber);
+
+	if (glob_ret == GLOB_NOSPACE || glob_ret == GLOB_ABORTED) {
+		globfree(&globber);
+		die("Unable to include config with pattern %s", pattern);
+	}
+
+	for (i = 0; i < globber.gl_pathc; i++) {
+		cfile = globber.gl_pathv[i];
+
+		/* Save away global state for including another file */
+		saved_config_file = config_file;
+		saved_config_file_name = config_file_name;
+		saved_config_linenr = config_linenr;
+		saved_config_file_eof = config_file_eof;
+
+		conf_ret = git_config_from_file(fn, cfile, data);
+
+		/* Restore it again */
+		config_file = saved_config_file;
+		config_file_name = saved_config_file_name;
+		config_linenr = saved_config_linenr;
+		config_file_eof = saved_config_file_eof;
+	}
+
+	globfree(&globber);
+}
+
 static int get_value(config_fn_t fn, void *data, char *name, unsigned int len)
 {
 	int c;
@@ -139,7 +186,13 @@ static int get_value(config_fn_t fn, void *data, char *name, unsigned int len)
 		if (!value)
 			return -1;
 	}
-	return fn(name, value, data);
+
+	if (!strcmp(name, "voodoo.include")) {
+		glob_include_config(fn, data, value);
+		return 0;
+	} else {
+		return fn(name, value, data);
+	}
 }
 
 static int get_extended_base_var(char *name, int baselen, int c)

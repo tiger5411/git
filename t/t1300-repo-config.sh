@@ -824,4 +824,47 @@ test_expect_success 'check split_cmdline return' "
 	test_must_fail git merge master
 	"
 
+cat > .git/config << EOF
+[some]
+	variable = blah
+[voodoo]
+	include = .git/more_config_*
+EOF
+
+cat > .git/more_config_1 << EOF
+[another]
+	variable = blah blah
+EOF
+
+cat > .git/more_config_2 << EOF
+[evenmore]
+	variable = blah bluh 
+EOF
+
+test_expect_success 'The voodoo include variable is hidden from us' \
+    'test_must_fail git config --get voodoo.include'
+test_expect_success 'get some included variable' \
+    'git config --get some.variable'
+test_expect_success 'get another included variable' \
+    'git config --get another.variable'
+test_expect_success 'get evenmore included variable' \
+    'git config --get evenmore.variable'
+
+rm .git/more_config*
+
+cat > .git/config << EOF
+[voodoo]
+	include = .git/more_config_*
+EOF
+
+cat > .git/more_config_1 << EOF
+[foo]
+    bar = zar
+[voodoo]
+	include = .git/more_config_*
+EOF
+
+test_expect_success 'circular config inclusion' \
+    'test_must_fail git config --get foo.bar'
+
 test_done
