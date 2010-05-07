@@ -46,8 +46,7 @@ test_expect_success \
      git config --add test.int 2k
      '
 
-test_external_without_stderr \
-    'Perl API' \
-    "$PERL_PATH" "$TEST_DIRECTORY"/t9700/test.pl
+"$PERL_PATH" "$TEST_DIRECTORY"/t9700/test.pl
 
-test_done
+# The Perl test finalizes the plan, so don't call test_done() here.
+GIT_EXIT_OK=t
