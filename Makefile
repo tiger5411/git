@@ -1912,6 +1912,9 @@ export NO_SVN_TESTS
 test: all
 	$(MAKE) -C t/ all
 
+test_harness: all
+	$(MAKE) -C t/ test_harness
+
 test-ctype$X: ctype.o
 
 test-date$X: date.o ctype.o

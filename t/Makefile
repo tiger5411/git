@@ -19,6 +19,9 @@ TSVN = $(wildcard t91[0-9][0-9]-*.sh)
 all: pre-clean
 	$(MAKE) aggregate-results-and-cleanup
 
+test_harness:
+	prove --jobs 9 ./t[0-9]*.sh
+
 $(T):
 	@echo "*** $@ ***"; GIT_CONFIG=.git/config '$(SHELL_PATH_SQ)' $@ $(GIT_TEST_OPTS)
 
