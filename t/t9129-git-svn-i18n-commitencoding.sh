@@ -72,7 +72,7 @@ done
 if locale -a |grep -q en_US.utf8; then
 	test_set_prereq UTF8
 else
-	say "UTF-8 locale not available, test skipped"
+	say "# UTF-8 locale not available, test skipped"
 fi
 
 test_expect_success UTF8 'ISO-8859-1 should match UTF-8 in svn' '

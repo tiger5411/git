@@ -29,7 +29,7 @@ then
 	}
 	test_set_prereq TTY
 else
-	say no usable terminal, so skipping some tests
+	say "# no usable terminal, so skipping some tests"
 fi
 
 unset GIT_PAGER GIT_PAGER_IN_USE
