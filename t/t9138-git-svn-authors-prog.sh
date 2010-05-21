@@ -8,7 +8,7 @@ test_description='git svn authors prog tests'
 . ./lib-git-svn.sh
 
 cat > svn-authors-prog <<'EOF'
-#!/usr/bin/perl
+#!/usr/bin/env perl
 $_ = shift;
 if (s/-sub$//)  {
 	print "$_ <$_\@sub.example.com>\n";

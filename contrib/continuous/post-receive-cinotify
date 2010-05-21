@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # A hook that notifies its companion cidaemon through a simple
 # queue file that a ref has been updated via a push (actually

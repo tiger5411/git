@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 use Gtk2 -init;
 use Gtk2::SimpleList;

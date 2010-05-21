@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 #
 # A daemon that waits for update events sent by its companion
 # post-receive-cinotify hook, checks out a new copy of source,
