@@ -211,3 +211,41 @@ case $(uname -s) in
 	}
 	;;
 esac
+
+# Try to use libintl's gettext.sh, or fall back to English if we
+# can't.
+. gettext.sh
+if test $? -eq 0
+then
+	TEXTDOMAIN=git
+	export TEXTDOMAIN
+	if [ -z "$GIT_TEXTDOMAINDIR" ]
+	then
+		TEXTDOMAINDIR="@@LOCALEDIR@@"
+	else
+		TEXTDOMAINDIR=$GIT_TEXTDOMAINDIR
+	fi
+	export TEXTDOMAINDIR
+else
+	# Since GNU gettext.sh isn't available we'll have to define our
+	# own dummy functions.
+
+	# This code adapted from NessusClient-1.0.2's nessusclient-mkcert
+	# by Michel Arboi <arboi@alussinan.org>. The original code is
+	# under the GPLv2.
+
+	# Not everyone has echo -n
+	case $(echo -n) in
+		\-n)	Xn=	  ; Xc='\c' ;;
+		*)		Xn=-n ; Xc=
+	esac
+
+	gettext () {
+		echo $Xn "$1" $Xc
+	}
+
+	eval_gettext () {
+		eval_gettext_var="echo $1"
+		echo $Xn `eval $eval_gettext_var` $Xc
+	}
+fi
