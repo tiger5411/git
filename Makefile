@@ -1505,7 +1505,7 @@ ifndef NO_TCLTK
 	$(QUIET_SUBDIR0)gitk-git $(QUIET_SUBDIR1) all
 endif
 ifndef NO_PERL
-	$(QUIET_SUBDIR0)perl $(QUIET_SUBDIR1) PERL_PATH='$(PERL_PATH_SQ)' prefix='$(prefix_SQ)' all
+	$(QUIET_SUBDIR0)perl $(QUIET_SUBDIR1) PERL_PATH='$(PERL_PATH_SQ)' prefix='$(prefix_SQ)' localedir='$(localedir_SQ)' all
 endif
 ifndef NO_PYTHON
 	$(QUIET_SUBDIR0)git_remote_helpers $(QUIET_SUBDIR1) PYTHON_PATH='$(PYTHON_PATH_SQ)' prefix='$(prefix_SQ)' all
@@ -1884,7 +1884,9 @@ cscope:
 	$(FIND) . -name '*.[hcS]' -print | xargs cscope -b
 
 pot:
-	$(XGETTEXT) -k_ -o po/git.pot $(C_OBJ:o=c) $(SCRIPT_SH)
+	$(XGETTEXT) --keyword=_ --output=po/git.pot --language=C $(C_OBJ:o=c)
+	$(XGETTEXT) --join-existing --output=po/git.pot --language=Shell $(SCRIPT_SH)
+	$(XGETTEXT) --join-existing --output=po/git.pot --language=Perl $(SCRIPT_PERL)
 
 POFILES := $(wildcard po/*.po)
 MOFILES := $(patsubst po/%.po,share/locale/%/LC_MESSAGES/git.mo,$(POFILES))
