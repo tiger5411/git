@@ -1884,9 +1884,9 @@ cscope:
 	$(FIND) . -name '*.[hcS]' -print | xargs cscope -b
 
 pot:
-	$(XGETTEXT) --keyword=_ --output=po/git.pot --language=C $(C_OBJ:o=c)
-	$(XGETTEXT) --join-existing --output=po/git.pot --language=Shell $(SCRIPT_SH)
-	$(XGETTEXT) --join-existing --output=po/git.pot --language=Perl $(SCRIPT_PERL)
+	$(XGETTEXT) --keyword= --keyword=_ --output=po/git.pot --language=C $(C_OBJ:o=c)
+	$(XGETTEXT) --join-existing --keyword= --keyword=gettext --output=po/git.pot --language=Shell $(SCRIPT_SH)
+	$(XGETTEXT) --join-existing --keyword= --keyword=gettext --output=po/git.pot --language=Perl $(SCRIPT_PERL)
 
 POFILES := $(wildcard po/*.po)
 MOFILES := $(patsubst po/%.po,share/locale/%/LC_MESSAGES/git.mo,$(POFILES))
