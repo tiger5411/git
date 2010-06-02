@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Git\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2010-06-02 17:35+0000\n"
-"PO-Revision-Date: 2010-06-02 16:01+0000\n"
+"POT-Creation-Date: 2010-06-02 19:43+0000\n"
+"PO-Revision-Date: 2010-06-02 19:35+0000\n"
 "Last-Translator: Ævar Arnfjörð Bjarmason <avarab@gmail.com>\n"
 "Language-Team: Git Mailing List <git@vger.kernel.org>\n"
 "MIME-Version: 1.0\n"
@@ -11,6 +11,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-Language: English\n"
 "X-Poedit-SourceCharset: utf-8\n"
+
+#: wt-status.c:63 wt-status.c:79 wt-status.c:98 wt-status.c:110
+#: wt-status.c:622
+msgid "On branch "
+msgstr "Á greininni "
+
+#: wt-status.c:629
+msgid "Not currently on any branch."
+msgstr "Ekki á neinni grein."
+
+#: wt-status.c:663
+#, c-format
+msgid "# No changes\n"
+msgstr "# Engar breytingar\n"
 
 #. TRANSLATORS: This is a test. You don't need to translate it.
 #: t/t0200-gettext/test.c:6
@@ -23,6 +37,10 @@ msgstr "TILRAUN: C tilraunastrengur"
 msgid "TEST: A C test string %s"
 msgstr "TILRAUN: C tilraunastrengur %s"
 
+#: git-pull.sh:124
+msgid "Fetching tags only, you probably meant:"
+msgstr "Næ aðeins í tögg, þú áttir líkast til við:"
+
 #. TRANSLATORS: This is a test. You don't need to translate it.
 #: t/t0200-gettext/test.sh:8
 msgid "TEST: A Shell test string"
@@ -33,6 +51,11 @@ msgstr "TILRAUN: Skeljartilraunastrengur"
 #, sh-format
 msgid "TEST: A Shell test $variable"
 msgstr "TILRAUN: Skeljartilraunastrengur með breytunni $variable"
+
+#: git-send-email.perl:678
+#, perl-format
+msgid "Emails will be sent from: %s\n"
+msgstr "Póstarnir verða sendir frá: %s\n"
 
 #. TRANSLATORS: This is a test. You don't need to translate it.
 #: t/t0200-gettext/test.perl:5
