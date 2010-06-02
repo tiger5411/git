@@ -11,4 +11,4 @@ int main(void)
 	/* TRANSLATORS: This is a test. You don't need to translate it. */
 	printf(_("TEST: A C test string %s"), "variable");
 }
-	
+
