@@ -211,3 +211,31 @@ case $(uname -s) in
 	}
 	;;
 esac
+
+# Try to use libintl's gettext.sh, or fall back to English if we
+# can't.
+. gettext.sh
+if test $? -eq 0 && test -z "$GIT_INTERNAL_GETTEXT_TEST_FALLBACKS"
+then
+	TEXTDOMAIN=git
+	export TEXTDOMAIN
+	if [ -z "$GIT_TEXTDOMAINDIR" ]
+	then
+		TEXTDOMAINDIR="@@LOCALEDIR@@"
+	else
+		TEXTDOMAINDIR=$GIT_TEXTDOMAINDIR
+	fi
+	export TEXTDOMAINDIR
+else
+	# Since gettext.sh isn't available we'll have to define our own
+	# dummy pass-through functions.
+
+	gettext () {
+		printf "%s" "$1"
+	}
+
+	eval_gettext () {
+		gettext_eval="printf '%s' \"$1\""
+		printf "%s" "`eval \"$gettext_eval\"`"
+	}
+fi

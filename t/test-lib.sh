@@ -37,6 +37,7 @@ ORIGINAL_TERM=$TERM
 # For repeatability, reset the environment to known value.
 LANG=C
 LC_ALL=C
+LANGUAGE=C
 PAGER=cat
 TZ=UTC
 TERM=dumb
