@@ -829,7 +829,7 @@ static int handle_commit_msg(struct strbuf *line)
 	return 0;
 }
 
-static void handle_patch(const struct strbuf *line)
+static void handle_patch(struct strbuf *line)
 {
 	if (recode_patch)
 		convert_to_utf8(line, charset.buf);
