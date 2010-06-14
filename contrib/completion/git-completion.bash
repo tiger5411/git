@@ -42,6 +42,17 @@
 #       set GIT_PS1_SHOWUNTRACKEDFILES to a nonempty value. If there're
 #       untracked files, then a '%' will be shown next to the branch name.
 #
+#       If you would like to see the difference between HEAD and its upstream,
+#       set GIT_PS1_SHOWUPSTREAM to one of the following:
+#           git          use @{upstream}
+#           svn          attempt to DWIM svn upstream for normal and --stdlayout
+#           ref <ref>    unconditionally use <ref>
+#           eval <code>  evaluate <code> which should print the commit to use
+#       Any other value DWIMs either svn or git, preferring svn if configured.
+#
+#       The difference will be shown as, e.g., "u+7-5" meaning that you are 7
+#       commits ahead of and 5 commits behind the upstream.
+#
 # To submit patches:
 #
 #    *) Read Documentation/SubmittingPatches
@@ -77,6 +88,77 @@ __gitdir ()
 		echo "$1"
 	fi
 }
+
+__git_ps1_divergence_from_upstream ()
+{
+	local cfg
+	if cfg="$(git config --get bash.showUpstream)"
+	then
+		GIT_PS1_SHOWUPSTREAM="$cfg"
+	fi
+	if [ -n "${GIT_PS1_SHOWUPSTREAM}" ]; then
+		local upstream count
+		case "${GIT_PS1_SHOWUPSTREAM}" in
+		svn|git|"ref "*|"eval "*)
+			;;
+		*)
+			# try to dwim the type
+			if git config --get svn-remote.svn.url >/dev/null; then
+				GIT_PS1_SHOWUPSTREAM=svn
+			else
+				GIT_PS1_SHOWUPSTREAM=git
+			fi
+			;;
+		esac
+		case "${GIT_PS1_SHOWUPSTREAM}" in
+		git)
+			upstream="@{upstream}"
+			;;
+		svn)
+			local url
+			# git-svn upstream checking: if it has a
+			# remotes/git-svn, that is probably the upstream.
+			# Otherwise try to figure out the branch for
+			# --stdlayout repos.
+			if ! upstream="$(git rev-parse remotes/git-svn 2>/dev/null)"; then
+				url="$(git config --get svn-remote.svn.url)"
+				upstream=( $(git log --first-parent -1 \
+						 --grep="^git-svn-id: $url") )
+				if [ -n "$upstream" ]; then
+					upstream=${upstream[ ${#upstream[@]} - 2 ]}
+					upstream=${upstream%@*}
+					upstream=${upstream#*$url/}
+				fi
+			fi
+			;;
+		"eval "*)
+			# custom shell command that determines upstream
+			upstream="$(eval "${GIT_PS1_SHOWUPSTREAM#eval }")"
+			;;
+		"ref "*)
+			upstream="${GIT_PS1_SHOWUPSTREAM#ref }"
+			;;
+		esac
+
+		count=$(git rev-list --count --left-right \
+				"$upstream"...HEAD 2>/dev/null)
+		case "$count" in
+		"0	0"|"")
+			# empty = no upstream or no --count
+			;;
+		"0	"*)
+			echo "+${count#0	}"
+			;;
+		*"	0")
+			echo "-${count%	0}"
+			;;
+		*)
+			echo "+${count#*	}-${count%	*}"
+			;;
+		esac
+	fi
+}
+
 
 # __git_ps1 accepts 0 or 1 arguments (i.e., format string)
 # returns text to add to bash PS1 prompt (includes branch name)
@@ -132,6 +214,7 @@ __git_ps1 ()
 		local s
 		local u
 		local c
+		local p
 
 		if [ "true" = "$(git rev-parse --is-inside-git-dir 2>/dev/null)" ]; then
 			if [ "true" = "$(git rev-parse --is-bare-repository 2>/dev/null)" ]; then
@@ -159,10 +242,14 @@ __git_ps1 ()
 			      u="%"
 			   fi
 			fi
+
+			if [ -n "${GIT_PS1_SHOWUPSTREAM-}" ]; then
+				p="$(__git_ps1_divergence_from_upstream)"
+			fi
 		fi
 
 		local f="$w$i$s$u"
-		printf "${1:- (%s)}" "$c${b##refs/heads/}${f:+ $f}$r"
+		printf "${1:- (%s)}" "$c${b##refs/heads/}${f:+ $f}$r${p:+ u$p}"
 	fi
 }
 
