@@ -23,16 +23,16 @@ test_expect_success 'git pull' '
 	mkdir cloned &&
 	(cd cloned && git init &&
 	git pull "../parent" >out 2>err &&
-	test -s err &&
-	test ! -s out)
+	test ! -s err &&
+	test -s out)
 '
 
 test_expect_success 'git pull -v' '
 	mkdir clonedv &&
 	(cd clonedv && git init &&
 	git pull -v "../parent" >out 2>err &&
-	test -s err &&
-	test ! -s out)
+	test ! -s err &&
+	test -s out)
 '
 
 test_expect_success 'git pull -v -q' '
@@ -47,8 +47,8 @@ test_expect_success 'git pull -q -v' '
 	mkdir clonedqv &&
 	(cd clonedqv && git init &&
 	git pull -q -v "../parent" >out 2>err &&
-	test ! -s out &&
-	test -s err)
+	test ! -s err &&
+	test -s out)
 '
 
 test_expect_success 'git pull --force' '

@@ -397,13 +397,14 @@ static int store_updated_refs(const char *raw_url, const char *remote_name,
 				TRANSPORT_SUMMARY_WIDTH, *kind ? kind : "branch",
 				 REFCOL_WIDTH, *what ? what : "HEAD");
 		if (*note) {
+			FILE *fout = rc ? stderr : stdout;
 			if (verbosity >= 0 && !shown_url) {
-				fprintf(stderr, "From %.*s\n",
+				fprintf(fout, "From %.*s\n",
 						url_len, url);
 				shown_url = 1;
 			}
 			if (verbosity >= 0)
-				fprintf(stderr, " %s\n", note);
+				fprintf(fout, " %s\n", note);
 		}
 	}
 	free(url);
