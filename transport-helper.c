@@ -862,3 +862,133 @@ int transport_helper_init(struct transport *transport, const char *name)
 	transport->smart_options = &(data->transport_options);
 	return 0;
 }
+
+
+#define BUFFERSIZE 4096
+
+/* Copy data from stdin to output and from input to stdout. */
+int bidirectional_transfer_loop(int input, int output)
+{
+	struct pollfd polls[4];
+	char in_buffer[BUFFERSIZE];
+	char out_buffer[BUFFERSIZE];
+	size_t in_buffer_use = 0;
+	size_t out_buffer_use = 0;
+	int in_hup = 0;
+	int out_hup = 0;
+	int socket_mode = 0;
+	int input_index = 2;
+	int output_index = 3;
+	int poll_count = 4;
+
+	if(input == output) {
+		output_index = input_index;
+		poll_count = 3;
+		socket_mode = 1;
+	}
+
+	while(in_buffer_use || out_buffer_use || !in_hup || !out_hup) {
+		int r, i;
+		/* Set up the poll and do it. */
+		polls[0].fd = 0;
+		polls[1].fd = 1;
+		polls[input_index].fd = input;
+		polls[output_index].fd = output;
+		for(i = 0; i < 4; i++)
+			polls[i].events = polls[i].revents = 0;
+
+		if(in_buffer_use > 0)
+			polls[output_index].events |= POLLOUT;
+		if(in_buffer_use < BUFFERSIZE && !in_hup)
+			polls[0].events |= POLLIN;
+		if(out_buffer_use > 0)
+			polls[1].events |= POLLOUT;
+		if(out_buffer_use < BUFFERSIZE && !out_hup)
+			polls[input_index].events |= POLLIN;
+		r = poll(polls, poll_count, -1);
+		if(r < 0) {
+			if(errno == EWOULDBLOCK || errno == EAGAIN ||
+				errno == EINTR)
+				continue;
+			perror("poll failed");
+			return 1;
+		} else if(r == 0)
+			continue;
+
+		/* Something interesting has happened... */
+		if(polls[0].revents & (POLLIN | POLLHUP)) {
+			/* Stdin is readable. */
+			r = read(0, in_buffer + in_buffer_use, BUFFERSIZE -
+				in_buffer_use);
+			if(r < 0 && errno != EWOULDBLOCK && errno != EAGAIN &&
+				errno != EINTR) {
+				perror("read(git) failed");
+				return 1;
+			} else if(r == 0) {
+				in_hup = 1;
+				if(!in_buffer_use) {
+					if(socket_mode)
+						shutdown(output, SHUT_WR);
+					else
+						close(output);
+				}
+			} else
+				in_buffer_use += r;
+		}
+
+		if(polls[input_index].revents & (POLLIN | POLLHUP)) {
+			/* Connection is readable. */
+			r = read(input, out_buffer + out_buffer_use,
+				BUFFERSIZE - out_buffer_use);
+			if(r < 0 && errno != EWOULDBLOCK && errno != EAGAIN &&
+				errno != EINTR) {
+				perror("read(connection) failed");
+				return 1;
+			} else if(r == 0) {
+				out_hup = 1;
+				if(!out_buffer_use)
+					close(1);
+			} else
+				out_buffer_use += r;
+		}
+
+		if(polls[1].revents & POLLOUT) {
+			/* Stdout is writable. */
+			r = write(1, out_buffer, out_buffer_use);
+			if(r < 0 && errno != EWOULDBLOCK && errno != EAGAIN &&
+				errno != EINTR) {
+				perror("write(git) failed");
+				return 1;
+			} else {
+				out_buffer_use -= r;
+				if(out_buffer_use > 0)
+					memmove(out_buffer, out_buffer + r,
+						out_buffer_use);
+				if(out_hup && !out_buffer_use)
+					close(1);
+			}
+		}
+
+		if(polls[output_index].revents & POLLOUT) {
+			/* Connection is writable. */
+			r = write(output, in_buffer, in_buffer_use);
+			if(r < 0 && errno != EWOULDBLOCK && errno != EAGAIN &&
+				errno != EINTR) {
+				perror("write(connection) failed");
+				return 1;
+			} else {
+				in_buffer_use -= r;
+				if(in_buffer_use > 0)
+					memmove(in_buffer, in_buffer + r,
+						in_buffer_use);
+				if(in_hup && !in_buffer_use) {
+					if(socket_mode)
+						shutdown(output, SHUT_WR);
+					else
+						close(output);
+				}
+			}
+		}
+	}
+	return 0;
+}
