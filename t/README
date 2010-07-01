@@ -52,7 +52,7 @@ prove and other harnesses come with a lot of useful options. The
 
 You can also run each test individually from command line, like this:
 
-    $ sh ./t3010-ls-files-killed-modified.sh
+    $ ./t3010-ls-files-killed-modified.sh
     ok 1 - git update-index --add to add various paths.
     ok 2 - git ls-files -k to show killed files.
     ok 3 - validate git ls-files -k output.
