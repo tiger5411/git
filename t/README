@@ -50,6 +50,12 @@ prove and other harnesses come with a lot of useful options. The
     # Repeat until no more failures
     $ prove -j 15 --state=failed,save ./t[0-9]*.sh
 
+The TAP support is completely incidental. A TAP harness is just a
+program that interprets the "ok"/"not ok" (and some other strings) in
+a special way. The only limitation this imposes is that you shouldn't
+echo "ok" or "not ok" by yourself at the beginning of a line, that'll
+confuse the TAP harness.
+
 You can also run each test individually from command line, like this:
 
     $ ./t3010-ls-files-killed-modified.sh
