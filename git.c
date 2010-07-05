@@ -434,6 +434,7 @@ static void handle_internal_command(int argc, const char **argv)
 		{ "version", cmd_version },
 		{ "whatchanged", cmd_whatchanged, RUN_SETUP },
 		{ "write-tree", cmd_write_tree, RUN_SETUP },
+		{ "skew", cmd_skew, RUN_SETUP },
 	};
 	int i;
 	static const char ext[] = STRIP_EXTENSION;
