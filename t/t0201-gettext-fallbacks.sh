@@ -5,10 +5,24 @@
 
 test_description='Gettext Shell fallbacks'
 
-. ./test-lib.sh
-. "$GIT_BUILD_DIR"/git-sh-i18n
+GIT_INTERNAL_GETTEXT_TEST_FALLBACKS=YesPlease
+export GIT_INTERNAL_GETTEXT_TEST_FALLBACKS
 
-test_expect_success 'gettext: our gettext() fallback has pass-through semantics' '
+. ./lib-gettext.sh
+
+test_expect_success C_LOCALE_OUTPUT "sanity: \$GIT_INTERNAL_GETTEXT_SH_SCHEME is set (to $GIT_INTERNAL_GETTEXT_SH_SCHEME)" '
+    test -n "$GIT_INTERNAL_GETTEXT_SH_SCHEME"
+'
+
+test_expect_success C_LOCALE_OUTPUT 'sanity: $GIT_INTERNAL_GETTEXT_TEST_FALLBACKS is set' '
+    test -n "$GIT_INTERNAL_GETTEXT_TEST_FALLBACKS"
+'
+
+test_expect_success C_LOCALE_OUTPUT 'sanity: $GIT_INTERNAL_GETTEXT_SH_SCHEME" is fallthrough' '
+    test "$GIT_INTERNAL_GETTEXT_SH_SCHEME" = "fallthrough"
+'
+
+test_expect_success C_LOCALE_OUTPUT 'gettext: our gettext() fallback has pass-through semantics' '
     printf "test" >expect &&
     gettext "test" >actual &&
     test_i18ncmp expect actual &&
@@ -17,7 +31,7 @@ test_expect_success 'gettext: our gettext() fallback has pass-through semantics'
     test_i18ncmp expect actual
 '
 
-test_expect_success 'eval_gettext: our eval_gettext() fallback has pass-through semantics' '
+test_expect_success C_LOCALE_OUTPUT 'eval_gettext: our eval_gettext() fallback has pass-through semantics' '
     printf "test" >expect &&
     eval_gettext "test" >actual &&
     test_i18ncmp expect actual &&
@@ -26,13 +40,13 @@ test_expect_success 'eval_gettext: our eval_gettext() fallback has pass-through 
     test_i18ncmp expect actual
 '
 
-test_expect_success 'eval_gettext: our eval_gettext() fallback can interpolate variables' '
+test_expect_success C_LOCALE_OUTPUT 'eval_gettext: our eval_gettext() fallback can interpolate variables' '
     printf "test YesPlease" >expect &&
-    GIT_INTERNAL_GETTEXT_TEST_FALLBACKS=YesPlease eval_gettext "test \$GIT_INTERNAL_GETTEXT_TEST_FALLBACKS" >actual &&
+    eval_gettext "test \$GIT_INTERNAL_GETTEXT_TEST_FALLBACKS" >actual &&
     test_i18ncmp expect actual
 '
 
-test_expect_success 'eval_gettext: our eval_gettext() fallback can interpolate variables with spaces' '
+test_expect_success C_LOCALE_OUTPUT 'eval_gettext: our eval_gettext() fallback can interpolate variables with spaces' '
     cmdline="git am" &&
     export cmdline;
     printf "When you have resolved this problem run git am --resolved." >expect &&
@@ -40,7 +54,7 @@ test_expect_success 'eval_gettext: our eval_gettext() fallback can interpolate v
     test_i18ncmp expect actual
 '
 
-test_expect_success 'eval_gettext: our eval_gettext() fallback can interpolate variables with spaces and quotes' '
+test_expect_success C_LOCALE_OUTPUT 'eval_gettext: our eval_gettext() fallback can interpolate variables with spaces and quotes' '
     cmdline="git am" &&
     export cmdline;
     printf "When you have resolved this problem run \"git am --resolved\"." >expect &&
