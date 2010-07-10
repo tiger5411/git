@@ -16,7 +16,7 @@ const char *system_path(const char *path)
 	struct strbuf d = STRBUF_INIT;
 
 	if (is_absolute_path(path))
-		return path;
+		return xstrdup(path);
 
 #ifdef RUNTIME_PREFIX
 	assert(argv0_path);
