@@ -137,6 +137,7 @@ int main(int argc, char **argv)
 	int devnull_fd;
 	int count;
 
+	git_setup_gettext();
 	git_extract_argv0_path(argv[0]);
 
 	/*
