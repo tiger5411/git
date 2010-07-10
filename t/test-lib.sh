@@ -44,6 +44,7 @@ export LANG LC_ALL PAGER TERM TZ
 EDITOR=:
 unset VISUAL
 unset GIT_EDITOR
+unset LANGUAGE
 unset AUTHOR_DATE
 unset AUTHOR_EMAIL
 unset AUTHOR_NAME
@@ -1078,6 +1079,7 @@ esac
 
 test -z "$NO_PERL" && test_set_prereq PERL
 test -z "$NO_PYTHON" && test_set_prereq PYTHON
+test -z "$NO_GETTEXT" && test_set_prereq GETTEXT
 
 # Can we rely on git's output in the C locale?
 if test -n "$GETTEXT_POISON"
