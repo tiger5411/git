@@ -37,6 +37,7 @@ ORIGINAL_TERM=$TERM
 # For repeatability, reset the environment to known value.
 LANG=C
 LC_ALL=C
+LANGUAGE=C
 PAGER=cat
 TZ=UTC
 TERM=dumb
@@ -1078,6 +1079,7 @@ esac
 
 test -z "$NO_PERL" && test_set_prereq PERL
 test -z "$NO_PYTHON" && test_set_prereq PYTHON
+test -z "$NO_GETTEXT" && test_set_prereq GETTEXT
 
 # Always set the NO_GETTEXT_POISON prerequisite while we don't have a
 # real gettext implementation in Git. This will be replaced by
