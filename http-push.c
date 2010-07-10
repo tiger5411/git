@@ -1797,6 +1797,8 @@ int main(int argc, char **argv)
 	struct ref *ref, *local_refs;
 	struct remote *remote;
 
+	git_setup_gettext();
+
 	git_extract_argv0_path(argv[0]);
 
 	repo = xcalloc(sizeof(*repo), 1);
