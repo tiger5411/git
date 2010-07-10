@@ -43,6 +43,13 @@ all::
 # Define EXPATDIR=/foo/bar if your expat header and library files are in
 # /foo/bar/include and /foo/bar/lib directories.
 #
+# Define NO_GETTEXT if you don't want Git output to be translated.
+# A translated Git requires GNU libintl or another gettext implementation,
+# plus libintl-perl at runtime.
+#
+# Define LIBC_CONTAINS_LIBINTL if your gettext implementation doesn't
+# need -lintl when linking.
+#
 # Define HAVE_PATHS_H if you have paths.h and want to use the default PATH
 # it specifies.
 #
@@ -301,6 +308,7 @@ gitexecdir = libexec/git-core
 mergetoolsdir = $(gitexecdir)/mergetools
 sharedir = $(prefix)/share
 gitwebdir = $(sharedir)/gitweb
+localedir = $(sharedir)/locale
 template_dir = share/git-core/templates
 htmldir = share/doc/git-doc
 ETC_GITCONFIG = $(sysconfdir)/gitconfig
@@ -309,7 +317,7 @@ lib = lib
 # DESTDIR=
 pathsep = :
 
-export prefix bindir sharedir sysconfdir gitwebdir
+export prefix bindir sharedir sysconfdir gitwebdir localedir
 
 CC = gcc
 AR = ar
@@ -322,6 +330,7 @@ RPMBUILD = rpmbuild
 TCL_PATH = tclsh
 TCLTK_PATH = wish
 XGETTEXT = xgettext
+MSGFMT = msgfmt
 PTHREAD_LIBS = -lpthread
 PTHREAD_CFLAGS =
 GCOV = gcov
@@ -817,12 +826,14 @@ ifeq ($(uname_S),Linux)
 	NO_STRLCPY = YesPlease
 	NO_MKSTEMPS = YesPlease
 	HAVE_PATHS_H = YesPlease
+	LIBC_CONTAINS_LIBINTL = YesPlease
 endif
 ifeq ($(uname_S),GNU/kFreeBSD)
 	NO_STRLCPY = YesPlease
 	NO_MKSTEMPS = YesPlease
 	HAVE_PATHS_H = YesPlease
 	DIR_HAS_BSD_GROUP_SEMANTICS = YesPlease
+	LIBC_CONTAINS_LIBINTL = YesPlease
 endif
 ifeq ($(uname_S),UnixWare)
 	CC = cc
@@ -1012,6 +1023,7 @@ ifeq ($(uname_S),GNU)
 	NO_STRLCPY=YesPlease
 	NO_MKSTEMPS = YesPlease
 	HAVE_PATHS_H = YesPlease
+	LIBC_CONTAINS_LIBINTL = YesPlease
 endif
 ifeq ($(uname_S),IRIX)
 	NO_SETENV = YesPlease
@@ -1405,6 +1417,11 @@ endif
 ifdef NEEDS_LIBGEN
 	EXTLIBS += -lgen
 endif
+ifndef NO_GETTEXT
+ifndef LIBC_CONTAINS_LIBINTL
+	EXTLIBS += -lintl
+endif
+endif
 ifdef NEEDS_SOCKET
 	EXTLIBS += -lsocket
 endif
@@ -1447,8 +1464,15 @@ ifdef NO_SYMLINK_HEAD
 	BASIC_CFLAGS += -DNO_SYMLINK_HEAD
 endif
 ifdef GETTEXT_POISON
-	LIB_OBJS += gettext.o
 	BASIC_CFLAGS += -DGETTEXT_POISON
+endif
+ifdef NO_GETTEXT
+	BASIC_CFLAGS += -DNO_GETTEXT
+	ifdef GETTEXT_POISON
+		LIB_OBJS += gettext.o
+	endif
+else
+	LIB_OBJS += gettext.o
 endif
 ifdef NO_STRCASESTR
 	COMPAT_CFLAGS += -DNO_STRCASESTR
@@ -1662,6 +1686,7 @@ ifndef V
 	QUIET_GEN      = @echo '   ' GEN $@;
 	QUIET_LNCP     = @echo '   ' LN/CP $@;
 	QUIET_XGETTEXT = @echo '   ' XGETTEXT $@;
+	QUIET_MSGFMT   = @echo '   ' MSGFMT $@;
 	QUIET_GCOV     = @echo '   ' GCOV $@;
 	QUIET_SP       = @echo '   ' SP $<;
 	QUIET_SUBDIR0  = +@subdir=
@@ -1688,6 +1713,7 @@ bindir_SQ = $(subst ','\'',$(bindir))
 bindir_relative_SQ = $(subst ','\'',$(bindir_relative))
 mandir_SQ = $(subst ','\'',$(mandir))
 infodir_SQ = $(subst ','\'',$(infodir))
+localedir_SQ = $(subst ','\'',$(localedir))
 gitexecdir_SQ = $(subst ','\'',$(gitexecdir))
 template_dir_SQ = $(subst ','\'',$(template_dir))
 htmldir_SQ = $(subst ','\'',$(htmldir))
@@ -1743,7 +1769,7 @@ ifndef NO_TCLTK
 	$(QUIET_SUBDIR0)gitk-git $(QUIET_SUBDIR1) all
 endif
 ifndef NO_PERL
-	$(QUIET_SUBDIR0)perl $(QUIET_SUBDIR1) PERL_PATH='$(PERL_PATH_SQ)' prefix='$(prefix_SQ)' all
+	$(QUIET_SUBDIR0)perl $(QUIET_SUBDIR1) PERL_PATH='$(PERL_PATH_SQ)' prefix='$(prefix_SQ)' localedir='$(localedir_SQ)' all
 endif
 ifndef NO_PYTHON
 	$(QUIET_SUBDIR0)git_remote_helpers $(QUIET_SUBDIR1) PYTHON_PATH='$(PYTHON_PATH_SQ)' prefix='$(prefix_SQ)' all
@@ -1793,6 +1819,7 @@ sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
     -e 's|@SHELL_PATH@|$(SHELL_PATH_SQ)|' \
     -e 's|@@DIFF@@|$(DIFF_SQ)|' \
     -e 's/@@GIT_VERSION@@/$(GIT_VERSION)/g' \
+    -e 's|@@LOCALEDIR@@|$(localedir_SQ)|g' \
     -e 's/@@NO_CURL@@/$(NO_CURL)/g' \
     -e $(BROKEN_PATH_FIX) \
     $@.sh >$@+
@@ -2045,6 +2072,9 @@ config.sp config.s config.o: EXTRA_CPPFLAGS = \
 attr.sp attr.s attr.o: EXTRA_CPPFLAGS = \
 	-DETC_GITATTRIBUTES='"$(ETC_GITATTRIBUTES_SQ)"'
 
+gettext.s gettext.o: EXTRA_CPPFLAGS = \
+	-DGIT_LOCALE_PATH="$(localedir_SQ)"
+
 http.sp http.s http.o: EXTRA_CPPFLAGS = \
 	-DGIT_HTTP_USER_AGENT='"git/$(GIT_VERSION)"'
 
@@ -2118,20 +2148,34 @@ XGETTEXT_FLAGS = \
 XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --language=C \
 	--keyword=_ --keyword=N_ --keyword="Q_:1,2"
 XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell
-LOCALIZED_C := $(C_OBJ:o=c)
-LOCALIZED_SH := $(SCRIPT_SH)
+XGETTEXT_FLAGS_PERL = $(XGETTEXT_FLAGS) --keyword=__ --language=Perl
+LOCALIZED_C := $(C_OBJ:o=c) t/0200/test.c
+LOCALIZED_SH := $(SCRIPT_SH) t/0200/test.sh
+LOCALIZED_PERL := $(SCRIPT_PERL) t/0200/test.perl
 
 po/git.pot: $(LOCALIZED_C)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ $(XGETTEXT_FLAGS_C) $(LOCALIZED_C)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_SH) \
-		$(LOCALIZED_SH)
+		$(LOCALIZED_SH) \
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_PERL) \
+		$(LOCALIZED_PERL)
 	mv $@+ $@
-
-pot: po/git.pot
 
 FIND_SOURCE_FILES = ( git ls-files '*.[hcS]' 2>/dev/null || \
 			$(FIND) . \( -name .git -type d -prune \) \
 				-o \( -name '*.[hcS]' -type f -print \) )
+
+pot: po/git.pot
+
+POFILES := $(wildcard po/*.po)
+MOFILES := $(patsubst po/%.po,share/locale/%/LC_MESSAGES/git.mo,$(POFILES))
+
+ifndef NO_GETTEXT
+all:: $(MOFILES)
+endif
+
+share/locale/%/LC_MESSAGES/git.mo: po/%.po
+	$(QUIET_MSGFMT)mkdir -p $(dir $@) && $(MSGFMT) -o $@ $<
 
 $(ETAGS_TARGET): FORCE
 	$(RM) $(ETAGS_TARGET)
@@ -2147,7 +2191,8 @@ cscope:
 
 ### Detect prefix changes
 TRACK_CFLAGS = $(CC):$(subst ','\'',$(ALL_CFLAGS)):\
-             $(bindir_SQ):$(gitexecdir_SQ):$(template_dir_SQ):$(prefix_SQ)
+             $(bindir_SQ):$(gitexecdir_SQ):$(template_dir_SQ):$(localedir_SQ):\
+             $(prefix_SQ)
 
 GIT-CFLAGS: FORCE
 	@FLAGS='$(TRACK_CFLAGS)'; \
@@ -2184,6 +2229,7 @@ endif
 ifdef GIT_TEST_CMP_USE_COPIED_CONTEXT
 	@echo GIT_TEST_CMP_USE_COPIED_CONTEXT=YesPlease >>$@
 endif
+	@echo NO_GETTEXT=\''$(subst ','\'',$(subst ','\'',$(NO_GETTEXT)))'\' >>$@
 	@echo GETTEXT_POISON=\''$(subst ','\'',$(subst ','\'',$(GETTEXT_POISON)))'\' >>$@
 
 ### Detect Tck/Tk interpreter path changes
@@ -2299,6 +2345,11 @@ install: all
 	$(MAKE) -C templates DESTDIR='$(DESTDIR_SQ)' install
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(mergetools_instdir_SQ)'
 	$(INSTALL) -m 644 mergetools/* '$(DESTDIR_SQ)$(mergetools_instdir_SQ)'
+ifndef NO_GETTEXT
+	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(localedir_SQ)'
+	(cd share/locale && $(TAR) cf - .) | \
+	(cd '$(DESTDIR_SQ)$(localedir_SQ)' && umask 022 && $(TAR) xof -)
+endif
 ifndef NO_PERL
 	$(MAKE) -C perl prefix='$(prefix_SQ)' DESTDIR='$(DESTDIR_SQ)' install
 	$(MAKE) -C gitweb install
@@ -2435,6 +2486,7 @@ clean:
 	$(RM) $(TEST_PROGRAMS)
 	$(RM) -r bin-wrappers
 	$(RM) -r $(dep_dirs)
+	$(RM) -r po/git.pot share/
 	$(RM) *.spec *.pyc *.pyo */*.pyc */*.pyo common-cmds.h $(ETAGS_TARGET) tags cscope*
 	$(RM) -r autom4te.cache
 	$(RM) config.log config.mak.autogen config.mak.append config.status config.cache
