@@ -86,8 +86,13 @@ void foo_remove(struct trp_root *treap, node_type \*node)::
 node_type *foo_search(struct trp_root \*treap, node_type \*key)::
 
 	Search for a node that matches key.  If no match is found,
-	return what would be key's successor, were key in treap
-	(NULL if no successor).
+	result is NULL.
+
+node_type *foo_nsearch(struct trp_root \*treap, node_type \*key)::
+
+	Like `foo_search`, but if if the key is missing return what
+	would be key's successor, were key in treap (NULL if no
+	successor).
 
 node_type *foo_first(struct trp_root \*treap)::
 

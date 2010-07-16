@@ -138,6 +138,19 @@ a_attr a_type MAYBE_UNUSED *a_pre##search(struct trp_root *treap, a_type *key) \
 	uint32_t ret = treap->trp_root; \
 	while (~ret && (cmp = (a_cmp)(key, trpn_pointer(a_base,ret)))) { \
 		if (cmp < 0) { \
+			ret = trp_left_get(a_base, a_field, ret); \
+		} else { \
+			ret = trp_right_get(a_base, a_field, ret); \
+		} \
+	} \
+	return trpn_pointer(a_base, ret); \
+} \
+a_attr a_type MAYBE_UNUSED *a_pre##nsearch(struct trp_root *treap, a_type *key) \
+{ \
+	int cmp; \
+	uint32_t ret = treap->trp_root; \
+	while (~ret && (cmp = (a_cmp)(key, trpn_pointer(a_base,ret)))) { \
+		if (cmp < 0) { \
 			if (!~trp_left_get(a_base, a_field, ret)) \
 				break; \
 			ret = trp_left_get(a_base, a_field, ret); \

@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 		next = node_offset(treap_next(&root, node_pointer(item)));
 
 		treap_remove(&root, node_pointer(item));
-		item = node_offset(treap_search(&root, tmp));
+		item = node_offset(treap_nsearch(&root, tmp));
 
 		if (item != next && (!~item || node_pointer(item)->n != tmp->n))
 			die("found %"PRIuMAX" in place of %"PRIuMAX"",
