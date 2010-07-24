@@ -2298,6 +2298,8 @@ coverage-report:
 	for dir in $(object_dirs); do \
 		gcov --preserve-paths --branch-probabilities --all-blocks --object-directory=$$dir $$dir*.c; \
 	done
+
+coverage-untested-functions: coverage-report
 	grep '^function.*called 0 ' *.c.gcov \
 		| sed -e 's/\([^:]*\)\.gcov: *function \([^ ]*\) called.*/\1: \2/' \
 		| tee coverage-untested-functions
