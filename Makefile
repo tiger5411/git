@@ -2307,3 +2307,6 @@ coverage-report-untested-functions:
 
 coverage-report-cover-db:
 	gcov2perl -db cover_db *.gcov
+
+coverage-report-cover-db-html: coverage-report-cover-db
+	cover -report html -outputdir cover_db_html cover_db

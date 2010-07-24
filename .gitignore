@@ -218,3 +218,4 @@
 /compat/*.gcov
 /coverage-untested-functions
 /cover_db
+/cover_db_html
