@@ -204,3 +204,7 @@
 *.pdb
 /Debug/
 /Release/
+*.gcda
+*.gcno
+*.gcov
+/coverage-untested-functions
