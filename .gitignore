@@ -217,3 +217,4 @@
 /compat/*.gcno
 /compat/*.gcov
 /coverage-untested-functions
+/cover_db
