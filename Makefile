@@ -2281,7 +2281,10 @@ coverage:
 	$(MAKE) coverage-report
 
 coverage-clean:
-	rm -f *.gcda *.gcno
+	$(RM) *.gcov *.gcda *.gcno
+	$(RM) builtin/*.gcov
+	$(RM) builtin/*.gcda
+	$(RM) builtin/*.gcno
 
 COVERAGE_CFLAGS = $(CFLAGS) -O0 -ftest-coverage -fprofile-arcs
 COVERAGE_LDFLAGS = $(CFLAGS)  -O0 -lgcov
@@ -2293,6 +2296,9 @@ coverage-build: coverage-clean
 
 coverage-report:
 	gcov -b *.c
+	gcov -b -o builtin builtin/*.c
+	gcov -b -o xdiff xdiff/*.c
+	gcov -b -o compat compat/*.c
 	grep '^function.*called 0 ' *.c.gcov \
 		| sed -e 's/\([^:]*\)\.gcov: *function \([^ ]*\) called.*/\1: \2/' \
 		| tee coverage-untested-functions
