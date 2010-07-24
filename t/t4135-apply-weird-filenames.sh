@@ -85,8 +85,8 @@ try_filename() {
 }
 
 try_filename 'plain'            'postimage.txt'
-try_filename 'with spaces'      'post image.txt' success failure failure
-try_filename 'with tab'         'post	image.txt' success failure failure
+try_filename 'with spaces'      'post image.txt'
+try_filename 'with tab'         'post	image.txt'
 try_filename 'with backslash'   'post\image.txt'
 try_filename 'with quote'       '"postimage".txt' success failure success
 
