@@ -34,15 +34,6 @@ test_expect_success 'setup: test prerequisites' '
 	if diff -pruN 1 2
 	then
 		test_set_prereq FULLDIFF
-	fi &&
-
-	echo "tab ->  ." >expected &&
-	echo "tab ->	." >with-tab &&
-
-	pr -tT -e8 with-tab >actual &&
-	if test_cmp expected actual
-	then
-		test_set_prereq PR
 	fi
 '
 
@@ -99,16 +90,12 @@ try_filename 'with tab'         'post	image.txt' success failure failure
 try_filename 'with backslash'   'post\image.txt'
 try_filename 'with quote'       '"postimage".txt' success failure success
 
-if test_have_prereq FULLDIFF && test_have_prereq PR
-then
-	test_set_prereq FULLDIFFPR
-fi
-test_expect_success FULLDIFFPR 'whitespace-damaged traditional patch' '
+test_expect_success FULLDIFF 'whitespace-damaged traditional patch' '
 	reset_preimage &&
 	reset_subdirs &&
 	echo postimage >b/postimage.txt &&
 	! diff -pruN a b >diff-plain.txt &&
-	pr -tT -e8 diff-plain.txt >damaged.diff &&
+	expand diff-plain.txt >damaged.diff &&
 
 	mv postimage.txt postimage.saved &&
 	git apply -v damaged.diff &&
