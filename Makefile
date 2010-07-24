@@ -2280,8 +2280,11 @@ coverage:
 	$(MAKE) coverage-build
 	$(MAKE) coverage-report
 
+object_dirs := $(sort $(dir $(OBJECTS)))
 coverage-clean:
-	rm -f *.gcda *.gcno
+	$(RM) $(addsuffix *.gcov,$(object_dirs))
+	$(RM) $(addsuffix *.gcda,$(object_dirs))
+	$(RM) $(addsuffix *.gcno,$(object_dirs))
 
 COVERAGE_CFLAGS = $(CFLAGS) -O0 -ftest-coverage -fprofile-arcs
 COVERAGE_LDFLAGS = $(CFLAGS)  -O0 -lgcov
@@ -2292,7 +2295,9 @@ coverage-build: coverage-clean
 		-j1 test
 
 coverage-report:
-	gcov -b *.c
+	for dir in $(object_dirs); do \
+		gcov --preserve-paths --branch-probabilities --all-blocks --object-directory=$$dir $$dir*.c; \
+	done
 	grep '^function.*called 0 ' *.c.gcov \
 		| sed -e 's/\([^:]*\)\.gcov: *function \([^ ]*\) called.*/\1: \2/' \
 		| tee coverage-untested-functions
