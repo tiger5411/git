@@ -606,6 +606,24 @@ static const char *get_template_message(struct strbuf *sb,
 	return NULL;
 }
 
+static void add_committer_signoff(struct strbuf *sb)
+{
+	struct strbuf sob = STRBUF_INIT;
+	int i;
+
+	strbuf_addstr(&sob, sign_off_header);
+	strbuf_addstr(&sob, fmt_name(getenv("GIT_COMMITTER_NAME"),
+				     getenv("GIT_COMMITTER_EMAIL")));
+	strbuf_addch(&sob, '\n');
+	for (i = sb->len - 1; i > 0 && sb->buf[i - 1] != '\n'; i--)
+		; /* do nothing */
+	if (prefixcmp(sb->buf + i, sob.buf)) {
+		if (!i || !ends_rfc2822_footer(sb))
+			strbuf_addch(sb, '\n');
+		strbuf_addbuf(sb, &sob);
+	}
+	strbuf_release(&sob);
+}
 
 static int prepare_to_commit(const char *index_file, const char *prefix,
 			     struct wt_status *s)
@@ -629,23 +647,8 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	if (cleanup_mode != CLEANUP_NONE)
 		stripspace(&sb, 0);
 
-	if (signoff) {
-		struct strbuf sob = STRBUF_INIT;
-		int i;
-
-		strbuf_addstr(&sob, sign_off_header);
-		strbuf_addstr(&sob, fmt_name(getenv("GIT_COMMITTER_NAME"),
-					     getenv("GIT_COMMITTER_EMAIL")));
-		strbuf_addch(&sob, '\n');
-		for (i = sb.len - 1; i > 0 && sb.buf[i - 1] != '\n'; i--)
-			; /* do nothing */
-		if (prefixcmp(sb.buf + i, sob.buf)) {
-			if (!i || !ends_rfc2822_footer(&sb))
-				strbuf_addch(&sb, '\n');
-			strbuf_addbuf(&sb, &sob);
-		}
-		strbuf_release(&sob);
-	}
+	if (signoff)
+		add_committer_signoff(&sb);
 
 	if (fwrite(sb.buf, 1, sb.len, fp) < sb.len)
 		die_errno("could not write commit template");
