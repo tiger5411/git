@@ -96,7 +96,8 @@ static int null_termination;
 static enum {
 	STATUS_FORMAT_LONG,
 	STATUS_FORMAT_SHORT,
-	STATUS_FORMAT_PORCELAIN
+	STATUS_FORMAT_PORCELAIN,
+	STATUS_FORMAT_NOCHANGES
 } status_format = STATUS_FORMAT_LONG;
 static int status_show_branch;
 
@@ -443,6 +444,9 @@ static int run_status(FILE *fp, const char *index_file, const char *prefix, int 
 	case STATUS_FORMAT_LONG:
 		wt_status_print(s);
 		break;
+	case STATUS_FORMAT_NOCHANGES:
+		wt_status_print_nochanges(s);
+		break;
 	}
 
 	return s->commitable;
@@ -711,6 +715,8 @@ static int empty_commit_ok(const char *index_file, const char *prefix,
 	if (in_merge || allow_empty || (amend && is_a_merge(head_sha1)))
 		return 1;
 
+	if (status_format == STATUS_FORMAT_LONG)
+		status_format = STATUS_FORMAT_NOCHANGES;
 	run_status(stdout, index_file, prefix, 0, s);
 	if (amend)
 		fputs(empty_amend_advice, stderr);
@@ -1170,6 +1176,8 @@ int cmd_status(int argc, const char **argv, const char *prefix)
 		s.ignore_submodule_arg = ignore_submodule_arg;
 		wt_status_print(&s);
 		break;
+	case STATUS_FORMAT_NOCHANGES:
+		return error("unexpected status format");
 	}
 	return 0;
 }

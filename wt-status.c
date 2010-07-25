@@ -612,7 +612,7 @@ static void wt_status_print_verbose(struct wt_status *s)
 	run_diff_index(&rev, 1);
 }
 
-static void wt_status_print_nochanges(struct wt_status *s)
+void wt_status_print_nochanges(struct wt_status *s)
 {
 	if (s->amend)
 		fprintf(s->fp, "# No changes\n");

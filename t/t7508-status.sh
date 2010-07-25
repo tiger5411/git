@@ -800,10 +800,11 @@ test_expect_success 'status submodule summary (clean submodule)' '
 	git commit -m "commit submodule" &&
 	git config status.submodulesummary 10 &&
 	test_when_finished "git config --unset status.submodulesummary" &&
-	test_must_fail git commit --dry-run >output &&
-	test_cmp expect output &&
+	test_must_fail git commit --dry-run >actual &&
 	git status >output &&
-	test_cmp expect output
+	test_cmp expect output &&
+	echo '\''no changes added to commit (use "git add" and/or "git commit -a")'\'' >expect &&
+	test_cmp expect actual
 '
 
 test_expect_success 'status -s submodule summary (clean submodule)' '
