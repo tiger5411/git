@@ -705,6 +705,18 @@ static int something_is_staged(void)
 		return index_differs_from(parent, 0);
 }
 
+static int empty_commit_ok(const char *index_file, const char *prefix,
+				struct wt_status *s)
+{
+	if (in_merge || allow_empty || (amend && is_a_merge(head_sha1)))
+		return 1;
+
+	run_status(stdout, index_file, prefix, 0, s);
+	if (amend)
+		fputs(empty_amend_advice, stderr);
+	return 0;
+}
+
 static int prepare_to_commit(const char *index_file, const char *prefix,
 			     struct wt_status *s)
 {
@@ -745,13 +757,13 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 
 	fclose(fp);
 
-	if (!commitable && !in_merge && !allow_empty &&
-	    !(amend && is_a_merge(head_sha1))) {
-		run_status(stdout, index_file, prefix, 0, s);
-		if (amend)
-			fputs(empty_amend_advice, stderr);
+	/*
+	 * If there is nothing staged for commit, this is not a
+	 * merge, and --allow-empty was not supplied, dump status
+	 * followed by some hints for staging changes.
+	 */
+	if (!commitable && !empty_commit_ok(index_file, prefix, s))
 		return 0;
-	}
 
 	/*
 	 * Re-read the index as pre-commit hook could have updated it,
