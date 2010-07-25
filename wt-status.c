@@ -522,7 +522,7 @@ static void wt_status_print_changed(struct wt_status *s)
 	wt_status_print_trailer(s);
 }
 
-static void wt_status_print_submodule_summary(struct wt_status *s, int uncommitted)
+static void do_submodule_summary(struct wt_status *s, int uncommitted)
 {
 	struct child_process sm_summary;
 	char summary_limit[64];
@@ -551,6 +551,14 @@ static void wt_status_print_submodule_summary(struct wt_status *s, int uncommitt
 	fflush(s->fp);
 	sm_summary.out = dup(fileno(s->fp));    /* run_command closes it */
 	run_command(&sm_summary);
+}
+
+static void wt_status_print_submodule_summary(struct wt_status *s)
+{
+	if (s->ignore_submodule_arg && !strcmp(s->ignore_submodule_arg, "all"))
+		return;
+	do_submodule_summary(s, 0);  /* staged */
+	do_submodule_summary(s, 1);  /* unstaged */
 }
 
 static void wt_status_print_other(struct wt_status *s,
@@ -680,12 +688,8 @@ void wt_status_print(struct wt_status *s)
 	wt_status_print_updated(s);
 	wt_status_print_unmerged(s);
 	wt_status_print_changed(s);
-	if (s->submodule_summary &&
-	    (!s->ignore_submodule_arg ||
-	     strcmp(s->ignore_submodule_arg, "all"))) {
-		wt_status_print_submodule_summary(s, 0);  /* staged */
-		wt_status_print_submodule_summary(s, 1);  /* unstaged */
-	}
+	if (s->submodule_summary)
+		wt_status_print_submodule_summary(s);
 	if (s->show_untracked_files) {
 		wt_status_print_other(s, &s->untracked, "Untracked", "add");
 		if (s->show_ignored_files)
