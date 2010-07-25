@@ -2288,6 +2288,7 @@ coverage-clean:
 	$(RM) $(addsuffix *.gcno,$(object_dirs))
 	$(RM) coverage-untested-functions
 	$(RM) -r cover_db/
+	$(RM) -r cover_db_html/
 
 COVERAGE_CFLAGS = $(CFLAGS) -O0 -ftest-coverage -fprofile-arcs
 COVERAGE_LDFLAGS = $(CFLAGS)  -O0 -lgcov
@@ -2310,3 +2311,6 @@ coverage-untested-functions: coverage-report
 
 cover_db: coverage-report
 	gcov2perl -db cover_db *.gcov
+
+cover_db_html: cover_db
+	cover -report html -outputdir cover_db_html cover_db
