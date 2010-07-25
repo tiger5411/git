@@ -604,6 +604,31 @@ static void wt_status_print_verbose(struct wt_status *s)
 	run_diff_index(&rev, 1);
 }
 
+static void wt_status_print_nochanges(struct wt_status *s)
+{
+	if (s->amend)
+		fprintf(s->fp, "# No changes\n");
+	else if (s->nowarn)
+		; /* nothing */
+	else if (s->workdir_dirty)
+		printf("no changes added to commit%s\n",
+			advice_status_hints
+			? " (use \"git add\" and/or \"git commit -a\")" : "");
+	else if (s->untracked.nr)
+		printf("nothing added to commit but untracked files present%s\n",
+			advice_status_hints
+			? " (use \"git add\" to track)" : "");
+	else if (s->is_initial)
+		printf("nothing to commit%s\n", advice_status_hints
+			? " (create/copy files and use \"git add\" to track)" : "");
+	else if (!s->show_untracked_files)
+		printf("nothing to commit%s\n", advice_status_hints
+			? " (use -u to show untracked files)" : "");
+	else
+		printf("nothing to commit%s\n", advice_status_hints
+			? " (working directory clean)" : "");
+}
+
 static void wt_status_print_tracking(struct wt_status *s)
 {
 	struct strbuf sb = STRBUF_INIT;
@@ -623,25 +648,28 @@ static void wt_status_print_tracking(struct wt_status *s)
 	color_fprintf_ln(s->fp, color(WT_STATUS_HEADER, s), "#");
 }
 
-void wt_status_print(struct wt_status *s)
+static void wt_status_print_onbranch(struct wt_status *s)
 {
 	const char *branch_color = color(WT_STATUS_HEADER, s);
-
-	if (s->branch) {
-		const char *on_what = "On branch ";
-		const char *branch_name = s->branch;
-		if (!prefixcmp(branch_name, "refs/heads/"))
-			branch_name += 11;
-		else if (!strcmp(branch_name, "HEAD")) {
-			branch_name = "";
-			branch_color = color(WT_STATUS_NOBRANCH, s);
-			on_what = "Not currently on any branch.";
-		}
-		color_fprintf(s->fp, color(WT_STATUS_HEADER, s), "# ");
-		color_fprintf_ln(s->fp, branch_color, "%s%s", on_what, branch_name);
-		if (!s->is_initial)
-			wt_status_print_tracking(s);
+	const char *on_what = "On branch ";
+	const char *branch_name = s->branch;
+	if (!prefixcmp(branch_name, "refs/heads/"))
+		branch_name += 11;
+	else if (!strcmp(branch_name, "HEAD")) {
+		branch_name = "";
+		branch_color = color(WT_STATUS_NOBRANCH, s);
+		on_what = "Not currently on any branch.";
 	}
+	color_fprintf(s->fp, color(WT_STATUS_HEADER, s), "# ");
+	color_fprintf_ln(s->fp, branch_color, "%s%s", on_what, branch_name);
+	if (!s->is_initial)
+		wt_status_print_tracking(s);
+}
+
+void wt_status_print(struct wt_status *s)
+{
+	if (s->branch)
+		wt_status_print_onbranch(s);
 
 	if (s->is_initial) {
 		color_fprintf_ln(s->fp, color(WT_STATUS_HEADER, s), "#");
@@ -669,29 +697,8 @@ void wt_status_print(struct wt_status *s)
 
 	if (s->verbose)
 		wt_status_print_verbose(s);
-	if (!s->commitable) {
-		if (s->amend)
-			fprintf(s->fp, "# No changes\n");
-		else if (s->nowarn)
-			; /* nothing */
-		else if (s->workdir_dirty)
-			printf("no changes added to commit%s\n",
-				advice_status_hints
-				? " (use \"git add\" and/or \"git commit -a\")" : "");
-		else if (s->untracked.nr)
-			printf("nothing added to commit but untracked files present%s\n",
-				advice_status_hints
-				? " (use \"git add\" to track)" : "");
-		else if (s->is_initial)
-			printf("nothing to commit%s\n", advice_status_hints
-				? " (create/copy files and use \"git add\" to track)" : "");
-		else if (!s->show_untracked_files)
-			printf("nothing to commit%s\n", advice_status_hints
-				? " (use -u to show untracked files)" : "");
-		else
-			printf("nothing to commit%s\n", advice_status_hints
-				? " (working directory clean)" : "");
-	}
+	if (!s->commitable)
+		wt_status_print_nochanges(s);
 }
 
 static void wt_shortstatus_unmerged(int null_termination, struct string_list_item *it,
