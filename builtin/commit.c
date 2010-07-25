@@ -549,13 +549,69 @@ static int ends_rfc2822_footer(struct strbuf *sb)
 	return 1;
 }
 
+/*
+ * Return value is the "source" argument for hooks/prepare-commit-msg.
+ */
+static const char *get_template_message(struct strbuf *sb,
+					const char **hook_arg2)
+{
+	struct stat statbuf;
+	if (message.len) {
+		strbuf_addbuf(sb, &message);
+		return "message";
+	}
+	if (logfile && !strcmp(logfile, "-")) {
+		if (isatty(0))
+			fprintf(stderr, "(reading log message from standard input)\n");
+		if (strbuf_read(sb, 0, 0) < 0)
+			die_errno("could not read log from standard input");
+		return "message";
+	}
+	if (logfile) {
+		if (strbuf_read_file(sb, logfile, 0) < 0)
+			die_errno("could not read log file '%s'", logfile);
+		return "message";
+	}
+	if (use_message) {
+		char *buffer = strstr(use_message_buffer, "\n\n");
+		if (!buffer || buffer[2] == '\0')
+			die("commit has empty message");
+		strbuf_add(sb, buffer + 2, strlen(buffer + 2));
+		*hook_arg2 = use_message;
+		return "commit";
+	}
+	if (!stat(git_path("MERGE_MSG"), &statbuf)) {
+		if (strbuf_read_file(sb, git_path("MERGE_MSG"), 0) < 0)
+			die_errno("could not read MERGE_MSG");
+		return "merge";
+	}
+	if (!stat(git_path("SQUASH_MSG"), &statbuf)) {
+		if (strbuf_read_file(sb, git_path("SQUASH_MSG"), 0) < 0)
+			die_errno("could not read SQUASH_MSG");
+		return "squash";
+	}
+	if (template_file && !stat(template_file, &statbuf)) {
+		if (strbuf_read_file(sb, template_file, 0) < 0)
+			die_errno("could not read '%s'", template_file);
+		return "template";
+	}
+
+	/*
+	 * This final case does not modify the template message,
+	 * it just sets the argument to the prepare-commit-msg hook.
+	 */
+	if (in_merge)
+		return "merge";
+
+	return NULL;
+}
+
+
 static int prepare_to_commit(const char *index_file, const char *prefix,
 			     struct wt_status *s)
 {
-	struct stat statbuf;
 	int commitable, saved_color_setting;
 	struct strbuf sb = STRBUF_INIT;
-	char *buffer;
 	FILE *fp;
 	const char *hook_arg1 = NULL;
 	const char *hook_arg2 = NULL;
@@ -564,47 +620,7 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	if (!no_verify && run_hook(index_file, "pre-commit", NULL))
 		return 0;
 
-	if (message.len) {
-		strbuf_addbuf(&sb, &message);
-		hook_arg1 = "message";
-	} else if (logfile && !strcmp(logfile, "-")) {
-		if (isatty(0))
-			fprintf(stderr, "(reading log message from standard input)\n");
-		if (strbuf_read(&sb, 0, 0) < 0)
-			die_errno("could not read log from standard input");
-		hook_arg1 = "message";
-	} else if (logfile) {
-		if (strbuf_read_file(&sb, logfile, 0) < 0)
-			die_errno("could not read log file '%s'",
-				  logfile);
-		hook_arg1 = "message";
-	} else if (use_message) {
-		buffer = strstr(use_message_buffer, "\n\n");
-		if (!buffer || buffer[2] == '\0')
-			die("commit has empty message");
-		strbuf_add(&sb, buffer + 2, strlen(buffer + 2));
-		hook_arg1 = "commit";
-		hook_arg2 = use_message;
-	} else if (!stat(git_path("MERGE_MSG"), &statbuf)) {
-		if (strbuf_read_file(&sb, git_path("MERGE_MSG"), 0) < 0)
-			die_errno("could not read MERGE_MSG");
-		hook_arg1 = "merge";
-	} else if (!stat(git_path("SQUASH_MSG"), &statbuf)) {
-		if (strbuf_read_file(&sb, git_path("SQUASH_MSG"), 0) < 0)
-			die_errno("could not read SQUASH_MSG");
-		hook_arg1 = "squash";
-	} else if (template_file && !stat(template_file, &statbuf)) {
-		if (strbuf_read_file(&sb, template_file, 0) < 0)
-			die_errno("could not read '%s'", template_file);
-		hook_arg1 = "template";
-	}
-
-	/*
-	 * This final case does not modify the template message,
-	 * it just sets the argument to the prepare-commit-msg hook.
-	 */
-	else if (in_merge)
-		hook_arg1 = "merge";
+	hook_arg1 = get_template_message(&sb, &hook_arg2);
 
 	fp = fopen(git_path(commit_editmsg), "w");
 	if (fp == NULL)
