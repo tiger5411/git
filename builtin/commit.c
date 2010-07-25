@@ -625,15 +625,94 @@ static void add_committer_signoff(struct strbuf *sb)
 	strbuf_release(&sob);
 }
 
+static int write_status(FILE *fp, const char *index_file,
+				const char *prefix, struct wt_status *s)
+{
+	int commitable, saved_color_setting;
+	char *author_ident;
+	const char *committer_ident;
+	int ident_shown = 0;
+
+	if (in_merge)
+		fprintf(fp,
+			"#\n"
+			"# It looks like you may be committing a MERGE.\n"
+			"# If this is not correct, please remove the file\n"
+			"#	%s\n"
+			"# and try again.\n"
+			"#\n",
+			git_path("MERGE_HEAD"));
+
+	fprintf(fp,
+		"\n"
+		"# Please enter the commit message for your changes.");
+	if (cleanup_mode == CLEANUP_ALL)
+		fprintf(fp,
+			" Lines starting\n"
+			"# with '#' will be ignored, and an empty"
+			" message aborts the commit.\n");
+	else /* CLEANUP_SPACE, that is. */
+		fprintf(fp,
+			" Lines starting\n"
+			"# with '#' will be kept; you may remove them"
+			" yourself if you want to.\n"
+			"# An empty message aborts the commit.\n");
+	if (only_include_assumed)
+		fprintf(fp, "# %s\n", only_include_assumed);
+
+	author_ident = xstrdup(fmt_name(author_name, author_email));
+	committer_ident = fmt_name(getenv("GIT_COMMITTER_NAME"),
+				   getenv("GIT_COMMITTER_EMAIL"));
+	if (strcmp(author_ident, committer_ident))
+		fprintf(fp,
+			"%s"
+			"# Author:    %s\n",
+			ident_shown++ ? "" : "#\n",
+			author_ident);
+	free(author_ident);
+
+	if (!user_ident_sufficiently_given())
+		fprintf(fp,
+			"%s"
+			"# Committer: %s\n",
+			ident_shown++ ? "" : "#\n",
+			committer_ident);
+
+	if (ident_shown)
+		fprintf(fp, "#\n");
+
+	saved_color_setting = s->use_color;
+	s->use_color = 0;
+	commitable = run_status(fp, index_file, prefix, 1, s);
+	s->use_color = saved_color_setting;
+	return commitable;
+}
+
+static int something_is_staged(void)
+{
+	unsigned char sha1[20];
+	const char *parent = "HEAD";
+
+	if (!active_nr && read_cache() < 0)
+		die("Cannot read index");
+
+	if (amend)
+		parent = "HEAD^1";
+
+	if (get_sha1(parent, sha1))
+		return !!active_nr;
+	else
+		return index_differs_from(parent, 0);
+}
+
 static int prepare_to_commit(const char *index_file, const char *prefix,
 			     struct wt_status *s)
 {
-	int commitable, saved_color_setting;
+	int commitable;
 	struct strbuf sb = STRBUF_INIT;
 	FILE *fp;
 	const char *hook_arg1 = NULL;
 	const char *hook_arg2 = NULL;
-	int ident_shown = 0;
 
 	if (!no_verify && run_hook(index_file, "pre-commit", NULL))
 		return 0;
@@ -659,77 +738,10 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 
 	/* This checks if committer ident is explicitly given */
 	git_committer_info(0);
-	if (use_editor && include_status) {
-		char *author_ident;
-		const char *committer_ident;
-
-		if (in_merge)
-			fprintf(fp,
-				"#\n"
-				"# It looks like you may be committing a MERGE.\n"
-				"# If this is not correct, please remove the file\n"
-				"#	%s\n"
-				"# and try again.\n"
-				"#\n",
-				git_path("MERGE_HEAD"));
-
-		fprintf(fp,
-			"\n"
-			"# Please enter the commit message for your changes.");
-		if (cleanup_mode == CLEANUP_ALL)
-			fprintf(fp,
-				" Lines starting\n"
-				"# with '#' will be ignored, and an empty"
-				" message aborts the commit.\n");
-		else /* CLEANUP_SPACE, that is. */
-			fprintf(fp,
-				" Lines starting\n"
-				"# with '#' will be kept; you may remove them"
-				" yourself if you want to.\n"
-				"# An empty message aborts the commit.\n");
-		if (only_include_assumed)
-			fprintf(fp, "# %s\n", only_include_assumed);
-
-		author_ident = xstrdup(fmt_name(author_name, author_email));
-		committer_ident = fmt_name(getenv("GIT_COMMITTER_NAME"),
-					   getenv("GIT_COMMITTER_EMAIL"));
-		if (strcmp(author_ident, committer_ident))
-			fprintf(fp,
-				"%s"
-				"# Author:    %s\n",
-				ident_shown++ ? "" : "#\n",
-				author_ident);
-		free(author_ident);
-
-		if (!user_ident_sufficiently_given())
-			fprintf(fp,
-				"%s"
-				"# Committer: %s\n",
-				ident_shown++ ? "" : "#\n",
-				committer_ident);
-
-		if (ident_shown)
-			fprintf(fp, "#\n");
-
-		saved_color_setting = s->use_color;
-		s->use_color = 0;
-		commitable = run_status(fp, index_file, prefix, 1, s);
-		s->use_color = saved_color_setting;
-	} else {
-		unsigned char sha1[20];
-		const char *parent = "HEAD";
-
-		if (!active_nr && read_cache() < 0)
-			die("Cannot read index");
-
-		if (amend)
-			parent = "HEAD^1";
-
-		if (get_sha1(parent, sha1))
-			commitable = !!active_nr;
-		else
-			commitable = index_differs_from(parent, 0);
-	}
+	if (use_editor && include_status)
+		commitable = write_status(fp, index_file, prefix, s);
+	else
+		commitable = something_is_staged();
 
 	fclose(fp);
 
