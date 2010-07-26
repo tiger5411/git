@@ -406,6 +406,25 @@ Commits A and B would no longer belong to a branch with a symbolic name,
 and so would be unreachable.  As such, these commits would be removed by
 a `git gc` command on the origin repository.
 
+CONFIGURATION
+-------------
+
+Variables that affect the sending (local) side:
+
+@@CONFIG(push.default)@@
+@@CONFIG(branch.<name>.remote)@@
+@@CONFIG(branch.<name>.merge)@@
+
+Variables that affect the receiving (remote) side:
+
+@@CONFIG(receive.autogc)@@
+@@CONFIG(receive.fsckObjects)@@
+@@CONFIG(receive.unpackLimit)@@
+@@CONFIG(receive.denyDeletes)@@
+@@CONFIG(receive.denyDeleteCurrent)@@
+@@CONFIG(receive.denyCurrentBranch)@@
+@@CONFIG(receive.denyNonFastForwards)@@
+@@CONFIG(receive.updateserverinfo)@@
 
 Author
 ------
