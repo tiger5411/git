@@ -98,6 +98,22 @@ git gui browser maint::
 	selected in the browser can be viewed with the internal
 	blame viewer.
 
+CONFIGURATION
+-------------
+
+@@CONFIG(gui.commitmsgwidth)@@
+@@CONFIG(gui.diffcontext)@@
+@@CONFIG(gui.encoding)@@
+@@CONFIG(gui.matchtrackingbranch)@@
+@@CONFIG(gui.newbranchtemplate)@@
+@@CONFIG(gui.pruneduringfetch)@@
+@@CONFIG(gui.trustmtime)@@
+@@CONFIG(gui.spellingdictionary)@@
+@@CONFIG(gui.fastcopyblame)@@
+@@CONFIG(gui.copyblamethreshold)@@
+@@CONFIG(gui.blamehistoryctx)@@
+
+
 SEE ALSO
 --------
 linkgit:gitk[1]::
