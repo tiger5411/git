@@ -100,6 +100,14 @@ Files
 Gitk creates the .gitk file in your $HOME directory to store preferences
 such as display options, font, and colors.
 
+
+CONFIGURATION
+-------------
+
+@@CONFIG(gui.encoding)@@
+@@CONFIG(i18n.commitEncoding)@@
+
+
 SEE ALSO
 --------
 'qgit(1)'::
