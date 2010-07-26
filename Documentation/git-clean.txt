@@ -56,6 +56,12 @@ OPTIONS
 	everything from scratch, but keep manually created files.
 
 
+CONFIGURATION
+-------------
+
+@@CONFIG(clean.requireForce)@@
+
+
 Author
 ------
 Written by Pavel Roskin <proski@gnu.org>
