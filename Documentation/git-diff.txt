@@ -157,6 +157,18 @@ $ git diff -R                          <2>
 rewrites (very expensive).
 <2> Output diff in reverse.
 
+CONFIGURATION
+-------------
+
+@@CONFIG(diff.autorefreshindex)@@
+@@CONFIG(diff.external)@@
+@@CONFIG(diff.mnemonicprefix)@@
+@@CONFIG(diff.noprefix)@@
+@@CONFIG(diff.renameLimit)@@
+@@CONFIG(diff.renames)@@
+@@CONFIG(diff.suppressBlankEmpty)@@
+@@CONFIG(diff.wordRegex)@@
+
 SEE ALSO
 --------
 linkgit:git-difftool[1]::
