@@ -195,9 +195,8 @@ Alternatively, you can undo the 'git rebase' with
 CONFIGURATION
 -------------
 
-rebase.stat::
-	Whether to show a diffstat of what changed upstream since the last
-	rebase. False by default.
+@@CONFIG(rebase.stat)@@
+
 
 OPTIONS
 -------
