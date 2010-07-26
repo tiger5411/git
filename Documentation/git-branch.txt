@@ -222,6 +222,14 @@ but different purposes:
 - `--no-merged` is used to find branches which are candidates for merging
   into HEAD, since those branches are not fully contained by HEAD.
 
+
+CONFIGURATION
+-------------
+
+@@CONFIG(branch.autosetupmerge)@@
+@@CONFIG(branch.autosetuprebase)@@
+
+
 SEE ALSO
 --------
 linkgit:git-check-ref-format[1],
