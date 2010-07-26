@@ -211,10 +211,9 @@ you can use `--suffix=-patch` to get `0001-description-of-my-change-patch`.
 
 CONFIGURATION
 -------------
-You can specify extra mail header lines to be added to each message,
-defaults for the subject prefix and file suffix, number patches when
-outputting more than one patch, add "To" or "Cc:" headers, configure
-attachments, and sign off patches with configuration variables.
+
+'git format-patch' has a lot of configuration variables.  A short
+example:
 
 ------------
 [format]
@@ -226,7 +225,22 @@ attachments, and sign off patches with configuration variables.
 	cc = <email>
 	attach [ = mime-boundary-string ]
 	signoff = true
+	signature = "Hello, world!\n"
+	thread = shallow
 ------------
+
+The individual variables are as follows:
+
+@@CONFIG(format.headers)@@
+@@CONFIG(format.subjectprefix)@@
+@@CONFIG(format.suffix)@@
+@@CONFIG(format.numbered)@@
+@@CONFIG(format.to)@@
+@@CONFIG(format.cc)@@
+@@CONFIG(format.attach)@@
+@@CONFIG(format.signoff)@@
+@@CONFIG(format.signature)@@
+@@CONFIG(format.thread)@@
 
 
 EXAMPLES
