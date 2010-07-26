@@ -1211,7 +1211,9 @@ mailmap.file::
 	first, then the mailmap file pointed to by this variable.
 	The location of the mailmap file may be in a repository
 	subdirectory, or somewhere outside of the repository itself.
+ifdef::git-config[]
 	See linkgit:git-shortlog[1] and linkgit:git-blame[1].
+endif::git-config[]
 
 man.viewer::
 	Specify the programs that may be used to display help in the
