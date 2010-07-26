@@ -76,6 +76,18 @@ The `pu` branch will be updated even if it is does not fast-forward,
 because it is prefixed with a plus sign; `tmp` will not be.
 
 
+CONFIGURATION
+-------------
+
+@@CONFIG(fetch.unpackLimit)@@
+@@CONFIG(core.gitProxy)@@
+@@CONFIG(branch.<name>.remote)@@
+@@CONFIG(branch.<name>.merge)@@
+
+The `remote.<name>.*` configuration options also affect git-fetch as
+discussed above.
+
+
 SEE ALSO
 --------
 linkgit:git-pull[1]
