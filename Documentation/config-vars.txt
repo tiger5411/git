@@ -1193,6 +1193,13 @@ log.showroot::
 	Tools like linkgit:git-log[1] or linkgit:git-whatchanged[1], which
 	normally hide the root commit will now show it. True by default.
 
+mailinfo.scissors::
+	When splitting the patch out of an email, remove everything in
+	body before a scissors line, if such a line is found.  A
+	scissors line is a line that mainly consists of scissors
+	(either ">8" or "8<") and perforation (dash "-") marks.
+	See the `\--scissors` option in linkgit:git-mailinfo.txt[].
+
 mailmap.file::
 	The location of an augmenting mailmap file. The default
 	mailmap, located in the root of the repository, is loaded

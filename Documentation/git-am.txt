@@ -185,6 +185,24 @@ commits that is more easily fixed by changing the mailbox (e.g.
 errors in the "From:" lines).
 
 
+CONFIGURATION
+-------------
+
+Variables that affect 'git am' itself:
+
+@@CONFIG(am.keepcr)@@
+@@CONFIG(i18n.commitEncoding)@@
+
+Variables that affect 'git apply', which is used to apply the patches:
+
+@@CONFIG(apply.ignorewhitespace)@@
+@@CONFIG(apply.whitespace)@@
+
+Variables that affect 'git mailinfo':
+
+@@CONFIG(mailinfo.scissors)@@
+
+
 SEE ALSO
 --------
 linkgit:git-apply[1].
