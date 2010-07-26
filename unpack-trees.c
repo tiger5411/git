@@ -53,6 +53,9 @@ static void add_entry(struct unpack_trees_options *o, struct cache_entry *ce,
 
 	clear |= CE_HASHED | CE_UNHASHED;
 
+	if (set & CE_REMOVE)
+		set |= CE_WT_REMOVE;
+
 	memcpy(new, ce, size);
 	new->next = NULL;
 	new->ce_flags = (new->ce_flags & ~clear) | set;
@@ -92,7 +95,7 @@ static int check_updates(struct unpack_trees_options *o)
 	if (o->update && o->verbose_update) {
 		for (total = cnt = 0; cnt < index->cache_nr; cnt++) {
 			struct cache_entry *ce = index->cache[cnt];
-			if (ce->ce_flags & (CE_UPDATE | CE_REMOVE | CE_WT_REMOVE))
+			if (ce->ce_flags & (CE_UPDATE | CE_WT_REMOVE))
 				total++;
 		}
 
@@ -111,12 +114,6 @@ static int check_updates(struct unpack_trees_options *o)
 			if (o->update)
 				unlink_entry(ce);
 			continue;
-		}
-
-		if (ce->ce_flags & CE_REMOVE) {
-			display_progress(progress, ++cnt);
-			if (o->update)
-				unlink_entry(ce);
 		}
 	}
 	remove_marked_cache_entries(&o->result);
@@ -799,10 +796,15 @@ int unpack_trees(unsigned len, struct tree_desc *t, struct unpack_trees_options 
 			/*
 			 * Merge strategies may set CE_UPDATE|CE_REMOVE outside checkout
 			 * area as a result of ce_skip_worktree() shortcuts in
-			 * verify_absent() and verify_uptodate(). Clear them.
+			 * verify_absent() and verify_uptodate().
+			 * Make sure they don't modify worktree.
 			 */
-			if (ce_skip_worktree(ce))
-				ce->ce_flags &= ~(CE_UPDATE | CE_REMOVE);
+			if (ce_skip_worktree(ce)) {
+				ce->ce_flags &= ~CE_UPDATE;
+
+				if (ce->ce_flags & CE_REMOVE)
+					ce->ce_flags &= ~CE_WT_REMOVE;
+			}
 			else
 				empty_worktree = 0;
 
