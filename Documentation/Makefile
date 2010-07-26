@@ -269,7 +269,8 @@ manpage-base-url.xsl: manpage-base-url.xsl.in
 
 user-manual.xml: user-manual.txt.cv user-manual.conf
 	$(QUIET_ASCIIDOC)$(RM) $@+ $@ && \
-	$(ASCIIDOC) $(ASCIIDOC_EXTRA) -b docbook -d book -o $@+ $< && \
+	$(ASCIIDOC) $(ASCIIDOC_EXTRA) -b docbook -d book -f user-manual.conf \
+		-o $@+ $< && \
 	mv $@+ $@
 
 technical/api-index.txt: technical/api-index-skel.txt \
