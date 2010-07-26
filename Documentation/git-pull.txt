@@ -165,6 +165,20 @@ If you tried a pull which resulted in a complex conflicts and
 would want to start over, you can recover with 'git reset'.
 
 
+CONFIGURATION
+-------------
+
+Options that affect 'git pull':
+
+@@CONFIG(branch.<name>.remote)@@
+@@CONFIG(branch.<name>.merge)@@
+@@CONFIG(branch.<name>.rebase)@@
+
+Options that affect the underlying 'git fetch' and 'git merge' are
+documented in linkgit:git-fetch[1] and linkgit:git-merge[1],
+respectively.
+
+
 SEE ALSO
 --------
 linkgit:git-fetch[1], linkgit:git-merge[1], linkgit:git-config[1]
