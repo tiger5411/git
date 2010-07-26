@@ -299,6 +299,14 @@ $ git add frotz
 ------------
 
 
+CONFIGURATION
+-------------
+
+@@CONFIG(branch.autosetupmerge)@@
+@@CONFIG(branch.autosetuprebase)@@
+@@CONFIG(merge.conflictstyle)@@
+
+
 Author
 ------
 Written by Linus Torvalds <torvalds@osdl.org>
