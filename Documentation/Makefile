@@ -246,7 +246,7 @@ clean:
 	$(RM) manpage-base-url.xsl
 
 %.txt.cv : %.txt subst-config.perl config-vars.txt
-	$(QUIET_GEN) ./subst-config.perl config-vars.txt $< $@
+	$(QUIET_GEN) ./subst-config.perl --varlist=config-vars.txt --input=$< --output=$@
 
 $(patsubst %.txt,%.txt.cv,$(MAN_HTML)): %.html : %.txt.cv
 	$(QUIET_ASCIIDOC)$(RM) $@+ $@ && \
