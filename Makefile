@@ -308,6 +308,7 @@ TCL_PATH = tclsh
 TCLTK_PATH = wish
 PTHREAD_LIBS = -lpthread
 PTHREAD_CFLAGS =
+GCOV = gcov
 
 export TCL_PATH TCLTK_PATH
 
@@ -2301,7 +2302,7 @@ coverage-build: coverage-clean
 
 coverage-report:
 	$(QUIET_GCOV)for dir in $(object_dirs); do \
-		gcov $(GCOVFLAGS) --object-directory=$$dir $$dir*.c || exit; \
+		$(GCOV) $(GCOVFLAGS) --object-directory=$$dir $$dir*.c || exit; \
 	done
 
 coverage-untested-functions: coverage-report
