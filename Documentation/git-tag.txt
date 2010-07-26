@@ -95,15 +95,8 @@ OPTIONS
 
 CONFIGURATION
 -------------
-By default, 'git tag' in sign-with-default mode (-s) will use your
-committer identity (of the form "Your Name <your@email.address>") to
-find a key.  If you want to use a different default key, you can specify
-it in the repository configuration as follows:
 
--------------------------------------
-[user]
-    signingkey = <gpg-key-id>
--------------------------------------
+@@CONFIG(user.signingkey)@@
 
 
 DISCUSSION
