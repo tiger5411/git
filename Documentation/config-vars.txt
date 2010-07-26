@@ -1137,8 +1137,11 @@ i18n.commitEncoding::
 	porcelains). See e.g. linkgit:git-mailinfo[1]. Defaults to 'utf-8'.
 
 i18n.logOutputEncoding::
-	Character encoding the commit messages are converted to when
-	running 'git log' and friends.
+	Encoding to use when displaying logs.
+ifdef::git-log[(See "Discussion", above.)]
+ifndef::git-log[See "Discussion" in linkgit:git-log[1].]
+	Defaults to the value of `i18n.commitEncoding` if set, UTF-8
+	otherwise.
 
 imap::
 	The configuration variables in the 'imap' section are described
@@ -1175,10 +1178,11 @@ interactive.singlekey::
 	ignored if portable keystroke input is not available.
 
 log.date::
-	Set default date-time mode for the log command. Setting log.date
-	value is similar to using 'git log'\'s --date option. The value is one of the
-	following alternatives: {relative,local,default,iso,rfc,short}.
-	See linkgit:git-log[1].
+	Default date-time mode for the log family. The value must be
+	one of {relative,local,default,iso,rfc,short}. Defaults to
+	"default".  See the `\--date` option
+ifdef::git-log[above.]
+ifndef::git-log[in linkgit:git-log[1].]
 
 log.decorate::
 	Print out the ref names of any commits that are shown by the log
@@ -1188,10 +1192,9 @@ log.decorate::
 	This is the same as the log commands '--decorate' option.
 
 log.showroot::
-	If true, the initial commit will be shown as a big creation event.
-	This is equivalent to a diff against an empty tree.
-	Tools like linkgit:git-log[1] or linkgit:git-whatchanged[1], which
-	normally hide the root commit will now show it. True by default.
+	If enabled, the initial commit will be shown as a big creation
+	event (equivalent to a diff against an empty tree).  Otherwise
+	it has an empty diff. Enabled by default.
 
 mailinfo.scissors::
 	When splitting the patch out of an email, remove everything in
@@ -1326,6 +1329,11 @@ globs.
 The effective value of "core.notesRef" (possibly overridden by
 GIT_NOTES_REF) is also implicitly added to the list of refs to be
 displayed.
+ifdef::git-log[]
++
+This setting can be disabled by the `--no-standard-notes` option
+and supplemented by the `--show-notes` option.
+endif::git-log[]
 
 notes.rewrite.<command>::
 	When rewriting commits with <command> (currently `amend` or
