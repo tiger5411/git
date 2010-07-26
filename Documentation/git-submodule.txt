@@ -258,6 +258,14 @@ to each submodule url is "submodule.$name.url".  See linkgit:gitmodules[5]
 for details.
 
 
+CONFIGURATION
+-------------
+
+@@CONFIG(submodule.<name>.path)@@
+@@CONFIG(submodule.<name>.url)@@
+@@CONFIG(submodule.<name>.update)@@
+
+
 AUTHOR
 ------
 Written by Lars Hjemli <hjemli@gmail.com>
