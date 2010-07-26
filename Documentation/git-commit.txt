@@ -375,6 +375,13 @@ and `post-commit` hooks.  See linkgit:githooks[5] for more
 information.
 
 
+CONFIGURATION
+-------------
+
+@@CONFIG(commit.status)@@
+@@CONFIG(commit.template)@@
+
+
 SEE ALSO
 --------
 linkgit:git-add[1],
