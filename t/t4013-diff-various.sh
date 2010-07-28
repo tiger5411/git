@@ -208,6 +208,7 @@ log -p --first-parent master
 log -m -p --first-parent master
 log -m -p master
 log -SF master
+log -S F master
 log -SF -p master
 log --decorate --all
 log --decorate=full --all
