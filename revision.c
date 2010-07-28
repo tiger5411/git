@@ -1486,6 +1486,8 @@ int setup_revisions(int argc, const char **argv, struct rev_info *revs, struct s
 {
 	int i, flags, left, seen_dashdash, read_from_stdin, got_rev_arg = 0;
 	const char **prune_data = NULL;
+	const char *optarg;
+	int argcount;
 
 	/* First, search for "--" */
 	seen_dashdash = 0;
@@ -1532,28 +1534,32 @@ int setup_revisions(int argc, const char **argv, struct rev_info *revs, struct s
 				handle_refs(revs, flags, for_each_remote_ref);
 				continue;
 			}
-			if (!prefixcmp(arg, "--glob=")) {
+			if ((argcount = diff_long_opt("glob", argv + i, &optarg))) {
 				struct all_refs_cb cb;
+				i += argcount - 1;
 				init_all_refs_cb(&cb, revs, flags);
-				for_each_glob_ref(handle_one_ref, arg + 7, &cb);
+				for_each_glob_ref(handle_one_ref, optarg, &cb);
 				continue;
 			}
-			if (!prefixcmp(arg, "--branches=")) {
+			if ((argcount = diff_long_opt("branches", argv + i, &optarg))) {
 				struct all_refs_cb cb;
+				i += argcount - 1;
 				init_all_refs_cb(&cb, revs, flags);
-				for_each_glob_ref_in(handle_one_ref, arg + 11, "refs/heads/", &cb);
+				for_each_glob_ref_in(handle_one_ref, optarg, "refs/heads/", &cb);
 				continue;
 			}
-			if (!prefixcmp(arg, "--tags=")) {
+			if ((argcount = diff_long_opt("tags", argv + i, &optarg))) {
 				struct all_refs_cb cb;
+				i += argcount - 1;
 				init_all_refs_cb(&cb, revs, flags);
-				for_each_glob_ref_in(handle_one_ref, arg + 7, "refs/tags/", &cb);
+				for_each_glob_ref_in(handle_one_ref, optarg, "refs/tags/", &cb);
 				continue;
 			}
-			if (!prefixcmp(arg, "--remotes=")) {
+			if ((argcount = diff_long_opt("remotes", argv + i, &optarg))) {
 				struct all_refs_cb cb;
+				i += argcount - 1;
 				init_all_refs_cb(&cb, revs, flags);
-				for_each_glob_ref_in(handle_one_ref, arg + 10, "refs/remotes/", &cb);
+				for_each_glob_ref_in(handle_one_ref, optarg, "refs/remotes/", &cb);
 				continue;
 			}
 			if (!strcmp(arg, "--reflog")) {
