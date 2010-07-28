@@ -2990,9 +2990,50 @@ static int opt_arg(const char *arg, int arg_short, const char *arg_long, int *va
 
 static int diff_scoreopt_parse(const char *opt);
 
+static inline int short_opt(char opt, const char **argv,
+			    const char **optarg)
+{
+	const char *arg = argv[0];
+	if (arg[0] != '-' || arg[1] != opt)
+		return 0;
+	if (arg[2] != '\0') {
+		*optarg = arg + strlen("-c");
+		return 1;
+	}
+	if (!argv[1])
+		die("Option '%c' requires a value", opt);
+	*optarg = argv[1];
+	return 2;
+}
+
+int diff_long_opt(const char *opt, const char **argv,
+		  const char **optarg)
+{
+	const char *arg = argv[0];
+	if (arg[0] != '-' || arg[1] != '-')
+		return 0;
+	arg += strlen("--");
+	if (prefixcmp(arg, opt))
+		return 0;
+	arg += strlen(opt);
+	if (*arg == '=') { /* Sticky form: --option=value */
+		*optarg = arg + 1;
+		return 1;
+	}
+	if (*arg != '\0')
+		return 0;
+	/* detached form: --option value */
+	if (!argv[1])
+		die("Option '--%s' requires a value", opt);
+	*optarg = argv[1];
+	return 2;
+}
+
 int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 {
 	const char *arg = av[0];
+	const char *optarg;
+	int argcount;
 
 	/* Output format options */
 	if (!strcmp(arg, "-p") || !strcmp(arg, "-u") || !strcmp(arg, "--patch"))
@@ -3035,11 +3076,24 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 		int name_width = options->stat_name_width;
 		arg += 6;
 		end = (char *)arg;
+		argcount = 1;
 
 		switch (*arg) {
 		case '-':
+			if (!strcmp(arg, "-width")) {
+				if (!av[1])
+					die("Option `--stat-width' requires a value");
+				width = strtoul(av[1], &end, 10);
+				argcount = 2;
+			}
 			if (!prefixcmp(arg, "-width="))
 				width = strtoul(arg + 7, &end, 10);
+			else if (!strcmp(arg, "-name-width")) {
+				if (!av[1])
+					die("Option `--stat-name-width' requires a value");
+				name_width = strtoul(av[1], &end, 10);
+				argcount = 2;
+			}
 			else if (!prefixcmp(arg, "-name-width="))
 				name_width = strtoul(arg + 12, &end, 10);
 			break;
@@ -3055,6 +3109,7 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 		options->output_format |= DIFF_FORMAT_DIFFSTAT;
 		options->stat_name_width = name_width;
 		options->stat_width = width;
+		return argcount;
 	}
 
 	/* renames options */
@@ -3149,10 +3204,11 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 		else
 			die("bad --word-diff argument: %s", type);
 	}
-	else if (!prefixcmp(arg, "--word-diff-regex=")) {
+	else if ((argcount = diff_long_opt("word-diff-regex", av, &optarg))) {
 		if (options->word_diff == DIFF_WORDS_NONE)
 			options->word_diff = DIFF_WORDS_PLAIN;
-		options->word_regex = arg + 18;
+		options->word_regex = optarg;
+		return argcount;
 	}
 	else if (!strcmp(arg, "--exit-code"))
 		DIFF_OPT_SET(options, EXIT_WITH_STATUS);
@@ -3180,20 +3236,30 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 	/* misc options */
 	else if (!strcmp(arg, "-z"))
 		options->line_termination = 0;
-	else if (!prefixcmp(arg, "-l"))
-		options->rename_limit = strtoul(arg+2, NULL, 10);
-	else if (!prefixcmp(arg, "-S"))
-		options->pickaxe = arg + 2;
-	else if (!prefixcmp(arg, "-G"))
+	else if ((argcount = short_opt('l', av, &optarg))) {
+		options->rename_limit = strtoul(optarg, NULL, 10);
+		return argcount;
+	}
+	else if ((argcount = short_opt('S', av, &optarg))) {
+		options->pickaxe = optarg;
+		return argcount;
+	}
+	else if ((argcount = short_opt('G', av, &optarg))) {
 		options->log_grep = arg + 2;
+		return argcount;
+	}
 	else if (!strcmp(arg, "--pickaxe-all"))
 		options->pickaxe_opts = DIFF_PICKAXE_ALL;
 	else if (!strcmp(arg, "--pickaxe-regex"))
 		options->pickaxe_opts = DIFF_PICKAXE_REGEX;
-	else if (!prefixcmp(arg, "-O"))
-		options->orderfile = arg + 2;
-	else if (!prefixcmp(arg, "--diff-filter="))
-		options->filter = arg + 14;
+	else if ((argcount = short_opt('O', av, &optarg))) {
+		options->orderfile = optarg;
+		return argcount;
+	}
+	else if ((argcount = diff_long_opt("diff-filter", av, &optarg))) {
+		options->filter = optarg;
+		return argcount;
+	}
 	else if (!strcmp(arg, "--abbrev"))
 		options->abbrev = DEFAULT_ABBREV;
 	else if (!prefixcmp(arg, "--abbrev=")) {
@@ -3203,20 +3269,24 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 		else if (40 < options->abbrev)
 			options->abbrev = 40;
 	}
-	else if (!prefixcmp(arg, "--src-prefix="))
-		options->a_prefix = arg + 13;
-	else if (!prefixcmp(arg, "--dst-prefix="))
-		options->b_prefix = arg + 13;
+	else if ((argcount = diff_long_opt("src-prefix", av, &optarg))) {
+		options->a_prefix = optarg;
+		return argcount;
+	}
+	else if ((argcount = diff_long_opt("dst-prefix", av, &optarg))) {
+		options->b_prefix = optarg;
+	}
 	else if (!strcmp(arg, "--no-prefix"))
 		options->a_prefix = options->b_prefix = "";
 	else if (opt_arg(arg, '\0', "inter-hunk-context",
 			 &options->interhunkcontext))
 		;
-	else if (!prefixcmp(arg, "--output=")) {
-		options->file = fopen(arg + strlen("--output="), "w");
+	else if ((argcount = diff_long_opt("output", av, &optarg))) {
+		options->file = fopen(optarg, "w");
 		if (!options->file)
 			die_errno("Could not open '%s'", arg + strlen("--output="));
 		options->close_file = 1;
+		return argcount;
 	} else
 		return 0;
 	return 1;
