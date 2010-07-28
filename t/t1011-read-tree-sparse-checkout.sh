@@ -147,4 +147,11 @@ test_expect_success 'read-tree adds to worktree, dirty case' '
 	grep -q dirty sub/added
 '
 
+test_expect_success 'read-tree --reset removes outside worktree' '
+	echo init.t > .git/info/sparse-checkout &&
+	git checkout -f top &&
+	git reset --hard removed &&
+	test -z "$(git ls-files sub/added)"
+'
+
 test_done

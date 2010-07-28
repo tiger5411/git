@@ -53,6 +53,9 @@ static void add_entry(struct unpack_trees_options *o, struct cache_entry *ce,
 
 	clear |= CE_HASHED | CE_UNHASHED;
 
+	if (set & CE_REMOVE)
+		set |= CE_WT_REMOVE;
+
 	memcpy(new, ce, size);
 	new->next = NULL;
 	new->ce_flags = (new->ce_flags & ~clear) | set;
@@ -84,7 +87,7 @@ static int check_updates(struct unpack_trees_options *o)
 	if (o->update && o->verbose_update) {
 		for (total = cnt = 0; cnt < index->cache_nr; cnt++) {
 			struct cache_entry *ce = index->cache[cnt];
-			if (ce->ce_flags & (CE_UPDATE | CE_REMOVE | CE_WT_REMOVE))
+			if (ce->ce_flags & (CE_UPDATE | CE_WT_REMOVE))
 				total++;
 		}
 
@@ -103,12 +106,6 @@ static int check_updates(struct unpack_trees_options *o)
 			if (o->update)
 				unlink_entry(ce);
 			continue;
-		}
-
-		if (ce->ce_flags & CE_REMOVE) {
-			display_progress(progress, ++cnt);
-			if (o->update)
-				unlink_entry(ce);
 		}
 	}
 	remove_marked_cache_entries(&o->result);
@@ -138,9 +135,6 @@ static int will_have_skip_worktree(const struct cache_entry *ce, struct unpack_t
 {
 	const char *basename;
 
-	if (ce_stage(ce))
-		return 0;
-
 	basename = strrchr(ce->name, '/');
 	basename = basename ? basename+1 : ce->name;
 	return excluded_from_list(ce->name, ce_namelen(ce), basename, NULL, o->el) <= 0;
@@ -150,7 +144,7 @@ static int apply_sparse_checkout(struct cache_entry *ce, struct unpack_trees_opt
 {
 	int was_skip_worktree = ce_skip_worktree(ce);
 
-	if (will_have_skip_worktree(ce, o))
+	if (!ce_stage(ce) && will_have_skip_worktree(ce, o))
 		ce->ce_flags |= CE_SKIP_WORKTREE;
 	else
 		ce->ce_flags &= ~CE_SKIP_WORKTREE;
@@ -801,10 +795,15 @@ int unpack_trees(unsigned len, struct tree_desc *t, struct unpack_trees_options 
 			/*
 			 * Merge strategies may set CE_UPDATE|CE_REMOVE outside checkout
 			 * area as a result of ce_skip_worktree() shortcuts in
-			 * verify_absent() and verify_uptodate(). Clear them.
+			 * verify_absent() and verify_uptodate().
+			 * Make sure they don't modify worktree.
 			 */
-			if (ce_skip_worktree(ce))
-				ce->ce_flags &= ~(CE_UPDATE | CE_REMOVE);
+			if (ce_skip_worktree(ce)) {
+				ce->ce_flags &= ~CE_UPDATE;
+
+				if (ce->ce_flags & CE_REMOVE)
+					ce->ce_flags &= ~CE_WT_REMOVE;
+			}
 			else
 				empty_worktree = 0;
 
@@ -1094,6 +1093,8 @@ static int merged_entry(struct cache_entry *merge, struct cache_entry *old,
 	if (!old) {
 		if (verify_absent(merge, "overwritten", o))
 			return -1;
+		if (!o->skip_sparse_checkout && will_have_skip_worktree(merge, o))
+			update |= CE_SKIP_WORKTREE;
 		invalidate_ce_path(merge, o);
 	} else if (!(old->ce_flags & CE_CONFLICTED)) {
 		/*
