@@ -3076,11 +3076,24 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 		int name_width = options->stat_name_width;
 		arg += 6;
 		end = (char *)arg;
+		argcount = 1;
 
 		switch (*arg) {
 		case '-':
+			if (!strcmp(arg, "-width")) {
+				if (!av[1])
+					die("Option `--stat-width' requires a value");
+				width = strtoul(av[1], &end, 10);
+				argcount = 2;
+			}
 			if (!prefixcmp(arg, "-width="))
 				width = strtoul(arg + 7, &end, 10);
+			else if (!strcmp(arg, "-name-width")) {
+				if (!av[1])
+					die("Option `--stat-name-width' requires a value");
+				name_width = strtoul(av[1], &end, 10);
+				argcount = 2;
+			}
 			else if (!prefixcmp(arg, "-name-width="))
 				name_width = strtoul(arg + 12, &end, 10);
 			break;
@@ -3096,6 +3109,7 @@ int diff_opt_parse(struct diff_options *options, const char **av, int ac)
 		options->output_format |= DIFF_FORMAT_DIFFSTAT;
 		options->stat_name_width = name_width;
 		options->stat_width = width;
+		return argcount;
 	}
 
 	/* renames options */
