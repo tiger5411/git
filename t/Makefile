@@ -49,4 +49,24 @@ full-svn-test:
 valgrind:
 	GIT_TEST_OPTS=--valgrind $(MAKE)
 
+test-results:
+	mkdir -p test-results
+
+-include ../GIT-VERSION-FILE
+test-results/git-smoke.tar.gz:
+	perl ./harness --git-version="$(GIT_VERSION)" \
+		--no-verbose \
+		--archive="test-results/git-smoke.tar.gz" \
+		$(wildcard t000[0-9]-*.sh)
+
+smoke: test-results/git-smoke.tar.gz
+
+smoke_report: smoke
+	curl \
+		-F architecture=amd64 \
+		-F platform=linux \
+		-F revision="$(GIT_VERSION)" \
+		-F report_file=@test-results/git-smoke.tar.gz \
+		http://git.smoke.example.net/submit_report
+
 .PHONY: pre-clean $(T) aggregate-results clean valgrind

@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+use 5.010;
+use strict;
+use warnings;
+use Pod::Usage ();
+use Getopt::Long ();
+use TAP::Harness::Archive;
+
+Getopt::Long::Parser->new(
+    config => [ qw/ pass_through / ],
+)->getoptions(
+    'h|help'        => \my $help,
+    'jobs:1'        => \my $jobs,
+    'verbose!'      => \(my $verbose = 1),
+    'git-version=s' => \my $git_version,
+    'archive=s'     => \my $archive,
+) or die "$0: Couldn't getoptions()";
+
+my @tests = @ARGV;
+
+my $harness = TAP::Harness::Archive->new({
+    verbosity => 0,
+    jobs      => $ENV{TEST_JOBS} || $jobs || 1,
+    test_args => [
+        ($verbose
+         ? qw/ --verbose /
+         : ())
+    ],
+    archive   => $archive,
+    extra_properties => {
+        git => {
+            version => $git_version,
+        },
+    }
+});
+$harness->runtests(@tests);
