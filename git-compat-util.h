@@ -183,7 +183,10 @@ extern char *gitbasename(char *);
 #define is_dir_sep(c) ((c) == '/')
 #endif
 
-#ifdef __GNUC__
+#ifdef __clang__
+#define NORETURN
+#define NORETURN_PTR __attribute__((__noreturn__))
+#elif __GNUC__
 #define NORETURN __attribute__((__noreturn__))
 #define NORETURN_PTR __attribute__((__noreturn__))
 #elif defined(_MSC_VER)
