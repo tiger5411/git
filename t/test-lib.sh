@@ -886,3 +886,17 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 # test whether the filesystem supports symbolic links
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
+
+# test whether we can make read-only files
+mkdir hla
+chmod -w hla
+touch hla/gh >/dev/null 2>&1
+if ! test -f hla/gh
+then
+    test_set_prereq CHMOD_0000
+    # A hack around not being able to supply more than one
+    # prerequisite in the test_* functions.
+    test_have_prereq POSIXPERM && test_set_prereq POSIXPERM_AND_CHMOD_0000
+    test_have_prereq SYMLINKS  && test_set_prereq SYMLINKS_AND_CHMOD_0000
+fi
+rm -rf hla
