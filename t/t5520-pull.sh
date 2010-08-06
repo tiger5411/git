@@ -160,4 +160,63 @@ test_expect_success 'pull --rebase works on branch yet to be born' '
 	test_cmp expect actual
 '
 
+test_expect_success 'setup for detecting upstreamed changes' '
+	mkdir src &&
+	(cd src &&
+	 git init &&
+	 for i in $(seq 1 10); do echo $i; done > stuff &&
+	 git add stuff &&
+	 git commit -m "Initial revision"
+	) &&
+	git clone src dst &&
+	(cd src &&
+	 sed -i s/5/43/ stuff &&
+	 git commit -a -m "5->43" &&
+	 sed -i s/6/42/ stuff &&
+	 git commit -a -m "Make it bigger" &&
+	 correct=$(git rev-parse HEAD)
+	) &&
+	(cd dst &&
+	 sed -i s/5/43/ stuff &&
+	 git commit -a -m "Independent discovery of 5->43"
+	)
+'
+
+test_expect_failure 'git pull --rebase detects upstreamed changes' '
+	(cd dst &&
+	 git pull --rebase &&
+	 test -z "$(git ls-files -u)"
+	)
+'
+
+test_expect_success 'setup for avoiding reapplying old patches' '
+	(cd dst &&
+	 (git rebase --abort || true) &&
+	 git reset --hard origin/master
+	) &&
+	git clone --bare src src-replace.git &&
+	rm -rf src &&
+	mv src-replace.git src &&
+	(cd dst &&
+	 sed -i s/2/22/ stuff &&
+	 git commit -a -m "Change 2" &&
+	 sed -i s/3/33/ stuff &&
+	 git commit -a -m "Change 3" &&
+	 sed -i s/4/44/ stuff &&
+	 git commit -a -m "Chagne 4" &&
+	 git push &&
+
+	 sed -i s/44/55/ stuff &&
+	 git commit --amend -a -m "Change 4" &&
+	 test_must_fail git push
+	)
+'
+
+test_expect_failure 'git pull --rebase does not reapply old patches' '
+	(cd dst &&
+	 (git pull --rebase || true) &&
+	 test 3 != $(find .git/rebase-apply -name "000*" | wc -l)
+	)
+'
+
 test_done
