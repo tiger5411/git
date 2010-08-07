@@ -543,9 +543,14 @@ static struct imap_cmd *v_issue_imap_cmd(struct imap_store *ctx,
 	while (imap->literal_pending)
 		get_cmd_result(ctx, NULL);
 
-	bufl = nfsnprintf(buf, sizeof(buf), cmd->cb.data ? CAP(LITERALPLUS) ?
-			   "%d %s{%d+}\r\n" : "%d %s{%d}\r\n" : "%d %s\r\n",
-			   cmd->tag, cmd->cmd, cmd->cb.dlen);
+	if (cmd->cb.data) {
+		bufl = nfsnprintf(buf, sizeof(buf),
+		                  CAP(LITERALPLUS) ? "%d %s{%d+}\r\n" : "%d %s{%d}\r\n",
+		                  cmd->tag, cmd->cmd, cmd->cb.dlen);
+	} else {
+		bufl = nfsnprintf(buf, sizeof(buf), "%d %s\r\n", cmd->tag, cmd->cmd);
+	}
+
 	if (Verbose) {
 		if (imap->num_in_progress)
 			printf("(%d in progress) ", imap->num_in_progress);
@@ -1086,7 +1091,7 @@ static struct store *imap_open_store(struct imap_server_conf *srvc)
 		int gai;
 		char portstr[6];
 
-		snprintf(portstr, sizeof(portstr), "%hu", srvc->port);
+		snprintf(portstr, sizeof(portstr), "%hu", (unsigned short)srvc->port);
 
 		memset(&hints, 0, sizeof(hints));
 		hints.ai_socktype = SOCK_STREAM;
