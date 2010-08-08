@@ -17,7 +17,7 @@ TAP::Harness::Archive->new({
 	merge            => 1,
 	archive          => $archive,
 	($ENV{GIT_TEST_OPTS}
-	 ? (test_args    => [ split /\s+/, $ENV{GIT_TEST_OPTS} ])
+	 ? (test_args    => [ '--verbose', split /\s+/, $ENV{GIT_TEST_OPTS} ])
 	 : ()),
 	extra_properties => {},
 })->runtests(munge_testfiles(@ARGV));
