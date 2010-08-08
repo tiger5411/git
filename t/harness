@@ -2,6 +2,7 @@
 use strict;
 use warnings;
 use Getopt::Long ();
+use TAP::Harness;
 use TAP::Harness::Archive;
 
 Getopt::Long::Parser->new(
@@ -18,4 +19,17 @@ TAP::Harness::Archive->new({
 	 ? (test_args    => [ split /\s+/, $ENV{GIT_TEST_OPTS} ])
 	 : ()),
 	extra_properties => {},
-})->runtests(@ARGV);
+})->runtests(munge_testfiles(@ARGV));
+
+# To work around a regression in TAP::Harness between 3.17_01 and 3.22
+sub munge_testfiles {
+	require version;
+	if (version->parse($TAP::Harness::VERSION) > version->parse("3.17") and
+		version->parse($TAP::Harness::VERSION) < version->parse("3.22")) {
+		# See https://rt.cpan.org/Public/Bug/Display.html?id=59186
+		# and https://rt.cpan.org/Public/Bug/Display.html?id=59457
+		return map { "./$_" } @_
+	} else {
+		return @_;
+	}
+}
