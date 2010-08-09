@@ -17,7 +17,7 @@
  * explain why it does not allow switching between branches when you have
  * local changes, for example.
  */
-static struct unpack_trees_error_msgs unpack_plumbing_errors = {
+const char *unpack_plumbing_errors[NB_UNPACK_TREES_ERROR_TYPES] = {
 	/* would_overwrite */
 	"Entry '%s' would be overwritten by merge. Cannot merge.",
 
@@ -27,7 +27,7 @@ static struct unpack_trees_error_msgs unpack_plumbing_errors = {
 	/* not_uptodate_dir */
 	"Updating '%s' would lose untracked files in it",
 
-	/* would_lose_untracked */
+	/* would_lose_untracked_file */
 	"Untracked working tree file '%s' would be %s by merge.",
 
 	/* bind_overlap */
@@ -40,10 +40,10 @@ static struct unpack_trees_error_msgs unpack_plumbing_errors = {
 	"Working tree file '%s' would be %s by sparse checkout update.",
 };
 
-#define ERRORMSG(o,fld) \
-	( ((o) && (o)->msgs.fld) \
-	? ((o)->msgs.fld) \
-	: (unpack_plumbing_errors.fld) )
+#define ERRORMSG(o,type) \
+	( ((o) && (o)->msgs[(type)]) \
+	  ? ((o)->msgs[(type)])      \
+	  : (unpack_plumbing_errors[(type)]) )
 
 static void add_entry(struct unpack_trees_options *o, struct cache_entry *ce,
 	unsigned int set, unsigned int clear)
@@ -1068,7 +1068,7 @@ static int verify_absent_1(struct cache_entry *ce, const char *action,
 		}
 
 		return o->gently ? -1 :
-			error(ERRORMSG(o, would_lose_untracked), ce->name, action);
+			error(ERRORMSG(o, would_lose_untracked_file), ce->name, action);
 	}
 	return 0;
 }
@@ -1077,7 +1077,7 @@ static int verify_absent(struct cache_entry *ce, const char *action,
 {
 	if (!o->skip_sparse_checkout && will_have_skip_worktree(ce, o))
 		return 0;
-	return verify_absent_1(ce, action, o, ERRORMSG(o, would_lose_untracked));
+	return verify_absent_1(ce, action, o, ERRORMSG(o, would_lose_untracked_file));
 }
 
 static int verify_absent_sparse(struct cache_entry *ce, const char *action,
