@@ -13,10 +13,12 @@ enum unpack_trees_error_types {
 	would_overwrite = 0,
 	not_uptodate_file,
 	not_uptodate_dir,
-	would_lose_untracked_file,
+	would_lose_untracked_overwritten,
+	would_lose_untracked_removed,
 	bind_overlap,
 	sparse_not_uptodate_file,
-	would_lose_orphaned,
+	would_lose_orphaned_overwritten,
+	would_lose_orphaned_removed,
 	NB_UNPACK_TREES_ERROR_TYPES
 };
 
