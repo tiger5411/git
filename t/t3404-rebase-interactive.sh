@@ -64,6 +64,54 @@ test_expect_success 'setup' '
 	done
 '
 
+test_expect_success 'rebase -i with the exec command' '
+	git checkout master &&
+	FAKE_LINES="1 exec_touch_touch-one 2 exec_touch_touch-two exec_false exec_touch_touch-three 3 4
+		exec_touch_\"touch-file__name_with_spaces\";_touch_touch-after-semicolon 5" \
+		test_must_fail git rebase -i A &&
+	test -f touch-one &&
+	test -f touch-two &&
+	! test -f touch-three &&
+	test $(git rev-parse C) = $(git rev-parse HEAD) || {
+		echo "Stopped at wrong revision:"
+		echo "($(git describe --tags HEAD) instead of C)"
+		false
+	} &&
+	git rebase --continue &&
+	test -f touch-three &&
+	test -f "touch-file  name with spaces" &&
+	test -f touch-after-semicolon &&
+	test $(git rev-parse master) = $(git rev-parse HEAD) || {
+		echo "Stopped at wrong revision:"
+		echo "($(git describe --tags HEAD) instead of master)"
+		false
+	} &&
+	rm -f touch-*
+'
+
+test_expect_success 'rebase -i with the exec command runs from tree root' '
+	git checkout master &&
+	mkdir subdir && cd subdir &&
+	FAKE_LINES="1 exec_touch_touch-subdir" \
+		git rebase -i HEAD^ &&
+	cd .. &&
+	test -f touch-subdir &&
+	rm -fr subdir
+'
+
+test_expect_success 'rebase -i with the exec command checks tree cleanness' '
+	git checkout master &&
+	FAKE_LINES="exec_echo_foo_>file1 1" \
+		test_must_fail git rebase -i HEAD^ &&
+	test $(git rev-parse master^) = $(git rev-parse HEAD) || {
+		echo "Stopped at wrong revision:"
+		echo "($(git describe --tags HEAD) instead of master^)"
+		false
+	} &&
+	git reset --hard &&
+	git rebase --continue
+'
+
 test_expect_success 'no changes are a nop' '
 	git checkout branch2 &&
 	git rebase -i F &&
