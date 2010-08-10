@@ -351,10 +351,10 @@ apply_stash () {
 }
 
 pop_stash() {
-	if apply_stash "$@"
-	then
-		drop_stash "$applied_stash"
-	fi
+	assert_stash_ref "$@"
+
+	apply_stash "$@" &&
+	drop_stash "$applied_stash"
 }
 
 drop_stash () {
