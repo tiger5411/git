@@ -9,14 +9,22 @@ struct exclude_list;
 typedef int (*merge_fn_t)(struct cache_entry **src,
 		struct unpack_trees_options *options);
 
-struct unpack_trees_error_msgs {
-	const char *would_overwrite;
-	const char *not_uptodate_file;
-	const char *not_uptodate_dir;
-	const char *would_lose_untracked;
-	const char *bind_overlap;
-	const char *sparse_not_uptodate_file;
-	const char *would_lose_orphaned;
+enum unpack_trees_error_types {
+	would_overwrite = 0,
+	not_uptodate_file,
+	not_uptodate_dir,
+	would_lose_untracked_overwritten,
+	would_lose_untracked_removed,
+	bind_overlap,
+	sparse_not_uptodate_file,
+	would_lose_orphaned_overwritten,
+	would_lose_orphaned_removed,
+	NB_UNPACK_TREES_ERROR_TYPES
+};
+
+struct rejected_paths_list {
+	char *path;
+	struct rejected_paths_list *next;
 };
 
 struct unpack_trees_options {
@@ -33,12 +41,18 @@ struct unpack_trees_options {
 		     diff_index_cached,
 		     debug_unpack,
 		     skip_sparse_checkout,
-		     gently;
+		     gently,
+		     show_all_errors;
 	const char *prefix;
 	int cache_bottom;
 	struct dir_struct *dir;
 	merge_fn_t fn;
-	struct unpack_trees_error_msgs msgs;
+	const char *msgs[NB_UNPACK_TREES_ERROR_TYPES];
+	/*
+	 * Store error messages in an array, each case
+	 * corresponding to a error message type
+	 */
+	struct rejected_paths_list *unpack_rejects[NB_UNPACK_TREES_ERROR_TYPES];
 
 	int head_idx;
 	int merge_size;
