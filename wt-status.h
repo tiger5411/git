@@ -65,5 +65,6 @@ void wt_status_collect(struct wt_status *s);
 
 void wt_shortstatus_print(struct wt_status *s, int null_termination, int show_branch);
 void wt_porcelain_print(struct wt_status *s, int null_termination);
+void wt_status_print_nochanges(struct wt_status *s);
 
 #endif /* STATUS_H */

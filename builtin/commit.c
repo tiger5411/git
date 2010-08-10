@@ -96,7 +96,8 @@ static int null_termination;
 static enum {
 	STATUS_FORMAT_LONG,
 	STATUS_FORMAT_SHORT,
-	STATUS_FORMAT_PORCELAIN
+	STATUS_FORMAT_PORCELAIN,
+	STATUS_FORMAT_NOCHANGES
 } status_format = STATUS_FORMAT_LONG;
 static int status_show_branch;
 
@@ -443,6 +444,9 @@ static int run_status(FILE *fp, const char *index_file, const char *prefix, int 
 	case STATUS_FORMAT_LONG:
 		wt_status_print(s);
 		break;
+	case STATUS_FORMAT_NOCHANGES:
+		wt_status_print_nochanges(s);
+		break;
 	}
 
 	return s->commitable;
@@ -549,62 +553,189 @@ static int ends_rfc2822_footer(struct strbuf *sb)
 	return 1;
 }
 
-static int prepare_to_commit(const char *index_file, const char *prefix,
-			     struct wt_status *s)
+/*
+ * Return value is the "source" argument for hooks/prepare-commit-msg.
+ */
+static const char *get_template_message(struct strbuf *sb,
+					const char **hook_arg2)
 {
 	struct stat statbuf;
-	int commitable, saved_color_setting;
-	struct strbuf sb = STRBUF_INIT;
-	char *buffer;
-	FILE *fp;
-	const char *hook_arg1 = NULL;
-	const char *hook_arg2 = NULL;
-	int ident_shown = 0;
-
-	if (!no_verify && run_hook(index_file, "pre-commit", NULL))
-		return 0;
-
 	if (message.len) {
-		strbuf_addbuf(&sb, &message);
-		hook_arg1 = "message";
-	} else if (logfile && !strcmp(logfile, "-")) {
+		strbuf_addbuf(sb, &message);
+		return "message";
+	}
+	if (logfile && !strcmp(logfile, "-")) {
 		if (isatty(0))
 			fprintf(stderr, "(reading log message from standard input)\n");
-		if (strbuf_read(&sb, 0, 0) < 0)
+		if (strbuf_read(sb, 0, 0) < 0)
 			die_errno("could not read log from standard input");
-		hook_arg1 = "message";
-	} else if (logfile) {
-		if (strbuf_read_file(&sb, logfile, 0) < 0)
-			die_errno("could not read log file '%s'",
-				  logfile);
-		hook_arg1 = "message";
-	} else if (use_message) {
-		buffer = strstr(use_message_buffer, "\n\n");
+		return "message";
+	}
+	if (logfile) {
+		if (strbuf_read_file(sb, logfile, 0) < 0)
+			die_errno("could not read log file '%s'", logfile);
+		return "message";
+	}
+	if (use_message) {
+		char *buffer = strstr(use_message_buffer, "\n\n");
 		if (!buffer || buffer[2] == '\0')
 			die("commit has empty message");
-		strbuf_add(&sb, buffer + 2, strlen(buffer + 2));
-		hook_arg1 = "commit";
-		hook_arg2 = use_message;
-	} else if (!stat(git_path("MERGE_MSG"), &statbuf)) {
-		if (strbuf_read_file(&sb, git_path("MERGE_MSG"), 0) < 0)
+		strbuf_add(sb, buffer + 2, strlen(buffer + 2));
+		*hook_arg2 = use_message;
+		return "commit";
+	}
+	if (!stat(git_path("MERGE_MSG"), &statbuf)) {
+		if (strbuf_read_file(sb, git_path("MERGE_MSG"), 0) < 0)
 			die_errno("could not read MERGE_MSG");
-		hook_arg1 = "merge";
-	} else if (!stat(git_path("SQUASH_MSG"), &statbuf)) {
-		if (strbuf_read_file(&sb, git_path("SQUASH_MSG"), 0) < 0)
+		return "merge";
+	}
+	if (!stat(git_path("SQUASH_MSG"), &statbuf)) {
+		if (strbuf_read_file(sb, git_path("SQUASH_MSG"), 0) < 0)
 			die_errno("could not read SQUASH_MSG");
-		hook_arg1 = "squash";
-	} else if (template_file && !stat(template_file, &statbuf)) {
-		if (strbuf_read_file(&sb, template_file, 0) < 0)
+		return "squash";
+	}
+	if (template_file && !stat(template_file, &statbuf)) {
+		if (strbuf_read_file(sb, template_file, 0) < 0)
 			die_errno("could not read '%s'", template_file);
-		hook_arg1 = "template";
+		return "template";
 	}
 
 	/*
 	 * This final case does not modify the template message,
 	 * it just sets the argument to the prepare-commit-msg hook.
 	 */
-	else if (in_merge)
-		hook_arg1 = "merge";
+	if (in_merge)
+		return "merge";
+
+	return NULL;
+}
+
+static void add_committer_signoff(struct strbuf *sb)
+{
+	struct strbuf sob = STRBUF_INIT;
+	int i;
+
+	strbuf_addstr(&sob, sign_off_header);
+	strbuf_addstr(&sob, fmt_name(getenv("GIT_COMMITTER_NAME"),
+				     getenv("GIT_COMMITTER_EMAIL")));
+	strbuf_addch(&sob, '\n');
+	for (i = sb->len - 1; i > 0 && sb->buf[i - 1] != '\n'; i--)
+		; /* do nothing */
+	if (prefixcmp(sb->buf + i, sob.buf)) {
+		if (!i || !ends_rfc2822_footer(sb))
+			strbuf_addch(sb, '\n');
+		strbuf_addbuf(sb, &sob);
+	}
+	strbuf_release(&sob);
+}
+
+static int write_status(FILE *fp, const char *index_file,
+				const char *prefix, struct wt_status *s)
+{
+	int commitable, saved_color_setting;
+	char *author_ident;
+	const char *committer_ident;
+	int ident_shown = 0;
+
+	if (in_merge)
+		fprintf(fp,
+			"#\n"
+			"# It looks like you may be committing a MERGE.\n"
+			"# If this is not correct, please remove the file\n"
+			"#	%s\n"
+			"# and try again.\n"
+			"#\n",
+			git_path("MERGE_HEAD"));
+
+	fprintf(fp,
+		"\n"
+		"# Please enter the commit message for your changes.");
+	if (cleanup_mode == CLEANUP_ALL)
+		fprintf(fp,
+			" Lines starting\n"
+			"# with '#' will be ignored, and an empty"
+			" message aborts the commit.\n");
+	else /* CLEANUP_SPACE, that is. */
+		fprintf(fp,
+			" Lines starting\n"
+			"# with '#' will be kept; you may remove them"
+			" yourself if you want to.\n"
+			"# An empty message aborts the commit.\n");
+	if (only_include_assumed)
+		fprintf(fp, "# %s\n", only_include_assumed);
+
+	author_ident = xstrdup(fmt_name(author_name, author_email));
+	committer_ident = fmt_name(getenv("GIT_COMMITTER_NAME"),
+				   getenv("GIT_COMMITTER_EMAIL"));
+	if (strcmp(author_ident, committer_ident))
+		fprintf(fp,
+			"%s"
+			"# Author:    %s\n",
+			ident_shown++ ? "" : "#\n",
+			author_ident);
+	free(author_ident);
+
+	if (!user_ident_sufficiently_given())
+		fprintf(fp,
+			"%s"
+			"# Committer: %s\n",
+			ident_shown++ ? "" : "#\n",
+			committer_ident);
+
+	if (ident_shown)
+		fprintf(fp, "#\n");
+
+	saved_color_setting = s->use_color;
+	s->use_color = 0;
+	commitable = run_status(fp, index_file, prefix, 1, s);
+	s->use_color = saved_color_setting;
+	return commitable;
+}
+
+static int something_is_staged(void)
+{
+	unsigned char sha1[20];
+	const char *parent = "HEAD";
+
+	if (!active_nr && read_cache() < 0)
+		die("Cannot read index");
+
+	if (amend)
+		parent = "HEAD^1";
+
+	if (get_sha1(parent, sha1))
+		return !!active_nr;
+	else
+		return index_differs_from(parent, 0);
+}
+
+static int empty_commit_ok(const char *index_file, const char *prefix,
+				struct wt_status *s)
+{
+	if (in_merge || allow_empty || (amend && is_a_merge(head_sha1)))
+		return 1;
+
+	if (status_format == STATUS_FORMAT_LONG)
+		status_format = STATUS_FORMAT_NOCHANGES;
+	run_status(stdout, index_file, prefix, 0, s);
+	if (amend)
+		fputs(empty_amend_advice, stderr);
+	return 0;
+}
+
+static int prepare_to_commit(const char *index_file, const char *prefix,
+			     struct wt_status *s)
+{
+	int commitable;
+	struct strbuf sb = STRBUF_INIT;
+	FILE *fp;
+	const char *hook_arg1 = NULL;
+	const char *hook_arg2 = NULL;
+
+	if (!no_verify && run_hook(index_file, "pre-commit", NULL))
+		return 0;
+
+	hook_arg1 = get_template_message(&sb, &hook_arg2);
 
 	fp = fopen(git_path(commit_editmsg), "w");
 	if (fp == NULL)
@@ -613,23 +744,8 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	if (cleanup_mode != CLEANUP_NONE)
 		stripspace(&sb, 0);
 
-	if (signoff) {
-		struct strbuf sob = STRBUF_INIT;
-		int i;
-
-		strbuf_addstr(&sob, sign_off_header);
-		strbuf_addstr(&sob, fmt_name(getenv("GIT_COMMITTER_NAME"),
-					     getenv("GIT_COMMITTER_EMAIL")));
-		strbuf_addch(&sob, '\n');
-		for (i = sb.len - 1; i > 0 && sb.buf[i - 1] != '\n'; i--)
-			; /* do nothing */
-		if (prefixcmp(sb.buf + i, sob.buf)) {
-			if (!i || !ends_rfc2822_footer(&sb))
-				strbuf_addch(&sb, '\n');
-			strbuf_addbuf(&sb, &sob);
-		}
-		strbuf_release(&sob);
-	}
+	if (signoff)
+		add_committer_signoff(&sb);
 
 	if (fwrite(sb.buf, 1, sb.len, fp) < sb.len)
 		die_errno("could not write commit template");
@@ -640,87 +756,20 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 
 	/* This checks if committer ident is explicitly given */
 	git_committer_info(0);
-	if (use_editor && include_status) {
-		char *author_ident;
-		const char *committer_ident;
-
-		if (in_merge)
-			fprintf(fp,
-				"#\n"
-				"# It looks like you may be committing a MERGE.\n"
-				"# If this is not correct, please remove the file\n"
-				"#	%s\n"
-				"# and try again.\n"
-				"#\n",
-				git_path("MERGE_HEAD"));
-
-		fprintf(fp,
-			"\n"
-			"# Please enter the commit message for your changes.");
-		if (cleanup_mode == CLEANUP_ALL)
-			fprintf(fp,
-				" Lines starting\n"
-				"# with '#' will be ignored, and an empty"
-				" message aborts the commit.\n");
-		else /* CLEANUP_SPACE, that is. */
-			fprintf(fp,
-				" Lines starting\n"
-				"# with '#' will be kept; you may remove them"
-				" yourself if you want to.\n"
-				"# An empty message aborts the commit.\n");
-		if (only_include_assumed)
-			fprintf(fp, "# %s\n", only_include_assumed);
-
-		author_ident = xstrdup(fmt_name(author_name, author_email));
-		committer_ident = fmt_name(getenv("GIT_COMMITTER_NAME"),
-					   getenv("GIT_COMMITTER_EMAIL"));
-		if (strcmp(author_ident, committer_ident))
-			fprintf(fp,
-				"%s"
-				"# Author:    %s\n",
-				ident_shown++ ? "" : "#\n",
-				author_ident);
-		free(author_ident);
-
-		if (!user_ident_sufficiently_given())
-			fprintf(fp,
-				"%s"
-				"# Committer: %s\n",
-				ident_shown++ ? "" : "#\n",
-				committer_ident);
-
-		if (ident_shown)
-			fprintf(fp, "#\n");
-
-		saved_color_setting = s->use_color;
-		s->use_color = 0;
-		commitable = run_status(fp, index_file, prefix, 1, s);
-		s->use_color = saved_color_setting;
-	} else {
-		unsigned char sha1[20];
-		const char *parent = "HEAD";
-
-		if (!active_nr && read_cache() < 0)
-			die("Cannot read index");
-
-		if (amend)
-			parent = "HEAD^1";
-
-		if (get_sha1(parent, sha1))
-			commitable = !!active_nr;
-		else
-			commitable = index_differs_from(parent, 0);
-	}
+	if (use_editor && include_status)
+		commitable = write_status(fp, index_file, prefix, s);
+	else
+		commitable = something_is_staged();
 
 	fclose(fp);
 
-	if (!commitable && !in_merge && !allow_empty &&
-	    !(amend && is_a_merge(head_sha1))) {
-		run_status(stdout, index_file, prefix, 0, s);
-		if (amend)
-			fputs(empty_amend_advice, stderr);
+	/*
+	 * If there is nothing staged for commit, this is not a
+	 * merge, and --allow-empty was not supplied, dump status
+	 * followed by some hints for staging changes.
+	 */
+	if (!commitable && !empty_commit_ok(index_file, prefix, s))
 		return 0;
-	}
 
 	/*
 	 * Re-read the index as pre-commit hook could have updated it,
@@ -973,7 +1022,14 @@ static int dry_run_commit(int argc, const char **argv, const char *prefix,
 	const char *index_file;
 
 	index_file = prepare_index(argc, argv, prefix, 1);
-	commitable = run_status(stdout, index_file, prefix, 0, s);
+
+	/*
+	 * Give extra advice when faced with attempts to amend away a commit.
+	 */
+	if (!something_is_staged() && !empty_commit_ok(index_file, prefix, s))
+		commitable = 0;
+	else
+		commitable = run_status(stdout, index_file, prefix, 0, s);
 	rollback_index_files();
 
 	return commitable ? 0 : 1;
@@ -1120,6 +1176,8 @@ int cmd_status(int argc, const char **argv, const char *prefix)
 		s.ignore_submodule_arg = ignore_submodule_arg;
 		wt_status_print(&s);
 		break;
+	case STATUS_FORMAT_NOCHANGES:
+		return error("unexpected status format");
 	}
 	return 0;
 }
