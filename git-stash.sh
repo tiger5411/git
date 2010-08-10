@@ -379,6 +379,7 @@ drop_stash () {
 		shift
 	fi
 
+	assert_stash_ref "$@"
 	assert_stash_like "$@"
 
 	git reflog delete --updateref --rewrite "$@" &&
