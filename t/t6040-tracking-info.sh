@@ -70,8 +70,9 @@ test_expect_success 'status' '
 		git checkout b1 >/dev/null &&
 		# reports nothing to commit
 		test_must_fail git commit --dry-run
-	) >actual &&
-	grep "have 1 and 1 different" actual
+	) >actual 2>actual-err &&
+	grep "nothing to commit" actual &&
+	grep "Already on" actual-err
 '
 
 test_expect_success 'status when tracking lightweight tags' '
