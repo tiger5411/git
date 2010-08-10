@@ -323,6 +323,13 @@ apply_stash () {
 	fi
 }
 
+pop_stash() {
+	if apply_stash "$@"
+	then
+		drop_stash "$applied_stash"
+	fi
+}
+
 drop_stash () {
 	have_stash || die 'No stash entries to drop'
 
@@ -422,10 +429,7 @@ drop)
 	;;
 pop)
 	shift
-	if apply_stash "$@"
-	then
-		drop_stash "$applied_stash"
-	fi
+	pop_stash "$@"
 	;;
 branch)
 	shift
