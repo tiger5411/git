@@ -390,20 +390,27 @@ drop_stash () {
 }
 
 apply_to_branch () {
-	have_stash || die 'Nothing to apply'
-
 	test -n "$1" || die 'No branch name specified'
 	branch=$1
 
 	if test -z "$2"
 	then
 		set x "$ref_stash@{0}"
+		have_stash || die 'Nothing to apply'
 	fi
 	stash=$2
 
+	assert_stash_like "$stash"
+
 	git checkout -b $branch $stash^ &&
-	apply_stash --index $stash &&
-	drop_stash $stash
+	apply_stash --index $stash
+
+	if is_stash_ref "$stash"
+	then
+		drop_stash "$stash"
+	else
+		true
+	fi
 }
 
 # The default command is "save" if nothing but options are given
