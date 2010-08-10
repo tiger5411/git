@@ -210,12 +210,17 @@ list_stash () {
 }
 
 show_stash () {
-	have_stash || die 'No stash found'
-
 	flags=$(git rev-parse --no-revs --flags "$@")
 	if test -z "$flags"
 	then
 		flags=--stat
+	fi
+
+	revs=$(git rev-parse --revs-only "$@")
+	if test -z "$revs"
+	then
+		have_stash || die "No stash found"
+		set -- ${ref_stash}@{0}
 	fi
 
 	assert_stash_like "$@"
