@@ -223,6 +223,15 @@ show_stash () {
 	git diff $flags $b_commit $w_commit
 }
 
+is_stash_ref() {
+	revs="$(git rev-parse --revs-only --symbolic --verify --default ${ref_stash} "$@")" &&
+	test "$ref_stash" = "$(git rev-parse --symbolic-full-name "${revs%@*}")"
+}
+
+assert_stash_ref() {
+	is_stash_ref "$@" || die "$* is not a stash reference"
+}
+
 #
 # if this function returns, then:
 #   s is set to the stash commit
