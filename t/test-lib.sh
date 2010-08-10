@@ -208,6 +208,11 @@ test_success=0
 
 test_external_has_tap=0
 
+# subtest state
+in_subtest=
+subtest_count=0
+tap_prefix=
+
 die () {
 	code=$?
 	if test -n "$GIT_EXIT_OK"
@@ -290,20 +295,38 @@ test_tick () {
 
 test_commit () {
 	file=${2:-"$1.t"}
-	echo "${3-$1}" > "$file" &&
-	git add "$file" &&
-	test_tick &&
-	git commit -m "$1" &&
-	git tag "$1"
+	subtest_count=$(($subtest_count + 1))
+
+	if echo "${3-$1}" > "$file" &&
+		git add "$file" &&
+		test_tick &&
+		git commit -m "$1" &&
+		git tag "$1"
+	then
+		test_ok_ "test_commit file:<$file> message:<$1> contents<${3-$1}>"
+		true
+	else
+		test_failure_ "test_commit file:<$file> message:<$1> contents<${3-$1}>"
+		true
+	fi
 }
 
 # Call test_merge with the arguments "<message> <commit>", where <commit>
 # can be a tag pointing to the commit-to-merge.
 
 test_merge () {
-	test_tick &&
-	git merge -m "$1" "$2" &&
-	git tag "$1"
+
+	subtest_count=$(($subtest_count + 1))
+	if test_tick &&
+		git merge -m "$1" "$2" &&
+		git tag "$1"
+	then
+		test_ok_ "test_merge: file<$2> message<$1> tag:<$1>"
+		true
+	else
+		test_failure_ "test_merge: file<$2> message<$1> tag:<$1>"
+		false
+	fi
 }
 
 # This function helps systems where core.filemode=false is set.
@@ -353,7 +376,7 @@ test_have_prereq () {
 
 test_ok_ () {
 	test_success=$(($test_success + 1))
-	say_color "" "ok $test_count - $@"
+	say_color "" "${tap_prefix}ok $test_count - $@"
 }
 
 test_failure_ () {
@@ -380,9 +403,25 @@ test_debug () {
 
 test_run_ () {
 	test_cleanup=:
+
+	# Run the test in a subtest scope
+	in_subtest=1
+	subtest_count=0
+	tap_prefix='    '
 	eval >&3 2>&4 "$1"
+	in_subtest=
+
 	eval_ret=$?
 	eval >&3 2>&4 "$test_cleanup"
+
+	# Report the subtest plan
+	if test $subtest_count -gt 0
+	then
+		say "${tap_prefix}1..$subtest_count"
+		subtest_count=0
+	fi
+	tap_prefix=
+
 	if test "$verbose" = "t" && test -n "$HARNESS_ACTIVE"; then
 		echo ""
 	fi
@@ -602,6 +641,15 @@ test_might_fail () {
 
 test_cmp() {
 	$GIT_TEST_CMP "$@"
+	subtest_count=$(($subtest_count + 1))
+	if test "$?" = 0
+	then
+		test_ok_ "test_cmp '$@'"
+		true
+	else
+		test_failure_ "test_cmp '$@'"
+		false
+	fi
 }
 
 # This function can be used to schedule some commands to be run
