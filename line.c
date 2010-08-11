@@ -431,7 +431,7 @@ struct diff_line_range *diff_line_range_merge(struct diff_line_range *out,
 		struct diff_line_range *other)
 {
 	struct diff_line_range *one = out, *two = other;
-	struct diff_line_range *pone;
+	struct diff_line_range *pone = NULL;
 
 	while (one) {
 		struct diff_line_range *ptwo;
@@ -1248,7 +1248,7 @@ static void diff_flush_filepair(struct rev_info *rev, struct diff_line_range *ra
 	if (one == NULL) {
 		if (rev->full_line_diff) {
 			chunk.two = two->data;
-			chunk.two_end = two->data + two->size;
+			chunk.two_end = (const char *)two->data + two->size;
 			chunk.ltwo = 1;
 			chunk.range = range;
 			diff_flush_chunks(&rev->diffopt, &chunk);
@@ -1304,10 +1304,10 @@ static void diff_flush_filepair(struct rev_info *rev, struct diff_line_range *ra
 	free((void *)b_two);
 
 	chunk.one = one->data;
-	chunk.one_end = one->data + one->size;
+	chunk.one_end = (const char *)one->data + one->size;
 	chunk.lone = 1;
 	chunk.two = two->data;
-	chunk.two_end = two->data + two->size;
+	chunk.two_end = (const char *)two->data + two->size;
 	chunk.ltwo = 1;
 	chunk.range = range;
 	diff_flush_chunks(&rev->diffopt, &chunk);
@@ -1347,7 +1347,7 @@ static void flush_nontrivial_merge(struct rev_info *rev,
 		if (range->nr) {
 			int lno = 1;
 			const char *ptr = range->spec->data;
-			const char *end = range->spec->data + range->spec->size;
+			const char *end = (const char *)range->spec->data + range->spec->size;
 			int i = 0;
 			fprintf(opt->file, "%s%s%s%s\n", line_prefix,
 				meta, range->spec->path, reset);
