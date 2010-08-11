@@ -150,26 +150,28 @@ done
 if test -n "$color"; then
 	say_color () {
 		(
+		test "$#" = 3 && { fd=$1; shift; } || fd=1
 		TERM=$ORIGINAL_TERM
 		export TERM
 		case "$1" in
-			error) tput bold; tput setaf 1;; # bold red
-			skip)  tput bold; tput setaf 2;; # bold green
-			pass)  tput setaf 2;;            # green
-			info)  tput setaf 3;;            # brown
+			error) tput bold >&$fd; tput setaf 1 >&$fd;; # bold red
+			skip)  tput bold >&$fd; tput setaf 2 >&$fd;; # bold green
+			pass)  tput setaf 2 >&$fd;;                  # green
+			info)  tput setaf 3 >&$fd;;                  # brown
 			*) test -n "$quiet" && return;;
 		esac
 		shift
-		printf "%s" "$*"
-		tput sgr0
+		printf "%s" "$*" >&$fd
+		tput sgr0 >&$fd
 		echo
 		)
 	}
 else
 	say_color() {
+		test "$#" = 3 && { fd=$1; shift; } || fd=1
 		test -z "$1" && test -n "$quiet" && return
 		shift
-		echo "$*"
+		echo "$*" >&$fd
 	}
 fi
 
@@ -212,6 +214,8 @@ test_external_has_tap=0
 in_subtest=
 subtest_count=0
 tap_prefix=
+nl='
+'
 
 die () {
 	code=$?
@@ -303,11 +307,11 @@ test_commit () {
 		git commit -m "$1" &&
 		git tag "$1"
 	then
-		test_ok_ "test_commit file:<$file> message:<$1> contents<${3-$1}>"
-		true
+		test_ok_ "test_commit file:<$file> message:<$1> contents<${3-$1}>$nl"
+		return 0
 	else
 		test_failure_ "test_commit file:<$file> message:<$1> contents<${3-$1}>"
-		true
+		return 1
 	fi
 }
 
@@ -322,10 +326,10 @@ test_merge () {
 		git tag "$1"
 	then
 		test_ok_ "test_merge: file<$2> message<$1> tag:<$1>"
-		true
+		return 0
 	else
 		test_failure_ "test_merge: file<$2> message<$1> tag:<$1>"
-		false
+		return 1
 	fi
 }
 
@@ -376,25 +380,25 @@ test_have_prereq () {
 
 test_ok_ () {
 	test_success=$(($test_success + 1))
-	say_color "" "${tap_prefix}ok $test_count - $@"
+	say_color 5 "" "${tap_prefix}ok $test_count - $@"
 }
 
 test_failure_ () {
 	test_failure=$(($test_failure + 1))
-	say_color error "not ok - $test_count $1"
+	say_color 5 error "not ok - $test_count $1"
 	shift
-	echo "$@" | sed -e 's/^/#	/'
+	echo "$@" | sed -e 's/^/#	/' >&5
 	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
 }
 
 test_known_broken_ok_ () {
 	test_fixed=$(($test_fixed+1))
-	say_color "" "ok $test_count - $@ # TODO known breakage"
+	say_color 5 "" "ok $test_count - $@ # TODO known breakage"
 }
 
 test_known_broken_failure_ () {
 	test_broken=$(($test_broken+1))
-	say_color skip "not ok $test_count - $@ # TODO known breakage"
+	say_color 5 skip "not ok $test_count - $@ # TODO known breakage"
 }
 
 test_debug () {
@@ -417,7 +421,7 @@ test_run_ () {
 	# Report the subtest plan
 	if test $subtest_count -gt 0
 	then
-		say "${tap_prefix}1..$subtest_count"
+		say_color 5 info "${tap_prefix}1..$subtest_count"
 		subtest_count=0
 	fi
 	tap_prefix=
