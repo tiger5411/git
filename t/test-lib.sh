@@ -213,7 +213,6 @@ test_external_has_tap=0
 # subtest state
 in_subtest=
 subtest_count=0
-tap_prefix=
 nl='
 '
 
@@ -299,7 +298,6 @@ test_tick () {
 
 test_commit () {
 	file=${2:-"$1.t"}
-	subtest_count=$(($subtest_count + 1))
 
 	if echo "${3-$1}" > "$file" &&
 		git add "$file" &&
@@ -319,8 +317,6 @@ test_commit () {
 # can be a tag pointing to the commit-to-merge.
 
 test_merge () {
-
-	subtest_count=$(($subtest_count + 1))
 	if test_tick &&
 		git merge -m "$1" "$2" &&
 		git tag "$1"
@@ -379,16 +375,30 @@ test_have_prereq () {
 # the text_expect_* functions instead.
 
 test_ok_ () {
-	test_success=$(($test_success + 1))
-	say_color 5 "" "${tap_prefix}ok $test_count - $@"
+    if test -n "$in_subtest"
+    then
+        subtest_count=$(($subtest_count + 1))
+        say_color 5 "" "    ok $subtest_count - $@"
+    else
+	    test_success=$(($test_success + 1))
+	    say_color 5 "" "ok $test_count - $@"
+    fi
 }
 
 test_failure_ () {
-	test_failure=$(($test_failure + 1))
-	say_color 5 error "not ok - $test_count $1"
-	shift
-	echo "$@" | sed -e 's/^/#	/' >&5
-	test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
+    if test -n "$in_subtest"
+    then
+        subtest_count=$(($subtest_count + 1))
+	    say_color 5 error "    not ok - $subtest_count $1"
+	    shift
+	    echo "$@" | sed -e 's/^/#	/' >&5
+    else
+	    test_failure=$(($test_failure + 1))
+	    say_color 5 error "not ok - $test_count $1"
+	    shift
+	    echo "$@" | sed -e 's/^/#	/' >&5
+	    test "$immediate" = "" || { GIT_EXIT_OK=t; exit 1; }
+    fi
 }
 
 test_known_broken_ok_ () {
@@ -411,7 +421,6 @@ test_run_ () {
 	# Run the test in a subtest scope
 	in_subtest=1
 	subtest_count=0
-	tap_prefix='    '
 	eval >&3 2>&4 "$1"
 	in_subtest=
 
@@ -421,10 +430,9 @@ test_run_ () {
 	# Report the subtest plan
 	if test $subtest_count -gt 0
 	then
-		say_color 5 info "${tap_prefix}1..$subtest_count"
+		say_color 5 info "    1..$subtest_count"
 		subtest_count=0
 	fi
-	tap_prefix=
 
 	if test "$verbose" = "t" && test -n "$HARNESS_ACTIVE"; then
 		echo ""
