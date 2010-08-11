@@ -210,19 +210,50 @@ list_stash () {
 }
 
 show_stash () {
-	have_stash || die 'No stash found'
-
 	flags=$(git rev-parse --no-revs --flags "$@")
 	if test -z "$flags"
 	then
 		flags=--stat
 	fi
 
-	w_commit=$(git rev-parse --quiet --verify --default $ref_stash "$@") &&
-	b_commit=$(git rev-parse --quiet --verify "$w_commit^") ||
-		die "'$*' is not a stash"
+	revs=$(git rev-parse --revs-only "$@")
+	if test -z "$revs"
+	then
+		have_stash || die "No stash found"
+		set -- ${ref_stash}@{0}
+	fi
+
+	assert_stash_like "$@"
 
 	git diff $flags $b_commit $w_commit
+}
+
+is_stash_ref() {
+	revs="$(git rev-parse --revs-only --symbolic --verify --default ${ref_stash} "$@")" &&
+	test "$ref_stash" = "$(git rev-parse --symbolic-full-name "${revs%@*}")"
+}
+
+assert_stash_ref() {
+	is_stash_ref "$@" || die "$* is not a stash reference"
+}
+
+#
+# if this function returns, then:
+#   s is set to the stash commit
+#   w_commit is set to the commit containing the working tree
+#   b_commit is set to the base commit
+#   i_commit is set to the commit containing the index tree
+# otherwise:
+#   the function exits via die
+#
+assert_stash_like() {
+	# stash records the work tree, and is a merge between the
+	# base commit (first parent) and the index tree (second parent).
+	s=$(git rev-parse --revs-only --quiet --verify --default $ref_stash "$@") &&
+	w_commit=$(git rev-parse --quiet --verify "$s:") &&
+	b_commit=$(git rev-parse --quiet --verify "$s^1:") &&
+	i_commit=$(git rev-parse --quiet --verify "$s^2:") ||
+		die "$*: no valid stashed state found"
 }
 
 apply_stash () {
@@ -253,13 +284,11 @@ apply_stash () {
 		applied_stash="$*"
 	fi
 
-	# stash records the work tree, and is a merge between the
-	# base commit (first parent) and the index tree (second parent).
-	s=$(git rev-parse --quiet --verify --default $ref_stash "$@") &&
-	w_tree=$(git rev-parse --quiet --verify "$s:") &&
-	b_tree=$(git rev-parse --quiet --verify "$s^1:") &&
-	i_tree=$(git rev-parse --quiet --verify "$s^2:") ||
-		die "$*: no valid stashed state found"
+	assert_stash_like "$@"
+
+	b_tree=$b_commit
+	w_tree=$w_commit
+	i_tree=$i_commit
 
 	git update-index -q --refresh &&
 	git diff-files --quiet --ignore-submodules ||
@@ -270,6 +299,9 @@ apply_stash () {
 		die 'Cannot apply a stash in the middle of a merge'
 
 	unstashed_index_tree=
+	#
+	# note to reviewers: comparing $c_tree to $i_tree seems unsound, since i_tree is only tree-ish
+	#
 	if test -n "$unstash_index" && test "$b_tree" != "$i_tree" &&
 			test "$c_tree" != "$i_tree"
 	then
@@ -323,6 +355,13 @@ apply_stash () {
 	fi
 }
 
+pop_stash() {
+	assert_stash_ref "$@"
+
+	apply_stash "$@" &&
+	drop_stash "$applied_stash"
+}
+
 drop_stash () {
 	have_stash || die 'No stash entries to drop'
 
@@ -344,12 +383,9 @@ drop_stash () {
 		set x "$ref_stash@{0}"
 		shift
 	fi
-	# Verify supplied argument looks like a stash entry
-	s=$(git rev-parse --verify "$@") &&
-	git rev-parse --verify "$s:"   > /dev/null 2>&1 &&
-	git rev-parse --verify "$s^1:" > /dev/null 2>&1 &&
-	git rev-parse --verify "$s^2:" > /dev/null 2>&1 ||
-		die "$*: not a valid stashed state"
+
+	assert_stash_ref "$@"
+	assert_stash_like "$@"
 
 	git reflog delete --updateref --rewrite "$@" &&
 		say "Dropped $* ($s)" || die "$*: Could not drop stash entry"
@@ -359,20 +395,27 @@ drop_stash () {
 }
 
 apply_to_branch () {
-	have_stash || die 'Nothing to apply'
-
 	test -n "$1" || die 'No branch name specified'
 	branch=$1
 
 	if test -z "$2"
 	then
 		set x "$ref_stash@{0}"
+		have_stash || die 'Nothing to apply'
 	fi
 	stash=$2
 
+	assert_stash_like "$stash"
+
 	git checkout -b $branch $stash^ &&
-	apply_stash --index $stash &&
-	drop_stash $stash
+	apply_stash --index $stash
+
+	if is_stash_ref "$stash"
+	then
+		drop_stash "$stash"
+	else
+		true
+	fi
 }
 
 # The default command is "save" if nothing but options are given
@@ -422,10 +465,7 @@ drop)
 	;;
 pop)
 	shift
-	if apply_stash "$@"
-	then
-		drop_stash "$applied_stash"
-	fi
+	pop_stash "$@"
 	;;
 branch)
 	shift
