@@ -169,8 +169,6 @@ static void send_git_request(int stdin_fd, const char *serv, const char *repo,
 {
 	size_t bufferspace;
 	size_t wpos = 0;
-	size_t spos = 0;
-	size_t tmp;
 	char* buffer;
 
 	/*
@@ -186,53 +184,17 @@ static void send_git_request(int stdin_fd, const char *serv, const char *repo,
 		die("Request too large to send");
 	buffer = xmalloc(bufferspace);
 
-	/* Packet length. */
-	sprintf(buffer + wpos, "%04x", (unsigned)bufferspace);
-	wpos += 4;
+	/* Make the packet. */
+	wpos = sprintf(buffer, "%04x%s %s%c", (unsigned)bufferspace,
+		serv, repo, 0);
 
-	/* Service. */
-	tmp = strlen(serv);
-	memcpy(buffer + wpos, serv, tmp);
-	wpos += tmp;
-
-	/* Space. */
-	buffer[wpos++] = ' ';
-
-	/* Repo. */
-	tmp = strlen(repo);
-	memcpy(buffer + wpos, repo, tmp);
-	wpos += tmp;
-
-	/* NUL. */
-	buffer[wpos++] = '\0';
-
-	/* Vhost if any. */
-	if (vhost) {
-		/* Header name. */
-		strcpy(buffer + wpos, "host=");
-		wpos += 5;
-
-		/* Actual vhost */
-		tmp = strlen(vhost);
-		memcpy(buffer + wpos, vhost, tmp);
-		wpos += tmp;
-
-		/* NUL. */
-		buffer[wpos++] = '\0';
-	}
+	/* Add vhost if any. */
+	if (vhost)
+		sprintf(buffer + wpos, "host=%s%c", vhost, 0);
 
 	/* Send the request */
-	while (spos < wpos) {
-		ssize_t r;
-		r = write(stdin_fd, buffer + spos, wpos - spos);
-		if (r < 0 && errno != EINTR && errno != EAGAIN &&
-			errno != EWOULDBLOCK)
-			die_errno("Failed to send request");
-		else if (r < 0)
-			continue;	/* Try again. */
-		else
-			spos += r;
-	}
+	if (write_in_full(stdin_fd, buffer, bufferspace) < 0)
+		die_errno("Failed to send request");
 
 	free(buffer);
 }
