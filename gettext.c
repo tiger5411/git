@@ -24,7 +24,6 @@ void git_setup_gettext(void)
 		podir = GIT_LOCALE_PATH;
 	bindtextdomain("git", podir);
 	setlocale(LC_MESSAGES, "");
-	setlocale(LC_CTYPE, "");
 	textdomain("git");
 }
 #endif
