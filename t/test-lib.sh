@@ -250,7 +250,7 @@ test_decode_color () {
 }
 
 q_to_nul () {
-	perl -pe 'y/Q/\000/'
+	"$PERL_PATH" -pe 'y/Q/\000/'
 }
 
 q_to_cr () {
