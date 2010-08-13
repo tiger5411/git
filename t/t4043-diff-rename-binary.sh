@@ -8,7 +8,7 @@ test_description='Move a binary file'
 . ./test-lib.sh
 
 
-test_expect_success 'prepare repository' '
+test_expect_success PERL 'prepare repository' '
 	git init &&
 	echo foo > foo &&
 	echo "barQ" | q_to_nul > bar &&
@@ -16,12 +16,13 @@ test_expect_success 'prepare repository' '
 	git commit -m "Initial commit"
 '
 
-test_expect_success 'move the files into a "sub" directory' '
+test_expect_success PERL 'move the files into a "sub" directory' '
 	mkdir sub &&
 	git mv bar foo sub/ &&
 	git commit -m "Moved to sub/"
 '
 
+test_expect_success PERL 'setup expected' '
 cat > expected <<\EOF
  bar => sub/bar |  Bin 5 -> 5 bytes
  foo => sub/foo |    0
@@ -36,8 +37,9 @@ similarity index 100%
 rename from foo
 rename to sub/foo
 EOF
+'
 
-test_expect_success 'git show -C -C report renames' '
+test_expect_success PERL 'git show -C -C report renames' '
 	git show -C -C --raw --binary --stat | tail -n 12 > current &&
 	test_cmp expected current
 '
