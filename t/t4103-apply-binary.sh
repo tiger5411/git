@@ -20,15 +20,15 @@ EOF
 cat file1 >file2
 cat file1 >file4
 
-test_expect_success 'setup' "
+test_expect_success PERL 'setup' "
 	git update-index --add --remove file1 file2 file4 &&
 	git commit -m 'Initial Version' 2>/dev/null &&
 
 	git checkout -b binary &&
-	perl -pe 'y/x/\000/' <file1 >file3 &&
+	\"$PERL_PATH\" -pe 'y/x/\000/' <file1 >file3 &&
 	cat file3 >file4 &&
 	git add file2 &&
-	perl -pe 'y/\000/v/' <file3 >file1 &&
+	\"$PERL_PATH\" -pe 'y/\000/v/' <file3 >file1 &&
 	rm -f file2 &&
 	git update-index --add --remove file1 file2 file3 file4 &&
 	git commit -m 'Second Version' &&
@@ -40,39 +40,39 @@ test_expect_success 'setup' "
 	git diff-tree -p --binary -C master binary >CF.diff
 "
 
-test_expect_success 'stat binary diff -- should not fail.' \
+test_expect_success PERL 'stat binary diff -- should not fail.' \
 	'git checkout master
 	 git apply --stat --summary B.diff'
 
-test_expect_success 'stat binary diff (copy) -- should not fail.' \
+test_expect_success PERL 'stat binary diff (copy) -- should not fail.' \
 	'git checkout master
 	 git apply --stat --summary C.diff'
 
-test_expect_success 'check binary diff -- should fail.' \
+test_expect_success PERL 'check binary diff -- should fail.' \
 	'git checkout master &&
 	 test_must_fail git apply --check B.diff'
 
-test_expect_success 'check binary diff (copy) -- should fail.' \
+test_expect_success PERL 'check binary diff (copy) -- should fail.' \
 	'git checkout master &&
 	 test_must_fail git apply --check C.diff'
 
-test_expect_success \
+test_expect_success PERL \
 	'check incomplete binary diff with replacement -- should fail.' '
 	git checkout master &&
 	test_must_fail git apply --check --allow-binary-replacement B.diff
 '
 
-test_expect_success \
+test_expect_success PERL \
     'check incomplete binary diff with replacement (copy) -- should fail.' '
 	 git checkout master &&
 	 test_must_fail git apply --check --allow-binary-replacement C.diff
 '
 
-test_expect_success 'check binary diff with replacement.' \
+test_expect_success PERL 'check binary diff with replacement.' \
 	'git checkout master
 	 git apply --check --allow-binary-replacement BF.diff'
 
-test_expect_success 'check binary diff with replacement (copy).' \
+test_expect_success PERL 'check binary diff with replacement (copy).' \
 	'git checkout master
 	 git apply --check --allow-binary-replacement CF.diff'
 
@@ -84,36 +84,36 @@ do_reset () {
 	git checkout -f master
 }
 
-test_expect_success 'apply binary diff -- should fail.' \
+test_expect_success PERL 'apply binary diff -- should fail.' \
 	'do_reset &&
 	 test_must_fail git apply B.diff'
 
-test_expect_success 'apply binary diff -- should fail.' \
+test_expect_success PERL 'apply binary diff -- should fail.' \
 	'do_reset &&
 	 test_must_fail git apply --index B.diff'
 
-test_expect_success 'apply binary diff (copy) -- should fail.' \
+test_expect_success PERL 'apply binary diff (copy) -- should fail.' \
 	'do_reset &&
 	 test_must_fail git apply C.diff'
 
-test_expect_success 'apply binary diff (copy) -- should fail.' \
+test_expect_success PERL 'apply binary diff (copy) -- should fail.' \
 	'do_reset &&
 	 test_must_fail git apply --index C.diff'
 
-test_expect_success 'apply binary diff without replacement.' \
+test_expect_success PERL 'apply binary diff without replacement.' \
 	'do_reset &&
 	 git apply BF.diff'
 
-test_expect_success 'apply binary diff without replacement (copy).' \
+test_expect_success PERL 'apply binary diff without replacement (copy).' \
 	'do_reset &&
 	 git apply CF.diff'
 
-test_expect_success 'apply binary diff.' \
+test_expect_success PERL 'apply binary diff.' \
 	'do_reset &&
 	 git apply --allow-binary-replacement --index BF.diff &&
 	 test -z "$(git diff --name-status binary)"'
 
-test_expect_success 'apply binary diff (copy).' \
+test_expect_success PERL 'apply binary diff (copy).' \
 	'do_reset &&
 	 git apply --allow-binary-replacement --index CF.diff &&
 	 test -z "$(git diff --name-status binary)"'
