@@ -120,9 +120,9 @@ test_expect_success 'no diff with -diff' '
 	git diff | grep Binary
 '
 
-echo NULZbetweenZwords | perl -pe 'y/Z/\000/' > file
 
-test_expect_success 'force diff with "diff"' '
+test_expect_success PERL 'force diff with "diff"' '
+	echo NULZbetweenZwords | \"$PERL_PATH\" -pe "y/Z/\000/" > file &&
 	echo >.gitattributes "file diff" &&
 	git diff >actual &&
 	test_cmp "$TEST_DIRECTORY"/t4020/diff.NUL actual
@@ -161,7 +161,7 @@ test_expect_success 'external diff with autocrlf = true' '
 	test $(wc -l < crlfed.txt) = $(cat crlfed.txt | keep_only_cr | wc -c)
 '
 
-test_expect_success 'diff --cached' '
+test_expect_success PERL 'diff --cached' '
 	git add file &&
 	git update-index --assume-unchanged file &&
 	echo second >file &&
