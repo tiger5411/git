@@ -806,15 +806,17 @@ Qsection.sub=section.val4
 Qsection.sub=section.val5Q
 EOF
 
-git config --null --list | perl -pe 'y/\000/Q/' > result
-echo >>result
+test_expect_success PERL '--null --list' "
+	git config --null --list | \"$PERL_PATH\" -pe 'y/\000/Q/' > result &&
+	echo >>result &&
+	cmp result expect
+"
 
-test_expect_success '--null --list' 'cmp result expect'
-
-git config --null --get-regexp 'val[0-9]' | perl -pe 'y/\000/Q/' > result
-echo >>result
-
-test_expect_success '--null --get-regexp' 'cmp result expect'
+test_expect_success PERL '--null --get-regexp' "
+	git config --null --get-regexp 'val[0-9]' | \"$PERL_PATH\" -pe 'y/\000/Q/' > result &&
+	echo >>result &&
+	cmp result expect
+"
 
 test_expect_success 'inner whitespace kept verbatim' '
 	git config section.val "foo 	  bar" &&
