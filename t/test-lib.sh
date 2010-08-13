@@ -327,12 +327,35 @@ test_set_prereq () {
 satisfied=" "
 
 test_have_prereq () {
-	case $satisfied in
-	*" $1 "*)
-		: yes, have it ;;
-	*)
-		! : nope ;;
-	esac
+	# prerequisites can be concatenated with ','
+	save_IFS=$IFS
+	IFS=,
+	set -- $*
+	IFS=$save_IFS
+
+	total_prereq=0
+	ok_prereq=0
+	missing_prereq=
+
+	for prerequisite
+	do
+		total_prereq=$(($total_prereq + 1))
+		case $satisfied in
+		*" $prerequisite "*)
+			ok_prereq=$(($ok_prereq + 1))
+			;;
+		*)
+			# Keep a list of missing prerequisites
+			if test -z "$missing_prereq"
+			then
+				missing_prereq=$prerequisite
+			else
+				missing_prereq="$prerequisite,$missing_prereq"
+			fi
+		esac
+	done
+
+	test $total_prereq = $ok_prereq
 }
 
 # You are not expected to call test_ok_ and test_failure_ directly, use
@@ -395,7 +418,7 @@ test_skip () {
 	case "$to_skip" in
 	t)
 		say_color skip >&3 "skipping test: $@"
-		say_color skip "ok $test_count # skip $1"
+		say_color skip "ok $test_count # skip $1 (missing $missing_prereq of $prereq)"
 		: true
 		;;
 	*)
@@ -889,3 +912,7 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 # test whether the filesystem supports symbolic links
 ln -s x y 2>/dev/null && test -h y 2>/dev/null && test_set_prereq SYMLINKS
 rm -f y
+
+# When the tests are run as root, permission tests will report that
+# things are writable when they shouldn't be.
+test -w / || test_set_prereq SANITY
