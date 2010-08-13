@@ -8,7 +8,7 @@ has_cr() {
 	tr '\015' Q <"$1" | grep Q >/dev/null
 }
 
-test_expect_success setup '
+test_expect_success PERL setup '
 
 	git config core.autocrlf false &&
 
@@ -33,7 +33,7 @@ test_expect_success setup '
 	echo happy.
 '
 
-test_expect_success 'safecrlf: autocrlf=input, all CRLF' '
+test_expect_success PERL 'safecrlf: autocrlf=input, all CRLF' '
 
 	git config core.autocrlf input &&
 	git config core.safecrlf true &&
@@ -42,7 +42,7 @@ test_expect_success 'safecrlf: autocrlf=input, all CRLF' '
 	test_must_fail git add allcrlf
 '
 
-test_expect_success 'safecrlf: autocrlf=input, mixed LF/CRLF' '
+test_expect_success PERL 'safecrlf: autocrlf=input, mixed LF/CRLF' '
 
 	git config core.autocrlf input &&
 	git config core.safecrlf true &&
@@ -51,7 +51,7 @@ test_expect_success 'safecrlf: autocrlf=input, mixed LF/CRLF' '
 	test_must_fail git add mixed
 '
 
-test_expect_success 'safecrlf: autocrlf=true, all LF' '
+test_expect_success PERL 'safecrlf: autocrlf=true, all LF' '
 
 	git config core.autocrlf true &&
 	git config core.safecrlf true &&
@@ -60,7 +60,7 @@ test_expect_success 'safecrlf: autocrlf=true, all LF' '
 	test_must_fail git add alllf
 '
 
-test_expect_success 'safecrlf: autocrlf=true mixed LF/CRLF' '
+test_expect_success PERL 'safecrlf: autocrlf=true mixed LF/CRLF' '
 
 	git config core.autocrlf true &&
 	git config core.safecrlf true &&
@@ -69,7 +69,7 @@ test_expect_success 'safecrlf: autocrlf=true mixed LF/CRLF' '
 	test_must_fail git add mixed
 '
 
-test_expect_success 'safecrlf: print warning only once' '
+test_expect_success PERL 'safecrlf: print warning only once' '
 
 	git config core.autocrlf input &&
 	git config core.safecrlf warn &&
@@ -81,13 +81,13 @@ test_expect_success 'safecrlf: print warning only once' '
 	test $(git add doublewarn 2>&1 | grep "CRLF will be replaced by LF" | wc -l) = 1
 '
 
-test_expect_success 'switch off autocrlf, safecrlf, reset HEAD' '
+test_expect_success PERL 'switch off autocrlf, safecrlf, reset HEAD' '
 	git config core.autocrlf false &&
 	git config core.safecrlf false &&
 	git reset --hard HEAD^
 '
 
-test_expect_success 'update with autocrlf=input' '
+test_expect_success PERL 'update with autocrlf=input' '
 
 	rm -f tmp one dir/two three &&
 	git read-tree --reset -u HEAD &&
@@ -111,7 +111,7 @@ test_expect_success 'update with autocrlf=input' '
 
 '
 
-test_expect_success 'update with autocrlf=true' '
+test_expect_success PERL 'update with autocrlf=true' '
 
 	rm -f tmp one dir/two three &&
 	git read-tree --reset -u HEAD &&
@@ -135,7 +135,7 @@ test_expect_success 'update with autocrlf=true' '
 
 '
 
-test_expect_success 'checkout with autocrlf=true' '
+test_expect_success PERL 'checkout with autocrlf=true' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf true &&
@@ -159,7 +159,7 @@ test_expect_success 'checkout with autocrlf=true' '
 	}
 '
 
-test_expect_success 'checkout with autocrlf=input' '
+test_expect_success PERL 'checkout with autocrlf=input' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf input &&
@@ -185,7 +185,7 @@ test_expect_success 'checkout with autocrlf=input' '
 	}
 '
 
-test_expect_success 'apply patch (autocrlf=input)' '
+test_expect_success PERL 'apply patch (autocrlf=input)' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf input &&
@@ -198,7 +198,7 @@ test_expect_success 'apply patch (autocrlf=input)' '
 	}
 '
 
-test_expect_success 'apply patch --cached (autocrlf=input)' '
+test_expect_success PERL 'apply patch --cached (autocrlf=input)' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf input &&
@@ -211,7 +211,7 @@ test_expect_success 'apply patch --cached (autocrlf=input)' '
 	}
 '
 
-test_expect_success 'apply patch --index (autocrlf=input)' '
+test_expect_success PERL 'apply patch --index (autocrlf=input)' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf input &&
@@ -225,7 +225,7 @@ test_expect_success 'apply patch --index (autocrlf=input)' '
 	}
 '
 
-test_expect_success 'apply patch (autocrlf=true)' '
+test_expect_success PERL 'apply patch (autocrlf=true)' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf true &&
@@ -238,7 +238,7 @@ test_expect_success 'apply patch (autocrlf=true)' '
 	}
 '
 
-test_expect_success 'apply patch --cached (autocrlf=true)' '
+test_expect_success PERL 'apply patch --cached (autocrlf=true)' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf true &&
@@ -251,7 +251,7 @@ test_expect_success 'apply patch --cached (autocrlf=true)' '
 	}
 '
 
-test_expect_success 'apply patch --index (autocrlf=true)' '
+test_expect_success PERL 'apply patch --index (autocrlf=true)' '
 
 	rm -f tmp one dir/two three &&
 	git config core.autocrlf true &&
@@ -265,7 +265,7 @@ test_expect_success 'apply patch --index (autocrlf=true)' '
 	}
 '
 
-test_expect_success '.gitattributes says two is binary' '
+test_expect_success PERL '.gitattributes says two is binary' '
 
 	rm -f tmp one dir/two three &&
 	echo "two -crlf" >.gitattributes &&
@@ -297,7 +297,7 @@ test_expect_success '.gitattributes says two is binary' '
 	fi
 '
 
-test_expect_success '.gitattributes says two is input' '
+test_expect_success PERL '.gitattributes says two is input' '
 
 	rm -f tmp one dir/two three &&
 	echo "two crlf=input" >.gitattributes &&
@@ -312,7 +312,7 @@ test_expect_success '.gitattributes says two is input' '
 	fi
 '
 
-test_expect_success '.gitattributes says two and three are text' '
+test_expect_success PERL '.gitattributes says two and three are text' '
 
 	rm -f tmp one dir/two three &&
 	echo "t* crlf" >.gitattributes &&
@@ -335,7 +335,7 @@ test_expect_success '.gitattributes says two and three are text' '
 	fi
 '
 
-test_expect_success 'in-tree .gitattributes (1)' '
+test_expect_success PERL 'in-tree .gitattributes (1)' '
 
 	echo "one -crlf" >>.gitattributes &&
 	git add .gitattributes &&
@@ -357,7 +357,7 @@ test_expect_success 'in-tree .gitattributes (1)' '
 	}
 '
 
-test_expect_success 'in-tree .gitattributes (2)' '
+test_expect_success PERL 'in-tree .gitattributes (2)' '
 
 	rm -rf tmp one dir .gitattributes patch.file three &&
 	git read-tree --reset HEAD &&
@@ -376,7 +376,7 @@ test_expect_success 'in-tree .gitattributes (2)' '
 	}
 '
 
-test_expect_success 'in-tree .gitattributes (3)' '
+test_expect_success PERL 'in-tree .gitattributes (3)' '
 
 	rm -rf tmp one dir .gitattributes patch.file three &&
 	git read-tree --reset HEAD &&
@@ -396,7 +396,7 @@ test_expect_success 'in-tree .gitattributes (3)' '
 	}
 '
 
-test_expect_success 'in-tree .gitattributes (4)' '
+test_expect_success PERL 'in-tree .gitattributes (4)' '
 
 	rm -rf tmp one dir .gitattributes patch.file three &&
 	git read-tree --reset HEAD &&
@@ -416,7 +416,7 @@ test_expect_success 'in-tree .gitattributes (4)' '
 	}
 '
 
-test_expect_success 'checkout with existing .gitattributes' '
+test_expect_success PERL 'checkout with existing .gitattributes' '
 
 	git config core.autocrlf true &&
 	git config --unset core.safecrlf &&
@@ -434,7 +434,7 @@ test_expect_success 'checkout with existing .gitattributes' '
 
 '
 
-test_expect_success 'checkout when deleting .gitattributes' '
+test_expect_success PERL 'checkout when deleting .gitattributes' '
 
 	git rm .gitattributes &&
 	echo "contentsQ" | q_to_cr > .file2 &&
@@ -447,7 +447,7 @@ test_expect_success 'checkout when deleting .gitattributes' '
 
 '
 
-test_expect_success 'invalid .gitattributes (must not crash)' '
+test_expect_success PERL 'invalid .gitattributes (must not crash)' '
 
 	echo "three +crlf" >>.gitattributes &&
 	git diff
@@ -456,7 +456,7 @@ test_expect_success 'invalid .gitattributes (must not crash)' '
 # Some more tests here to add new autocrlf functionality.
 # We want to have a known state here, so start a bit from scratch
 
-test_expect_success 'setting up for new autocrlf tests' '
+test_expect_success PERL 'setting up for new autocrlf tests' '
 	git config core.autocrlf false &&
 	git config core.safecrlf false &&
 	rm -rf .????* * &&
@@ -468,13 +468,13 @@ test_expect_success 'setting up for new autocrlf tests' '
 	git tag -a -m "message" autocrlf-checkpoint
 '
 
-test_expect_success 'report no change after setting autocrlf' '
+test_expect_success PERL 'report no change after setting autocrlf' '
 	git config core.autocrlf true &&
 	touch * &&
 	git diff --exit-code
 '
 
-test_expect_success 'files are clean after checkout' '
+test_expect_success PERL 'files are clean after checkout' '
 	rm * &&
 	git checkout -f &&
 	git diff --exit-code
@@ -484,19 +484,19 @@ cr_to_Q_no_NL () {
     tr '\015' Q | tr -d '\012'
 }
 
-test_expect_success 'LF only file gets CRLF with autocrlf' '
+test_expect_success PERL 'LF only file gets CRLF with autocrlf' '
 	test "$(cr_to_Q_no_NL < alllf)" = "IQamQallQLFQ"
 '
 
-test_expect_success 'Mixed file is still mixed with autocrlf' '
+test_expect_success PERL 'Mixed file is still mixed with autocrlf' '
 	test "$(cr_to_Q_no_NL < mixed)" = "OhhereisCRLFQintext"
 '
 
-test_expect_success 'CRLF only file has CRLF with autocrlf' '
+test_expect_success PERL 'CRLF only file has CRLF with autocrlf' '
 	test "$(cr_to_Q_no_NL < allcrlf)" = "IQamQallQCRLFQ"
 '
 
-test_expect_success 'New CRLF file gets LF in repo' '
+test_expect_success PERL 'New CRLF file gets LF in repo' '
 	tr -d "\015" < alllf | append_cr > alllf2 &&
 	git add alllf2 &&
 	git commit -m "alllf2 added" &&

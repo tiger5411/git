@@ -8,7 +8,7 @@ has_cr() {
 	tr '\015' Q <"$1" | grep Q >/dev/null
 }
 
-test_expect_success setup '
+test_expect_success PERL setup '
 
 	git config core.autocrlf false &&
 
@@ -26,7 +26,7 @@ test_expect_success setup '
 	echo happy.
 '
 
-test_expect_success 'default settings cause no changes' '
+test_expect_success PERL 'default settings cause no changes' '
 
 	rm -f .gitattributes tmp one two three &&
 	git read-tree --reset -u HEAD &&
@@ -39,7 +39,7 @@ test_expect_success 'default settings cause no changes' '
 	test -z "$onediff" -a -z "$twodiff" -a -z "$threediff"
 '
 
-test_expect_success 'crlf=true causes a CRLF file to be normalized' '
+test_expect_success PERL 'crlf=true causes a CRLF file to be normalized' '
 
 	# Backwards compatibility check
 	rm -f .gitattributes tmp one two three &&
@@ -52,7 +52,7 @@ test_expect_success 'crlf=true causes a CRLF file to be normalized' '
 	test -n "$twodiff"
 '
 
-test_expect_success 'text=true causes a CRLF file to be normalized' '
+test_expect_success PERL 'text=true causes a CRLF file to be normalized' '
 
 	rm -f .gitattributes tmp one two three &&
 	echo "two text" > .gitattributes &&
@@ -64,7 +64,7 @@ test_expect_success 'text=true causes a CRLF file to be normalized' '
 	test -n "$twodiff"
 '
 
-test_expect_success 'eol=crlf gives a normalized file CRLFs with autocrlf=false' '
+test_expect_success PERL 'eol=crlf gives a normalized file CRLFs with autocrlf=false' '
 
 	rm -f .gitattributes tmp one two three &&
 	git config core.autocrlf false &&
@@ -76,7 +76,7 @@ test_expect_success 'eol=crlf gives a normalized file CRLFs with autocrlf=false'
 	test -z "$onediff"
 '
 
-test_expect_success 'eol=crlf gives a normalized file CRLFs with autocrlf=input' '
+test_expect_success PERL 'eol=crlf gives a normalized file CRLFs with autocrlf=input' '
 
 	rm -f .gitattributes tmp one two three &&
 	git config core.autocrlf input &&
@@ -88,7 +88,7 @@ test_expect_success 'eol=crlf gives a normalized file CRLFs with autocrlf=input'
 	test -z "$onediff"
 '
 
-test_expect_success 'eol=lf gives a normalized file LFs with autocrlf=true' '
+test_expect_success PERL 'eol=lf gives a normalized file LFs with autocrlf=true' '
 
 	rm -f .gitattributes tmp one two three &&
 	git config core.autocrlf true &&
@@ -100,7 +100,7 @@ test_expect_success 'eol=lf gives a normalized file LFs with autocrlf=true' '
 	test -z "$onediff"
 '
 
-test_expect_success 'autocrlf=true does not normalize CRLF files' '
+test_expect_success PERL 'autocrlf=true does not normalize CRLF files' '
 
 	rm -f .gitattributes tmp one two three &&
 	git config core.autocrlf true &&
@@ -114,7 +114,7 @@ test_expect_success 'autocrlf=true does not normalize CRLF files' '
 	test -z "$onediff" -a -z "$twodiff" -a -z "$threediff"
 '
 
-test_expect_success 'text=auto, autocrlf=true _does_ normalize CRLF files' '
+test_expect_success PERL 'text=auto, autocrlf=true _does_ normalize CRLF files' '
 
 	rm -f .gitattributes tmp one two three &&
 	git config core.autocrlf true &&
@@ -129,7 +129,7 @@ test_expect_success 'text=auto, autocrlf=true _does_ normalize CRLF files' '
 	test -z "$onediff" -a -n "$twodiff" -a -z "$threediff"
 '
 
-test_expect_success 'text=auto, autocrlf=true does not normalize binary files' '
+test_expect_success PERL 'text=auto, autocrlf=true does not normalize binary files' '
 
 	rm -f .gitattributes tmp one two three &&
 	git config core.autocrlf true &&
@@ -141,7 +141,7 @@ test_expect_success 'text=auto, autocrlf=true does not normalize binary files' '
 	test -z "$threediff"
 '
 
-test_expect_success 'eol=crlf _does_ normalize binary files' '
+test_expect_success PERL 'eol=crlf _does_ normalize binary files' '
 
 	rm -f .gitattributes tmp one two three &&
 	echo "three eol=crlf" > .gitattributes &&
