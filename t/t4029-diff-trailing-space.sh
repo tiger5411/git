@@ -6,7 +6,8 @@ test_description='diff honors config option, diff.suppressBlankEmpty'
 
 . ./test-lib.sh
 
-cat <<\EOF > exp ||
+test_expect_success 'setup exp' '
+cat <<\EOF > exp
 diff --git a/f b/f
 index 5f6a263..8cb8bae 100644
 --- a/f
@@ -16,9 +17,9 @@ index 5f6a263..8cb8bae 100644
 -x
 +y
 EOF
-exit 1
+'
 
-test_expect_success \
+test_expect_success PERL \
     "$test_description" \
     'printf "\nx\n" > f &&
      git add f &&
@@ -27,7 +28,7 @@ test_expect_success \
      git config --bool diff.suppressBlankEmpty true &&
      git diff f > actual &&
      test_cmp exp actual &&
-     perl -i.bak -p -e "s/^\$/ /" exp &&
+     \"$PERL_PATH\" -i.bak -p -e "s/^\$/ /" exp &&
      git config --bool diff.suppressBlankEmpty false &&
      git diff f > actual &&
      test_cmp exp actual &&
