@@ -102,7 +102,7 @@ check_output()
 # from front and back.
 name_from_description()
 {
-	perl -pe '
+	"$PERL_PATH" -pe '
 		s/[^A-Za-z0-9.]/-/g;
 		s/-+/-/g;
 		s/-$//;
@@ -123,5 +123,5 @@ test_output_expect_success()
         [ $# -eq 2 ] || error "usage: test_output_expect_success description test <<EOF ... EOF"
         _name=$(echo $_description | name_from_description)
 	cat > $_name.expected
-	test_expect_success "$_description" "check_output $_name \"$_test\""
+	test_expect_success PERL "$_description" "check_output $_name \"$_test\""
 }
