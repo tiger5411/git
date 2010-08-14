@@ -688,8 +688,25 @@ unless ($opt_P) {
 	}
 	($cvspsfh, $cvspsfile) = tempfile('gitXXXXXX', SUFFIX => '.cvsps',
 					  DIR => File::Spec->tmpdir());
-	while (<CVSPS>) {
-	    print $cvspsfh $_;
+	# Alarm because "cvsps --norc -q --cvs-direct -u -A --root
+	# /home/avar/g/git/t/t9601/cvsroot module" will hang forever if
+	# the "t9601/cvsroot" directory isn't writable by us.
+	{
+		my $got_input;
+		my $start = time;
+		local $SIG{ALRM} = sub {
+			unless ($got_input) {
+				die sprintf "cvsps left us hanging for %d seconds, do you have permission to write to %s?",
+				    time() - $start,
+				    $opt_d;
+			}
+		};
+		alarm 10;
+		while (<CVSPS>) {
+			$got_input = 1;
+			print $cvspsfh $_;
+		}
+		alarm 0;
 	}
 	close CVSPS;
 	$? == 0 or die "git cvsimport: fatal: cvsps reported error\n";
