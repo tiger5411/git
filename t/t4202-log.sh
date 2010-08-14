@@ -441,5 +441,14 @@ test_expect_success 'log.decorate configuration' '
 
 '
 
+test_expect_success 'Regression test for v1.7.2-rc0~103^2~2' '
+	# Needs an unrelated root commit
+	test_commit README &&
+	>Foo.bar &&
+	git add Foo.bar &&
+	git commit --allow-empty-message </dev/null &&
+	git log -M --follow --name-only Foo.bar
+'
+
 test_done
 
