@@ -441,5 +441,18 @@ test_expect_success 'log.decorate configuration' '
 
 '
 
+test_expect_success 'show added path under "--follow -M"' '
+	# This tests for a regression introduced in v1.7.2-rc0~103^2~2
+	test_create_repo regression &&
+	(
+		cd regression &&
+		test_commit needs-another-commit &&
+		test_commit Foo.bar &&
+		git log -M --follow -p Foo.bar.t &&
+		git log -M --follow --stat Foo.bar.t &&
+		git log -M --follow --name-only Foo.bar.t
+	)
+'
+
 test_done
 
