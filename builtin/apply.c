@@ -3783,7 +3783,7 @@ int cmd_apply(int argc, const char **argv, const char *unused_prefix)
 {
 	int i;
 	int errs = 0;
-	int is_not_gitdir;
+	int is_not_gitdir = !startup_info->have_repository;
 	int binary;
 	int force_apply = 0;
 
@@ -3856,7 +3856,6 @@ int cmd_apply(int argc, const char **argv, const char *unused_prefix)
 		OPT_END()
 	};
 
-	prefix = setup_git_directory_gently(&is_not_gitdir);
 	prefix_length = prefix ? strlen(prefix) : 0;
 	git_config(git_apply_config, NULL);
 	if (apply_default_whitespace)
