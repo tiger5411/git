@@ -22,9 +22,12 @@
 #ifndef _REGEX_H
 #define _REGEX_H 1
 
-#ifdef HAVE_STDDEF_H
+#include <stdio.h>
+/*
+  Git: Was in `#ifdef HAVE_STDDEF_H` in gawk, adding -DHAVE_STDDEF_H makes a
+  *lot* of other things break
+*/
 #include <stddef.h>
-#endif
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>

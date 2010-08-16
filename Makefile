@@ -1443,6 +1443,10 @@ ifdef UNRELIABLE_FSTAT
 	BASIC_CFLAGS += -DUNRELIABLE_FSTAT
 endif
 ifdef NO_REGEX
+	# TODO: How do I compile just regex.o with this flag, not the
+	# whole of Git?
+	BASIC_CFLAGS += -DGAWK
+
 	COMPAT_CFLAGS += -Icompat/regex
 	COMPAT_OBJS += compat/regex/regex.o
 endif
