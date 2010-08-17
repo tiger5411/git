@@ -1,5 +1,6 @@
 #define NO_THE_INDEX_COMPATIBILITY_MACROS
 #include "cache.h"
+#include "exec_cmd.h"
 #include "attr.h"
 
 const char git_attr__true[] = "(builtin)true";
@@ -462,6 +463,24 @@ static void drop_attr_stack(void)
 	}
 }
 
+const char *git_etc_gitattributes(void)
+{
+	static const char *system_wide;
+	if (!system_wide)
+		system_wide = system_path(ETC_GITATTRIBUTES);
+	return system_wide;
+}
+
+int git_attr_system(void)
+{
+	return !git_env_bool("GIT_ATTR_NOSYSTEM", 0);
+}
+
+int git_attr_global(void)
+{
+	return !git_env_bool("GIT_ATTR_NOGLOBAL", 0);
+}
+
 static void bootstrap_attr_stack(void)
 {
 	if (!attr_stack) {
@@ -471,6 +490,27 @@ static void bootstrap_attr_stack(void)
 		elem->origin = NULL;
 		elem->prev = attr_stack;
 		attr_stack = elem;
+
+		if (git_attr_system()) {
+			elem = read_attr_from_file(git_etc_gitattributes(), 1);
+			if (elem) {
+				elem->origin = NULL;
+				elem->prev = attr_stack;
+				attr_stack = elem;
+			}
+		}
+
+		if (git_attr_global() && attributes_file) {
+			char *user_attr = xstrdup(attributes_file);
+
+			elem = read_attr_from_file(user_attr, 1);
+			free(user_attr);
+			if (elem) {
+				elem->origin = NULL;
+				elem->prev = attr_stack;
+				attr_stack = elem;
+			}
+		}
 
 		if (!is_bare_repository() || direction == GIT_ATTR_INDEX) {
 			elem = read_attr(GITATTRIBUTES_FILE, 1);
@@ -499,7 +539,9 @@ static void prepare_attr_stack(const char *path, int dirlen)
 
 	/*
 	 * At the bottom of the attribute stack is the built-in
-	 * set of attribute definitions.  Then, contents from
+	 * set of attribute definitions, followed by the contents
+	 * of $(prefix)/etc/gitattributes and a file specified by
+	 * core.attributesfile.  Then, contents from
 	 * .gitattribute files from directories closer to the
 	 * root to the ones in deeper directories are pushed
 	 * to the stack.  Finally, at the very top of the stack
