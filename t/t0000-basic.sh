@@ -54,9 +54,14 @@ test_expect_success 'success is reported like this' '
 test_expect_failure 'pretend we have a known breakage' '
     false
 '
-test_expect_failure 'pretend we have fixed a known breakage' '
-    :
-'
+if test -z "$TEST_PASSING_TODO"
+then
+	say "Not testing a known breakage, set TEST_PASSING_TODO=1 to enable"
+else
+	test_expect_failure 'pretend we have fixed a known breakage' '
+	    :
+	'
+fi
 test_set_prereq HAVEIT
 haveit=no
 test_expect_success HAVEIT 'test runs if prerequisite is satisfied' '
