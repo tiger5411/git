@@ -550,6 +550,20 @@ static int ends_rfc2822_footer(struct strbuf *sb)
 	return 1;
 }
 
+static int update_index(const char *index_file) {
+	discard_cache();
+	read_cache_from(index_file);
+	if (!active_cache_tree)
+		active_cache_tree = cache_tree();
+	if (cache_tree_update(active_cache_tree,
+			      active_cache, active_nr, 0, 0) < 0) {
+		error("Error building trees");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int prepare_to_commit(const char *index_file, const char *prefix,
 			     struct wt_status *s)
 {
@@ -563,6 +577,16 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	int ident_shown = 0;
 
 	if (!no_verify && run_hook(index_file, "pre-commit", NULL))
+		return 0;
+
+	/* Update the index after we run the pre-commit hook, but before
+	 * we construct the message we're sending to the editor. The
+	 * pre-commit hook may e.g. create a new file and add it to the
+	 * index.
+	 *
+	 * Having that file show up as modified but not staged is confusing.
+	 */
+	if (!update_index(index_file))
 		return 0;
 
 	if (message.len) {
@@ -728,15 +752,8 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	 * and write it out as a tree.  We must do this before we invoke
 	 * the editor and after we invoke run_status above.
 	 */
-	discard_cache();
-	read_cache_from(index_file);
-	if (!active_cache_tree)
-		active_cache_tree = cache_tree();
-	if (cache_tree_update(active_cache_tree,
-			      active_cache, active_nr, 0, 0) < 0) {
-		error("Error building trees");
+	if (!update_index(index_file))
 		return 0;
-	}
 
 	if (run_hook(index_file, "prepare-commit-msg",
 		     git_path(commit_editmsg), hook_arg1, hook_arg2, NULL))
