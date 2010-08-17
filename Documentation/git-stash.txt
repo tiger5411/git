@@ -9,10 +9,11 @@ SYNOPSIS
 --------
 [verse]
 'git stash' list [<options>]
-'git stash' show [<stash>]
-'git stash' drop [-q|--quiet] [<stash>]
-'git stash' ( pop | apply ) [--index] [-q|--quiet] [<stash>]
-'git stash' branch <branchname> [<stash>]
+'git stash' show [<stash-like>]
+'git stash' drop [-q|--quiet] [<stash-entry>]
+'git stash' pop [--index] [-q|--quiet] [<stash-entry>]
+'git stash' apply [--index] [-q|--quiet] [<stash-like>]
+'git stash' branch <branchname> [<stash-like>]
 'git stash' [save [--patch] [-k|--[no-]keep-index] [-q|--quiet] [<message>]]
 'git stash' clear
 'git stash' create
@@ -80,15 +81,15 @@ stash@{1}: On master: 9cc0589... Add git-stash
 The command takes options applicable to the 'git log'
 command to control what is shown and how. See linkgit:git-log[1].
 
-show [<stash>]::
+show [<stash-like>]::
 
 	Show the changes recorded in the stash as a diff between the
-	stashed state and its original parent. When no `<stash>` is given,
+	stashed state and its original parent. When no `<stash-like>` is given,
 	shows the latest one. By default, the command shows the diffstat, but
 	it will accept any format known to 'git diff' (e.g., `git stash show
 	-p stash@\{1}` to view the second most recent stash in patch form).
 
-pop [--index] [-q|--quiet] [<stash>]::
+pop [--index] [-q|--quiet] [<stash-entry>]::
 
 	Remove a single stashed state from the stash list and apply it
 	on top of the current working tree state, i.e., do the inverse
@@ -104,19 +105,21 @@ tree's changes, but also the index's ones. However, this can fail, when you
 have conflicts (which are stored in the index, where you therefore can no
 longer apply the changes as they were originally).
 +
-When no `<stash>` is given, `stash@\{0}` is assumed.
+When no `<stash-entry>` is given, `stash@\{0}` is assumed.
 
-apply [--index] [-q|--quiet] [<stash>]::
+apply [--index] [-q|--quiet] [<stash-like>]::
 
-	Like `pop`, but do not remove the state from the stash list.
+	Like `pop`, but do not remove the state from the stash list. Unlike `pop`,
+	the `<stash-like>` argument can be any commit that looks like a stash, for
+	example, a stash created with `create`.
 
-branch <branchname> [<stash>]::
+branch <branchname> [<stash-like>]::
 
 	Creates and checks out a new branch named `<branchname>` starting from
-	the commit at which the `<stash>` was originally created, applies the
-	changes recorded in `<stash>` to the new working tree and index, then
-	drops the `<stash>` if that completes successfully. When no `<stash>`
-	is given, applies the latest one.
+	the commit at which the `<stash-like>` was originally created, applies the
+	changes recorded in `<stash-like>` to the new working tree and index, then
+	drops the `<stash-like>` if that completes successfully and `<stash-like>`
+	is also a stash entry. When no `<stash-like>` is given, applies the latest one.
 +
 This is useful if the branch on which you ran `git stash save` has
 changed enough that `git stash apply` fails due to conflicts. Since
@@ -129,9 +132,9 @@ clear::
 	be subject to pruning, and may be impossible to recover (see
 	'Examples' below for a possible strategy).
 
-drop [-q|--quiet] [<stash>]::
+drop [-q|--quiet] [<stash-entry>]::
 
-	Remove a single stashed state from the stash list. When no `<stash>`
+	Remove a single stashed state from the stash list. When no `<stash-entry>`
 	is given, it removes the latest one. i.e. `stash@\{0}`
 
 create::
