@@ -378,4 +378,144 @@ test_expect_failure 'stash file to directory' '
 	test foo = "$(cat file/file)"
 '
 
+test_expect_success 'stash branch - no stashes on stack, stash-like argument' '
+	git stash clear &&
+	test_when_finished "git reset --hard HEAD" &&
+	git reset --hard &&
+	echo foo >> file &&
+	STASH_ID=$(git stash create) &&
+	git reset --hard &&
+	git stash branch stash-branch ${STASH_ID} &&
+	test_when_finished "git reset --hard HEAD && git checkout master && git branch -D stash-branch" &&
+	test $(git ls-files --modified | wc -l) -eq 1
+'
+
+test_expect_success 'stash branch - stashes on stack, stash-like argument' '
+	git stash clear &&
+	test_when_finished "git reset --hard HEAD" &&
+	git reset --hard &&
+	echo foo >> file &&
+	git stash &&
+	test_when_finished "git stash drop" &&
+	echo bar >> file &&
+	STASH_ID=$(git stash create) &&
+	git reset --hard &&
+	git stash branch stash-branch ${STASH_ID} &&
+	test_when_finished "git reset --hard HEAD && git checkout master && git branch -D stash-branch" &&
+	test $(git ls-files --modified | wc -l) -eq 1
+'
+
+test_expect_success 'stash show - stashes on stack, stash-like argument' '
+	git stash clear &&
+	test_when_finished "git reset --hard HEAD" &&
+	git reset --hard &&
+	echo foo >> file &&
+	git stash &&
+	test_when_finished "git stash drop" &&
+	echo bar >> file &&
+	STASH_ID=$(git stash create) &&
+	git reset --hard &&
+	git stash show ${STASH_ID}
+'
+test_expect_success 'stash show - no stashes on stack, stash-like argument' '
+	git stash clear &&
+	test_when_finished "git reset --hard HEAD" &&
+	git reset --hard &&
+	echo foo >> file &&
+	STASH_ID=$(git stash create) &&
+	git reset --hard &&
+	git stash show ${STASH_ID}
+'
+
+test_expect_success 'stash drop - fail early if specified stash is not a stash reference' '
+	git stash clear &&
+	test_when_finished "git reset --hard HEAD && git stash clear" &&
+	git reset --hard &&
+	echo foo > file &&
+	git stash &&
+	echo bar > file &&
+	git stash &&
+	! git stash drop $(git rev-parse stash@{0}) &&
+	git stash pop &&
+	test bar = "$(cat file)" &&
+	git reset --hard HEAD
+'
+
+test_expect_success 'stash pop - fail early if specified stash is not a stash reference' '
+	git stash clear &&
+	test_when_finished "git reset --hard HEAD && git stash clear" &&
+	git reset --hard &&
+	echo foo > file &&
+	git stash &&
+	echo bar > file &&
+	git stash &&
+	! git stash pop $(git rev-parse stash@{0}) &&
+	git stash pop &&
+	test bar = "$(cat file)" &&
+	git reset --hard HEAD
+'
+
+test_expect_success 'stash drop - bad stash ref' '
+	git stash clear &&
+	echo bar5 > file &&
+	echo bar6 > file2 &&
+	git add file2 &&
+	git stash &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash drop does-not-exist &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash drop does-not-exist@{0} &&
+	git stash drop
+'
+
+test_expect_success 'stash pop - bad stash ref' '
+	git stash clear &&
+	echo bar5 > file &&
+	echo bar6 > file2 &&
+	git add file2 &&
+	git stash &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash pop does-not-exist &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash pop does-not-exist@{0} &&
+	git stash drop
+'
+
+test_expect_success 'stash apply - bad stash ref' '
+	git stash clear &&
+	echo bar5 > file &&
+	echo bar6 > file2 &&
+	git add file2 &&
+	git stash &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash apply does-not-exist &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash apply does-not-exist@{0} &&
+	git stash drop
+'
+
+test_expect_success 'stash show - bad stash ref' '
+	git stash clear &&
+	echo bar5 > file &&
+	echo bar6 > file2 &&
+	git add file2 &&
+	git stash &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash show does-not-exist &&
+	! git rev-parse --quiet --verify does-not-exist &&
+	! git stash show does-not-exist@{0} &&
+	git stash drop
+'
+
+test_expect_success 'stash drop - invalid stash reference' '
+	git stash clear &&
+	! git stash stash@{0} &&
+	echo bar5 > file &&
+	echo bar6 > file2 &&
+	git add file2 &&
+	git stash &&
+	! git drop stash@{1} &&
+	git stash drop
+'
+
 test_done
