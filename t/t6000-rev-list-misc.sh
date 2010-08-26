@@ -11,13 +11,13 @@ test_expect_success setup '
 	git commit -m one
 '
 
-test_expect_failure 'rev-list --objects heeds pathspecs' '
+test_expect_success 'rev-list --objects heeds pathspecs' '
 	git rev-list --objects HEAD -- wanted_file >output &&
 	grep wanted_file output &&
 	! grep unwanted_file output
 '
 
-test_expect_failure 'rev-list --objects with pathspecs and deeper paths' '
+test_expect_success 'rev-list --objects with pathspecs and deeper paths' '
 	mkdir foo &&
 	>foo/file &&
 	git add foo/file &&
@@ -31,7 +31,7 @@ test_expect_failure 'rev-list --objects with pathspecs and deeper paths' '
 	! grep unwanted_file output
 '
 
-test_expect_failure 'rev-list --objects with pathspecs and copied files' '
+test_expect_success 'rev-list --objects with pathspecs and copied files' '
 	git checkout --orphan junio-testcase &&
 	git rm -rf . &&
 
