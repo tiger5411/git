@@ -951,13 +951,13 @@ static int load_poll_params(struct pollfd *polls, size_t inbufuse,
 	return nextindex;
 }
 
-static int transfer_handle_events(struct pollfd* polls, char *in_buffer,
+static int transfer_handle_events(struct pollfd *polls, char *in_buffer,
 	char *out_buffer, size_t *in_buffer_use, size_t *out_buffer_use,
 	int *in_hup, int *out_hup, int *in_closed, int *out_closed,
 	int socket_mode, int poll_count, int input, int output)
 {
 	int i, r;
-	for(i = 0; i < poll_count; i++) {
+	for (i = 0; i < poll_count; i++) {
 		/* Handle stdin. */
 		if (polls[i].fd == 0 && polls[i].revents & (POLLIN | POLLHUP)) {
 			transfer_debug("stdin is readable");
@@ -1023,7 +1023,7 @@ static int transfer_handle_events(struct pollfd* polls, char *in_buffer,
 				errno != EINTR) {
 				perror("write(git) failed");
 				return 1;
-			} else if (r > 0){
+			} else if (r > 0) {
 				*out_buffer_use -= r;
 				transfer_debug("Wrote %i bytes to stdout (buffer now at %i)", r, (int)*out_buffer_use);
 				if (*out_buffer_use > 0)

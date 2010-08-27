@@ -1,10 +1,5 @@
 #include "git-compat-util.h"
 #include "transport.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
 
 
 /*
@@ -22,8 +17,8 @@
  *
  */
 
-int input_fd = -1;
-int output_fd = -1;
+static int input_fd = -1;
+static int output_fd = -1;
 
 #define MAXCOMMAND 4096
 
@@ -34,7 +29,7 @@ static int command_loop(void)
 	while (1) {
 		if (!fgets(buffer, MAXCOMMAND - 1, stdin))
 			exit(0);
-		//Strip end of line characters.
+		/* Strip end of line characters. */
 		while (isspace((unsigned char)buffer[strlen(buffer) - 1]))
 			buffer[strlen(buffer) - 1] = 0;
 
@@ -55,7 +50,7 @@ static int command_loop(void)
 
 int cmd_remote_fd(int argc, const char **argv, const char *prefix)
 {
-	char* end;
+	char *end;
 	unsigned long r;
 
 	if (argc < 3) {
@@ -66,7 +61,7 @@ int cmd_remote_fd(int argc, const char **argv, const char *prefix)
 	r = strtoul(argv[2], &end, 10);
 	input_fd = (int)r;
 
-	if ((*end != ',' && *end !='/' && *end) || end == argv[2]) {
+	if ((*end != ',' && *end != '/' && *end) || end == argv[2]) {
 		fprintf(stderr, "Error: Bad URL syntax");
 		exit(1);
 	}
@@ -74,11 +69,11 @@ int cmd_remote_fd(int argc, const char **argv, const char *prefix)
 	if (*end == '/' || !*end) {
 		output_fd = input_fd;
 	} else {
-		char* end2;
+		char *end2;
 		r = strtoul(end + 1, &end2, 10);
 		output_fd = (int)r;
 
-		if ((*end2 !='/' && *end2) || end2 == end + 1) {
+		if ((*end2 != '/' && *end2) || end2 == end + 1) {
 			fprintf(stderr, "Error: Bad URL syntax");
 			exit(1);
 		}

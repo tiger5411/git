@@ -1,11 +1,6 @@
 #include "git-compat-util.h"
 #include "transport.h"
 #include "run-command.h"
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <unistd.h>
 
 /*
  * URL syntax:
@@ -26,8 +21,8 @@
  *		not activate sending git:// style request).
  */
 
-char* git_req = NULL;
-char* git_req_vhost = NULL;
+static char *git_req;
+static char *git_req_vhost;
 
 static char *strip_escapes(const char *str, const char *service,
 	const char **next)
@@ -99,7 +94,7 @@ static char *strip_escapes(const char *str, const char *service,
 	escape = 0;
 	while (str[rpos] && (escape || str[rpos] != ' ')) {
 		if (escape) {
-			switch(str[rpos]) {
+			switch (str[rpos]) {
 			case ' ':
 			case '\\':
 				ret[wpos++] = str[rpos];
@@ -115,7 +110,7 @@ static char *strip_escapes(const char *str, const char *service,
 			}
 			escape = 0;
 		} else
-			switch(str[rpos]) {
+			switch (str[rpos]) {
 			case '\\':
 				escape = 1;
 				break;
@@ -126,7 +121,7 @@ static char *strip_escapes(const char *str, const char *service,
 		rpos++;
 	}
 	ret[wpos] = 0;
-	switch(special) {
+	switch (special) {
 	case 'G':
 		git_req = ret;
 		return NULL;
@@ -145,11 +140,11 @@ static const char **parse_argv(const char *arg, const char *service)
 {
 	int arguments = 0;
 	int i;
-	char** ret;
+	char **ret;
 	char *(temparray[MAXARGUMENTS + 1]);
 
 	while (*arg) {
-		char* ret;
+		char *ret;
 		if (arguments == MAXARGUMENTS)
 			die("remote-ext command has too many arguments");
 		ret = strip_escapes(arg, service, &arg);
@@ -157,11 +152,11 @@ static const char **parse_argv(const char *arg, const char *service)
 			temparray[arguments++] = ret;
 	}
 
-	ret = xcalloc(arguments + 1, sizeof(char*));
+	ret = xcalloc(arguments + 1, sizeof(char *));
 	for (i = 0; i < arguments; i++)
 		ret[i] = temparray[i];
 
-	return (const char**)ret;
+	return (const char **)ret;
 }
 
 static void send_git_request(int stdin_fd, const char *serv, const char *repo,
@@ -169,7 +164,7 @@ static void send_git_request(int stdin_fd, const char *serv, const char *repo,
 {
 	size_t bufferspace;
 	size_t wpos = 0;
-	char* buffer;
+	char *buffer;
 
 	/*
 	 * Request needs 12 bytes extra if there is vhost (xxxx \0host=\0) and
@@ -233,7 +228,7 @@ static int command_loop(const char *child)
 	while (1) {
 		if (!fgets(buffer, MAXCOMMAND - 1, stdin))
 			exit(0);
-		//Strip end of line characters.
+		/* Strip end of line characters. */
 		while (isspace((unsigned char)buffer[strlen(buffer) - 1]))
 			buffer[strlen(buffer) - 1] = 0;
 
