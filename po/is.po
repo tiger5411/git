@@ -9,8 +9,8 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid "See git help COMMAND for more information on a specific command."
-msgstr "Sjá git help SKIPUN til að sjá hjálp fyrir tiltekna skipun."
+msgid "See 'git help COMMAND' for more information on a specific command."
+msgstr "Sjá 'git help SKIPUN' til að sjá hjálp fyrir tiltekna skipun."
 
 #. TRANSLATORS: This is a test. You don't need to translate it.
 msgid "TEST: A C test string"
