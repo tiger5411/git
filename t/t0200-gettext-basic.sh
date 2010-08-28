@@ -69,7 +69,7 @@ test_expect_success GETTEXT_LOCALE 'xgettext: C extraction of _() and N_() strin
     printf "Sjá git help SKIPUN til að sjá hjálp fyrir tiltekna skipun." >>expect &&
     LANGUAGE=is LC_ALL="$is_IS_locale" gettext "TEST: A C test string" >actual &&
     printf "\n" >>actual &&
-    LANGUAGE=is LC_ALL="$is_IS_locale" gettext "See git help COMMAND for more information on a specific command." >>actual &&
+    LANGUAGE=is LC_ALL="$is_IS_locale" gettext "See '\''git help COMMAND'\'' for more information on a specific command." >>actual &&
     test_cmp expect actual
 '
 
