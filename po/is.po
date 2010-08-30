@@ -37,6 +37,12 @@ msgid "TEST: Old English Runes"
 msgstr "TILRAUN: ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
 
 #. TRANSLATORS: This is a test. You don't need to translate it.
+#: t/t0200/test.c:21
+#, c-format
+msgid "TEST: ‘single’ and “double” quotes"
+msgstr "TILRAUN: ‚einfaldar‘ og „tvöfaldar“ gæsalappir"
+
+#. TRANSLATORS: This is a test. You don't need to translate it.
 #: t/t0200/test.sh:8
 msgid "TEST: A Shell test string"
 msgstr "TILRAUN: Skeljartilraunastrengur"
