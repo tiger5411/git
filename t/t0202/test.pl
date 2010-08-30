@@ -3,7 +3,7 @@ use 5.006002;
 use lib (split(/:/, $ENV{GITPERLLIB}));
 use warnings;
 use strict;
-use Test::More tests => 9;
+use Test::More tests => 11;
 use Git::I18N;
 use POSIX qw(:locale_h);
 
@@ -47,9 +47,21 @@ is_deeply(\@Git::I18N::EXPORT, \@Git::I18N::EXPORT_OK, "sanity: Git::I18N export
 	is(__($got), $expect, "Passing a string through __() in the C locale works");
 }
 
-# Test a basic message on different locales
-SKIP: {
-	unless ($ENV{GETTEXT_LOCALE}) {
+my %utf_to_x = (
+	'UTF-8' => { qw(
+		locale_env GETTEXT_LOCALE
+		locale_loc is_IS_locale
+	) },
+	'ISO-8859-1' => { qw(
+		locale_env GETTEXT_ISO_LOCALE
+		locale_loc is_IS_iso_locale
+	) },
+);
+
+for my $test (qw(UTF-8 ISO-8859-1)) {
+  # Test a basic message on different locales
+  SKIP: {
+	unless ($ENV{$utf_to_x{$test}{locale_env}}) {
 		# Can't reliably test __() with a non-C locales because the
 		# required locales may not be installed on the system.
 		#
@@ -57,18 +69,18 @@ SKIP: {
 		# tests. Skipping these here will eliminate failures on odd
 		# platforms with incomplete locale data.
 
-		skip "GETTEXT_LOCALE must be set by lib-gettext.sh for exhaustive Git::I18N tests", 2;
+		skip "$utf_to_x{$test}{locale_env} must be set by lib-gettext.sh for exhaustive Git::I18N tests", 2;
 	}
 
 	# The is_IS UTF-8 locale passed from lib-gettext.sh
-	my $is_IS_locale = $ENV{is_IS_locale};
+	my $is_IS_locale = $ENV{$utf_to_x{$test}{locale_loc}} // die "Internal error: no locale for $test";
 
 	my $test = sub {
 		my ($got, $expect, $msg, $locale) = @_;
 		# Maybe this system doesn't have the locale we're trying to
 		# test.
 		my $locale_ok = setlocale(LC_ALL, $locale);
-		is(__($got), $expect, "$msg a gettext library + <$locale> locale <$got> turns into <$expect>");
+		is(__($got), $expect, "UTF-8 -> $test: $msg a gettext library + <$locale> locale <$got> turns into <$expect>");
 	};
 
 	my $env_C = sub {
@@ -82,7 +94,7 @@ SKIP: {
 	};
 
 	# Translation's the same as the original
-	my ($got, $expect) = (('TEST: A Perl test string') x 2);
+	my ($got, $expect) = (('TEST: Hello World!') x 2);
 
 	if ($has_gettext_library) {
 		{
@@ -91,7 +103,7 @@ SKIP: {
 		}
 
 		{
-			my ($got, $expect) = ($got, 'TILRAUN: Perl tilraunastrengur');
+			my ($got, $expect) = ($got, 'TILRAUN: Halló Heimur!');
 			local %ENV; $env_is->();
 			$test->($got, $expect, "With", $is_IS_locale);
 		}
@@ -106,4 +118,5 @@ SKIP: {
 			$test->($got, $expect, "Without", 'is');
 		}
 	}
+  }
 }
