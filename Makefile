@@ -1338,6 +1338,10 @@ ifdef SNPRINTF_RETURNS_BOGUS
 	COMPAT_CFLAGS += -DSNPRINTF_RETURNS_BOGUS
 	COMPAT_OBJS += compat/snprintf.o
 endif
+ifdef PRINTF_RETURNS_BOGUS
+	COMPAT_CFLAGS += -DPRINTF_RETURNS_BOGUS -Icompat/printf -Icompat/printf/include -Icompat/printf/sys
+	COMPAT_OBJS += compat/printf/vsprintf.o
+endif
 ifdef FREAD_READS_DIRECTORIES
 	COMPAT_CFLAGS += -DFREAD_READS_DIRECTORIES
 	COMPAT_OBJS += compat/fopen.o
@@ -1946,6 +1950,10 @@ endif
 
 ifdef NO_REGEX
 compat/regex/regex.o: EXTRA_CPPFLAGS = -DGAWK -DNO_MBSUPPORT
+endif
+
+ifdef PRINTF_RETURNS_BOGUS
+compat/printf/vsprintf.o: EXTRA_CPPFLAGS = -D__va_list=va_list -D__sbuf=sbuf -D'__FBSDID(x)'=
 endif
 
 git-%$X: %.o $(GITLIBS)
