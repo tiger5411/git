@@ -22,6 +22,16 @@ msgid "TEST: A C test string %s"
 msgstr "TILRAUN: C tilraunastrengur %s"
 
 #. TRANSLATORS: This is a test. You don't need to translate it.
+#, c-format
+msgid "TEST: Hello World!"
+msgstr "TILRAUN: Halló Heimur!"
+
+#. TRANSLATORS: This is a test. You don't need to translate it.
+#, c-format
+msgid "TEST: Old English Runes"
+msgstr "TILRAUN: ᚻᛖ ᚳᚹᚫᚦ ᚦᚫᛏ ᚻᛖ ᛒᚢᛞᛖ ᚩᚾ ᚦᚫᛗ ᛚᚪᚾᛞᛖ ᚾᚩᚱᚦᚹᛖᚪᚱᛞᚢᛗ ᚹᛁᚦ ᚦᚪ ᚹᛖᛥᚫ"
+
+#. TRANSLATORS: This is a test. You don't need to translate it.
 msgid "TEST: A Shell test string"
 msgstr "TILRAUN: Skeljartilraunastrengur"
 
