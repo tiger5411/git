@@ -38,7 +38,6 @@ const char *pager_program;
 int pager_use_color = 1;
 const char *editor_program;
 const char *excludes_file;
-const char *attributes_file;
 enum auto_crlf auto_crlf = AUTO_CRLF_FALSE;
 int read_replace_refs = 1;
 enum eol eol = EOL_UNSET;

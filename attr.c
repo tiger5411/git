@@ -11,6 +11,8 @@ static const char git_attr__unknown[] = "(builtin)unknown";
 #define ATTR__UNSET NULL
 #define ATTR__UNKNOWN git_attr__unknown
 
+static const char *attributes_file;
+
 /*
  * The basic design decision here is that we are not going to have
  * insanely large number of attributes.
@@ -481,6 +483,13 @@ int git_attr_global(void)
 	return !git_env_bool("GIT_ATTR_NOGLOBAL", 0);
 }
 
+static int get_core_attributesfile(const char *key, const char *value, void *cb)
+{
+	if (!strcmp(key, "core.attributesfile"))
+		return git_config_pathname(&attributes_file, key, value);
+	return 0;
+}
+
 static void bootstrap_attr_stack(void)
 {
 	if (!attr_stack) {
@@ -500,6 +509,7 @@ static void bootstrap_attr_stack(void)
 			}
 		}
 
+		git_config(get_core_attributesfile, NULL);
 		if (git_attr_global() && attributes_file) {
 			char *user_attr = xstrdup(attributes_file);
 
