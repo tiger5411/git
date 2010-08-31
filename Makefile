@@ -272,6 +272,10 @@ ALL_CFLAGS = $(CPPFLAGS) $(CFLAGS)
 ALL_LDFLAGS = $(LDFLAGS)
 STRIP ?= strip
 
+# Disable gettext by default in releases while the implementation is
+# settling
+NO_GETTEXT = YesPleaseForNow
+
 # Among the variables below, these:
 #   gitexecdir
 #   template_dir
