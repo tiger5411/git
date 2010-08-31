@@ -806,7 +806,7 @@ AC_SUBST(HAVE_PATHS_H)
 #
 # Define NO_GETTEXT if you don't have libintl.h
 AC_CHECK_HEADER([libintl.h],
-[NO_GETTEXT=],
+[NO_GETTEXT=HaveItButYesPlease],
 [NO_GETTEXT=YesPlease])
 AC_SUBST(NO_GETTEXT)
 #
