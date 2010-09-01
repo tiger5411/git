@@ -571,7 +571,7 @@ static void update_refs_for_switch(struct checkout_opts *opts,
 		if (!opts->quiet) {
 			if (old->path && advice_detached_head)
 				detach_advice(old->path, new->name);
-			describe_detached_head("HEAD is now at", new->commit);
+			describe_detached_head(_("HEAD is now at"), new->commit);
 		}
 	}
 	remove_branch_state();
@@ -613,7 +613,7 @@ static int switch_branches(struct checkout_opts *opts, struct branch_info *new)
 	 * to remind the user that it might be lost.
 	 */
 	if (!opts->quiet && !old.path && old.commit && new->commit != old.commit)
-		describe_detached_head("Previous HEAD position was", old.commit);
+		describe_detached_head(_("Previous HEAD position was"), old.commit);
 
 	update_refs_for_switch(opts, &old, new);
 
