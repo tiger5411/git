@@ -1,5 +1,4 @@
-#include "cache.h"
-#include "commit.h"
+#include "builtin.h"
 #include "tag.h"
 #include "merge-recursive.h"
 

@@ -1,5 +1,4 @@
-#include "cache.h"
-#include "commit.h"
+#include "builtin.h"
 #include "refs.h"
 #include "pkt-line.h"
 #include "sideband.h"

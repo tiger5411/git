@@ -1,7 +1,6 @@
-#include "cache.h"
+#include "builtin.h"
 #include "refs.h"
 #include "pkt-line.h"
-#include "commit.h"
 #include "tag.h"
 #include "exec_cmd.h"
 #include "pack.h"
