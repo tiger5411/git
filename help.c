@@ -362,9 +362,3 @@ const char *help_unknown_cmd(const char *cmd)
 
 	exit(1);
 }
-
-int cmd_version(int argc, const char **argv, const char *prefix)
-{
-	printf("git version %s\n", git_version_string);
-	return 0;
-}
