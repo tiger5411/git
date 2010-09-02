@@ -647,28 +647,28 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 
 		if (in_merge)
 			fprintf(fp,
-				"#\n"
+				_("#\n"
 				"# It looks like you may be committing a MERGE.\n"
 				"# If this is not correct, please remove the file\n"
 				"#	%s\n"
 				"# and try again.\n"
-				"#\n",
+				"#\n"),
 				git_path("MERGE_HEAD"));
 
 		fprintf(fp,
-			"\n"
-			"# Please enter the commit message for your changes.");
+			_("\n"
+			"# Please enter the commit message for your changes."));
 		if (cleanup_mode == CLEANUP_ALL)
 			fprintf(fp,
-				" Lines starting\n"
+				_(" Lines starting\n"
 				"# with '#' will be ignored, and an empty"
-				" message aborts the commit.\n");
+				" message aborts the commit.\n"));
 		else /* CLEANUP_SPACE, that is. */
 			fprintf(fp,
-				" Lines starting\n"
+				_(" Lines starting\n"
 				"# with '#' will be kept; you may remove them"
 				" yourself if you want to.\n"
-				"# An empty message aborts the commit.\n");
+				"# An empty message aborts the commit.\n"));
 		if (only_include_assumed)
 			fprintf(fp, "# %s\n", only_include_assumed);
 
@@ -677,16 +677,16 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 					   getenv("GIT_COMMITTER_EMAIL"));
 		if (strcmp(author_ident, committer_ident))
 			fprintf(fp,
-				"%s"
-				"# Author:    %s\n",
+				_("%s"
+				"# Author:    %s\n"),
 				ident_shown++ ? "" : "#\n",
 				author_ident);
 		free(author_ident);
 
 		if (!user_ident_sufficiently_given())
 			fprintf(fp,
-				"%s"
-				"# Committer: %s\n",
+				_("%s"
+				"# Committer: %s\n"),
 				ident_shown++ ? "" : "#\n",
 				committer_ident);
 
@@ -1182,9 +1182,9 @@ static void print_summary(const char *prefix, const unsigned char *sha1)
 		!prefixcmp(head, "refs/heads/") ?
 			head + 11 :
 			!strcmp(head, "HEAD") ?
-				"detached HEAD" :
+				_("detached HEAD") :
 				head,
-		initial_commit ? " (root-commit)" : "");
+		initial_commit ? _(" (root-commit)") : "");
 
 	if (!log_tree_commit(&rev, commit)) {
 		rev.always_show_header = 1;
