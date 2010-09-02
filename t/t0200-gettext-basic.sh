@@ -39,11 +39,6 @@ test_expect_success GETTEXT 'sanity: Icelandic locale was compiled' '
     test -f "$TEXTDOMAINDIR/is/LC_MESSAGES/git.mo"
 '
 
-test_expect_success NO_GETTEXT "sanity: \$TEXTDOMAINDIR doesn't exists with NO_GETTEXT=YesPlease" '
-    ! test -d "$TEXTDOMAINDIR" &&
-    test "$TEXTDOMAINDIR" = "$GIT_TEXTDOMAINDIR"
-'
-
 # TODO: When we have more locales, generalize this to test them
 # all. Maybe we'll need a dir->locale map for that.
 test_expect_success GETTEXT_LOCALE 'sanity: gettext("") metadata is OK' '
