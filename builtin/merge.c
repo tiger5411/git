@@ -791,7 +791,7 @@ static int merge_trivial(void)
 	parent->next->item = remoteheads->item;
 	parent->next->next = NULL;
 	commit_tree(merge_msg.buf, result_tree, parent, result_commit, NULL);
-	finish(result_commit, "In-index merge");
+	finish(result_commit, _("In-index merge"));
 	drop_save();
 	return 0;
 }
