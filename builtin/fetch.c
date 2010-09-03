@@ -346,15 +346,15 @@ static int store_updated_refs(const char *raw_url, const char *remote_name,
 			what = "";
 		}
 		else if (!prefixcmp(rm->name, "refs/heads/")) {
-			kind = _("branch");
+			kind = "branch";
 			what = rm->name + 11;
 		}
 		else if (!prefixcmp(rm->name, "refs/tags/")) {
-			kind = _("tag");
+			kind = "tag";
 			what = rm->name + 10;
 		}
 		else if (!prefixcmp(rm->name, "refs/remotes/")) {
-			kind = _("remote branch");
+			kind = "remote branch";
 			what = rm->name + 13;
 		}
 		else {
@@ -394,7 +394,7 @@ static int store_updated_refs(const char *raw_url, const char *remote_name,
 			free(ref);
 		} else
 			sprintf(note, "* %-*s %-*s -> FETCH_HEAD",
-				TRANSPORT_SUMMARY_WIDTH, *kind ? kind : _("branch"),
+				TRANSPORT_SUMMARY_WIDTH, *kind ? kind : "branch",
 				 REFCOL_WIDTH, *what ? what : "HEAD");
 		if (*note) {
 			if (verbosity >= 0 && !shown_url) {
