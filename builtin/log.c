@@ -717,7 +717,7 @@ static void make_cover_letter(struct rev_info *rev, int use_stdout,
 {
 	const char *committer;
 	const char *subject_start = NULL;
-	const char *body = _("*** SUBJECT HERE ***\n\n*** BLURB HERE ***\n");
+	const char *body = "*** SUBJECT HERE ***\n\n*** BLURB HERE ***\n";
 	const char *msg;
 	const char *extra_headers = rev->extra_headers;
 	struct shortlog log;
