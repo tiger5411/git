@@ -63,7 +63,7 @@ Merge made by octopus.
  create mode 100644 c4.c
 EOF
 
-test_expect_success 'merge output uses pretty names' '
+test_expect_success NO_GETTEXT_POISON 'merge output uses pretty names' '
 	git reset --hard c1 &&
 	git merge c2 c3 c4 >actual &&
 	test_cmp actual expected
@@ -78,7 +78,7 @@ Merge made by octopus.
  create mode 100644 c5.c
 EOF
 
-test_expect_success 'merge up-to-date output uses pretty names' '
+test_expect_success NO_GETTEXT_POISON 'merge up-to-date output uses pretty names' '
 	git merge c4 c5 >actual &&
 	test_cmp actual expected
 '
@@ -94,7 +94,7 @@ Merge made by octopus.
  create mode 100644 c2.c
 EOF
 
-test_expect_success 'merge fast-forward output uses pretty names' '
+test_expect_success NO_GETTEXT_POISON 'merge fast-forward output uses pretty names' '
 	git reset --hard c0 &&
 	git merge c1 c2 >actual &&
 	test_cmp actual expected
