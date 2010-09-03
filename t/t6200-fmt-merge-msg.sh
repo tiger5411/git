@@ -77,7 +77,7 @@ cat >expected <<\EOF
 Merge branch 'left'
 EOF
 
-test_expect_success 'merge-msg test #1' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #1' '
 
 	git checkout master &&
 	git fetch . left &&
@@ -90,7 +90,7 @@ cat >expected <<EOF
 Merge branch 'left' of $(pwd)
 EOF
 
-test_expect_success 'merge-msg test #2' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #2' '
 
 	git checkout master &&
 	git fetch "$(pwd)" left &&
@@ -110,7 +110,7 @@ Merge branch 'left'
   Common #1
 EOF
 
-test_expect_success 'merge-msg test #3-1' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #3-1' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -124,7 +124,7 @@ test_expect_success 'merge-msg test #3-1' '
 	test_cmp expected actual
 '
 
-test_expect_success 'merge-msg test #3-2' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #3-2' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -156,7 +156,7 @@ Merge branches 'left' and 'right'
   Common #1
 EOF
 
-test_expect_success 'merge-msg test #4-1' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #4-1' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -170,7 +170,7 @@ test_expect_success 'merge-msg test #4-1' '
 	test_cmp expected actual
 '
 
-test_expect_success 'merge-msg test #4-2' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #4-2' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -184,7 +184,7 @@ test_expect_success 'merge-msg test #4-2' '
 	test_cmp expected actual
 '
 
-test_expect_success 'merge-msg test #5-1' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #5-1' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -198,7 +198,7 @@ test_expect_success 'merge-msg test #5-1' '
 	test_cmp expected actual
 '
 
-test_expect_success 'merge-msg test #5-2' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg test #5-2' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -212,7 +212,7 @@ test_expect_success 'merge-msg test #5-2' '
 	test_cmp expected actual
 '
 
-test_expect_success 'merge-msg -F' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg -F' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -226,7 +226,7 @@ test_expect_success 'merge-msg -F' '
 	test_cmp expected actual
 '
 
-test_expect_success 'merge-msg -F in subdirectory' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg -F in subdirectory' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -270,7 +270,7 @@ Merge tag 'tag-r3'
   Common #1
 EOF
 
-test_expect_success 'merge-msg tag' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg tag' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -300,7 +300,7 @@ Merge tags 'tag-r3' and 'tag-l5'
   Common #1
 EOF
 
-test_expect_success 'merge-msg two tags' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg two tags' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -330,7 +330,7 @@ Merge branch 'left', tag 'tag-r3'
   Common #1
 EOF
 
-test_expect_success 'merge-msg tag and branch' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg tag and branch' '
 
 	git config --unset-all merge.log
 	git config --unset-all merge.summary
@@ -350,7 +350,7 @@ Merge branch 'long'
 * long: (35 commits)
 EOF
 
-test_expect_success 'merge-msg lots of commits' '
+test_expect_success NO_GETTEXT_POISON 'merge-msg lots of commits' '
 
 	git checkout master &&
 	test_tick &&
