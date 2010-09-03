@@ -159,7 +159,7 @@ FASTFORWARD (no commit created; -m option ignored)
  2 files changed, 2 insertions(+), 0 deletions(-)
 EOF
 
-test_expect_success 'git resolve' '
+test_expect_success NO_GETTEXT_POISON 'git resolve' '
 	git checkout mybranch &&
 	git merge -m "Merge upstream changes." master |
 		sed -e "1s/[0-9a-f]\{7\}/VARIABLE/g" \
