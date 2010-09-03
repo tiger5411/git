@@ -4,6 +4,17 @@
 #include <langinfo.h>
 #include <stdlib.h>
 
+#ifdef GETTEXT_POISON
+#include <stdio.h>
+#include <stdlib.h>
+char *gettext_poison(const char* msgid)
+{
+	if (getenv("GIT_GETTEXT_POISON_DEBUG"))
+		fprintf(stderr, "msgid = [%s]\n", msgid);
+	return "# POISON";
+}
+#endif
+
 extern void git_setup_gettext(void) {
 	char *podir;
 	char *envdir = getenv("GIT_TEXTDOMAINDIR");

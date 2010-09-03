@@ -15,7 +15,8 @@ extern void git_setup_gettext(void);
 #include <libintl.h>
 #define _(s) gettext(s)
 #else
-#define _(s) "INJECTED WITH A POISON"
+char *gettext_poison(const char *);
+#define _(s) gettext_poison(s)
 #endif
 #endif
 
