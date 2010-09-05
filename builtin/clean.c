@@ -78,8 +78,12 @@ int cmd_clean(int argc, const char **argv, const char *prefix)
 		die(_("-x and -X cannot be used together"));
 
 	if (!show_only && !force)
-		die("clean.requireForce %s to true and neither -n nor -f given; "
-		    "refusing to clean", config_set ? "set" : "defaults");
+		if (config_set)
+			die(_("clean.requireForce set to true and neither -n nor -f given; "
+				  "refusing to clean"));
+		else
+			die(_("clean.requireForce defaults to true and neither -n nor -f given; "
+				  "refusing to clean"));
 
 	if (force > 1)
 		rm_flags = 0;
