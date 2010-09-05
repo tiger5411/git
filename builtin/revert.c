@@ -552,7 +552,9 @@ static int revert_or_cherry_pick(int argc, const char **argv)
 	struct rev_info revs;
 
 	git_config(git_default_config, NULL);
-	me = action == REVERT ? "revert" : "cherry-pick";
+	/* TRANSLATORS: This is used in several error messages indicating
+	   the name of the current program */
+	me = action == REVERT ? N_("revert") : N_("cherry-pick");
 	setenv(GIT_REFLOG_ACTION, me, 0);
 	parse_args(argc, argv);
 
