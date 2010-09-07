@@ -464,7 +464,10 @@ test_expect_success 'am newline in subject' '
 	git checkout first &&
 	test_tick &&
 	sed -e "s/second/second \\\n foo/" patch1 >patchnl &&
-	git am <patchnl >output.out 2>&1 &&
+	git am <patchnl >output.out 2>&1
+'
+
+test_expect_success C_LOCALE_OUTPUT 'output: am newline in subject' '
 	grep "^Applying: second \\\n foo$" output.out
 '
 
