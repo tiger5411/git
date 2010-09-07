@@ -465,11 +465,12 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 		die(_("could not create leading directories of '%s'"), git_dir);
 	set_git_dir(make_absolute_path(git_dir));
 
-	if (0 <= option_verbosity)
+	if (0 <= option_verbosity) {
 		if (option_bare)
 			printf(_("Cloning into bare repository %s"), dir);
 		else
 			printf(_("Cloning into %s"), dir);
+	}
 	init_db(option_template, INIT_DB_QUIET);
 
 	/*
