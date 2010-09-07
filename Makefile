@@ -1635,6 +1635,10 @@ ifdef NEEDS_LIBINTL
 	EXTLIBS += -lintl
 endif
 
+ifdef GNU_GETTEXT
+	MSGFMT += --check
+endif
+
 ifdef GETTEXT_POISON
 	COMPAT_CFLAGS += -DGETTEXT_POISON
 endif
