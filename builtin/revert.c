@@ -347,7 +347,8 @@ static int do_recursive_merge(struct commit *base, struct commit *next,
 	if (active_cache_changed &&
 	    (write_cache(index_fd, active_cache, active_nr) ||
 	     commit_locked_index(&index_lock)))
-		die(_("%s: Unable to write new index file"), _(me));
+		/* TRANSLATORS: %s will be "revert" or "cherry-pick" */
+		die(_("%s: Unable to write new index file"), me);
 	rollback_lock_file(&index_lock);
 
 	if (!clean) {
@@ -454,8 +455,10 @@ static int do_pick_commit(void)
 		return fast_forward_to(commit->object.sha1, head);
 
 	if (parent && parse_commit(parent) < 0)
+		/* TRANSLATORS: The first %s will be "revert" or
+		   "cherry-pick", the second %s a SHA1 */
 		die(_("%s: cannot parse parent commit %s"),
-		    _(me), sha1_to_hex(parent->object.sha1));
+		    me, sha1_to_hex(parent->object.sha1));
 
 	if (get_message(commit->buffer, &msg) != 0)
 		die(_("Cannot get commit message for %s"),
@@ -577,7 +580,8 @@ static int revert_or_cherry_pick(int argc, const char **argv)
 	}
 
 	if (read_cache() < 0)
-		die(_("git %s: failed to read the index"), _(me));
+		/* TRANSLATORS: %s will be "revert" or "cherry-pick" */
+		die(_("git %s: failed to read the index"), me);
 
 	prepare_revs(&revs);
 
