@@ -1671,6 +1671,10 @@ ifdef GIT_TEST_CMP_USE_COPIED_CONTEXT
 	export GIT_TEST_CMP_USE_COPIED_CONTEXT
 endif
 
+ifndef NONGNU_GETTEXT
+	MSGFMT += --check
+endif
+
 ifeq ($(TCLTK_PATH),)
 NO_TCLTK=NoThanks
 endif
