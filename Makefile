@@ -50,6 +50,9 @@ all::
 # Define LIBC_CONTAINS_LIBINTL if your gettext implementation doesn't
 # need -lintl when linking.
 #
+# Define NONGNU_GETTEXT if your implementation of libintl does not support
+# GNU extensions like "msgfmt --check".
+#
 # Define HAVE_PATHS_H if you have paths.h and want to use the default PATH
 # it specifies.
 #
@@ -885,6 +888,7 @@ ifeq ($(uname_S),SunOS)
 	NO_MKSTEMPS = YesPlease
 	NO_REGEX = YesPlease
 	NO_FNMATCH_CASEFOLD = YesPlease
+	NONGNU_GETTEXT = YesPlease
 	ifeq ($(uname_R),5.6)
 		SOCKLEN_T = int
 		NO_HSTRERROR = YesPlease
