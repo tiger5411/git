@@ -1077,6 +1077,7 @@ if test -n "$GETTEXT_POISON"
 then
 	GIT_GETTEXT_POISON=YesPlease
 	export GIT_GETTEXT_POISON
+	test_set_prereq GETTEXT_POISON
 else
 	test_set_prereq C_LOCALE_OUTPUT
 fi
