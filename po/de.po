@@ -3,6 +3,7 @@ msgstr ""
 "Project-Id-Version: Git\n"
 "Report-Msgid-Bugs-To: Git Mailing List <git@vger.kernel.org>\n"
 "POT-Creation-Date: 2010-09-03 15:45+0200\n"
+"PO-Revision-Date: 2010-09-05 19:09 +0000\n"
 "Last-Translator: Jan Krüger <jk@jk.gs>\n"
 "Language-Team: Git Mailing List <git@vger.kernel.org>\n"
 "MIME-Version: 1.0\n"
@@ -169,14 +170,14 @@ msgstr "# Keine Änderungen\n"
 
 #, c-format
 msgid "no changes added to commit%s\n"
-msgstr "keine Änderungen für den Commit vorgemerkt\n"
+msgstr "keine Änderungen für den Commit vorgemerkt%s\n"
 
 msgid " (use \"git add\" and/or \"git commit -a\")"
 msgstr " (benutze \"git add\" und/oder \"git commit -a\")"
 
 #, c-format
 msgid "nothing added to commit but untracked files present%s\n"
-msgstr "keine Änderungen für den Commit vorgemerkt, aber unberücksichtigte Dateien vorhanden\n"
+msgstr "keine Änderungen für den Commit vorgemerkt, aber unberücksichtigte Dateien vorhanden%s\n"
 
 msgid " (use \"git add\" to track)"
 msgstr " (benutze \"git add\", um sie zu berücksichtigen)"
@@ -211,7 +212,7 @@ msgstr "nur dort "
 
 #, c-format
 msgid "unexpected diff status %c"
-msgstr "unerwarteter Diff-Status %s"
+msgstr "unerwarteter Diff-Status %c"
 
 msgid "updating files failed"
 msgstr "Aktualisieren der Dateien ist fehlgeschlagen"
@@ -292,7 +293,7 @@ msgid ""
 "deleting branch '%s' that has been merged to\n"
 "         '%s', but it is not yet merged to HEAD."
 msgstr ""
-"lösche Branch '%', der nach '%s' gemerged wurde,\n"
+"lösche Branch '%s', der nach '%s' gemerged wurde,\n"
 "         aber er ist noch nicht nach HEAD gemerged."
 
 #, c-format
@@ -848,7 +849,7 @@ msgstr ""
 
 #, c-format
 msgid "Invalid cleanup mode %s"
-msgstr "Ungültiger Aufräummodus (--cleanup) für den Commit-Kommentar"
+msgstr "Ungültiger Aufräummodus (--cleanup=%s) für den Commit-Kommentar"
 
 msgid "Paths with -a does not make sense."
 msgstr "Es ist unsinnig, mit -a Pfade anzugeben."
