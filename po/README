@@ -66,3 +66,17 @@ But then you need remember to remove the comments before you submit
 the file upstream:
 
     perl -pi -e 's/^#: .*\n//' XX.po
+
+
+Testing your changes
+--------------------
+
+Before you submit your changes go back to the top-level and do:
+
+    make
+
+On systems with GNU gettext (i.e. not Solaris) this will compile your
+changed PO file with `msgfmt --check`, the --check option flags many
+common errors, e.g. missing printf format strings, or translated
+messages that deviate from the originals in whether they begin/end
+with a newline or not.
