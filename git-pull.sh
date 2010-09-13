@@ -167,9 +167,12 @@ Generally this means that you provided a wildcard refspec which had no
 matches on the remote end."; echo
 		fi
 	elif [ $# -gt 0 ] && [ "$1" != "$remote" ]; then
-		echo "You asked to pull from the remote '$1', but did not specify"
-		echo "a branch. Because this is not the default configured remote"
-		echo "for your current branch, you must specify a branch on the command line."
+		requested_remote=$1
+		# TRANSLATORS: $requested_remote will be a remote name, like
+		# "origin" or "avar"
+		eval_gettext "You asked to pull from the remote '\$requested_remote', but did not specify
+a branch. Because this is not the default configured remote
+for your current branch, you must specify a branch on the command line."; echo
 	elif [ -z "$curr_branch" -o -z "$upstream" ]; then
 		. git-parse-remote
 		error_on_missing_default_upstream "pull" $op_type $op_prep \
