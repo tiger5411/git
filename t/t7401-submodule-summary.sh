@@ -210,7 +210,7 @@ test_expect_success 'given commit' "
 EOF
 "
 
-test_expect_success '--for-status' "
+test_expect_success NO_GETTEXT_POISON '--for-status' "
     git submodule summary --for-status HEAD^ >actual &&
     test_cmp actual - <<EOF
 # Submodule changes to be committed:
