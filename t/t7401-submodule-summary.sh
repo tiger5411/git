@@ -226,7 +226,7 @@ EOF
     test_cmp expected actual
 "
 
-test_expect_success '--for-status' "
+test_expect_success C_LOCALE_OUTPUT '--for-status' "
     git submodule summary --for-status HEAD^ >actual &&
     test_cmp actual - <<EOF
 # Submodule changes to be committed:
