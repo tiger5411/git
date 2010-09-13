@@ -2168,9 +2168,15 @@ XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --language=C \
 	--keyword=_ --keyword=N_ --keyword="Q_:1,2"
 XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell
 XGETTEXT_FLAGS_PERL = $(XGETTEXT_FLAGS) --keyword=__ --language=Perl
-LOCALIZED_C := $(C_OBJ:o=c) t/0200/test.c
-LOCALIZED_SH := $(SCRIPT_SH) t/0200/test.sh
-LOCALIZED_PERL := $(SCRIPT_PERL) t/0200/test.perl
+LOCALIZED_C := $(C_OBJ:o=c)
+LOCALIZED_SH := $(SCRIPT_SH)
+LOCALIZED_PERL := $(SCRIPT_PERL)
+
+ifdef XGETTEXT_INCLUDE_TESTS
+LOCALIZED_C += t/t0200/test.c
+LOCALIZED_SH += t/t0200/test.sh
+LOCALIZED_PERL += t/t0200/test.perl
+endif
 
 po/git.pot: $(LOCALIZED_C)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ $(XGETTEXT_FLAGS_C) $(LOCALIZED_C)
