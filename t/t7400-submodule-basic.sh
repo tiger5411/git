@@ -86,7 +86,7 @@ test_expect_success 'submodule add' '
 	test_cmp empty untracked
 '
 
-test_expect_success 'submodule add to .gitignored path fails' '
+test_expect_success C_LOCALE_OUTPUT 'submodule add to .gitignored path fails' '
 	(
 		cd addtest-ignore &&
 		cat <<-\EOF >expect &&
