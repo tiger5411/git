@@ -4,9 +4,17 @@
 
 #include "git-compat-util.h"
 #include "gettext.h"
+
+#ifndef NO_GETTEXT
 #include <locale.h>
 #include <libintl.h>
-#include <langinfo.h>
+#ifdef HAVE_LIBCHARSET_H
+# include <libcharset.h>
+#else
+# include <langinfo.h>
+# define locale_charset() nl_langinfo(CODESET)
+#endif
+#endif
 
 int use_gettext_poison(void)
 {
@@ -22,7 +30,7 @@ static void init_gettext_charset(const char *domain)
 	const char *charset;
 
 	setlocale(LC_CTYPE, "");
-	charset = nl_langinfo(CODESET);
+	charset = locale_charset();
 	bind_textdomain_codeset(domain, charset);
 	setlocale(LC_CTYPE, "C");
 }
