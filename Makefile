@@ -47,6 +47,12 @@ all::
 # A translated Git requires GNU libintl or another gettext implementation,
 # plus libintl-perl at runtime.
 #
+# Define HAVE_LIBCHARSET_H if you haven't set NO_GETTEXT and you can't
+# trust the langinfo.h's nl_langinfo(CODESET) function to return the
+# current character set. GNU and Solaris have a nl_langinfo(CODESET),
+# FreeBSD can use either, but MinGW and some others need to use
+# libcharset.h's locale_charset() instead.
+#
 # Define LIBC_CONTAINS_LIBINTL if your gettext implementation doesn't
 # need -lintl when linking.
 #
@@ -1240,6 +1246,7 @@ ifneq (,$(wildcard ../THIS_IS_MSYSGIT))
 	EXTLIBS += /mingw/lib/libz.a
 	NO_R_TO_GCC_LINKER = YesPlease
 	INTERNAL_QSORT = YesPlease
+	HAVE_LIBCHARSET_H = YesPlease
 else
 	NO_CURL = YesPlease
 endif
@@ -1634,6 +1641,10 @@ endif
 
 ifdef HAVE_PATHS_H
 	BASIC_CFLAGS += -DHAVE_PATHS_H
+endif
+
+ifdef HAVE_LIBCHARSET_H
+	BASIC_CFLAGS += -DHAVE_LIBCHARSET_H
 endif
 
 ifdef DIR_HAS_BSD_GROUP_SEMANTICS
