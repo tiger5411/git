@@ -777,11 +777,11 @@ our ($message_id, %mail, $subject, $reply_to, $references, $message,
 
 sub extract_valid_address {
 	my $address = shift;
-	my $local_part_regexp = '[^<>"\s@]+';
-	my $domain_regexp = '[^.<>"\s@]+(?:\.[^.<>"\s@]+)+';
+	my $local_part_regexp = qr/[^<>"\s@]+/;
+	my $domain_regexp = qr/[^.<>"\s@]+(?:\.[^.<>"\s@]+)+/;
 
 	# check for a local address:
-	return $address if ($address =~ /^($local_part_regexp)$/);
+	return $address if ($address =~ /^($local_part_regexp)$/o);
 
 	$address =~ s/^\s*<(.*)>\s*$/$1/;
 	if ($have_email_valid) {
@@ -789,7 +789,7 @@ sub extract_valid_address {
 	} else {
 		# less robust/correct than the monster regexp in Email::Valid,
 		# but still does a 99% job, and one less dependency
-		$address =~ /($local_part_regexp\@$domain_regexp)/;
+		$address =~ /($local_part_regexp\@$domain_regexp)/o;
 		return $1;
 	}
 }
