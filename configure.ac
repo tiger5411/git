@@ -818,6 +818,12 @@ GIT_CHECK_FUNC(strtok_r,
 [NO_STRTOK_R=YesPlease])
 AC_SUBST(NO_STRTOK_R)
 #
+# Define NO_FNMATCH if you don't have fnmatch
+GIT_CHECK_FUNC(fnmatch,
+[NO_FNMATCH=],
+[NO_FNMATCH=YesPlease])
+AC_SUBST(NO_FNMATCH)
+#
 # Define NO_MEMMEM if you don't have memmem.
 GIT_CHECK_FUNC(memmem,
 [NO_MEMMEM=],
