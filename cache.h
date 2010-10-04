@@ -277,9 +277,15 @@ static inline int ce_to_dtype(const struct cache_entry *ce)
 	else
 		return DT_UNKNOWN;
 }
+
+/*
+ * We use extra parentheses around mode to work around a NetBSD issue
+ * described in NetBSD Problem Report #43937. See
+ * http://www.netbsd.org/cgi-bin/query-pr-single.pl?number=43937
+ */
 #define canon_mode(mode) \
-	(S_ISREG(mode) ? (S_IFREG | ce_permissions(mode)) : \
-	S_ISLNK(mode) ? S_IFLNK : S_ISDIR(mode) ? S_IFDIR : S_IFGITLINK)
+	(S_ISREG((mode)) ? (S_IFREG | ce_permissions(mode)) : \
+	S_ISLNK((mode)) ? S_IFLNK : S_ISDIR((mode)) ? S_IFDIR : S_IFGITLINK)
 
 #define flexible_size(STRUCT,len) ((offsetof(struct STRUCT,name) + (len) + 8) & ~7)
 #define cache_entry_size(len) flexible_size(cache_entry,len)
