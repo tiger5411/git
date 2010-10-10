@@ -178,7 +178,7 @@ static void consume_shallow_list(int fd)
 				continue;
 			if (!prefixcmp(line, "unshallow "))
 				continue;
-			die("git fetch-pack: expected shallow list");
+			die(_("git fetch-pack: expected shallow list"));
 		}
 	}
 }
@@ -189,7 +189,7 @@ static enum ack_type get_ack(int fd, unsigned char *result_sha1)
 	int len = packet_read_line(fd, line, sizeof(line));
 
 	if (!len)
-		die("git fetch-pack: expected ACK/NAK, got EOF");
+		die(_("git fetch-pack: expected ACK/NAK, got EOF"));
 	if (line[len-1] == '\n')
 		line[--len] = 0;
 	if (!strcmp(line, "NAK"))
@@ -205,7 +205,7 @@ static enum ack_type get_ack(int fd, unsigned char *result_sha1)
 			return ACK;
 		}
 	}
-	die("git fetch_pack: expected ACK/NAK, got '%s'", line);
+	die(_("git fetch_pack: expected ACK/NAK, got '%s'"), line);
 }
 
 static void send_request(int fd, struct strbuf *buf)
@@ -229,7 +229,7 @@ static int find_common(int fd[2], unsigned char *result_sha1,
 	size_t state_len = 0;
 
 	if (args.stateless_rpc && multi_ack == 1)
-		die("--stateless-rpc requires multi_ack_detailed");
+		die(_("--stateless-rpc requires multi_ack_detailed"));
 	if (marked)
 		for_each_ref(clear_marks, NULL);
 	marked = 1;
@@ -296,23 +296,23 @@ static int find_common(int fd[2], unsigned char *result_sha1,
 		while (packet_read_line(fd[0], line, sizeof(line))) {
 			if (!prefixcmp(line, "shallow ")) {
 				if (get_sha1_hex(line + 8, sha1))
-					die("invalid shallow line: %s", line);
+					die(_("invalid shallow line: %s"), line);
 				register_shallow(sha1);
 				continue;
 			}
 			if (!prefixcmp(line, "unshallow ")) {
 				if (get_sha1_hex(line + 10, sha1))
-					die("invalid unshallow line: %s", line);
+					die(_("invalid unshallow line: %s"), line);
 				if (!lookup_object(sha1))
-					die("object not found: %s", line);
+					die(_("object not found: %s"), line);
 				/* make sure that it is parsed as shallow */
 				if (!parse_object(sha1))
-					die("error in object: %s", line);
+					die(_("error in object: %s"), line);
 				if (unregister_shallow(sha1))
-					die("no shallow found: %s", line);
+					die(_("no shallow found: %s"), line);
 				continue;
 			}
-			die("expected shallow/unshallow, got %s", line);
+			die(_("expected shallow/unshallow, got %s"), line);
 		}
 	} else if (!args.stateless_rpc)
 		send_request(fd[1], &req_buf);
@@ -330,7 +330,7 @@ static int find_common(int fd[2], unsigned char *result_sha1,
 	while ((sha1 = get_rev())) {
 		packet_buf_write(&req_buf, "have %s\n", sha1_to_hex(sha1));
 		if (args.verbose)
-			fprintf(stderr, "have %s\n", sha1_to_hex(sha1));
+			fprintf(stderr, _("have %s\n"), sha1_to_hex(sha1));
 		in_vain++;
 		if (!(31 & ++count)) {
 			int ack;
@@ -351,7 +351,7 @@ static int find_common(int fd[2], unsigned char *result_sha1,
 			do {
 				ack = get_ack(fd[0], result_sha1);
 				if (args.verbose && ack)
-					fprintf(stderr, "got ack %d %s\n", ack,
+					fprintf(stderr, _("got ack %d %s\n"), ack,
 							sha1_to_hex(result_sha1));
 				switch (ack) {
 				case ACK:
@@ -386,7 +386,7 @@ static int find_common(int fd[2], unsigned char *result_sha1,
 			flushes--;
 			if (got_continue && MAX_IN_VAIN < in_vain) {
 				if (args.verbose)
-					fprintf(stderr, "giving up\n");
+					fprintf(stderr, _("giving up\n"));
 				break; /* give up */
 			}
 		}
@@ -395,7 +395,7 @@ done:
 	packet_buf_write(&req_buf, "done\n");
 	send_request(fd[1], &req_buf);
 	if (args.verbose)
-		fprintf(stderr, "done\n");
+		fprintf(stderr, _("done\n"));
 	if (retval != 0) {
 		multi_ack = 0;
 		flushes++;
@@ -407,7 +407,7 @@ done:
 		int ack = get_ack(fd[0], result_sha1);
 		if (ack) {
 			if (args.verbose)
-				fprintf(stderr, "got ack (%d) %s\n", ack,
+				fprintf(stderr, _("got ack (%d) %s\n"), ack,
 					sha1_to_hex(result_sha1));
 			if (ack == ACK)
 				return 0;
@@ -445,7 +445,7 @@ static void mark_recent_complete_commits(unsigned long cutoff)
 {
 	while (complete && cutoff <= complete->item->date) {
 		if (args.verbose)
-			fprintf(stderr, "Marking %s as complete\n",
+			fprintf(stderr, _("Marking %s as complete\n"),
 				sha1_to_hex(complete->item->object.sha1));
 		pop_most_recent_commit(&complete, COMPLETE);
 	}
@@ -571,7 +571,7 @@ static int everything_local(struct ref **refs, int nr_match, char **match)
 			if (!args.verbose)
 				continue;
 			fprintf(stderr,
-				"want %s (%s)\n", sha1_to_hex(remote),
+				_("want %s (%s)\n"), sha1_to_hex(remote),
 				ref->name);
 			continue;
 		}
@@ -580,7 +580,7 @@ static int everything_local(struct ref **refs, int nr_match, char **match)
 		if (!args.verbose)
 			continue;
 		fprintf(stderr,
-			"already have %s (%s)\n", sha1_to_hex(remote),
+			_("already have %s (%s)\n"), sha1_to_hex(remote),
 			ref->name);
 	}
 	return retval;
@@ -615,8 +615,8 @@ static int get_pack(int xd[2], char **pack_lockfile)
 		demux.data = xd;
 		demux.out = -1;
 		if (start_async(&demux))
-			die("fetch-pack: unable to fork off sideband"
-			    " demultiplexer");
+			die(_("fetch-pack: unable to fork off sideband"
+			    " demultiplexer"));
 	}
 	else
 		demux.out = xd[0];
@@ -629,7 +629,7 @@ static int get_pack(int xd[2], char **pack_lockfile)
 		struct pack_header header;
 
 		if (read_pack_header(demux.out, &header))
-			die("protocol error: bad pack header");
+			die(_("protocol error: bad pack header"));
 		snprintf(hdr_arg, sizeof(hdr_arg),
 			 "--pack_header=%"PRIu32",%"PRIu32,
 			 ntohl(header.hdr_version), ntohl(header.hdr_entries));
@@ -668,16 +668,16 @@ static int get_pack(int xd[2], char **pack_lockfile)
 	cmd.in = demux.out;
 	cmd.git_cmd = 1;
 	if (start_command(&cmd))
-		die("fetch-pack: unable to fork off %s", argv[0]);
+		die(_("fetch-pack: unable to fork off %s"), argv[0]);
 	if (do_keep && pack_lockfile) {
 		*pack_lockfile = index_pack_lockfile(cmd.out);
 		close(cmd.out);
 	}
 
 	if (finish_command(&cmd))
-		die("%s failed", argv[0]);
+		die(_("%s failed"), argv[0]);
 	if (use_sideband && finish_async(&demux))
-		die("error in sideband demultiplexer");
+		die(_("error in sideband demultiplexer"));
 	return 0;
 }
 
@@ -691,30 +691,30 @@ static struct ref *do_fetch_pack(int fd[2],
 	unsigned char sha1[20];
 
 	if (is_repository_shallow() && !server_supports("shallow"))
-		die("Server does not support shallow clients");
+		die(_("Server does not support shallow clients"));
 	if (server_supports("multi_ack_detailed")) {
 		if (args.verbose)
-			fprintf(stderr, "Server supports multi_ack_detailed\n");
+			fprintf(stderr, _("Server supports multi_ack_detailed\n"));
 		multi_ack = 2;
 	}
 	else if (server_supports("multi_ack")) {
 		if (args.verbose)
-			fprintf(stderr, "Server supports multi_ack\n");
+			fprintf(stderr, _("Server supports multi_ack\n"));
 		multi_ack = 1;
 	}
 	if (server_supports("side-band-64k")) {
 		if (args.verbose)
-			fprintf(stderr, "Server supports side-band-64k\n");
+			fprintf(stderr, _("Server supports side-band-64k\n"));
 		use_sideband = 2;
 	}
 	else if (server_supports("side-band")) {
 		if (args.verbose)
-			fprintf(stderr, "Server supports side-band\n");
+			fprintf(stderr, _("Server supports side-band\n"));
 		use_sideband = 1;
 	}
 	if (server_supports("ofs-delta")) {
 		if (args.verbose)
-			fprintf(stderr, "Server supports ofs-delta\n");
+			fprintf(stderr, _("Server supports ofs-delta\n"));
 	} else
 		prefer_ofs_delta = 0;
 	if (everything_local(&ref, nr_match, match)) {
@@ -726,12 +726,12 @@ static struct ref *do_fetch_pack(int fd[2],
 			/* When cloning, it is not unusual to have
 			 * no common commit.
 			 */
-			warning("no common commits");
+			warning(_("no common commits"));
 
 	if (args.stateless_rpc)
 		packet_flush(fd[1]);
 	if (get_pack(fd, pack_lockfile))
-		die("git fetch-pack: fetch failed.");
+		die(_("git fetch-pack: fetch failed."));
 
  all_done:
 	return ref;
@@ -884,7 +884,7 @@ int cmd_fetch_pack(int argc, const char **argv, const char *prefix)
 	ref = fetch_pack(&args, fd, conn, ref, dest,
 		nr_heads, heads, pack_lockfile_ptr);
 	if (pack_lockfile) {
-		printf("lock %s\n", pack_lockfile);
+		printf(_("lock %s\n"), pack_lockfile);
 		fflush(stdout);
 	}
 	close(fd[0]);
@@ -901,7 +901,7 @@ int cmd_fetch_pack(int argc, const char **argv, const char *prefix)
 		 */
 		for (i = 0; i < nr_heads; i++)
 			if (heads[i] && heads[i][0]) {
-				error("no such remote ref %s", heads[i]);
+				error(_("no such remote ref %s"), heads[i]);
 				ret = 1;
 			}
 	}
@@ -937,7 +937,7 @@ struct ref *fetch_pack(struct fetch_pack_args *my_args,
 		nr_heads = remove_duplicates(nr_heads, heads);
 	if (!ref) {
 		packet_flush(fd[1]);
-		die("no matching remote head");
+		die(_("no matching remote head"));
 	}
 	ref_cpy = do_fetch_pack(fd, ref, nr_heads, heads, pack_lockfile);
 
@@ -951,13 +951,13 @@ struct ref *fetch_pack(struct fetch_pack_args *my_args,
 		mtime.nsec = ST_MTIME_NSEC(st);
 		if (stat(shallow, &st)) {
 			if (mtime.sec)
-				die("shallow file was removed during fetch");
+				die(_("shallow file was removed during fetch"));
 		} else if (st.st_mtime != mtime.sec
 #ifdef USE_NSEC
 				|| ST_MTIME_NSEC(st) != mtime.nsec
 #endif
 			  )
-			die("shallow file was changed during fetch");
+			die(_("shallow file was changed during fetch"));
 
 		fd = hold_lock_file_for_update(&lock, shallow,
 					       LOCK_DIE_ON_ERROR);
