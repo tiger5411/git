@@ -1747,7 +1747,16 @@ configure: configure.ac
 	$(QUIET_GEN)$(RM) $@ $<+ && \
 	sed -e 's/@@GIT_VERSION@@/$(GIT_VERSION)/g' \
 	    $< > $<+ && \
-	autoconf -o $@ $<+ && \
+	if ! autoconf -o $@ $<+; \
+	then \
+		echo "ERROR: We couldn't run autoconf for you. But you're in luck!"; \
+		echo "ERROR: Git doesn't actually need autoconf to build. Just try"; \
+		echo "ERROR: running \"make\" directly at the top-level. The Makefile"; \
+		echo "ERROR: will guess your configuration based on your OS. If that"; \
+		echo "ERROR: doesn't work try installing autoconf and running"; \
+		echo "ERROR: \"make configure && ./configure && make\" again."; \
+		false; \
+	fi && \
 	$(RM) $<+
 
 # These can record GIT_VERSION
