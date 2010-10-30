@@ -105,4 +105,7 @@ test_expect_success GETTEXT_LOCALE 'sanity: Some gettext("") data for real local
     test -s real-locale
 '
 
+# Test eval_gettext() interpolation with the actual eval_gettext function
+test_eval_gettext_interpolation
+
 test_done
