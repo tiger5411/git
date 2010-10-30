@@ -46,4 +46,7 @@ test_expect_success NO_GETTEXT_POISON 'eval_gettext: our eval_gettext() fallback
     test_cmp expect actual
 '
 
+# Test eval_gettext() interpolation with the fallback eval_gettext function
+test_eval_gettext_interpolation
+
 test_done
