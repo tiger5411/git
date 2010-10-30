@@ -40,3 +40,27 @@ else
 	test_set_prereq NO_GETTEXT
 	say "# lib-gettext: No GETTEXT support available"
 fi
+
+test_eval_gettext_interpolation() {
+	test_expect_success NO_GETTEXT_POISON 'eval_gettext: our eval_gettext() fallback can interpolate whitespace variables' '
+	    git_am_cmdline="git am" &&
+	    printf "test git am" >expect &&
+	    eval_gettext "test \$git_am_cmdline" >actual &&
+	    test_cmp expect actual
+	'
+
+	test_expect_success NO_GETTEXT_POISON 'eval_gettext: git am $cmdline bug' '
+	    cmdline="git am -3" &&
+	    export cmdline &&
+	    cat >expect <<EOF &&
+When you have resolved this problem run "git am -3 --resolved".
+If you would prefer to skip this patch, instead run "git am -3 --skip".
+To restore the original branch and stop patching run "git am -3 --abort".
+EOF
+	    eval_gettext "When you have resolved this problem run \"\$cmdline --resolved\".
+If you would prefer to skip this patch, instead run \"\$cmdline --skip\".
+To restore the original branch and stop patching run \"\$cmdline --abort\"." >actual &&
+	    echo >>actual &&
+	    test_cmp expect actual
+	'
+}
