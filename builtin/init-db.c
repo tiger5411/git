@@ -346,7 +346,7 @@ int init_db(const char *template_dir, unsigned int flags)
 		else if (shared_repository == PERM_EVERYBODY)
 			sprintf(buf, "%d", OLD_PERM_EVERYBODY);
 		else
-			die("oops");
+			die(_("oops"));
 		git_config_set("core.sharedrepository", buf);
 		git_config_set("receive.denyNonFastforwards", "true");
 	}
