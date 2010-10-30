@@ -38,9 +38,7 @@ then
 
 		# Solaris has a gettext(1) but no eval_gettext(1)
 		eval_gettext () {
-			gettext_out=$(gettext "$1")
-			gettext_eval="printf '%s' \"$gettext_out\""
-			printf "%s" "`eval \"$gettext_eval\"`"
+			gettext "$1" | git sh-i18n--envsubst
 		}
 	else
 		# Since gettext.sh isn't available we'll have to define our own
@@ -55,8 +53,7 @@ then
 		}
 
 		eval_gettext () {
-			gettext_eval="printf '%s' \"$1\""
-			printf "%s" "`eval \"$gettext_eval\"`"
+			printf "%s" "$1" | git sh-i18n--envsubst
 		}
 	fi
 else
