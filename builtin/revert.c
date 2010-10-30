@@ -294,9 +294,9 @@ static NORETURN void die_dirty_index(const char *me)
 					  "Please, commit your changes or stash them to proceed."));
 		} else {
 			if (action == REVERT)
-				die("Your local changes would be overwritten by revert.\n");
+				die(_("Your local changes would be overwritten by revert.\n"));
 			else
-				die("Your local changes would be overwritten by cherry-pick.\n");
+				die(_("Your local changes would be overwritten by cherry-pick.\n"));
 		}
 	}
 }
