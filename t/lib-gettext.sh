@@ -70,7 +70,6 @@ fi
 test_eval_gettext_interpolation() {
 	test_expect_success NO_GETTEXT_POISON 'eval_gettext: our eval_gettext() fallback can interpolate whitespace variables' '
 	    git_am_cmdline="git am" &&
-	    export git_am_cmdline &&
 	    printf "test git am" >expect &&
 	    eval_gettext "test \$git_am_cmdline" >actual &&
 	    test_cmp expect actual

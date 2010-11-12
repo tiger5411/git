@@ -38,7 +38,7 @@ then
 
 		# Solaris has a gettext(1) but no eval_gettext(1)
 		eval_gettext () {
-			gettext "$1" | git sh-i18n--envsubst
+			gettext "$1" | (export PATH `envsubst --variables "$1"`; envsubst "$1")
 		}
 	else
 		# Since gettext.sh isn't available we'll have to define our own
@@ -53,7 +53,7 @@ then
 		}
 
 		eval_gettext () {
-			printf "%s" "$1" | git sh-i18n--envsubst
+			printf "%s" "$1" | (export PATH `envsubst --variables "$1"`; envsubst "$1")
 		}
 	fi
 else
