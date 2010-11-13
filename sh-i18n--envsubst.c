@@ -185,24 +185,6 @@ struct string_list_ty
   size_t nitems_max;
 };
 
-/* Compare two strings given by reference.  */
-static int
-cmp_string (const void *pstr1, const void *pstr2)
-{
-  const char *str1 = *(const char **)pstr1;
-  const char *str2 = *(const char **)pstr2;
-
-  return strcmp (str1, str2);
-}
-
-/* Sort a list of strings.  */
-static inline void
-string_list_sort (string_list_ty *slp)
-{
-  if (slp->nitems > 0)
-    qsort (slp->item, slp->nitems, sizeof (slp->item[0]), cmp_string);
-}
-
 /* Test whether a string list contains a given string.  */
 static inline int
 string_list_member (const string_list_ty *slp, const char *s)
