@@ -61,7 +61,6 @@ static unsigned short int all_variables;
 
 /* Forward declaration of local functions.  */
 static void print_variables (const char *string);
-static void note_variables (const char *string);
 static void subst_from_stdin (void);
 
 int
@@ -291,27 +290,6 @@ string_list_destroy (string_list_ty *slp)
 /* Set of variables on which to perform substitution.
    Used only if !all_variables.  */
 static string_list_ty variables_set;
-
-/* Adds a variable to variables_set.  */
-static void
-note_variable (const char *var_ptr, size_t var_len)
-{
-  char *string = xmalloc (var_len + 1);
-  memcpy (string, var_ptr, var_len);
-  string[var_len] = '\0';
-
-  string_list_append (&variables_set, string);
-}
-
-/* Stores the variables occurring in the string in variables_set.  */
-static void
-note_variables (const char *string)
-{
-  string_list_init (&variables_set);
-  find_variables (string, &note_variable);
-  string_list_sort (&variables_set);
-}
-
 
 static int
 do_getc ()
