@@ -70,26 +70,23 @@ main (int argc, char *argv[])
   /* Default values for command line options.  */
   unsigned short int show_variables = 0;
 
-  if (argc > 2)
-	{
-	  error ("too many arguments");
-	  exit (EXIT_FAILURE);
-	}
+  printf("argc = %d\n", argc);
 
   switch (argc)
 	{
-	case 0:
-	  error("you must call me with arguments");
 	case 1:
 	  all_variables = 1;
       subst_from_stdin ();
-	case 2:
-	  if (strcmp(argv[2], "--variables"))
+	  break;
+	case 3:
+	  if (strcmp(argv[1], "--variables"))
 		error ("first argument must be --variables when two are given");
 	  show_variables = 1;
       print_variables (argv[2]);
+	  break;
 	default:
 	  error ("too many arguments");
+	  break;
 	}
 
   /* Close standard error.  This is simpler than fwriteerror_no_ebadf, because
