@@ -84,6 +84,8 @@ main (int argc, char *argv[])
 	  all_variables = 1;
       subst_from_stdin ();
 	case 2:
+	  if (strcmp(argv[2], "--variables"))
+		error ("first argument must be --variables when two are given");
 	  show_variables = 1;
       print_variables (argv[2]);
 	default:
