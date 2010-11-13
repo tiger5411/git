@@ -229,19 +229,6 @@ sorted_string_list_member (const string_list_ty *slp, const char *s)
   return 0;
 }
 
-/* Destroy a list of strings.  */
-static inline void
-string_list_destroy (string_list_ty *slp)
-{
-  size_t j;
-
-  for (j = 0; j < slp->nitems; ++j)
-    free ((char *) slp->item[j]);
-  if (slp->item != NULL)
-    free (slp->item);
-}
-
-
 /* Set of variables on which to perform substitution.
    Used only if !all_variables.  */
 static string_list_ty variables_set;
