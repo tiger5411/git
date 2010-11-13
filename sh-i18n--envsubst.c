@@ -70,67 +70,40 @@ main (int argc, char *argv[])
   /* Default values for command line options.  */
   unsigned short int show_variables = 0;
 
-  int opt;
-
-  /* Parse command line options.  */
-  while ((opt = getopt_long (argc, argv, "hvV", long_options, NULL)) != EOF)
-    switch (opt)
-    {
-    case '\0':		/* Long option.  */
-      break;
-    case 'h':
-      do_help = 1;
-      break;
-    case 'v':
-      show_variables = 1;
-      break;
-    case 'V':
-      do_version = 1;
-      break;
-    default:
-	  error("invalid usage");
-      /*usage (EXIT_FAILURE);*/
-    }
-
-  if (argc - optind > 1)
-    error ("too many arguments");
-
-  /* Distinguish the two main operation modes.  */
-  if (show_variables)
-    {
-      /* Output only the variables.  */
-      switch (argc - optind)
+  if (argc > 2)
 	{
-	case 1:
-	  break;
-	case 0:
-	  error ("missing arguments");
-	default:
-	  abort ();
+	  error ("too many arguments");
+	  exit (EXIT_FAILURE);
 	}
-      print_variables (argv[optind++]);
-    }
-  else
-    {
-      /* Actually perform the substitutions.  */
-      switch (argc - optind)
+
+  switch (argc)
 	{
-	case 1:
-	  all_variables = 0;
-	  note_variables (argv[optind++]);
-	  break;
 	case 0:
+	  error("you must call me with arguments");
+	case 1:
 	  all_variables = 1;
-	  break;
-	default:
-	  abort ();
-	}
       subst_from_stdin ();
+	case 2:
+	  show_variables = 1;
+      print_variables (argv[2]);
+	default:
+	  error ("too many arguments");
+	}
+
+  /* Close standard error.  This is simpler than fwriteerror_no_ebadf, because
+     upon failure we don't need an errno - all we can do at this point is to
+     set an exit status.  */
+  errno = 0;
+  if (ferror (stderr) || fflush (stderr))
+    { 
+      fclose (stderr);
+      exit (EXIT_FAILURE);
     }
+  if (fclose (stderr) && errno != EBADF)
+    exit (EXIT_FAILURE);
 
   exit (EXIT_SUCCESS);
 }
-
 
 /* Parse the string and invoke the callback each time a $VARIABLE or
    ${VARIABLE} construct is seen, where VARIABLE is a nonempty sequence
