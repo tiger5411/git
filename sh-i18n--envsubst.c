@@ -281,6 +281,7 @@ sorted_string_list_member (const string_list_ty *slp, const char *s)
   return 0;
 }
 
+
 /* Set of variables on which to perform substitution.
    Used only if !all_variables.  */
 static string_list_ty variables_set;
