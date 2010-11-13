@@ -70,13 +70,14 @@ main (int argc, char *argv[])
   /* Default values for command line options.  */
   unsigned short int show_variables = 0;
 
-  printf("argc = %d\n", argc);
-
   switch (argc)
 	{
 	case 1:
 	  all_variables = 1;
       subst_from_stdin ();
+	  break;
+	case 2:
+	  error ("too few arguments");
 	  break;
 	case 3:
 	  if (strcmp(argv[1], "--variables"))
