@@ -59,35 +59,149 @@
 /* If true, substitution shall be performed on all variables.  */
 static unsigned short int all_variables;
 
+/* Forward declaration of local functions.  */
+static void print_variables (const char *string);
+static void note_variables (const char *string);
 static void subst_from_stdin (void);
 
 int
 main (int argc, char *argv[])
 {
-  all_variables = 1;
+  /* Default values for command line options.  */
+  unsigned short int show_variables = 0;
 
-  if (argc > 1)
-	{
-	  error ("too many arguments");
-	  exit (EXIT_FAILURE);
-	}
+  int opt;
 
-  subst_from_stdin ();
-
-  /* Close standard error.  This is simpler than fwriteerror_no_ebadf, because
-     upon failure we don't need an errno - all we can do at this point is to
-     set an exit status.  */
-  errno = 0;
-  if (ferror (stderr) || fflush (stderr))
-    { 
-      fclose (stderr);
-      exit (EXIT_FAILURE);
+  /* Parse command line options.  */
+  while ((opt = getopt_long (argc, argv, "hvV", long_options, NULL)) != EOF)
+    switch (opt)
+    {
+    case '\0':		/* Long option.  */
+      break;
+    case 'h':
+      do_help = 1;
+      break;
+    case 'v':
+      show_variables = 1;
+      break;
+    case 'V':
+      do_version = 1;
+      break;
+    default:
+	  error("invalid usage");
+      /*usage (EXIT_FAILURE);*/
     }
-  if (fclose (stderr) && errno != EBADF)
-    exit (EXIT_FAILURE);
+
+  if (argc - optind > 1)
+    error ("too many arguments");
+
+  /* Distinguish the two main operation modes.  */
+  if (show_variables)
+    {
+      /* Output only the variables.  */
+      switch (argc - optind)
+	{
+	case 1:
+	  break;
+	case 0:
+	  error ("missing arguments");
+	default:
+	  abort ();
+	}
+      print_variables (argv[optind++]);
+    }
+  else
+    {
+      /* Actually perform the substitutions.  */
+      switch (argc - optind)
+	{
+	case 1:
+	  all_variables = 0;
+	  note_variables (argv[optind++]);
+	  break;
+	case 0:
+	  all_variables = 1;
+	  break;
+	default:
+	  abort ();
+	}
+      subst_from_stdin ();
+    }
 
   exit (EXIT_SUCCESS);
 }
+
+
+/* Parse the string and invoke the callback each time a $VARIABLE or
+   ${VARIABLE} construct is seen, where VARIABLE is a nonempty sequence
+   of ASCII alphanumeric/underscore characters, starting with an ASCII
+   alphabetic/underscore character.
+   We allow only ASCII characters, to avoid dependencies w.r.t. the current
+   encoding: While "${\xe0}" looks like a variable access in ISO-8859-1
+   encoding, it doesn't look like one in the BIG5, BIG5-HKSCS, GBK, GB18030,
+   SHIFT_JIS, JOHAB encodings, because \xe0\x7d is a single character in these
+   encodings.  */
+static void
+find_variables (const char *string,
+		void (*callback) (const char *var_ptr, size_t var_len))
+{
+  for (; *string != '\0';)
+    if (*string++ == '$')
+      {
+	const char *variable_start;
+	const char *variable_end;
+	unsigned short int valid;
+	char c;
+
+	if (*string == '{')
+	  string++;
+
+	variable_start = string;
+	c = *string;
+	if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_')
+	  {
+	    do
+	      c = *++string;
+	    while ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')
+		   || (c >= '0' && c <= '9') || c == '_');
+	    variable_end = string;
+
+	    if (variable_start[-1] == '{')
+	      {
+		if (*string == '}')
+		  {
+		    string++;
+		    valid = 1;
+		  }
+		else
+		  valid = 0;
+	      }
+	    else
+	      valid = 1;
+
+	    if (valid)
+	      callback (variable_start, variable_end - variable_start);
+	  }
+      }
+}
+
+
+/* Print a variable to stdout, followed by a newline.  */
+static void
+print_variable (const char *var_ptr, size_t var_len)
+{
+  fwrite (var_ptr, var_len, 1, stdout);
+  putchar ('\n');
+}
+
+/* Print the variables contained in STRING to stdout, each one followed by a
+   newline.  */
+static void
+print_variables (const char *string)
+{
+  find_variables (string, &print_variable);
+}
+
 
 /* Type describing list of immutable strings,
    implemented using a dynamic array.  */
@@ -98,6 +212,15 @@ struct string_list_ty
   size_t nitems;
   size_t nitems_max;
 };
+
+/* Initialize an empty list of strings.  */
+static inline void
+string_list_init (string_list_ty *slp)
+{
+  slp->item = NULL;
+  slp->nitems = 0;
+  slp->nitems_max = 0;
+}
 
 /* Append a single string to the end of a list of strings.  */
 static inline void
@@ -115,6 +238,24 @@ string_list_append (string_list_ty *slp, const char *s)
 
   /* Add the string to the end of the list.  */
   slp->item[slp->nitems++] = s;
+}
+
+/* Compare two strings given by reference.  */
+static int
+cmp_string (const void *pstr1, const void *pstr2)
+{
+  const char *str1 = *(const char **)pstr1;
+  const char *str2 = *(const char **)pstr2;
+
+  return strcmp (str1, str2);
+}
+
+/* Sort a list of strings.  */
+static inline void
+string_list_sort (string_list_ty *slp)
+{
+  if (slp->nitems > 0)
+    qsort (slp->item, slp->nitems, sizeof (slp->item[0]), cmp_string);
 }
 
 /* Test whether a string list contains a given string.  */
@@ -161,10 +302,43 @@ sorted_string_list_member (const string_list_ty *slp, const char *s)
   return 0;
 }
 
+/* Destroy a list of strings.  */
+static inline void
+string_list_destroy (string_list_ty *slp)
+{
+  size_t j;
+
+  for (j = 0; j < slp->nitems; ++j)
+    free ((char *) slp->item[j]);
+  if (slp->item != NULL)
+    free (slp->item);
+}
+
 
 /* Set of variables on which to perform substitution.
    Used only if !all_variables.  */
 static string_list_ty variables_set;
+
+/* Adds a variable to variables_set.  */
+static void
+note_variable (const char *var_ptr, size_t var_len)
+{
+  char *string = xmalloc (var_len + 1);
+  memcpy (string, var_ptr, var_len);
+  string[var_len] = '\0';
+
+  string_list_append (&variables_set, string);
+}
+
+/* Stores the variables occurring in the string in variables_set.  */
+static void
+note_variables (const char *string)
+{
+  string_list_init (&variables_set);
+  find_variables (string, &note_variable);
+  string_list_sort (&variables_set);
+}
+
 
 static int
 do_getc ()
