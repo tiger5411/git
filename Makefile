@@ -826,6 +826,8 @@ ifeq ($(uname_S),Windows)
 	NO_REGEX = YesPlease
 	NO_CURL = YesPlease
 	NO_PYTHON = YesPlease
+	NO_GETTEXT = YesPlease
+	NEEDS_LIBINTL =
 	BLK_SHA1 = YesPlease
 	NATIVE_CRLF = YesPlease
 
@@ -878,6 +880,8 @@ ifneq (,$(findstring MINGW,$(uname_S)))
 	OBJECT_CREATION_USES_RENAMES = UnfortunatelyNeedsTo
 	NO_REGEX = YesPlease
 	NO_PYTHON = YesPlease
+	NO_GETTEXT = YesPlease
+	NEEDS_LIBINTL =
 	BLK_SHA1 = YesPlease
 	ETAGS_TARGET = ETAGS
 	COMPAT_CFLAGS += -D__USE_MINGW_ACCESS -DNOGDI -Icompat -Icompat/fnmatch -Icompat/win32
