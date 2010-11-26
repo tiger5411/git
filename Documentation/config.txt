@@ -1205,6 +1205,11 @@ http.proxy::
 	environment variable (see linkgit:curl[1]).  This can be overridden
 	on a per-remote basis; see remote.<name>.proxy
 
+https.proxy::
+	Override the HTTPS proxy, normally configured using the 'HTTPS_PROXY'
+	or 'https_proxy' environment variables (see linkgit:curl[1]).  This
+	can be overridden on a per-remote basis; see remote.<name>.proxy
+
 http.sslVerify::
 	Whether to verify the SSL certificate when fetching or pushing
 	over HTTPS. Can be overridden by the 'GIT_SSL_NO_VERIFY' environment
