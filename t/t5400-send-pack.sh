@@ -90,7 +90,8 @@ test_expect_success 'refuse deleting push with denyDeletes' '
 	    git config receive.denyDeletes true &&
 	    git branch extra master
 	) &&
-	test_must_fail git send-pack ./victim :extra master
+	test_must_fail git send-pack ./victim :extra master &&
+	test_when_finished "(cd victim && git config --unset receive.denyDeletes)"
 '
 
 test_expect_success 'cannot override denyDeletes with git -c send-pack' '
@@ -101,7 +102,8 @@ test_expect_success 'cannot override denyDeletes with git -c send-pack' '
 		git branch extra master
 	) &&
 	test_must_fail git -c receive.denyDeletes=false \
-					send-pack ./victim :extra master
+					send-pack ./victim :extra master &&
+	test_when_finished "(cd victim && git config --unset receive.denyDeletes)"
 '
 
 test_expect_success 'override denyDeletes with git -c receive-pack' '
@@ -125,7 +127,8 @@ test_expect_success 'denyNonFastforwards trumps --force' '
 	victim_orig=$(cd victim && git rev-parse --verify master) &&
 	test_must_fail git send-pack --force ./victim master^:master &&
 	victim_head=$(cd victim && git rev-parse --verify master) &&
-	test "$victim_orig" = "$victim_head"
+	test "$victim_orig" = "$victim_head" &&
+	test_when_finished "(cd victim && git config --unset receive.denyNonFastforwards)"
 '
 
 test_expect_success 'push --all excludes remote-tracking hierarchy' '
