@@ -76,8 +76,7 @@ test_expect_success 'refuse pushing rewound head without --force' '
 	test "$victim_head" = "$pushed_head"
 '
 
-test_expect_success \
-        'push can be used to delete a ref' '
+test_expect_success 'push can be used to delete a ref' '
 	( cd victim && git branch extra master ) &&
 	git send-pack ./victim :extra master &&
 	( cd victim &&
