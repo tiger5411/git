@@ -32,7 +32,11 @@ test_expect_success setup '
 	done &&
 	git update-ref HEAD "$commit" &&
 	git clone ./. victim &&
-	( cd victim && git config receive.denyCurrentBranch warn && git log ) &&
+	(
+	    cd victim &&
+	    git config receive.denyCurrentBranch warn &&
+	    git log
+	) &&
 	git update-ref HEAD "$zero" &&
 	parent=$zero &&
 	i=0 &&
