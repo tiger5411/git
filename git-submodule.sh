@@ -53,7 +53,7 @@ resolve_relative_url ()
 				sep=:
 				;;
 			*)
-				die "cannot strip one component off url '$remoteurl'"
+				die "$(eval_gettext "cannot strip one component off url '\$remoteurl'")"
 				;;
 			esac
 			;;
