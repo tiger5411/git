@@ -252,7 +252,7 @@ static void read_empty(unsigned const char *sha1, int verbose)
 	args[i] = NULL;
 
 	if (run_command_v_opt(args, RUN_GIT_CMD))
-		die("read-tree failed");
+		die(_("read-tree failed"));
 }
 
 static void reset_hard(unsigned const char *sha1, int verbose)
@@ -951,7 +951,7 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 		const char *nargv[] = {"reset", "--merge", NULL};
 
 		if (!file_exists(git_path("MERGE_HEAD")))
-			die("There is no merge to abort (MERGE_HEAD missing).");
+			die(_("There is no merge to abort (MERGE_HEAD missing)."));
 
 		/* Invoke 'git reset --merge' */
 		return cmd_reset(nargc, nargv, prefix);
@@ -966,10 +966,10 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 		 * add/rm <file>', just 'git commit'.
 		 */
 		if (advice_resolve_conflict)
-			die("You have not concluded your merge (MERGE_HEAD exists).\n"
-			    "Please, commit your changes before you can merge.");
+			die(_("You have not concluded your merge (MERGE_HEAD exists).\n"
+				  "Please, commit your changes before you can merge."));
 		else
-			die("You have not concluded your merge (MERGE_HEAD exists).");
+			die(_("You have not concluded your merge (MERGE_HEAD exists)."));
 	}
 	resolve_undo_clear();
 
