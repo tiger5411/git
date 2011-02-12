@@ -554,7 +554,7 @@ static char *cut_ident_timestamp_part(char *string)
 {
 	char *ket = strrchr(string, '>');
 	if (!ket || ket[1] != ' ')
-		die("Malformed ident string: '%s'", string);
+		die(_("Malformed ident string: '%s'"), string);
 	*++ket = '\0';
 	return ket;
 }
@@ -588,7 +588,7 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 			struct commit *c;
 			c = lookup_commit_reference_by_name(squash_message);
 			if (!c)
-				die("could not lookup commit %s", squash_message);
+				die(_("could not lookup commit %s"), squash_message);
 			ctx.output_encoding = get_commit_output_encoding();
 			format_commit_message(c, "squash! %s\n\n", &sb,
 					      &ctx);
@@ -621,7 +621,7 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 		struct commit *commit;
 		commit = lookup_commit_reference_by_name(fixup_message);
 		if (!commit)
-			die("could not lookup commit %s", fixup_message);
+			die(_("could not lookup commit %s"), fixup_message);
 		ctx.output_encoding = get_commit_output_encoding();
 		format_commit_message(commit, "fixup! %s\n\n",
 				      &sb, &ctx);
@@ -942,7 +942,7 @@ static int parse_and_validate_options(int argc, const char *argv[],
 	if (f > 1)
 		die(_("Only one of -c/-C/-F/--fixup can be used."));
 	if (message.len && f > 0)
-		die(("Option -m cannot be combined with -c/-C/-F/--fixup."));
+		die((_("Option -m cannot be combined with -c/-C/-F/--fixup.")));
 	if (edit_message)
 		use_message = edit_message;
 	if (amend && !use_message && !fixup_message)
