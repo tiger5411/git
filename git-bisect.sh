@@ -419,7 +419,7 @@ bisect_run () {
 }
 
 bisect_log () {
-	test -s "$GIT_DIR/BISECT_LOG" || die "We are not bisecting."
+	test -s "$GIT_DIR/BISECT_LOG" || die "$(gettext "We are not bisecting.")"
 	cat "$GIT_DIR/BISECT_LOG"
 }
 
