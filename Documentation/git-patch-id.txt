@@ -9,6 +9,8 @@ SYNOPSIS
 --------
 'git patch-id' < <patch>
 
+'git log --pretty=format:%H -p | git patch-id'
+
 DESCRIPTION
 -----------
 A "patch ID" is nothing but a SHA1 of the diff associated with a patch, with
