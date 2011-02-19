@@ -1,0 +1,37 @@
+git-sh-i18n(1)
+===============
+
+NAME
+----
+git-sh-i18n - Common git shell script setup code
+
+SYNOPSIS
+--------
+'. "$(git --exec-path)/git-sh-i18n"'
+
+DESCRIPTION
+-----------
+
+Like linkgit:git-sh-setup[1] this is not a command the end user would
+want to run. Ever. This documentation is meant for people who are
+studying the Porcelain-ish scripts and/or are writing new ones.
+
+The 'gitsh-i18n' scriptlet is designed to be sourced (using
+`.`) by other shell scripts to set up some variables pointing at
+the normal git directories and a few helper shell functions.
+
+FUNCTIONS
+---------
+
+gettext::
+
+eval_gettext::
+	die with the usage message.
+
+Author
+------
+Written by Ævar Arnfjörð Bjarmason <avarab@gmail.com>
+
+GIT
+---
+Part of the linkgit:git[1] suite
