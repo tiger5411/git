@@ -282,7 +282,7 @@ test_expect_success 'commit --squash works with -c for same commit' '
 	commit_msg_is "squash! edited commit"
 '
 
-test_expect_success 'commit --squash works with editor' '
+test_expect_success NO_GETTEXT_POISON 'commit --squash works with editor' '
 	commit_for_rebase_autosquash_setup &&
 	test_set_editor "$TEST_DIRECTORY"/t7500/add-content &&
 	git commit --squash HEAD~1 &&
