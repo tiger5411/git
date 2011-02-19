@@ -1,0 +1,30 @@
+git-sh-i18n--envsubst(1)
+========================
+
+NAME
+----
+git-sh-i18n--envsubst - Git's very own envsubst(1)
+
+SYNOPSIS
+--------
+
+	eval_gettext () {
+		printf "%s" "$1" | (
+			export PATH $(git sh-i18n--envsubst --variables "$1");
+			git sh-i18n--envsubst "$1"
+		)
+	}
+
+DESCRIPTION
+-----------
+
+This is an internal utility used by linkgit:git-sh-i18n[1], it is not
+a command the end user would want to run. Ever.
+
+Author
+------
+Written by Ævar Arnfjörð Bjarmason <avarab@gmail.com>
+
+GIT
+---
+Part of the linkgit:git[1] suite
