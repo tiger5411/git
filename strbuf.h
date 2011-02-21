@@ -118,6 +118,8 @@ struct strbuf_expand_dict_entry {
 extern size_t strbuf_expand_dict_cb(struct strbuf *sb, const char *placeholder, void *context);
 extern void strbuf_addbuf_percentquote(struct strbuf *dst, const struct strbuf *src);
 
+__attribute__((format (printf,2,0)))
+void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list args);
 __attribute__((format (printf,2,3)))
 extern void strbuf_addf(struct strbuf *sb, const char *fmt, ...);
 
