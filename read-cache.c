@@ -547,7 +547,7 @@ static struct cache_entry *create_alias_ce(struct cache_entry *ce, struct cache_
 	struct cache_entry *new;
 
 	if (alias->ce_flags & CE_ADDED)
-		die("Will not add file alias '%s' ('%s' already exists in index)", ce->name, alias->name);
+		die(_("Will not add file alias '%s' ('%s' already exists in index)"), ce->name, alias->name);
 
 	/* Ok, create the new entry using the name of the existing alias */
 	len = ce_namelen(alias);
@@ -562,7 +562,7 @@ static void record_intent_to_add(struct cache_entry *ce)
 {
 	unsigned char sha1[20];
 	if (write_sha1_file("", 0, blob_type, sha1))
-		die("cannot create an empty blob in the object database");
+		die(_("cannot create an empty blob in the object database"));
 	hashcpy(ce->sha1, sha1);
 }
 
@@ -579,7 +579,7 @@ int add_to_index(struct index_state *istate, const char *path, struct stat *st, 
 			  (intent_only ? ADD_CACHE_NEW_ONLY : 0));
 
 	if (!S_ISREG(st_mode) && !S_ISLNK(st_mode) && !S_ISDIR(st_mode))
-		return error("%s: can only add regular files, symbolic links or git-directories", path);
+		return error(_("%s: can only add regular files, symbolic links or git-directories"), path);
 
 	namelen = strlen(path);
 	if (S_ISDIR(st_mode)) {
@@ -642,7 +642,7 @@ int add_to_index(struct index_state *istate, const char *path, struct stat *st, 
 	}
 	if (!intent_only) {
 		if (index_path(ce->sha1, path, st, HASH_WRITE_OBJECT))
-			return error("unable to index file %s", path);
+			return error(_("unable to index file %s"), path);
 	} else
 		record_intent_to_add(ce);
 
@@ -659,9 +659,9 @@ int add_to_index(struct index_state *istate, const char *path, struct stat *st, 
 	if (pretend)
 		;
 	else if (add_index_entry(istate, ce, add_option))
-		return error("unable to add %s to index",path);
+		return error(_("unable to add %s to index"),path);
 	if (verbose && !was_same)
-		printf("add '%s'\n", path);
+		printf(_("add '%s'\n"), path);
 	return 0;
 }
 
@@ -669,7 +669,7 @@ int add_file_to_index(struct index_state *istate, const char *path, int flags)
 {
 	struct stat st;
 	if (lstat(path, &st))
-		die_errno("unable to stat '%s'", path);
+		die_errno(_("unable to stat '%s'"), path);
 	return add_to_index(istate, path, &st, flags);
 }
 
@@ -681,7 +681,7 @@ struct cache_entry *make_cache_entry(unsigned int mode,
 	struct cache_entry *ce;
 
 	if (!verify_path(path)) {
-		error("Invalid path '%s'", path);
+		error(_("Invalid path '%s'"), path);
 		return NULL;
 	}
 
@@ -943,12 +943,12 @@ static int add_index_entry_with_check(struct index_state *istate, struct cache_e
 	if (!ok_to_add)
 		return -1;
 	if (!verify_path(ce->name))
-		return error("Invalid path '%s'", ce->name);
+		return error(_("Invalid path '%s'"), ce->name);
 
 	if (!skip_df_check &&
 	    check_file_directory_conflict(istate, ce, pos, ok_to_replace)) {
 		if (!ok_to_replace)
-			return error("'%s' appears as both a file and as a directory",
+			return error(_("'%s' appears as both a file and as a directory"),
 				     ce->name);
 		pos = index_name_pos(istate, ce->name, ce->ce_flags);
 		pos = -pos-1;
@@ -1105,8 +1105,8 @@ int refresh_index(struct index_state *istate, unsigned int flags, const char **p
 	const char *needs_update_fmt;
 	const char *needs_merge_fmt;
 
-	needs_update_fmt = (in_porcelain ? "M\t%s\n" : "%s: needs update\n");
-	needs_merge_fmt = (in_porcelain ? "U\t%s\n" : "%s: needs merge\n");
+	needs_update_fmt = (in_porcelain ? "M\t%s\n" : _("%s: needs update\n"));
+	needs_merge_fmt = (in_porcelain ? "U\t%s\n" : _("%s: needs merge\n"));
 	for (i = 0; i < istate->cache_nr; i++) {
 		struct cache_entry *ce, *new;
 		int cache_errno = 0;
@@ -1166,14 +1166,14 @@ static int verify_hdr(struct cache_header *hdr, unsigned long size)
 	unsigned char sha1[20];
 
 	if (hdr->hdr_signature != htonl(CACHE_SIGNATURE))
-		return error("bad signature");
+		return error(_("bad signature"));
 	if (hdr->hdr_version != htonl(2) && hdr->hdr_version != htonl(3))
-		return error("bad index version");
+		return error(_("bad index version"));
 	git_SHA1_Init(&c);
 	git_SHA1_Update(&c, hdr, size - 20);
 	git_SHA1_Final(sha1, &c);
 	if (hashcmp(sha1, (unsigned char *)hdr + size - 20))
-		return error("bad index file sha1 signature");
+		return error(_("bad index file sha1 signature"));
 	return 0;
 }
 
@@ -1189,9 +1189,9 @@ static int read_index_extension(struct index_state *istate,
 		break;
 	default:
 		if (*ext < 'A' || 'Z' < *ext)
-			return error("index uses %.4s extension, which we do not understand",
+			return error(_("index uses %.4s extension, which we do not understand"),
 				     ext);
-		fprintf(stderr, "ignoring %.4s extension\n", ext);
+		fprintf(stderr, _("ignoring %.4s extension\n"), ext);
 		break;
 	}
 	return 0;
@@ -1231,7 +1231,7 @@ static void convert_from_disk(struct ondisk_cache_entry *ondisk, struct cache_en
 		extended_flags = ntohs(ondisk2->flags2) << 16;
 		/* We do not yet understand any bit out of CE_EXTENDED_FLAGS */
 		if (extended_flags & ~CE_EXTENDED_FLAGS)
-			die("Unknown index entry format %08x", extended_flags);
+			die(_("Unknown index entry format %08x"), extended_flags);
 		ce->ce_flags |= extended_flags;
 		name = ondisk2->name;
 	}
@@ -1282,21 +1282,21 @@ int read_index_from(struct index_state *istate, const char *path)
 	if (fd < 0) {
 		if (errno == ENOENT)
 			return 0;
-		die_errno("index file open failed");
+		die_errno(_("index file open failed"));
 	}
 
 	if (fstat(fd, &st))
-		die_errno("cannot stat the open index");
+		die_errno(_("cannot stat the open index"));
 
 	errno = EINVAL;
 	mmap_size = xsize_t(st.st_size);
 	if (mmap_size < sizeof(struct cache_header) + 20)
-		die("index file smaller than expected");
+		die(_("index file smaller than expected"));
 
 	mmap = xmmap(NULL, mmap_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
 	close(fd);
 	if (mmap == MAP_FAILED)
-		die_errno("unable to map index file");
+		die_errno(_("unable to map index file"));
 
 	hdr = mmap;
 	if (verify_hdr(hdr, mmap_size) < 0)
@@ -1356,7 +1356,7 @@ int read_index_from(struct index_state *istate, const char *path)
 unmap:
 	munmap(mmap, mmap_size);
 	errno = EINVAL;
-	die("index file corrupt");
+	die(_("index file corrupt"));
 }
 
 int is_index_unborn(struct index_state *istate)
@@ -1667,7 +1667,7 @@ int read_index_unmerged(struct index_state *istate)
 		new_ce->ce_flags = create_ce_flags(len, 0) | CE_CONFLICTED;
 		new_ce->ce_mode = ce->ce_mode;
 		if (add_index_entry(istate, new_ce, 0))
-			return error("%s: cannot drop to stage #0",
+			return error(_("%s: cannot drop to stage #0"),
 				     ce->name);
 		i = index_name_pos(istate, new_ce->name, len);
 	}
