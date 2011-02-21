@@ -24,6 +24,50 @@ int use_poison(void)
 	return poison_requested;
 }
 
+static char rot13_ch(char ch)
+{
+	/* NEEDSWORK: arbitrary */
+	if (ch >= 'a' && ch <= 'z')
+		return (ch - 'a' + 13) % 26 + 'a';
+	if (ch >= 'A' && ch <= 'Z')
+		return (ch - 'A' + 13) % 26 + 'A';
+	switch (ch) {
+	case '!': return '1';
+	case '1': return '!';
+	case '@': return '2';
+	case '2': return '@';
+	case '#': return '3';
+	case '3': return '#';
+	case '$': return '4';
+	case '4': return '$';
+	case '%': return '5';
+	case '5': return '"';	/* avoid printf magic. */
+	case '^': return '6';
+	case '6': return '^';
+	case '&': return '7';
+	case '7': return '&';
+	case '*': return '8';
+	case '8': return '*';
+	case '(': return '9';
+	case '9': return '(';
+	case ')': return '0';
+	case '0': return ')';
+	}
+	return ch;
+}
+
+const char *rot13(const char *msg)
+{
+	/* NEEDSWORK: leaky */
+	char *result = xmallocz(strlen(msg));
+	const char *p = msg;
+	char *q = result;
+
+	while (*p)
+		*q++ = rot13_ch(*p++);
+	return result;
+}
+
 #ifndef NO_GETTEXT
 static void init_gettext_charset(const char *domain)
 {

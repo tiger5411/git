@@ -34,13 +34,14 @@ static inline void git_setup_gettext(void)
 
 #ifdef GETTEXT_POISON
 extern int use_poison(void);
+extern const char *rot13(const char *msgid);
 #else
 #define use_poison() 0
 #endif
 
 static inline FORMAT_PRESERVING(1) const char *_(const char *msgid)
 {
-	return use_poison() ? "# GETTEXT POISON #" : gettext(msgid);
+	return use_poison() ? rot13(msgid) : gettext(msgid);
 }
 
 /* Mark msgid for translation but do not translate it. */
