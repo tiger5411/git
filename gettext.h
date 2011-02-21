@@ -16,7 +16,7 @@
 #define FORMAT_PRESERVING(n) __attribute__((format_arg(n)))
 
 #ifdef GETTEXT_POISON
-#define use_poison() 1
+extern int use_poison(void);
 #else
 #define use_poison() 0
 #endif
