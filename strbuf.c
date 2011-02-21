@@ -193,21 +193,22 @@ void strbuf_adddup(struct strbuf *sb, size_t pos, size_t len)
 	strbuf_setlen(sb, sb->len + len);
 }
 
-void strbuf_addf(struct strbuf *sb, const char *fmt, ...)
+__attribute__((format(printf, 2, 0)))
+void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list args)
 {
 	int len;
 	va_list ap;
 
 	if (!strbuf_avail(sb))
 		strbuf_grow(sb, 64);
-	va_start(ap, fmt);
+	va_copy(ap, args);
 	len = vsnprintf(sb->buf + sb->len, sb->alloc - sb->len, fmt, ap);
 	va_end(ap);
 	if (len < 0)
 		die("your vsnprintf is broken");
 	if (len > strbuf_avail(sb)) {
 		strbuf_grow(sb, len);
-		va_start(ap, fmt);
+		va_copy(ap, args);
 		len = vsnprintf(sb->buf + sb->len, sb->alloc - sb->len, fmt, ap);
 		va_end(ap);
 		if (len > strbuf_avail(sb)) {
@@ -215,6 +216,15 @@ void strbuf_addf(struct strbuf *sb, const char *fmt, ...)
 		}
 	}
 	strbuf_setlen(sb, sb->len + len);
+}
+
+__attribute__((format(printf, 2, 3)))
+void strbuf_addf(struct strbuf *sb, const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	strbuf_vaddf(sb, fmt, ap);
+	va_end(ap);
 }
 
 void strbuf_expand(struct strbuf *sb, const char *format, expand_fn_t fn,
