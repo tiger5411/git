@@ -1417,7 +1417,6 @@ ifdef NO_GETTEXT
 else
 	LIB_OBJS += gettext.o
 endif
-endif
 ifdef NO_STRCASESTR
 	COMPAT_CFLAGS += -DNO_STRCASESTR
 	COMPAT_OBJS += compat/strcasestr.o
