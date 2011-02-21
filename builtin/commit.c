@@ -559,6 +559,47 @@ static char *cut_ident_timestamp_part(char *string)
 	return ket;
 }
 
+__attribute__((format(printf, 4, 5)))
+void fprintf_commented(FILE *fp, int mid_line, const char *color, const char *fmt, ...)
+{
+	struct strbuf sb = STRBUF_INIT;
+	struct strbuf linebuf = STRBUF_INIT;
+	const char *line, *eol;
+	va_list ap;
+
+	va_start(ap, fmt);
+	strbuf_vaddf(&sb, fmt, ap);
+	va_end(ap);
+
+	if (!*sb.buf) {
+		color_fprintf(fp, color, "# ");
+		return;
+	}
+	for (line = sb.buf; ; line = eol + 1) {
+		eol = strchr(line, '\n');
+
+		if (!eol && !*line)
+			break;	/* "...\n" */
+		strbuf_reset(&linebuf);
+		if (!mid_line) {
+			strbuf_addch(&linebuf, '#');
+			if (*line && *line != '\t')
+				strbuf_addch(&linebuf, ' ');
+		}
+		if (eol) {
+			strbuf_add(&linebuf, line, eol - line);
+			color_fprintf_ln(fp, color, "%s", linebuf.buf);
+		} else {
+			strbuf_addstr(&linebuf, line);
+			color_fprintf(fp, color, "%s", linebuf.buf);
+			break;
+		}
+		mid_line = 0;
+	}
+	strbuf_release(&linebuf);
+	strbuf_release(&sb);
+}
+
 static int prepare_to_commit(const char *index_file, const char *prefix,
 			     struct wt_status *s,
 			     struct strbuf *author_ident)
@@ -695,50 +736,50 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	if (use_editor && include_status) {
 		char *ai_tmp, *ci_tmp;
 		if (in_merge)
-			fprintf(fp,
-				_("#\n"
-				"# It looks like you may be committing a MERGE.\n"
-				"# If this is not correct, please remove the file\n"
-				"#	%s\n"
-				"# and try again.\n"
-				"#\n"),
+			fprintf_commented(fp, 0, "",
+				_("\n"
+				"It looks like you may be committing a MERGE.\n"
+				"If this is not correct, please remove the file\n"
+				"	%s\n"
+				"and try again.\n"
+				"\n"),
 				git_path("MERGE_HEAD"));
 
-		fprintf(fp,
-			_("\n"
-			"# Please enter the commit message for your changes."));
+		fprintf(fp, "\n");
+		fprintf_commented(fp, 0, "",
+			_("Please enter the commit message for your changes."));
 		if (cleanup_mode == CLEANUP_ALL)
-			fprintf(fp,
+			fprintf_commented(fp, 1, "",
 				_(" Lines starting\n"
-				"# with '#' will be ignored, and an empty"
+				"with '#' will be ignored, and an empty"
 				" message aborts the commit.\n"));
 		else /* CLEANUP_SPACE, that is. */
-			fprintf(fp,
+			fprintf_commented(fp, 1, "",
 				_(" Lines starting\n"
-				"# with '#' will be kept; you may remove them"
+				"with '#' will be kept; you may remove them"
 				" yourself if you want to.\n"
-				"# An empty message aborts the commit.\n"));
+				"An empty message aborts the commit.\n"));
 		if (only_include_assumed)
-			fprintf(fp, "# %s\n", only_include_assumed);
+			fprintf_commented(fp, 0, "", "%s\n", only_include_assumed);
 
 		ai_tmp = cut_ident_timestamp_part(author_ident->buf);
 		ci_tmp = cut_ident_timestamp_part(committer_ident.buf);
 		if (strcmp(author_ident->buf, committer_ident.buf))
-			fprintf(fp,
+			fprintf_commented(fp, 0, "",
 				_("%s"
-				"# Author:    %s\n"),
-				ident_shown++ ? "" : "#\n",
+				"Author:    %s\n"),
+				ident_shown++ ? "" : "\n",
 				author_ident->buf);
 
 		if (!user_ident_sufficiently_given())
-			fprintf(fp,
+			fprintf_commented(fp, 0, "",
 				_("%s"
-				"# Committer: %s\n"),
-				ident_shown++ ? "" : "#\n",
+				"Committer: %s\n"),
+				ident_shown++ ? "" : "\n",
 				committer_ident.buf);
 
 		if (ident_shown)
-			fprintf(fp, "#\n");
+			fprintf_commented(fp, 0, "", "\n");
 
 		saved_color_setting = s->use_color;
 		s->use_color = 0;
