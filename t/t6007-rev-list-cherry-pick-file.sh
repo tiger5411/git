@@ -110,6 +110,13 @@ test_expect_success '--cherry-pick --right-only' '
 	test_cmp actual.named expect
 '
 
+test_expect_success '--cherry' '
+	git rev-list --cherry F...E -- bar > actual &&
+	git name-rev --stdin --name-only --refs="*tags/*" \
+		< actual > actual.named &&
+	test_cmp actual.named expect
+'
+
 test_expect_success '--cherry-pick --left-only' '
 	git rev-list --cherry-pick --left-only E...F -- bar > actual &&
 	git name-rev --stdin --name-only --refs="*tags/*" \
