@@ -266,6 +266,7 @@ const char git_version_string[] = GIT_VERSION;
  * RUN_SETUP for reading from the configuration file.
  */
 #define NEED_WORK_TREE		(1<<3)
+#define DO_NOT_TRANSLATE	(1<<4)
 
 struct cmd_struct {
 	const char *cmd;
@@ -281,6 +282,10 @@ static int run_builtin(struct cmd_struct *p, int argc, const char **argv)
 
 	prefix = NULL;
 	help = argc == 2 && !strcmp(argv[1], "-h");
+	if (!(p->option & DO_NOT_TRANSLATE))
+		git_setup_gettext();
+	else
+		unsetenv("GIT_GETTEXT_POISON");
 	if (!help) {
 		if (p->option & RUN_SETUP)
 			prefix = setup_git_directory();
@@ -430,7 +435,7 @@ static void handle_internal_command(int argc, const char **argv)
 		{ "tar-tree", cmd_tar_tree },
 		{ "unpack-file", cmd_unpack_file, RUN_SETUP },
 		{ "unpack-objects", cmd_unpack_objects, RUN_SETUP },
-		{ "update-index", cmd_update_index, RUN_SETUP },
+		{ "update-index", cmd_update_index, RUN_SETUP | DO_NOT_TRANSLATE },
 		{ "update-ref", cmd_update_ref, RUN_SETUP },
 		{ "update-server-info", cmd_update_server_info, RUN_SETUP },
 		{ "upload-archive", cmd_upload_archive },
@@ -536,8 +541,6 @@ int main(int argc, const char **argv)
 	cmd = git_extract_argv0_path(argv[0]);
 	if (!cmd)
 		cmd = "git-help";
-
-	git_setup_gettext();
 
 	/*
 	 * "git-xxxx" is the same as "git xxxx", but we obviously:
