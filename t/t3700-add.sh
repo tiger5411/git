@@ -260,7 +260,7 @@ test_expect_success '"add non-existent" should fail' '
 	! (git ls-files | grep "non-existent")
 '
 
-test_expect_success 'git add --dry-run of existing changed file' "
+test_expect_success C_LOCALE_OUTPUT 'git add --dry-run of existing changed file' "
 	echo new >>track-this &&
 	git add --dry-run track-this >actual 2>&1 &&
 	echo \"add 'track-this'\" | test_cmp - actual
