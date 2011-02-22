@@ -552,7 +552,7 @@ static void update_refs_for_switch(struct checkout_opts *opts,
 		if (!opts->quiet) {
 			if (old->path && advice_detached_head)
 				detach_advice(old->path, new->name);
-			describe_detached_head("HEAD is now at", new->commit);
+			describe_detached_head(_("HEAD is now at"), new->commit);
 		}
 	} else if (new->path) {	/* Switch branches. */
 		create_symref("HEAD", new->path, msg.buf);
@@ -736,7 +736,7 @@ static int parse_branchname_arg(int argc, const char **argv,
 
 	if (get_sha1_mb(arg, rev)) {
 		if (has_dash_dash)          /* case (1) */
-			die("invalid reference: %s", arg);
+			die(_("invalid reference: %s"), arg);
 		if (dwim_new_local_branch_ok &&
 		    !check_filename(NULL, arg) &&
 		    argc == 1) {
@@ -775,7 +775,7 @@ static int parse_branchname_arg(int argc, const char **argv,
 	}
 
 	if (!*source_tree)                   /* case (1): want a tree */
-		die("reference is not a tree: %s", arg);
+		die(_("reference is not a tree: %s"), arg);
 	if (!has_dash_dash) {/* case (3 -> 1) */
 		/*
 		 * Do not complain the most common case
@@ -903,7 +903,6 @@ int cmd_checkout(int argc, const char **argv, const char *prefix)
 	 * remote branches, erroring out for invalid or ambiguous cases.
 	 */
 	if (argc) {
-<<<<<<< HEAD
 		int dwim_ok =
 			!patch_mode &&
 			dwim_new_local_branch &&
@@ -913,74 +912,6 @@ int cmd_checkout(int argc, const char **argv, const char *prefix)
 				&new, &source_tree, rev, &opts.new_branch);
 		argv += n;
 		argc -= n;
-=======
-		if (!strcmp(argv[0], "--")) {       /* case (2) */
-			argv++;
-			argc--;
-			goto no_reference;
-		}
-
-		arg = argv[0];
-		has_dash_dash = (argc > 1) && !strcmp(argv[1], "--");
-
-		if (!strcmp(arg, "-"))
-			arg = "@{-1}";
-
-		if (get_sha1_mb(arg, rev)) {
-			if (has_dash_dash)          /* case (1) */
-				die(_("invalid reference: %s"), arg);
-			if (!patch_mode &&
-			    dwim_new_local_branch &&
-			    opts.track == BRANCH_TRACK_UNSPECIFIED &&
-			    !opts.new_branch &&
-			    !check_filename(NULL, arg) &&
-			    argc == 1) {
-				const char *remote = unique_tracking_name(arg);
-				if (!remote || get_sha1(remote, rev))
-					goto no_reference;
-				opts.new_branch = arg;
-				arg = remote;
-				/* DWIMmed to create local branch */
-			}
-			else
-				goto no_reference;
-		}
-
-		/* we can't end up being in (2) anymore, eat the argument */
-		argv++;
-		argc--;
-
-		new.name = arg;
-		if ((new.commit = lookup_commit_reference_gently(rev, 1))) {
-			setup_branch_path(&new);
-
-			if ((check_ref_format(new.path) == CHECK_REF_FORMAT_OK) &&
-			    resolve_ref(new.path, rev, 1, NULL))
-				;
-			else
-				new.path = NULL;
-			parse_commit(new.commit);
-			source_tree = new.commit->tree;
-		} else
-			source_tree = parse_tree_indirect(rev);
-
-		if (!source_tree)                   /* case (1): want a tree */
-			die(_("reference is not a tree: %s"), arg);
-		if (!has_dash_dash) {/* case (3 -> 1) */
-			/*
-			 * Do not complain the most common case
-			 *	git checkout branch
-			 * even if there happen to be a file called 'branch';
-			 * it would be extremely annoying.
-			 */
-			if (argc)
-				verify_non_filename(NULL, arg);
-		}
-		else {
-			argv++;
-			argc--;
-		}
->>>>>>> i18n: git-checkout basic messages
 	}
 
 	if (opts.track == BRANCH_TRACK_UNSPECIFIED)
