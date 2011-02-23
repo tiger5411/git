@@ -263,6 +263,13 @@ void set_config_fetch_recurse_submodules(int value)
 	config_fetch_recurse_submodules = value;
 }
 
+static int is_submodule_commit_present(const char *path, unsigned char sha1[20])
+{
+	if (!add_submodule_odb(path))
+		return lookup_commit_reference(sha1) != 0;
+	return 0;
+}
+
 static void submodule_collect_changed_cb(struct diff_queue_struct *q,
 					 struct diff_options *options,
 					 void *data)
@@ -280,7 +287,7 @@ static void submodule_collect_changed_cb(struct diff_queue_struct *q,
 			 * being moved around. */
 			struct string_list_item *path;
 			path = unsorted_string_list_lookup(&changed_submodule_paths, p->two->path);
-			if (!path)
+			if (!path && !is_submodule_commit_present(p->two->path, p->two->sha1))
 				string_list_append(&changed_submodule_paths, xstrdup(p->two->path));
 		} else {
 			/* Submodule is new or was moved here */
