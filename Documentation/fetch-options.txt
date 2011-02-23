@@ -73,6 +73,14 @@ ifndef::git-pull[]
 	Prepend <path> to paths printed in informative messages
 	such as "Fetching submodule foo".  This option is used
 	internally when recursing over submodules.
+
+--submodule-default=[yes|on-demand]::
+	This option is used internally to set the submodule recursion default
+	to either a boolean configuration value representing "true" (for
+	unconditonal recursion) or to "on-demand" (when only those submodules
+	should be fetched of which new commits have been fetched in its
+	superproject).
+	Using the "--[no-]recurse-submodules" option ignores this setting.
 endif::git-pull[]
 
 -u::
