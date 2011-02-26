@@ -16,6 +16,7 @@
 #endif
 #endif
 
+#ifdef GETTEXT_POISON
 int use_gettext_poison(void)
 {
 	static int poison_requested = -1;
@@ -23,6 +24,7 @@ int use_gettext_poison(void)
 		poison_requested = getenv("GIT_GETTEXT_POISON") ? 1 : 0;
 	return poison_requested;
 }
+#endif
 
 #ifndef NO_GETTEXT
 static void init_gettext_charset(const char *domain)
