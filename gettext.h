@@ -22,8 +22,6 @@
 #	define gettext(s) (s)
 #endif
 
-#endif
-
 #define FORMAT_PRESERVING(n) __attribute__((format_arg(n)))
 
 #ifndef NO_GETTEXT
