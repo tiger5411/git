@@ -20,6 +20,10 @@
 #		undef gettext
 #	endif
 #	define gettext(s) (s)
+#	ifdef ngettext
+#		undef ngettext
+#	endif
+#	define ngettext(s, p, n) ((n == 1) ? (s) : (p))
 #endif
 
 #define FORMAT_PRESERVING(n) __attribute__((format_arg(n)))
