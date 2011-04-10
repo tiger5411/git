@@ -2051,7 +2051,7 @@ XGETTEXT_FLAGS = \
 	--add-comments \
 	--msgid-bugs-address="Git Mailing List <git@vger.kernel.org>" \
 	--from-code=UTF-8
-XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --keyword=_ --keyword=N_ --language=C
+XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --keyword=_ --keyword=N_ --keyword="Q_:1,2" --language=C
 LOCALIZED_C := $(C_OBJ:o=c)
 
 po/git.pot: $(LOCALIZED_C)
