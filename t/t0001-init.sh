@@ -374,9 +374,12 @@ test_expect_success 'init prefers command line to GIT_DIR' '
 test_expect_success 'init with separate gitdir' '
 	rm -rf newdir &&
 	git init --separate-git-dir realgitdir newdir &&
-	echo "gitdir: `pwd`/realgitdir" >expected &&
-	test_cmp expected newdir/.git &&
 	test -d realgitdir/refs
+'
+
+test_expect_success C_LOCALE_OUTPUT 'init with separate gitdir: output' '
+	echo "gitdir: `pwd`/realgitdir" >expected &&
+	test_cmp expected newdir/.git
 '
 
 test_expect_success 're-init to update git link' '
@@ -384,10 +387,13 @@ test_expect_success 're-init to update git link' '
 	cd newdir &&
 	git init --separate-git-dir ../surrealgitdir
 	) &&
-	echo "gitdir: `pwd`/surrealgitdir" >expected &&
-	test_cmp expected newdir/.git &&
 	test -d surrealgitdir/refs &&
 	! test -d realgitdir/refs
+'
+
+test_expect_success C_LOCALE_OUTPUT 're-init to update git link: output' '
+	echo "gitdir: `pwd`/surrealgitdir" >expected &&
+	test_cmp expected newdir/.git
 '
 
 test_expect_success 're-init to move gitdir' '
@@ -397,9 +403,12 @@ test_expect_success 're-init to move gitdir' '
 	cd newdir &&
 	git init --separate-git-dir ../realgitdir
 	) &&
-	echo "gitdir: `pwd`/realgitdir" >expected &&
-	test_cmp expected newdir/.git &&
 	test -d realgitdir/refs
+'
+
+test_expect_success C_LOCALE_OUTPUT 're-init to move gitdir: output' '
+	echo "gitdir: `pwd`/realgitdir" >expected &&
+	test_cmp expected newdir/.git
 '
 
 test_expect_success 're-init to move gitdir symlink' '
@@ -411,10 +420,13 @@ test_expect_success 're-init to move gitdir symlink' '
 	ln -s here .git &&
 	git init -L ../realgitdir
 	) &&
-	echo "gitdir: `pwd`/realgitdir" >expected &&
-	test_cmp expected newdir/.git &&
 	test -d realgitdir/refs &&
 	! test -d newdir/here
+'
+
+test_expect_success C_LOCALE_OUTPUT 're-init to move gitdir symlink: output' '
+	echo "gitdir: `pwd`/realgitdir" >expected &&
+	test_cmp expected newdir/.git
 '
 
 test_done
