@@ -155,25 +155,25 @@ EOF
 rm -f sm1 &&
 test_create_repo sm1 &&
 head6=$(add_file sm1 foo6 foo7)
-test_expect_success C_LOCALE_OUTPUT 'nonexistent commit' "
+test_expect_success 'nonexistent commit' "
     git submodule summary >actual &&
     cat >expected <<-EOF &&
 * sm1 $head4...$head6:
   Warn: sm1 doesn't contain commit $head4_full
 
 EOF
-    test_cmp actual expected
+    test_i18ncmp actual expected
 "
 
 commit_file
-test_expect_success C_LOCALE_OUTPUT 'typechanged submodule(blob->submodule)' "
+test_expect_success 'typechanged submodule(blob->submodule)' "
     git submodule summary >actual &&
     cat >expected <<-EOF &&
 * sm1 $head5(blob)->$head6(submodule) (2):
   > Add foo7
 
 EOF
-    test_cmp expected actual
+    test_i18ncmp expected actual
 "
 
 commit_file sm1 &&
@@ -226,9 +226,9 @@ EOF
     test_cmp expected actual
 "
 
-test_expect_success C_LOCALE_OUTPUT '--for-status' "
+test_expect_success '--for-status' "
     git submodule summary --for-status HEAD^ >actual &&
-    test_cmp actual - <<EOF
+    test_i18ncmp actual - <<EOF
 # Submodule changes to be committed:
 #
 # * sm1 $head6...0000000:
