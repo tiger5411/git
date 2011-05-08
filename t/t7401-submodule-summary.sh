@@ -121,35 +121,35 @@ git add sm1 &&
 rm -f sm1 &&
 mv sm1-bak sm1
 
-test_expect_success C_LOCALE_OUTPUT 'typechanged submodule(submodule->blob), --cached' "
+test_expect_success 'typechanged submodule(submodule->blob), --cached' "
     git submodule summary --cached >actual &&
     cat >expected <<-EOF &&
 * sm1 $head4(submodule)->$head5(blob) (3):
   < Add foo5
 
 EOF
-	test_cmp actual expected
+	test_i18ncmp actual expected
 "
 
-test_expect_success C_LOCALE_OUTPUT 'typechanged submodule(submodule->blob), --files' "
+test_expect_success 'typechanged submodule(submodule->blob), --files' "
     git submodule summary --files >actual &&
     cat >expected <<-EOF &&
 * sm1 $head5(blob)->$head4(submodule) (3):
   > Add foo5
 
 EOF
-    test_cmp actual expected
+    test_i18ncmp actual expected
 "
 
 rm -rf sm1 &&
 git checkout-index sm1
-test_expect_success C_LOCALE_OUTPUT 'typechanged submodule(submodule->blob)' "
+test_expect_success 'typechanged submodule(submodule->blob)' "
     git submodule summary >actual &&
     cat >expected <<-EOF &&
 * sm1 $head4(submodule)->$head5(blob):
 
 EOF
-    test_cmp actual expected
+    test_i18ncmp actual expected
 "
 
 rm -f sm1 &&
