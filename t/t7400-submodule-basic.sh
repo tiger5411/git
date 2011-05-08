@@ -86,7 +86,7 @@ test_expect_success 'submodule add' '
 	test_cmp empty untracked
 '
 
-test_expect_success C_LOCALE_OUTPUT 'submodule add to .gitignored path fails' '
+test_expect_success 'submodule add to .gitignored path fails' '
 	(
 		cd addtest-ignore &&
 		cat <<-\EOF >expect &&
@@ -99,7 +99,7 @@ test_expect_success C_LOCALE_OUTPUT 'submodule add to .gitignored path fails' '
 		git add --force .gitignore &&
 		git commit -m"Ignore everything" &&
 		! git submodule add "$submodurl" submod >actual 2>&1 &&
-		test_cmp expect actual
+		test_i18ncmp expect actual
 	)
 '
 
@@ -349,7 +349,7 @@ test_expect_success 'apply submodule diff' '
 	test_cmp empty staged
 '
 
-test_expect_success C_LOCALE_OUTPUT 'update --init' '
+test_expect_success 'update --init' '
 	mv init init2 &&
 	git config -f .gitmodules submodule.example.url "$(pwd)/init2" &&
 	git config --remove-section submodule.example &&
@@ -357,7 +357,7 @@ test_expect_success C_LOCALE_OUTPUT 'update --init' '
 
 	git submodule update init > update.out &&
 	cat update.out &&
-	grep "not initialized" update.out &&
+	test_i18ngrep "not initialized" update.out &&
 	! test -d init/.git &&
 
 	git submodule update --init init &&
