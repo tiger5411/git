@@ -68,7 +68,7 @@ Entering 'sub3'
 $pwd/clone-foo3-sub3-$sub3sha1
 EOF
 
-test_expect_success C_LOCALE_OUTPUT 'test basic "submodule foreach" usage' '
+test_expect_success 'test basic "submodule foreach" usage' '
 	git clone super clone &&
 	(
 		cd clone &&
@@ -77,7 +77,7 @@ test_expect_success C_LOCALE_OUTPUT 'test basic "submodule foreach" usage' '
 		git config foo.bar zar &&
 		git submodule foreach "git config --file \"\$toplevel/.git/config\" foo.bar"
 	) &&
-	test_cmp expect actual
+	test_i18ncmp expect actual
 '
 
 test_expect_success 'setup nested submodules' '
@@ -153,12 +153,12 @@ Entering 'sub2'
 Entering 'sub3'
 EOF
 
-test_expect_success C_LOCALE_OUTPUT 'test messages from "foreach --recursive"' '
+test_expect_success 'test messages from "foreach --recursive"' '
 	(
 		cd clone2 &&
 		git submodule foreach --recursive "true" > ../actual
 	) &&
-	test_cmp expect actual
+	test_i18ncmp expect actual
 '
 
 cat > expect <<EOF
