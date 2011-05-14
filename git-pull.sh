@@ -217,9 +217,12 @@ then
 	# $orig_head commit, but we are merging into $curr_head.
 	# First update the working tree to match $curr_head.
 
-	echo >&2 "$(eval_gettext "Warning: fetch updated the current branch head.
+	(
+		eval_gettext "Warning: fetch updated the current branch head.
 Warning: fast-forwarding your working tree from
-Warning: commit \$orig_head.")"
+Warning: commit \$orig_head." &&
+		echo
+	) >&2
 	git update-index -q --refresh
 	git read-tree -u -m "$orig_head" "$curr_head" ||
 		die "$(eval_gettext "Cannot fast-forward your working tree.
