@@ -42,7 +42,7 @@ bisect_autostart() {
 			# TRANSLATORS: Make sure to include [Y] and [n] in your
 			# translation. The program will only accept English input
 			# at this point.
-			echo >&2 -n "$(gettext "Do you want me to do it for you [Y/n]? ")"
+            gettext "Do you want me to do it for you [Y/n]? " >&2
 			read yesno
 			case "$yesno" in
 			[Nn]*)
