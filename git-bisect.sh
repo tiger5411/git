@@ -437,8 +437,11 @@ exit code \$res from '\$command' is < 0 or >= 128" &&
       fi
 
       if [ $res -ne 0 ]; then
-	  echo >&2 "$(eval_gettext "bisect run failed:
-'bisect_state \$state' exited with error code \$res")"
+	  (
+	      eval_gettext "bisect run failed:
+'bisect_state \$state' exited with error code \$res" &&
+	      echo
+	  ) >&2
 	  exit $res
       fi
 
