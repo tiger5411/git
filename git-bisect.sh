@@ -254,7 +254,7 @@ bisect_next_check() {
 			# TRANSLATORS: Make sure to include [Y] and [n] in your
 			# translation. The program will only accept English input
 			# at this point.
-			printf >&2 "$(gettext "Are you sure [Y/n]? ")"
+			gettext "Are you sure [Y/n]? " >&2
 			read yesno
 			case "$yesno" in [Nn]*) exit 1 ;; esac
 		fi
