@@ -36,7 +36,10 @@ _x40="$_x40$_x40$_x40$_x40$_x40$_x40$_x40$_x40"
 
 bisect_autostart() {
 	test -s "$GIT_DIR/BISECT_START" || {
-		echo >&2 "$(gettext "You need to start by \"git bisect start\"")"
+		(
+			gettext "You need to start by \"git bisect start\"" &&
+			echo
+		) >&2
 		if test -t 0
 		then
 			# TRANSLATORS: Make sure to include [Y] and [n] in your
@@ -242,7 +245,10 @@ bisect_next_check() {
 	t,,good)
 		# have bad but not good.  we could bisect although
 		# this is less optimum.
-		echo >&2 "$(gettext "Warning: bisecting only with a bad commit.")"
+		(
+			gettext "Warning: bisecting only with a bad commit." &&
+			echo
+		) >&2
 		if test -t 0
 		then
 			# TRANSLATORS: Make sure to include [Y] and [n] in your
@@ -417,7 +423,10 @@ exit code \$res from '\$command' is < 0 or >= 128" &&
 
       if sane_grep "first bad commit could be any of" "$GIT_DIR/BISECT_RUN" \
 		> /dev/null; then
-	  echo >&2 "$(gettext "bisect run cannot continue any more")"
+	  (
+	      gettext "bisect run cannot continue any more" &&
+	      echo
+	  ) >&2
 	  exit $res
       fi
 
