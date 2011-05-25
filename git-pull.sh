@@ -217,17 +217,18 @@ then
 	# $orig_head commit, but we are merging into $curr_head.
 	# First update the working tree to match $curr_head.
 
+	GIT_I18N_VARIABLE_orig_head=$orig_head
 	(
 		eval_gettext "Warning: fetch updated the current branch head.
 Warning: fast-forwarding your working tree from
-Warning: commit \$orig_head." &&
+Warning: commit \$GIT_I18N_VARIABLE_orig_head." &&
 		echo
 	) >&2
 	git update-index -q --refresh
 	git read-tree -u -m "$orig_head" "$curr_head" ||
 		die "$(eval_gettext "Cannot fast-forward your working tree.
 After making sure that you saved anything precious from
-$ git diff \$orig_head
+$ git diff \$GIT_I18N_VARIABLE_orig_head
 output, run
 $ git reset --hard
 to recover.")"
