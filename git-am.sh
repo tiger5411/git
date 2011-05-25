@@ -102,9 +102,11 @@ stop_here_user_resolve () {
 	    printf '%s\n' "$resolvemsg"
 	    stop_here $1
     fi
-    eval_gettext "When you have resolved this problem run \"\$cmdline --resolved\".
-If you would prefer to skip this patch, instead run \"\$cmdline --skip\".
-To restore the original branch and stop patching run \"\$cmdline --abort\"."; echo
+
+    GIT_I18N_VARIABLE_cmdline=$cmdline
+    eval_gettext "When you have resolved this problem run \"\$GIT_I18N_VARIABLE_cmdline --resolved\".
+If you would prefer to skip this patch, instead run \"\$GIT_I18N_VARIABLE_cmdline --skip\".
+To restore the original branch and stop patching run \"\$GIT_I18N_VARIABLE_cmdline --abort\"."; echo
 
     stop_here $1
 }
@@ -310,7 +312,8 @@ split_patches () {
 		;;
 	*)
 		if test -n "$parse_patch" ; then
-			clean_abort "$(eval_gettext "Patch format \$patch_format is not supported.")"
+			GIT_I18N_VARIABLE_patch_format=$patch_format
+			clean_abort "$(eval_gettext "Patch format \$GIT_I18N_VARIABLE_patch_format is not supported.")"
 		else
 			clean_abort "$(gettext "Patch format detection failed.")"
 		fi
@@ -407,6 +410,7 @@ fi
 
 if test -d "$dotest"
 then
+	GIT_I18N_VARIABLE_dotest=$dotest
 	case "$#,$skip$resolved$abort" in
 	0,*t*)
 		# Explicit resume command and we do not have file, so
@@ -425,7 +429,7 @@ then
 		false
 		;;
 	esac ||
-	die "$(eval_gettext "previous rebase directory \$dotest still exists but mbox given.")"
+	die "$(eval_gettext "previous rebase directory \$GIT_I18N_VARIABLE_dotest still exists but mbox given.")"
 	resume=yes
 
 	case "$skip,$abort" in
@@ -522,7 +526,8 @@ case "$resolved" in
 	if test "$files"
 	then
 		test -n "$HAS_HEAD" && : >"$dotest/dirtyindex"
-		die "$(eval_gettext "Dirty index: cannot apply patches (dirty: \$files)")"
+		GIT_I18N_VARIABLE_files=$files
+		die "$(eval_gettext "Dirty index: cannot apply patches (dirty: \$GIT_I18N_VARIABLE_files)")"
 	fi
 esac
 
@@ -611,9 +616,10 @@ do
 			go_next && continue
 
 		test -s "$dotest/patch" || {
+			GIT_I18N_VARIABLE_cmdline=$cmdline
 			eval_gettext "Patch is empty.  Was it split wrong?
-If you would prefer to skip this patch, instead run \"\$cmdline --skip\".
-To restore the original branch and stop patching run \"\$cmdline --abort\"."; echo
+If you would prefer to skip this patch, instead run \"\$GIT_I18N_VARIABLE_cmdline --skip\".
+To restore the original branch and stop patching run \"\$GIT_I18N_VARIABLE_cmdline --abort\"."; echo
 			stop_here $this
 		}
 		rm -f "$dotest/original-commit" "$dotest/author-script"
@@ -742,7 +748,8 @@ To restore the original branch and stop patching run \"\$cmdline --abort\"."; ec
 		stop_here $this
 	fi
 
-	say "$(eval_gettext "Applying: \$FIRSTLINE")"
+	GIT_I18N_VARIABLE_FIRSTLINE=$FIRSTLINE
+	say "$(eval_gettext "Applying: \$GIT_I18N_VARIABLE_FIRSTLINE")"
 
 	case "$resolved" in
 	'')
@@ -797,7 +804,9 @@ did you forget to use 'git add'?"; echo
 	fi
 	if test $apply_status != 0
 	then
-		eval_gettext 'Patch failed at $msgnum $FIRSTLINE'; echo
+		GIT_I18N_VARIABLE_msgnum=$msgnum
+		GIT_I18N_VARIABLE_FIRSTLINE=$FIRSTLINE
+		eval_gettext 'Patch failed at $GIT_I18N_VARIABLE_msgnum $GIT_I18N_VARIABLE_FIRSTLINE'; echo
 		stop_here_user_resolve $this
 	fi
 
