@@ -2092,7 +2092,7 @@ attr.sp attr.s attr.o: EXTRA_CPPFLAGS = \
 	-DETC_GITATTRIBUTES='"$(ETC_GITATTRIBUTES_SQ)"'
 
 gettext.s gettext.o: EXTRA_CPPFLAGS = \
-	-DGIT_LOCALE_PATH="$(localedir_SQ)"
+	-DGIT_LOCALE_PATH='"$(localedir_SQ)"'
 
 http.sp http.s http.o: EXTRA_CPPFLAGS = \
 	-DGIT_HTTP_USER_AGENT='"git/$(GIT_VERSION)"'
