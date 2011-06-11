@@ -31,6 +31,8 @@ struct tag_filter {
 	struct commit_list *with_commit;
 };
 
+int tag_clock_skew = 86400;
+
 int contains(struct commit *, const struct commit_list *);
 
 static int show_reference(const char *refname, const unsigned char *sha1,
@@ -234,6 +236,14 @@ static int git_tag_config(const char *var, const char *value, void *cb)
 		if (!value)
 			return config_error_nonbool(var);
 		set_signingkey(value);
+		return 0;
+	}
+
+	if (!strcmp(var, "tag.clockskew")) {
+		if (!value || !strcmp(value, "none"))
+			tag_clock_skew = -1;
+		else
+			tag_clock_skew = git_config_int(var, value);
 		return 0;
 	}
 
@@ -538,7 +548,7 @@ int contains(struct commit *candidate, const struct commit_list *want)
 {
 	unsigned long cutoff = 0;
 
-	if (core_clock_skew >= 0) {
+	if (tag_clock_skew >= 0) {
 		const struct commit_list *c;
 		unsigned long min_date = ULONG_MAX;
 		for (c = want; c; c = c->next) {
@@ -547,8 +557,8 @@ int contains(struct commit *candidate, const struct commit_list *want)
 			if (c->item->date < min_date)
 				min_date = c->item->date;
 		}
-		if (min_date > core_clock_skew)
-			cutoff = min_date - core_clock_skew;
+		if (min_date > tag_clock_skew)
+			cutoff = min_date - tag_clock_skew;
 	}
 
 	return contains_recurse(candidate, want, cutoff);
