@@ -33,7 +33,67 @@ struct tag_filter {
 
 int tag_clock_skew = 86400;
 
-int contains(struct commit *, const struct commit_list *);
+static int in_commit_list(const struct commit_list *want, struct commit *c)
+{
+	for (; want; want = want->next)
+		if (!hashcmp(want->item->object.sha1, c->object.sha1))
+			return 1;
+	return 0;
+}
+
+static int contains_recurse(struct commit *candidate,
+			    const struct commit_list *want,
+			    unsigned long cutoff)
+{
+	struct commit_list *p;
+
+	/* was it previously marked as containing a want commit? */
+	if (candidate->object.flags & TMP_MARK)
+		return 1;
+	/* or marked as not possibly containing a want commit? */
+	if (candidate->object.flags & UNINTERESTING)
+		return 0;
+	/* or are we it? */
+	if (in_commit_list(want, candidate))
+		return 1;
+
+	if (parse_commit(candidate) < 0)
+		return 0;
+
+	/* stop searching if we go too far back in time */
+	if (candidate->date < cutoff)
+		return 0;
+
+	/* Otherwise recurse and mark ourselves for future traversals. */
+	for (p = candidate->parents; p; p = p->next) {
+		if (contains_recurse(p->item, want, cutoff)) {
+			candidate->object.flags |= TMP_MARK;
+			return 1;
+		}
+	}
+	candidate->object.flags |= UNINTERESTING;
+	return 0;
+}
+
+int contains(struct commit *candidate, const struct commit_list *want)
+{
+	unsigned long cutoff = 0;
+
+	if (tag_clock_skew >= 0) {
+		const struct commit_list *c;
+		unsigned long min_date = ULONG_MAX;
+		for (c = want; c; c = c->next) {
+			if (parse_commit(c->item) < 0)
+				continue;
+			if (c->item->date < min_date)
+				min_date = c->item->date;
+		}
+		if (min_date > tag_clock_skew)
+			cutoff = min_date - tag_clock_skew;
+	}
+
+	return contains_recurse(candidate, want, cutoff);
+}
 
 static int show_reference(const char *refname, const unsigned char *sha1,
 			  int flag, void *cb_data)
@@ -500,66 +560,4 @@ int cmd_tag(int argc, const char **argv, const char *prefix)
 	strbuf_release(&buf);
 	strbuf_release(&ref);
 	return 0;
-}
-
-static int in_commit_list(const struct commit_list *want, struct commit *c)
-{
-	for (; want; want = want->next)
-		if (!hashcmp(want->item->object.sha1, c->object.sha1))
-			return 1;
-	return 0;
-}
-
-static int contains_recurse(struct commit *candidate,
-			    const struct commit_list *want,
-			    unsigned long cutoff)
-{
-	struct commit_list *p;
-
-	/* was it previously marked as containing a want commit? */
-	if (candidate->object.flags & TMP_MARK)
-		return 1;
-	/* or marked as not possibly containing a want commit? */
-	if (candidate->object.flags & UNINTERESTING)
-		return 0;
-	/* or are we it? */
-	if (in_commit_list(want, candidate))
-		return 1;
-
-	if (parse_commit(candidate) < 0)
-		return 0;
-
-	/* stop searching if we go too far back in time */
-	if (candidate->date < cutoff)
-		return 0;
-
-	/* Otherwise recurse and mark ourselves for future traversals. */
-	for (p = candidate->parents; p; p = p->next) {
-		if (contains_recurse(p->item, want, cutoff)) {
-			candidate->object.flags |= TMP_MARK;
-			return 1;
-		}
-	}
-	candidate->object.flags |= UNINTERESTING;
-	return 0;
-}
-
-int contains(struct commit *candidate, const struct commit_list *want)
-{
-	unsigned long cutoff = 0;
-
-	if (tag_clock_skew >= 0) {
-		const struct commit_list *c;
-		unsigned long min_date = ULONG_MAX;
-		for (c = want; c; c = c->next) {
-			if (parse_commit(c->item) < 0)
-				continue;
-			if (c->item->date < min_date)
-				min_date = c->item->date;
-		}
-		if (min_date > tag_clock_skew)
-			cutoff = min_date - tag_clock_skew;
-	}
-
-	return contains_recurse(candidate, want, cutoff);
 }
