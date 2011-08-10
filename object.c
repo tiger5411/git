@@ -5,19 +5,6 @@
 #include "commit.h"
 #include "tag.h"
 
-static struct object **obj_hash;
-static int nr_objs, obj_hash_size;
-
-unsigned int get_max_object_index(void)
-{
-	return obj_hash_size;
-}
-
-struct object *get_indexed_object(unsigned int idx)
-{
-	return obj_hash[idx];
-}
-
 static const char *object_type_strings[] = {
 	NULL,		/* OBJ_NONE = 0 */
 	"commit",	/* OBJ_COMMIT = 1 */
@@ -43,11 +30,31 @@ int type_from_string(const char *str)
 	die("invalid object type \"%s\"", str);
 }
 
+static struct object **obj_hash;
+static int nr_objs, obj_hash_size;
+
+unsigned int get_max_object_index(void)
+{
+	return obj_hash_size;
+}
+
+struct object *get_indexed_object(unsigned int idx)
+{
+	return obj_hash[idx];
+}
+
 static unsigned int hash_obj(struct object *obj, unsigned int n)
 {
 	unsigned int hash;
 	memcpy(&hash, obj->sha1, sizeof(unsigned int));
 	return hash % n;
+}
+
+static unsigned int hashtable_index(const unsigned char *sha1)
+{
+	unsigned int i;
+	memcpy(&i, sha1, sizeof(unsigned int));
+	return i % obj_hash_size;
 }
 
 static void insert_obj_hash(struct object *obj, struct object **hash, unsigned int size)
@@ -60,13 +67,6 @@ static void insert_obj_hash(struct object *obj, struct object **hash, unsigned i
 			j = 0;
 	}
 	hash[j] = obj;
-}
-
-static unsigned int hashtable_index(const unsigned char *sha1)
-{
-	unsigned int i;
-	memcpy(&i, sha1, sizeof(unsigned int));
-	return i % obj_hash_size;
 }
 
 struct object *lookup_object(const unsigned char *sha1)
