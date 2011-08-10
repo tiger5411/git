@@ -52,7 +52,7 @@ static unsigned int hash_val(const unsigned char *sha1)
 
 static void insert_obj_hash(struct object *obj, struct object **hash, unsigned int size)
 {
-	unsigned int j = hash_val(obj->sha1) % size;
+	unsigned int j = hash_val(obj->sha1) & (size-1);
 
 	while (hash[j]) {
 		j++;
@@ -70,7 +70,7 @@ struct object *lookup_object(const unsigned char *sha1)
 	if (!obj_hash)
 		return NULL;
 
-	i = hash_val(sha1) % obj_hash_size;
+	i = hash_val(sha1) & (obj_hash_size-1);
 	while ((obj = obj_hash[i]) != NULL) {
 		if (!hashcmp(sha1, obj->sha1))
 			break;
