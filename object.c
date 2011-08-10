@@ -81,10 +81,15 @@ struct object *lookup_object(const unsigned char *sha1)
 	return obj;
 }
 
+static int next_size(int sz)
+{
+	return sz < 32 ? 32 : 2 * sz;
+}
+
 static void grow_object_hash(void)
 {
 	int i;
-	int new_hash_size = obj_hash_size < 32 ? 32 : 2 * obj_hash_size;
+	int new_hash_size = next_size(obj_hash_size);
 	struct object **new_hash;
 
 	new_hash = xcalloc(new_hash_size, sizeof(struct object *));
