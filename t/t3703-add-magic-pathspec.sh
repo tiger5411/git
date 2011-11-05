@@ -18,7 +18,7 @@ test_expect_success 'add :/' "
 	add 'sub/foo'
 	EOF
 	(cd sub && git add -n :/ >actual) &&
-	test_cmp expected sub/actual
+	test_i18ncmp expected sub/actual
 "
 
 cat >expected <<EOF
@@ -27,7 +27,7 @@ EOF
 
 test_expect_success 'add :/anothersub' '
 	(cd sub && git add -n :/anothersub >actual) &&
-	test_cmp expected sub/actual
+	test_i18ncmp expected sub/actual
 '
 
 test_expect_success 'add :/non-existent' '
