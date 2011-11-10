@@ -1,11 +1,8 @@
 package Git::I18N;
-use 5.006002;
+use 5.008;
 use strict;
 use warnings;
-use Exporter;
-use base 'Exporter';
-
-our $VERSION = '0.01';
+use Exporter 'import';
 
 our @EXPORT = qw(__);
 our @EXPORT_OK = @EXPORT;

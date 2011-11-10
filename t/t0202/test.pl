@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use 5.006002;
+use 5.008;
 use lib (split(/:/, $ENV{GITPERLLIB}));
 use warnings;
 use strict;
@@ -9,7 +9,7 @@ use POSIX qw(:locale_h);
 
 my $has_gettext_library = $Git::I18N::__HAS_LIBRARY;
 
-ok(1, "Testing Git::I18N version $Git::I18N::VERSION with " .
+ok(1, "Testing Git::I18N with " .
 	 ($has_gettext_library
 	  ? (defined $Locale::Messages::VERSION
 		 ? "Locale::Messages version $Locale::Messages::VERSION"
@@ -17,7 +17,6 @@ ok(1, "Testing Git::I18N version $Git::I18N::VERSION with " .
 	  : "NO Perl gettext library"));
 ok(1, "Git::I18N is located at $INC{'Git/I18N.pm'}");
 
-ok($Git::I18N::VERSION, 'sanity: Git::I18N defines a $VERSION');
 {
 	my $exports = @Git::I18N::EXPORT;
 	ok($exports, "sanity: Git::I18N has $exports export(s)");
