@@ -29,7 +29,7 @@ is_deeply(\@Git::I18N::EXPORT, \@Git::I18N::EXPORT_OK, "sanity: Git::I18N export
 	# more gettext wrapper functions.
 	my %prototypes = (qw(
 		__	$
-    ));
+	));
 	while (my ($sub, $proto) = each %prototypes) {
 		is(prototype(\&{"Git::I18N::$sub"}), $proto, "sanity: $sub has a $proto prototype");
 	}
@@ -39,7 +39,7 @@ is_deeply(\@Git::I18N::EXPORT, \@Git::I18N::EXPORT_OK, "sanity: Git::I18N export
 {
 	local $ENV{LANGUAGE} = 'C';
 	local $ENV{LC_ALL}   = 'C';
-	local $ENV{LANG} = 'C';
+	local $ENV{LANG}     = 'C';
 
 	my ($got, $expect) = (('TEST: A Perl test string') x 2);
 
