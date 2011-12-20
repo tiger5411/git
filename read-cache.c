@@ -758,7 +758,13 @@ int verify_path(const char *path)
 		return 0;
 
 	goto inside;
+#ifdef __sun
+#	pragma error_messages (off, E_STATEMENT_NOT_REACHED)
+#endif
 	for (;;) {
+#ifdef __sun
+#	pragma error_messages (on, E_STATEMENT_NOT_REACHED)
+#endif
 		if (!c)
 			return 1;
 		if (is_dir_sep(c)) {

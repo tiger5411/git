@@ -191,7 +191,13 @@ int xdl_recmatch(const char *l1, long s1, const char *l2, long s2, long flags)
 	 */
 	if (flags & XDF_IGNORE_WHITESPACE) {
 		goto skip_ws;
+#ifdef __sun
+#	pragma error_messages (off, E_STATEMENT_NOT_REACHED)
+#endif
 		while (i1 < s1 && i2 < s2) {
+#ifdef __sun
+#	pragma error_messages (on, E_STATEMENT_NOT_REACHED)
+#endif
 			if (l1[i1++] != l2[i2++])
 				return 0;
 		skip_ws:
