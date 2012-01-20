@@ -18,7 +18,7 @@ export TEXTDOMAINDIR
 
 if test -z "$GIT_GETTEXT_POISON"
 then
-	if test -z "$GIT_INTERNAL_GETTEXT_TEST_FALLBACKS" && type gettext.sh >/dev/null 2>&1
+	if test -z "$GIT_INTERNAL_GETTEXT_TEST_FALLBACKS" && type gettext.sh >/dev/null 2>&1 && test "$(gettext test 2>&1)" = "test"
 	then
 		# This is GNU libintl's gettext.sh, we don't need to do anything
 		# else than setting up the environment and loading gettext.sh

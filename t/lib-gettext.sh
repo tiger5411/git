@@ -3,7 +3,12 @@
 # Copyright (c) 2010 Ævar Arnfjörð Bjarmason
 #
 
-. ./test-lib.sh
+if test -z "$TEST_DIRECTORY"
+then
+	# In case the test loaded test-lib.sh by itself to do some tests
+	# prior to loading us.
+	. ./test-lib.sh
+fi
 
 GIT_TEXTDOMAINDIR="$GIT_BUILD_DIR/po/build/locale"
 GIT_PO_PATH="$GIT_BUILD_DIR/po"
