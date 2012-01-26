@@ -1888,7 +1888,7 @@ sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
     -e 's|@@LOCALEDIR@@|$(localedir_SQ)|g' \
     -e 's/@@NO_CURL@@/$(NO_CURL)/g' \
     -e $(BROKEN_PATH_FIX) \
-    $@.sh >$@+
+    $@.sh | ./util-remove-i18n.sh >$@+
 endef
 
 $(patsubst %.sh,%,$(SCRIPT_SH)) : % : %.sh
