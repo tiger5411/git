@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 while (<STDIN>) {
-    s/"\$\(gettext "([^"]+)"\)"/"\1"/;
+    s/"\$\(gettext "([^"]+)"\)"/"$1"/;
 
     print;
 }
