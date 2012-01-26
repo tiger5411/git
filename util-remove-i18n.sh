@@ -10,7 +10,7 @@ while (<STDIN>) {
     s/\bgettextln "([^"]+)"?$/echo "$1"/;
     s/\bgettextln "([^"]+)" >&2?$/echo "$1" >&2/;
 
-    s/"\$\(eval_gettext "([^"]+)"\)/'"' . remove_backslash_dollah($1) . '"'/ge;
+    s/"\$\(eval_gettext "([^"]+)"\)"/'"' . remove_backslash_dollah($1) . '"'/ge;
 
     print;
 }
