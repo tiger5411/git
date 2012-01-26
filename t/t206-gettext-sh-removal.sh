@@ -11,10 +11,12 @@ remove_script=$GIT_BUILD_DIR/util-remove-i18n.sh
 
 test_expect_success 'gettext: basic invocation' '
     cat >test <<-\EOF &&
-    die "$(gettext "You need to set your committer info first")"
+    gettext "Apply? [y]es/[n]o/[e]dit/[v]iew patch/[a]ccept all "
+    gettext "Do you want me to do it for you [Y/n]? " >&2
 EOF
     cat >expected <<-\EOF &&
-    die "You need to set your committer info first"
+    printf "%s" "Apply? [y]es/[n]o/[e]dit/[v]iew patch/[a]ccept all "
+    printf "%s" "Do you want me to do it for you [Y/n]? " >&2
 EOF
     $GIT_BUILD_DIR/util-remove-i18n.sh <test >actual
    test_cmp expected actual
