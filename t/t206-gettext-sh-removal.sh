@@ -49,9 +49,15 @@ EOF
 test_expect_success 'gettext: one line, with variable substitution' "
     cat >test <<-\EOF &&
     die \"\$(eval_gettext \"Failed to recurse into submodule path '\\\$path'\")\"
+    die \"\$(eval_gettext \"No submodule mapping found in .gitmodules for path '\\\$path'\")\"
+    die \"\$(eval_gettext \"Clone of '\\\$url' into submodule path '\\\$path' failed\")\"
+    die \"\$(eval_gettext \"repo URL: '\\\$repo' must be absolute or begin with ./|../\")\"
 EOF
     cat >expected <<-\EOF &&
     die \"Failed to recurse into submodule path '\$path'\"
+    die \"No submodule mapping found in .gitmodules for path '\$path'\"
+    die \"Clone of '\$url' into submodule path '\$path' failed\"
+    die \"repo URL: '\$repo' must be absolute or begin with ./|../\"
 EOF
     \$GIT_BUILD_DIR/util-remove-i18n.sh <test >actual
    test_cmp expected actual
