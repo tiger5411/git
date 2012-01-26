@@ -1,3 +1,9 @@
-#!/bin/sh
+#!/usr/bin/perl
+use strict;
+use warnings;
 
-sed -re 's/"\$\(gettext "([^"]+)"\)"/"\1"/'
+while (<STDIN>) {
+    s/"\$\(gettext "([^"]+)"\)"/"\1"/;
+
+    print;
+}
