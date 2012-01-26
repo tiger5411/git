@@ -20,4 +20,15 @@ EOF
    test_cmp expected actual
 '
 
+test_expect_success 'gettextln: basic invocation' '
+    cat >test <<-\EOF &&
+    gettextln "Cannot fall back to three-way merge."
+EOF
+    cat >expected <<-\EOF &&
+    echo "Cannot fall back to three-way merge."
+EOF
+    $GIT_BUILD_DIR/util-remove-i18n.sh <test >actual
+   test_cmp expected actual
+'
+
 test_done
