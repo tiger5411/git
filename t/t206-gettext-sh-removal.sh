@@ -20,12 +20,25 @@ EOF
    test_cmp expected actual
 '
 
+test_expect_success 'gettext: interpolation invocation' '
+    cat >test <<-\EOF &&
+    die "$(gettext "You need to set your committer info first")"
+EOF
+    cat >expected <<-\EOF &&
+    die "You need to set your committer info first"
+EOF
+    $GIT_BUILD_DIR/util-remove-i18n.sh <test >actual
+   test_cmp expected actual
+'
+
 test_expect_success 'gettextln: basic invocation' '
     cat >test <<-\EOF &&
     gettextln "Cannot fall back to three-way merge."
+    gettextln "Warning: bisecting only with a bad commit." >&2
 EOF
     cat >expected <<-\EOF &&
     echo "Cannot fall back to three-way merge."
+    echo "Warning: bisecting only with a bad commit." >&2
 EOF
     $GIT_BUILD_DIR/util-remove-i18n.sh <test >actual
    test_cmp expected actual
