@@ -1879,7 +1879,8 @@ sub cmt_sha2rev_batch {
 sub working_head_info {
 	my ($head, $refs) = @_;
 	my @args = qw/log --no-color --no-decorate --first-parent
-	              --pretty=medium/;
+	              --pretty=medium --no-abbrev-commit --no-decorate/;
+
 	my ($fh, $ctx) = command_output_pipe(@args, $head);
 	my $hash;
 	my %max;
