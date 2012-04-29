@@ -1,7 +1,7 @@
 # Icelandic translations for Git.
 # Copyright (C) 2010 Ævar Arnfjörð Bjarmason <avarab@gmail.com>
 # This file is distributed under the same license as the Git package.
-# Ævar Arnfjörð Bjarmason <avarab@gmail.com>, 2010.
+# Ævar Arnfjörð Bjarmason <avarab@gmail.com>, 2010 & 2012.
 #
 msgid ""
 msgstr ""
@@ -20,7 +20,7 @@ msgstr ""
 #: advice.c:40
 #, c-format
 msgid "hint: %.*s\n"
-msgstr ""
+msgstr "vísbending: %.*s\n"
 
 #.
 #. * Message used both when 'git commit' fails and when
@@ -37,30 +37,30 @@ msgstr ""
 #: commit.c:48
 #, c-format
 msgid "could not parse %s"
-msgstr ""
+msgstr "gat ekki rínt %s"
 
 #: commit.c:50
 #, c-format
 msgid "%s %s is not a commit!"
-msgstr ""
+msgstr "%s %s er ekki færsla!"
 
 #: compat/obstack.c:406 compat/obstack.c:408
 msgid "memory exhausted"
-msgstr ""
+msgstr "minni búið"
 
 #: connected.c:39
 msgid "Could not run 'git rev-list'"
-msgstr ""
+msgstr "Gat ekki keyrt 'git rev-list'"
 
 #: connected.c:48
 #, c-format
 msgid "failed write to rev-list: %s"
-msgstr ""
+msgstr "gat ekki skrifað til rev-list: %s"
 
 #: connected.c:56
 #, c-format
 msgid "failed to close rev-list's stdin: %s"
-msgstr ""
+msgstr "gat ekki losað stdin á rev-list: %s"
 
 #: diff.c:105
 #, c-format
@@ -70,7 +70,7 @@ msgstr ""
 #: diff.c:110
 #, c-format
 msgid "  Unknown dirstat parameter '%.*s'\n"
-msgstr ""
+msgstr "  Óþekktur dirstat rofi '%.*s'\n"
 
 #: diff.c:210
 #, c-format
@@ -78,31 +78,33 @@ msgid ""
 "Found errors in 'diff.dirstat' config variable:\n"
 "%s"
 msgstr ""
+"Fann villur í 'diff.dirstat' stillingarbreytunni:\n"
+"%s"
 
 #: diff.c:1400
 msgid " 0 files changed\n"
-msgstr ""
+msgstr " 0 skrám breytt\n"
 
 #: diff.c:1404
 #, c-format
 msgid " %d file changed"
 msgid_plural " %d files changed"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] " %d skrá breytt"
+msgstr[1] " %d skrám breytt"
 
 #: diff.c:1421
 #, c-format
 msgid ", %d insertion(+)"
 msgid_plural ", %d insertions(+)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] ", %d viðbót(+)"
+msgstr[1] ", %d viðbætur (+)"
 
 #: diff.c:1432
 #, c-format
 msgid ", %d deletion(-)"
 msgid_plural ", %d deletions(-)"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] ", %d úrfelling(-)"
+msgstr[1] ", %d úrfellingar(-)"
 
 #: diff.c:3435
 #, c-format
@@ -110,33 +112,35 @@ msgid ""
 "Failed to parse --dirstat/-X option parameter:\n"
 "%s"
 msgstr ""
+"Gat ekki skilið --dirstat/-X rofann\n"
+"%s"
 
 #: gpg-interface.c:59
 msgid "could not run gpg."
-msgstr ""
+msgstr "gat ekki ræst gpg."
 
 #: gpg-interface.c:71
 msgid "gpg did not accept the data"
-msgstr ""
+msgstr "gpg gúderði ekki þessi gögn"
 
 #: gpg-interface.c:82
 msgid "gpg failed to sign the data"
-msgstr ""
+msgstr "gpg gat ekki vottað gögnin"
 
 #: grep.c:1280
 #, c-format
 msgid "'%s': unable to read %s"
-msgstr ""
+msgstr "'%s': gat ekki lesið %s"
 
 #: grep.c:1297
 #, c-format
 msgid "'%s': %s"
-msgstr ""
+msgstr "'%s': %s"
 
 #: grep.c:1308
 #, c-format
 msgid "'%s': short read %s"
-msgstr ""
+msgstr "'%s': „short read“ villa %s"
 
 #: help.c:287
 #, c-format
@@ -144,21 +148,23 @@ msgid ""
 "'%s' appears to be a git command, but we were not\n"
 "able to execute it. Maybe git-%s is broken?"
 msgstr ""
+"'%s' virðist vera git skipun, en við gátum\n"
+"ekki ræst hana. Kannski virkar git-%s ekki?"
 
 #: remote.c:1607
 #, c-format
 msgid "Your branch is ahead of '%s' by %d commit.\n"
 msgid_plural "Your branch is ahead of '%s' by %d commits.\n"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Greinin þín er %2$d færslu á undan '%1$s'\n"
+msgstr[1] "Greinin þín er %2$d færslum á undan '%1$s'\n"
 
 #: remote.c:1613
 #, c-format
 msgid "Your branch is behind '%s' by %d commit, and can be fast-forwarded.\n"
 msgid_plural ""
 "Your branch is behind '%s' by %d commits, and can be fast-forwarded.\n"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Greinin þín er %2$d færslu á eftir '%1$s' og getur verið beint uppfærð\n"
+msgstr[1] "Greinin þín er %2$d færslum á eftir '%1$s' og getur verið beint uppfærð\n"
 
 #: remote.c:1621
 #, c-format
@@ -169,19 +175,23 @@ msgid_plural ""
 "Your branch and '%s' have diverged,\n"
 "and have %d and %d different commits each, respectively.\n"
 msgstr[0] ""
+"Greinin þín og '%s' hafa tvístrast,\n"
+"þær hafa %d og %d mismunandi færslu hver.\n"
 msgstr[1] ""
+"Greinin þín og '%s' hafa tvístrast,\n"
+"þær hafa %d og %d mismunandi færslur hver.\n"
 
 #: sequencer.c:120 builtin/merge.c:865 builtin/merge.c:978
 #: builtin/merge.c:1088 builtin/merge.c:1098
 #, c-format
 msgid "Could not open '%s' for writing"
-msgstr ""
+msgstr "Gat ekki opnað '%s' til útskrifunar"
 
 #: sequencer.c:122 builtin/merge.c:333 builtin/merge.c:868
 #: builtin/merge.c:1090 builtin/merge.c:1103
 #, c-format
 msgid "Could not write to '%s'"
-msgstr ""
+msgstr "Gat ekki skrifað skránna '%s'"
 
 #: sequencer.c:143
 msgid ""
@@ -199,7 +209,7 @@ msgstr ""
 #: sequencer.c:159 sequencer.c:685 sequencer.c:768
 #, c-format
 msgid "Could not write to %s"
-msgstr ""
+msgstr "Gat ekki skrifað skránna %s"
 
 #: sequencer.c:162
 #, c-format
@@ -208,11 +218,11 @@ msgstr ""
 
 #: sequencer.c:177
 msgid "Your local changes would be overwritten by cherry-pick."
-msgstr ""
+msgstr "Breytingarnar þínar yrðu yfirskrifaðar af tínslu."
 
 #: sequencer.c:179
 msgid "Your local changes would be overwritten by revert."
-msgstr ""
+msgstr "Breytingarnar þínar yrðu yfirskrifaðar af afturköllun."
 
 #: sequencer.c:182
 msgid "Commit your changes or stash them to proceed."
@@ -226,16 +236,16 @@ msgstr ""
 
 #: sequencer.c:298
 msgid "Your index file is unmerged."
-msgstr ""
+msgstr "Færslusvæðisskráin þín er ósameinuð."
 
 #: sequencer.c:301
 msgid "You do not have a valid HEAD"
-msgstr ""
+msgstr "Þú ert ekki með gildann HAUS"
 
 #: sequencer.c:316
 #, c-format
 msgid "Commit %s is a merge but no -m option was given."
-msgstr ""
+msgstr "Færslan %s er sameining en þú gafst ekki -m rofann."
 
 #: sequencer.c:324
 #, c-format
@@ -262,7 +272,7 @@ msgstr ""
 #: sequencer.c:427
 #, c-format
 msgid "could not revert %s... %s"
-msgstr ""
+msgstr "gat ekki tekið aftur %s... %s"
 
 #: sequencer.c:428
 #, c-format
@@ -282,22 +292,22 @@ msgstr ""
 #: sequencer.c:461
 #, c-format
 msgid "git %s: failed to read the index"
-msgstr ""
+msgstr "git %s: gat ekki lesið færslusvæðið"
 
 #: sequencer.c:466
 #, c-format
 msgid "git %s: failed to refresh the index"
-msgstr ""
+msgstr "git %s: gat ekki hresst færslusvæðið"
 
 #: sequencer.c:551
 #, c-format
 msgid "Cannot %s during a %s"
-msgstr ""
+msgstr "Get ekki keyrt \"%s\" á meðan \"%s\" stendur"
 
 #: sequencer.c:573
 #, c-format
 msgid "Could not parse line %d."
-msgstr ""
+msgstr "Gat ekki rínt línu %d."
 
 #: sequencer.c:578
 msgid "No commits parsed."
@@ -306,12 +316,12 @@ msgstr ""
 #: sequencer.c:591
 #, c-format
 msgid "Could not open %s"
-msgstr ""
+msgstr "Gat ekki opnað %s"
 
 #: sequencer.c:595
 #, c-format
 msgid "Could not read %s."
-msgstr ""
+msgstr "Gat ekki lesið %s."
 
 #: sequencer.c:602
 #, c-format
@@ -321,12 +331,12 @@ msgstr ""
 #: sequencer.c:630
 #, c-format
 msgid "Invalid key: %s"
-msgstr ""
+msgstr "Ógild stilling: %s"
 
 #: sequencer.c:633
 #, c-format
 msgid "Invalid value for %s: %s"
-msgstr ""
+msgstr "Ógilt gildi fyrir %s: %s"
 
 #: sequencer.c:645
 #, c-format
@@ -339,7 +349,7 @@ msgstr ""
 
 #: sequencer.c:667
 msgid "try \"git cherry-pick (--continue | --quit | --abort)\""
-msgstr ""
+msgstr "reyndu \\\"git cherry-pick (--continue | --quit | --abort)\""
 
 #: sequencer.c:671
 #, c-format
@@ -357,7 +367,7 @@ msgstr ""
 
 #: sequencer.c:708
 msgid "cannot resolve HEAD"
-msgstr ""
+msgstr "gat ekki gert grein fyrir hausnum"
 
 #: sequencer.c:710
 msgid "cannot abort from a branch yet to be born"
@@ -366,16 +376,16 @@ msgstr ""
 #: sequencer.c:732
 #, c-format
 msgid "cannot open %s: %s"
-msgstr ""
+msgstr "get ekki opnað %s: %s"
 
 #: sequencer.c:735
 #, c-format
 msgid "cannot read %s: %s"
-msgstr ""
+msgstr "get ekki lesið %s: %s"
 
 #: sequencer.c:736
 msgid "unexpected end of file"
-msgstr ""
+msgstr "bjóst ekki við enda á skrá"
 
 #: sequencer.c:742
 #, c-format
@@ -397,60 +407,60 @@ msgstr ""
 
 #: sha1_name.c:864
 msgid "HEAD does not point to a branch"
-msgstr ""
+msgstr "HAUS bendir ekki á grein"
 
 #: sha1_name.c:867
 #, c-format
 msgid "No such branch: '%s'"
-msgstr ""
+msgstr "Engin slík grein: '%s'"
 
 #: sha1_name.c:869
 #, c-format
 msgid "No upstream configured for branch '%s'"
-msgstr ""
+msgstr "Engin fjarlæg grein still fyrir greinina '%s'"
 
 #: sha1_name.c:872
 #, c-format
 msgid "Upstream branch '%s' not stored as a remote-tracking branch"
-msgstr ""
+msgstr "Fjarlæg grein '%s' er ekki geymd sem fylgigrein"
 
 #: wt-status.c:134
 msgid "Unmerged paths:"
-msgstr ""
+msgstr "Ósameinaðar slóðir:"
 
 #: wt-status.c:140 wt-status.c:157
 #, c-format
 msgid "  (use \"git reset %s <file>...\" to unstage)"
-msgstr ""
+msgstr "  (notaðu \"git reset %s <skrár>...\" til að fjarlægja úr færslusvæðinu)"
 
 #: wt-status.c:142 wt-status.c:159
 msgid "  (use \"git rm --cached <file>...\" to unstage)"
-msgstr ""
+msgstr "  (notaðu \"git rm --cached <skrá>...\" til að fjarlægja úr færslusvæðinu)"
 
 #: wt-status.c:143
 msgid "  (use \"git add/rm <file>...\" as appropriate to mark resolution)"
-msgstr ""
+msgstr "  (notaðu \"git add/rm <skrá>...\" eins og við á til að merkja lausn)"
 
 #: wt-status.c:151
 msgid "Changes to be committed:"
-msgstr ""
+msgstr "Breytingar sem verða í næstu færslu:"
 
 #: wt-status.c:169
 msgid "Changes not staged for commit:"
-msgstr ""
+msgstr "Breytingar sem eru ekki í færslusvæðinu:"
 
 #: wt-status.c:173
 msgid "  (use \"git add <file>...\" to update what will be committed)"
-msgstr ""
+msgstr "  (notaðu \"git add <skrá>...\" til að breyta hvað verður sett í næstu færslu)"
 
 #: wt-status.c:175
 msgid "  (use \"git add/rm <file>...\" to update what will be committed)"
-msgstr ""
+msgstr "  (notaðu \"git add/rm <skrá>...\" til að uppfæra hvað verður í næstu færslu)"
 
 #: wt-status.c:176
 msgid ""
 "  (use \"git checkout -- <file>...\" to discard changes in working directory)"
-msgstr ""
+msgstr "  (notaðu \"git checkout -- <skrá>...\" til að henda breytingum í vinnumöppunni)"
 
 #: wt-status.c:178
 msgid "  (commit or discard the untracked or modified content in submodules)"
@@ -459,109 +469,109 @@ msgstr ""
 #: wt-status.c:187
 #, c-format
 msgid "%s files:"
-msgstr ""
+msgstr "%s skrár:"
 
 #: wt-status.c:190
 #, c-format
 msgid "  (use \"git %s <file>...\" to include in what will be committed)"
-msgstr ""
+msgstr "  (notaðu \"git %s <skrá>...\" til að bæta þeim á færslusvæðið)"
 
 #: wt-status.c:207
 msgid "bug"
-msgstr ""
+msgstr "villa"
 
 #: wt-status.c:212
 msgid "both deleted:"
-msgstr ""
+msgstr "báðir eyddu:"
 
 #: wt-status.c:213
 msgid "added by us:"
-msgstr ""
+msgstr "bætt við af okkur:"
 
 #: wt-status.c:214
 msgid "deleted by them:"
-msgstr ""
+msgstr "eytt af þeim:"
 
 #: wt-status.c:215
 msgid "added by them:"
-msgstr ""
+msgstr "bætt við af þeim:"
 
 #: wt-status.c:216
 msgid "deleted by us:"
-msgstr ""
+msgstr "eytt af okkur:"
 
 #: wt-status.c:217
 msgid "both added:"
-msgstr ""
+msgstr "báðir aðilar bættu við:"
 
 #: wt-status.c:218
 msgid "both modified:"
-msgstr ""
+msgstr "báðir breyttu:"
 
 #: wt-status.c:248
 msgid "new commits, "
-msgstr ""
+msgstr "nýjar færslur, "
 
 #: wt-status.c:250
 msgid "modified content, "
-msgstr ""
+msgstr "breytt efni, "
 
 #: wt-status.c:252
 msgid "untracked content, "
-msgstr ""
+msgstr "órakið efni, "
 
 #: wt-status.c:266
 #, c-format
 msgid "new file:   %s"
-msgstr ""
+msgstr "ný skrá:      %s"
 
 #: wt-status.c:269
 #, c-format
 msgid "copied:     %s -> %s"
-msgstr ""
+msgstr "afrituð:      %s -> %s"
 
 #: wt-status.c:272
 #, c-format
 msgid "deleted:    %s"
-msgstr ""
+msgstr "eytt:         %s"
 
 #: wt-status.c:275
 #, c-format
 msgid "modified:   %s"
-msgstr ""
+msgstr "breytt:       %s"
 
 #: wt-status.c:278
 #, c-format
 msgid "renamed:    %s -> %s"
-msgstr ""
+msgstr "nafni breytt: %s -> %s"
 
 #: wt-status.c:281
 #, c-format
 msgid "typechange: %s"
-msgstr ""
+msgstr "gerð breytt:  %s"
 
 #: wt-status.c:284
 #, c-format
 msgid "unknown:    %s"
-msgstr ""
+msgstr "óþekkt:       %s"
 
 #: wt-status.c:287
 #, c-format
 msgid "unmerged:   %s"
-msgstr ""
+msgstr "ósameinuð:    %s"
 
 #: wt-status.c:290
 #, c-format
 msgid "bug: unhandled diff status %c"
-msgstr ""
+msgstr "villa: óhöndluð diff staða %c"
 
 #: wt-status.c:713
 msgid "On branch "
-msgstr ""
+msgstr "Á greininni "
 
 #: wt-status.c:720
 msgid "Not currently on any branch."
-msgstr ""
+msgstr "Ekki á neinni grein."
 
 #: wt-status.c:731
 msgid "Initial commit"
@@ -569,67 +579,67 @@ msgstr "Bjó til tóma"
 
 #: wt-status.c:745
 msgid "Untracked"
-msgstr ""
+msgstr "Óraktar"
 
 #: wt-status.c:747
 msgid "Ignored"
-msgstr ""
+msgstr "Hunsaðar"
 
 #: wt-status.c:749
 #, c-format
 msgid "Untracked files not listed%s"
-msgstr ""
+msgstr "Óraktar skrár eru ekki listaðar%s"
 
 #: wt-status.c:751
 msgid " (use -u option to show untracked files)"
-msgstr ""
+msgstr " (notaðu -u rofann til að sýna óraktar skrár)"
 
 #: wt-status.c:757
 msgid "No changes"
-msgstr ""
+msgstr "Engar breytingar"
 
 #: wt-status.c:761
 #, c-format
 msgid "no changes added to commit%s\n"
-msgstr ""
+msgstr "engum breytingum bætt við færslusvæðið%s\n"
 
 #: wt-status.c:763
 msgid " (use \"git add\" and/or \"git commit -a\")"
-msgstr ""
+msgstr " (notaðu \"git add\" og/eða \"git commit -a\")"
 
 #: wt-status.c:765
 #, c-format
 msgid "nothing added to commit but untracked files present%s\n"
-msgstr ""
+msgstr "engu bætt við til að bókfæra, en óraktar skrár í vinnumöppunni%s\n"
 
 #: wt-status.c:767
 msgid " (use \"git add\" to track)"
-msgstr ""
+msgstr " (notaðu \"git add\" til að rekja)"
 
 #: wt-status.c:769 wt-status.c:772 wt-status.c:775
 #, c-format
 msgid "nothing to commit%s\n"
-msgstr ""
+msgstr "ekkert til að bókfæra%s\n"
 
 #: wt-status.c:770
 msgid " (create/copy files and use \"git add\" to track)"
-msgstr ""
+msgstr " (búðu til/afritaðu skrár og notaðu \"git add\" til að bæta við færslusvæðið)"
 
 #: wt-status.c:773
 msgid " (use -u to show untracked files)"
-msgstr ""
+msgstr " (notaðu -u til að sýna nýjar skrár)"
 
 #: wt-status.c:776
 msgid " (working directory clean)"
-msgstr ""
+msgstr " (vinnusvæðið er hreint)"
 
 #: wt-status.c:884
 msgid "HEAD (no branch)"
-msgstr ""
+msgstr "HAUS (engin grein)"
 
 #: wt-status.c:890
 msgid "Initial commit on "
-msgstr ""
+msgstr "Fyrsta færsla á "
 
 #: wt-status.c:905
 msgid "behind "
@@ -650,12 +660,12 @@ msgstr ""
 
 #: builtin/add.c:67 builtin/commit.c:298
 msgid "updating files failed"
-msgstr ""
+msgstr "að uppfæra skrár mistókst"
 
 #: builtin/add.c:77
 #, c-format
 msgid "remove '%s'\n"
-msgstr ""
+msgstr "fjarlægja '%s'\n"
 
 #: builtin/add.c:176
 #, c-format
@@ -678,16 +688,16 @@ msgstr ""
 
 #: builtin/add.c:276
 msgid "Could not read the index"
-msgstr ""
+msgstr "Gat ekki lesið færslusvæðið"
 
 #: builtin/add.c:286
 #, c-format
 msgid "Could not open '%s' for writing."
-msgstr ""
+msgstr "Gat ekki opnað '%s' til skrifunar."
 
 #: builtin/add.c:290
 msgid "Could not write patch"
-msgstr ""
+msgstr "Gat ekki skrifað bót"
 
 #: builtin/add.c:295
 #, c-format
@@ -696,7 +706,7 @@ msgstr ""
 
 #: builtin/add.c:297
 msgid "Empty patch. Aborted."
-msgstr ""
+msgstr "Tóm bót, hætti við."
 
 #: builtin/add.c:303
 #, c-format
@@ -741,11 +751,11 @@ msgstr ""
 #: builtin/add.c:420 builtin/clean.c:95 builtin/commit.c:358 builtin/mv.c:82
 #: builtin/rm.c:162
 msgid "index file corrupt"
-msgstr ""
+msgstr "færslusvæðisskráin er skemmd"
 
 #: builtin/add.c:476 builtin/mv.c:229 builtin/rm.c:260
 msgid "Unable to write new index file"
-msgstr ""
+msgstr "Gat ekki skrifað nýja færslusvæðisskrá"
 
 #: builtin/archive.c:17
 #, c-format
@@ -762,12 +772,12 @@ msgstr ""
 
 #: builtin/archive.c:58
 msgid "git archive: expected ACK/NAK, got EOF"
-msgstr ""
+msgstr "git archive: bjóst við ACK/NAK, fékk EOF"
 
 #: builtin/archive.c:63
 #, c-format
 msgid "git archive: NACK %s"
-msgstr ""
+msgstr "git archive: NACK %s"
 
 #: builtin/archive.c:65
 #, c-format
@@ -799,11 +809,11 @@ msgstr ""
 #. TRANSLATORS: This is "remote " in "remote branch '%s' not found"
 #: builtin/branch.c:164
 msgid "remote "
-msgstr ""
+msgstr "fylgi"
 
 #: builtin/branch.c:172
 msgid "cannot use -a with -d"
-msgstr ""
+msgstr "get ekki notað -a með -d"
 
 #: builtin/branch.c:178
 msgid "Couldn't look up commit object for HEAD"
@@ -812,17 +822,17 @@ msgstr ""
 #: builtin/branch.c:183
 #, c-format
 msgid "Cannot delete the branch '%s' which you are currently on."
-msgstr ""
+msgstr "Get ekki eytt greininni '%s' sem þú ert núna á."
 
 #: builtin/branch.c:193
 #, c-format
 msgid "%sbranch '%s' not found."
-msgstr ""
+msgstr "%sgrein '%s' fannst ekki."
 
 #: builtin/branch.c:201
 #, c-format
 msgid "Couldn't look up commit object for '%s'"
-msgstr ""
+msgstr "Gat ekki fundið færsluskrá fyrir '%s'"
 
 #: builtin/branch.c:207
 #, c-format
@@ -830,48 +840,50 @@ msgid ""
 "The branch '%s' is not fully merged.\n"
 "If you are sure you want to delete it, run 'git branch -D %s'."
 msgstr ""
+"Greinin '%s' er ekki fullsameinuð.\n"
+"Ef þú ert viss um að þú viljir eyða henni notaðu 'git branch -D %s'."
 
 #: builtin/branch.c:215
 #, c-format
 msgid "Error deleting %sbranch '%s'"
-msgstr ""
+msgstr "Villa við að eyða %sgrein '%s'"
 
 #: builtin/branch.c:221
 #, c-format
 msgid "Deleted %sbranch %s (was %s).\n"
-msgstr ""
+msgstr "Eyddi %sgrein %s (var %s).\n"
 
 #: builtin/branch.c:226
 msgid "Update of config-file failed"
-msgstr ""
+msgstr "Uppfærsla á stillingarskrá mistókst"
 
 #: builtin/branch.c:324
 #, c-format
 msgid "branch '%s' does not point at a commit"
-msgstr ""
+msgstr "greinin '%s' bendir ekki á færslu"
 
 #: builtin/branch.c:396
 #, c-format
 msgid "behind %d] "
-msgstr ""
+msgstr "á eftir %d] "
 
 #: builtin/branch.c:398
 #, c-format
 msgid "ahead %d] "
-msgstr ""
+msgstr "á undan %d] "
 
 #: builtin/branch.c:400
 #, c-format
 msgid "ahead %d, behind %d] "
-msgstr ""
+msgstr "%d á undan, %d á eftir] "
 
 #: builtin/branch.c:503
 msgid "(no branch)"
-msgstr ""
+msgstr "(engin grein)"
 
 #: builtin/branch.c:568
 msgid "some refs could not be read"
-msgstr ""
+msgstr "get ekki lesið suma bendla"
 
 #: builtin/branch.c:581
 msgid "cannot rename the current branch while not on any."
@@ -880,11 +892,11 @@ msgstr ""
 #: builtin/branch.c:591
 #, c-format
 msgid "Invalid branch name: '%s'"
-msgstr ""
+msgstr "Ógild greinarnafn: '%s'"
 
 #: builtin/branch.c:606
 msgid "Branch rename failed"
-msgstr ""
+msgstr "Tókst ekki að breyta nafni á grein"
 
 #: builtin/branch.c:610
 #, c-format
@@ -916,7 +928,7 @@ msgstr ""
 
 #: builtin/branch.c:755 builtin/clone.c:558
 msgid "HEAD not found below refs/heads!"
-msgstr ""
+msgstr "HAUS fannst ekki undir refs/heads!"
 
 #: builtin/branch.c:813
 msgid "-a and -r options to 'git branch' do not make sense with a branch name"
@@ -925,15 +937,15 @@ msgstr ""
 #: builtin/bundle.c:47
 #, c-format
 msgid "%s is okay\n"
-msgstr ""
+msgstr "%s er í lagi\n"
 
 #: builtin/bundle.c:56
 msgid "Need a repository to create a bundle."
-msgstr ""
+msgstr "Þarf hirslu til að búa til böggul."
 
 #: builtin/bundle.c:60
 msgid "Need a repository to unbundle."
-msgstr ""
+msgstr "Þarf hirslu til að afböggla"
 
 #: builtin/checkout.c:113 builtin/checkout.c:146
 #, c-format
@@ -972,7 +984,7 @@ msgstr ""
 
 #: builtin/checkout.c:234 builtin/checkout.c:392
 msgid "corrupt index file"
-msgstr ""
+msgstr "skemmd færslusvæðisskrá"
 
 #: builtin/checkout.c:264 builtin/checkout.c:271
 #, c-format
@@ -982,7 +994,7 @@ msgstr ""
 #: builtin/checkout.c:302 builtin/checkout.c:498 builtin/clone.c:583
 #: builtin/merge.c:812
 msgid "unable to write new index file"
-msgstr ""
+msgstr "gat ekki skrifað nýja færslusvæðisskrá"
 
 #: builtin/checkout.c:319 builtin/diff.c:302 builtin/merge.c:408
 msgid "diff_setup_done failed"
@@ -999,7 +1011,7 @@ msgstr ""
 
 #: builtin/checkout.c:566
 msgid "HEAD is now at"
-msgstr ""
+msgstr "HAUS er nú á"
 
 #: builtin/checkout.c:573
 #, c-format
@@ -1009,7 +1021,7 @@ msgstr ""
 #: builtin/checkout.c:576
 #, c-format
 msgid "Already on '%s'\n"
-msgstr ""
+msgstr "Nú þegar á '%s'\n"
 
 #: builtin/checkout.c:580
 #, c-format
@@ -1029,7 +1041,7 @@ msgstr ""
 #: builtin/checkout.c:640
 #, c-format
 msgid " ... and %d more.\n"
-msgstr ""
+msgstr " ... og %d fleiri.\n"
 
 #. The singular version
 #: builtin/checkout.c:646
@@ -1045,7 +1057,15 @@ msgid_plural ""
 "\n"
 "%s\n"
 msgstr[0] ""
+"Aðvörun: þú ert að skilja %d færslu eftir sem er ekki\n"
+"tengd neinni grein:\n"
+"\n"
+"%s\n"
 msgstr[1] ""
+"Aðvörun: þú ert að skilja %d færslur eftir sem eru ekki\n"
+"tengdar neinni grein:\n"
+"\n"
+"%s\n"
 
 #: builtin/checkout.c:664
 #, c-format
@@ -1059,11 +1079,11 @@ msgstr ""
 
 #: builtin/checkout.c:693
 msgid "internal error in revision walk"
-msgstr ""
+msgstr "innri villa í yfirfærslu færslna"
 
 #: builtin/checkout.c:697
 msgid "Previous HEAD position was"
-msgstr ""
+msgstr "Fyrri HAUS bendill var"
 
 #: builtin/checkout.c:723
 msgid "You are on a branch yet to be born"
@@ -1073,13 +1093,13 @@ msgstr ""
 #: builtin/checkout.c:854
 #, c-format
 msgid "invalid reference: %s"
-msgstr ""
+msgstr "ógildur bendill: %s"
 
 #. case (1): want a tree
 #: builtin/checkout.c:893
 #, c-format
 msgid "reference is not a tree: %s"
-msgstr ""
+msgstr "bendillinn er ekki tré: %s"
 
 #: builtin/checkout.c:973
 msgid "-B cannot be used with -b"
@@ -1115,7 +1135,7 @@ msgstr ""
 
 #: builtin/checkout.c:1018
 msgid "git checkout: -f and -m are incompatible"
-msgstr ""
+msgstr "git checkout: -f og -m eru ósamhæf"
 
 #: builtin/checkout.c:1052
 msgid "invalid path specification"
@@ -1168,27 +1188,27 @@ msgstr ""
 #: builtin/clean.c:155 builtin/clean.c:176
 #, c-format
 msgid "Would remove %s\n"
-msgstr ""
+msgstr "Myndi fjarlægja %s\n"
 
 #: builtin/clean.c:159 builtin/clean.c:179
 #, c-format
 msgid "Removing %s\n"
-msgstr ""
+msgstr "Fjarlægi %s\n"
 
 #: builtin/clean.c:162 builtin/clean.c:182
 #, c-format
 msgid "failed to remove %s"
-msgstr ""
+msgstr "gat ekki fjarlægt %s"
 
 #: builtin/clean.c:166
 #, c-format
 msgid "Would not remove %s\n"
-msgstr ""
+msgstr "Myndi ekki fjarlægja %s\n"
 
 #: builtin/clean.c:168
 #, c-format
 msgid "Not removing %s\n"
-msgstr ""
+msgstr "Fjarlægi ekki %s\n"
 
 #: builtin/clone.c:243
 #, c-format
@@ -1198,7 +1218,7 @@ msgstr ""
 #: builtin/clone.c:302
 #, c-format
 msgid "failed to open '%s'"
-msgstr ""
+msgstr "gat ekki opnað '%s'"
 
 #: builtin/clone.c:306
 #, c-format
@@ -1238,7 +1258,7 @@ msgstr ""
 #: builtin/clone.c:373
 #, c-format
 msgid "done.\n"
-msgstr ""
+msgstr "búinn.\n"
 
 #: builtin/clone.c:440
 #, c-format
@@ -1251,11 +1271,11 @@ msgstr ""
 
 #: builtin/clone.c:639
 msgid "Too many arguments."
-msgstr ""
+msgstr "Of margir rofar."
 
 #: builtin/clone.c:643
 msgid "You must specify a repository to clone."
-msgstr ""
+msgstr "Þú verður að gefa upp hirslu til að klóna."
 
 #: builtin/clone.c:654
 #, c-format
@@ -1265,7 +1285,7 @@ msgstr ""
 #: builtin/clone.c:668
 #, c-format
 msgid "repository '%s' does not exist"
-msgstr ""
+msgstr "hirslan '%s' er ekki til"
 
 #: builtin/clone.c:673
 msgid "--depth is ignored in local clones; use file:// instead."
@@ -1279,7 +1299,7 @@ msgstr ""
 #: builtin/clone.c:693
 #, c-format
 msgid "working tree '%s' already exists."
-msgstr ""
+msgstr "vinnumappan '%s' er þegar til."
 
 #: builtin/clone.c:706 builtin/clone.c:720
 #, c-format
@@ -1294,17 +1314,17 @@ msgstr ""
 #: builtin/clone.c:728
 #, c-format
 msgid "Cloning into bare repository '%s'...\n"
-msgstr ""
+msgstr "Klóna í nýja auða hirslu '%s'...\n"
 
 #: builtin/clone.c:730
 #, c-format
 msgid "Cloning into '%s'...\n"
-msgstr ""
+msgstr "Klóna í nýja hirslu '%s'...\n"
 
 #: builtin/clone.c:786
 #, c-format
 msgid "Don't know how to clone %s"
-msgstr ""
+msgstr "Ég veit ekki hvernig ég á að klóna %s"
 
 #: builtin/clone.c:835
 #, c-format
@@ -1313,7 +1333,7 @@ msgstr ""
 
 #: builtin/clone.c:842
 msgid "You appear to have cloned an empty repository."
-msgstr ""
+msgstr "Þú virðist hafa klónað tóma hirslu."
 
 #: builtin/commit.c:42
 msgid ""
@@ -1348,11 +1368,11 @@ msgstr ""
 
 #: builtin/commit.c:205 builtin/reset.c:33
 msgid "merge"
-msgstr ""
+msgstr "sameining"
 
 #: builtin/commit.c:208
 msgid "cherry-pick"
-msgstr ""
+msgstr "tínsla"
 
 #: builtin/commit.c:325
 msgid "failed to unpack HEAD tree object"
@@ -1360,11 +1380,11 @@ msgstr ""
 
 #: builtin/commit.c:367
 msgid "unable to create temporary index"
-msgstr ""
+msgstr "gat ekki búið til tímabundið færslusvæði"
 
 #: builtin/commit.c:373
 msgid "interactive add failed"
-msgstr ""
+msgstr "gagnvirk viðbót mistókst"
 
 #: builtin/commit.c:406 builtin/commit.c:427 builtin/commit.c:473
 msgid "unable to write new_index file"
@@ -1377,20 +1397,20 @@ msgstr ""
 
 #: builtin/commit.c:466
 msgid "cannot read the index"
-msgstr ""
+msgstr "gat ekki lesið færslusvæðið"
 
 #: builtin/commit.c:486
 msgid "unable to write temporary index file"
-msgstr ""
+msgstr "gat ekki skrifað tímabundna færslusvæðisskrá"
 
 #: builtin/commit.c:561 builtin/commit.c:567
 #, c-format
 msgid "invalid commit: %s"
-msgstr ""
+msgstr "ógild færsla: %s"
 
 #: builtin/commit.c:590
 msgid "malformed --author parameter"
-msgstr ""
+msgstr "ógildur --author rofi"
 
 #: builtin/commit.c:651
 #, c-format
@@ -1400,7 +1420,7 @@ msgstr ""
 #: builtin/commit.c:689 builtin/commit.c:722 builtin/commit.c:1033
 #, c-format
 msgid "could not lookup commit %s"
-msgstr ""
+msgstr "gat ekki fundið færslu %s"
 
 #: builtin/commit.c:701 builtin/shortlog.c:296
 #, c-format
@@ -1422,25 +1442,25 @@ msgstr ""
 
 #: builtin/commit.c:729
 msgid "could not read MERGE_MSG"
-msgstr ""
+msgstr "gat ekki lesið MERGE_MSG"
 
 #: builtin/commit.c:733
 msgid "could not read SQUASH_MSG"
-msgstr ""
+msgstr "gat ekki lesið SQUASH_MSG"
 
 #: builtin/commit.c:737
 #, c-format
 msgid "could not read '%s'"
-msgstr ""
+msgstr "gat ekki lesið '%s'"
 
 #: builtin/commit.c:765
 #, c-format
 msgid "could not open '%s'"
-msgstr ""
+msgstr "gat ekki opnað '%s'"
 
 #: builtin/commit.c:789
 msgid "could not write commit template"
-msgstr ""
+msgstr "gat ekki skrifað færsluforsnið"
 
 #: builtin/commit.c:799
 #, c-format
@@ -1454,13 +1474,16 @@ msgstr ""
 
 #: builtin/commit.c:812
 msgid "Please enter the commit message for your changes."
-msgstr ""
+msgstr "Vinsamlegast sláðu inn færsluskilaboð fyrir breytinguna þína."
 
 #: builtin/commit.c:815
 msgid ""
 " Lines starting\n"
 "with '#' will be ignored, and an empty message aborts the commit.\n"
 msgstr ""
+"Línur\n"
+"sem byrja á '#' verða hunsaðar, og engin færsla verður búin til\n"
+"ef skilaboðin eru tóm\n"
 
 #: builtin/commit.c:820
 msgid ""
@@ -1472,20 +1495,20 @@ msgstr ""
 #: builtin/commit.c:832
 #, c-format
 msgid "%sAuthor:    %s"
-msgstr ""
+msgstr "%sHöfundur:   %s"
 
 #: builtin/commit.c:839
 #, c-format
 msgid "%sCommitter: %s"
-msgstr ""
+msgstr "%sBókfærandi: %s"
 
 #: builtin/commit.c:859
 msgid "Cannot read index"
-msgstr ""
+msgstr "gat ekki lesið færslusvæðið"
 
 #: builtin/commit.c:896
 msgid "Error building trees"
-msgstr ""
+msgstr "Villa við að búa til tré"
 
 #: builtin/commit.c:911 builtin/tag.c:357
 #, c-format
@@ -1570,7 +1593,7 @@ msgstr ""
 
 #: builtin/commit.c:1360
 msgid " (root-commit)"
-msgstr ""
+msgstr " (rótafærsla)"
 
 #: builtin/commit.c:1450
 msgid "could not parse HEAD commit"
@@ -1579,21 +1602,21 @@ msgstr ""
 #: builtin/commit.c:1487 builtin/merge.c:509
 #, c-format
 msgid "could not open '%s' for reading"
-msgstr ""
+msgstr "gat ekki opnað '%s' til lesunar"
 
 #: builtin/commit.c:1494
 #, c-format
 msgid "Corrupt MERGE_HEAD file (%s)"
-msgstr ""
+msgstr "Skemmd MERGE_HEAD skrá (%s)"
 
 #: builtin/commit.c:1501
 msgid "could not read MERGE_MODE"
-msgstr ""
+msgstr "gat ekki lesið MERGE_MODE"
 
 #: builtin/commit.c:1520
 #, c-format
 msgid "could not read commit message: %s"
-msgstr ""
+msgstr "gat ekki lesið færsluboð: %s"
 
 #: builtin/commit.c:1534
 #, c-format
@@ -1603,19 +1626,19 @@ msgstr ""
 #: builtin/commit.c:1539
 #, c-format
 msgid "Aborting commit due to empty commit message.\n"
-msgstr ""
+msgstr "Hætti við að búa til færslu vegna tómra færsluskilaboða.\n"
 
 #: builtin/commit.c:1554 builtin/merge.c:936 builtin/merge.c:961
 msgid "failed to write commit object"
-msgstr ""
+msgstr "gat ekki skrifað færsluhlut"
 
 #: builtin/commit.c:1575
 msgid "cannot lock HEAD ref"
-msgstr ""
+msgstr "gat ekki læst HAUS-bendli"
 
 #: builtin/commit.c:1579
 msgid "cannot update HEAD ref"
-msgstr ""
+msgstr "gat ekki uppfært HAUS-bendil"
 
 #: builtin/commit.c:1590
 msgid ""
@@ -1637,22 +1660,22 @@ msgstr ""
 #: builtin/describe.c:240
 #, c-format
 msgid "tag '%s' is really '%s' here"
-msgstr ""
+msgstr "merkið '%s' er í raun '%s' hér"
 
 #: builtin/describe.c:267
 #, c-format
 msgid "Not a valid object name %s"
-msgstr ""
+msgstr "%s er ógilt nafn á hlut"
 
 #: builtin/describe.c:270
 #, c-format
 msgid "%s is not a valid '%s' object"
-msgstr ""
+msgstr "%s er ekki gildur '%s' hlutur"
 
 #: builtin/describe.c:287
 #, c-format
 msgid "no tag exactly matches '%s'"
-msgstr ""
+msgstr "ekkert merki passar við '%s'"
 
 #: builtin/describe.c:289
 #, c-format
@@ -1662,7 +1685,7 @@ msgstr ""
 #: builtin/describe.c:329
 #, c-format
 msgid "finished search at %s\n"
-msgstr ""
+msgstr "lauk leit á %s\n"
 
 #: builtin/describe.c:353
 #, c-format
@@ -1681,7 +1704,7 @@ msgstr ""
 #: builtin/describe.c:378
 #, c-format
 msgid "traversed %lu commits\n"
-msgstr ""
+msgstr "fór yfir %lu færslur\n"
 
 #: builtin/describe.c:381
 #, c-format
@@ -1710,26 +1733,26 @@ msgstr ""
 #: builtin/diff.c:220
 #, c-format
 msgid "invalid option: %s"
-msgstr ""
+msgstr "ógildur rofi: %s"
 
 #: builtin/diff.c:297
 msgid "Not a git repository"
-msgstr ""
+msgstr "Ekki git hirsla"
 
 #: builtin/diff.c:347
 #, c-format
 msgid "invalid object '%s' given."
-msgstr ""
+msgstr "ógildur hlutur '%s' gefinn."
 
 #: builtin/diff.c:352
 #, c-format
 msgid "more than %d trees given: '%s'"
-msgstr ""
+msgstr "meira en %d trés gefin: '%s'"
 
 #: builtin/diff.c:362
 #, c-format
 msgid "more than two blobs given: '%s'"
-msgstr ""
+msgstr "meira en tvær hlussur gefnar: '%s'"
 
 #: builtin/diff.c:370
 #, c-format
@@ -1743,7 +1766,7 @@ msgstr ""
 #: builtin/fetch.c:253
 #, c-format
 msgid "object %s not found"
-msgstr ""
+msgstr "hluturinn %s fannst ekki"
 
 #: builtin/fetch.c:259
 msgid "[up to date]"
@@ -1756,54 +1779,54 @@ msgstr ""
 
 #: builtin/fetch.c:274 builtin/fetch.c:360
 msgid "[rejected]"
-msgstr ""
+msgstr "[hafnað]"
 
 #: builtin/fetch.c:285
 msgid "[tag update]"
-msgstr ""
+msgstr "[merkisuppfærsla]"
 
 #: builtin/fetch.c:287 builtin/fetch.c:322 builtin/fetch.c:340
 msgid "  (unable to update local ref)"
-msgstr ""
+msgstr " (gat ekki uppfært bendilinn okkar)"
 
 #: builtin/fetch.c:305
 msgid "[new tag]"
-msgstr ""
+msgstr "[nýtt merki]"
 
 #: builtin/fetch.c:308
 msgid "[new branch]"
-msgstr ""
+msgstr "[ný grein]"
 
 #: builtin/fetch.c:311
 msgid "[new ref]"
-msgstr ""
+msgstr "[ný tilvísun]"
 
 #: builtin/fetch.c:356
 msgid "unable to update local ref"
-msgstr ""
+msgstr "gat ekki uppfært bendilinn okkar"
 
 #: builtin/fetch.c:356
 msgid "forced update"
-msgstr ""
+msgstr "bein uppfærsla"
 
 #: builtin/fetch.c:362
 msgid "(non-fast-forward)"
-msgstr ""
+msgstr "(óbein uppfærsla)"
 
 #: builtin/fetch.c:393 builtin/fetch.c:685
 #, c-format
 msgid "cannot open %s: %s\n"
-msgstr ""
+msgstr "gat ekki opnað %s: %s\n"
 
 #: builtin/fetch.c:402
 #, c-format
 msgid "%s did not send all necessary objects\n"
-msgstr ""
+msgstr "%s sendi ekki alla nauðsynlega hluti\n"
 
 #: builtin/fetch.c:488
 #, c-format
 msgid "From %.*s\n"
-msgstr ""
+msgstr "Frá %.*s\n"
 
 #: builtin/fetch.c:499
 #, c-format
@@ -1824,7 +1847,7 @@ msgstr ""
 
 #: builtin/fetch.c:557
 msgid "[deleted]"
-msgstr ""
+msgstr "[eytt]"
 
 #: builtin/fetch.c:558
 msgid "(none)"
@@ -1838,27 +1861,27 @@ msgstr ""
 #: builtin/fetch.c:709
 #, c-format
 msgid "Don't know how to fetch from %s"
-msgstr ""
+msgstr "Kann ekki að sækja frá %s"
 
 #: builtin/fetch.c:786
 #, c-format
 msgid "Option \"%s\" value \"%s\" is not valid for %s"
-msgstr ""
+msgstr "Rofinn \"%s\" með gildinu \"%ss\" er ekki gildur fyrir %s"
 
 #: builtin/fetch.c:789
 #, c-format
 msgid "Option \"%s\" is ignored for %s\n"
-msgstr ""
+msgstr "Rofinn \"%s\" er hunsaður fyrir %s\n"
 
 #: builtin/fetch.c:888
 #, c-format
 msgid "Fetching %s\n"
-msgstr ""
+msgstr "Sæki %s\n"
 
 #: builtin/fetch.c:890
 #, c-format
 msgid "Could not fetch %s"
-msgstr ""
+msgstr "Gat ekki sótt %s"
 
 #: builtin/fetch.c:907
 msgid ""
@@ -1868,11 +1891,11 @@ msgstr ""
 
 #: builtin/fetch.c:927
 msgid "You need to specify a tag name."
-msgstr ""
+msgstr "Þú verður að gefa upp merkisnafn."
 
 #: builtin/fetch.c:979
 msgid "fetch --all does not take a repository argument"
-msgstr ""
+msgstr "fetch --all tekur ekki hirslu sem rofa"
 
 #: builtin/fetch.c:981
 msgid "fetch --all does not make sense with refspecs"
@@ -1890,11 +1913,11 @@ msgstr ""
 #: builtin/gc.c:63
 #, c-format
 msgid "Invalid %s: '%s'"
-msgstr ""
+msgstr "Ógilt %s: '%s'"
 
 #: builtin/gc.c:78
 msgid "Too many options specified"
-msgstr ""
+msgstr "Of margir nofar voru gefnir upp"
 
 #: builtin/gc.c:103
 #, c-format
@@ -1921,17 +1944,17 @@ msgstr ""
 #: builtin/grep.c:216
 #, c-format
 msgid "grep: failed to create thread: %s"
-msgstr ""
+msgstr "grep: gat ekki búið til þráð %s"
 
 #: builtin/grep.c:402
 #, c-format
 msgid "Failed to chdir: %s"
-msgstr ""
+msgstr "„chdir„ mistókst: %s"
 
 #: builtin/grep.c:478 builtin/grep.c:512
 #, c-format
 msgid "unable to read tree (%s)"
-msgstr ""
+msgstr "gat ekki lesið tré (%s)"
 
 #: builtin/grep.c:526
 #, c-format
@@ -1941,12 +1964,12 @@ msgstr ""
 #: builtin/grep.c:584
 #, c-format
 msgid "switch `%c' expects a numerical value"
-msgstr ""
+msgstr "rofinn `%c' býst við tölugildi"
 
 #: builtin/grep.c:601
 #, c-format
 msgid "cannot open '%s'"
-msgstr ""
+msgstr "get ekki opnað '%s'"
 
 #: builtin/grep.c:888
 msgid "no pattern given."
@@ -1955,7 +1978,7 @@ msgstr ""
 #: builtin/grep.c:902
 #, c-format
 msgid "bad object %s"
-msgstr ""
+msgstr "ógildur hlutur %s"
 
 #: builtin/grep.c:943
 msgid "--open-files-in-pager only works on the worktree"
@@ -1990,7 +2013,7 @@ msgstr ""
 #: builtin/init-db.c:67
 #, c-format
 msgid "cannot stat '%s'"
-msgstr ""
+msgstr "„stat“ mistókst %s"
 
 #: builtin/init-db.c:73
 #, c-format
@@ -2000,12 +2023,12 @@ msgstr ""
 #: builtin/init-db.c:80
 #, c-format
 msgid "cannot opendir '%s'"
-msgstr ""
+msgstr "„opendir“ mistókst: %s"
 
 #: builtin/init-db.c:97
 #, c-format
 msgid "cannot readlink '%s'"
-msgstr ""
+msgstr "„readlink“ mistókst: '%s'"
 
 #: builtin/init-db.c:99
 #, c-format
@@ -2025,7 +2048,7 @@ msgstr ""
 #: builtin/init-db.c:110
 #, c-format
 msgid "ignoring template %s"
-msgstr ""
+msgstr "hunsa færsluforsnið %s"
 
 #: builtin/init-db.c:133
 #, c-format
@@ -2050,12 +2073,12 @@ msgstr ""
 #: builtin/init-db.c:322 builtin/init-db.c:325
 #, c-format
 msgid "%s already exists"
-msgstr ""
+msgstr "%s er þegar til"
 
 #: builtin/init-db.c:354
 #, c-format
 msgid "unable to handle file type %d"
-msgstr ""
+msgstr "get ekki höndlað skráargerðina %d"
 
 #: builtin/init-db.c:357
 #, c-format
@@ -2096,7 +2119,7 @@ msgstr ""
 #: builtin/init-db.c:521 builtin/init-db.c:528
 #, c-format
 msgid "cannot mkdir %s"
-msgstr ""
+msgstr "„mkdir“ misókst: %s"
 
 #: builtin/init-db.c:532
 #, c-format
@@ -2127,16 +2150,16 @@ msgstr ""
 #: builtin/log.c:401 builtin/log.c:489
 #, c-format
 msgid "Could not read object %s"
-msgstr ""
+msgstr "Gat ekki lesið hlutinn %s"
 
 #: builtin/log.c:513
 #, c-format
 msgid "Unknown type: %d"
-msgstr ""
+msgstr "Óþekkt gerð: %d"
 
 #: builtin/log.c:602
 msgid "format.headers without value"
-msgstr ""
+msgstr "format.headers án gildis"
 
 #: builtin/log.c:675
 msgid "name of output directory is too long"
@@ -2145,7 +2168,7 @@ msgstr ""
 #: builtin/log.c:686
 #, c-format
 msgid "Cannot open patch file %s"
-msgstr ""
+msgstr "Gat ekki opnað bótarskrá %s"
 
 #: builtin/log.c:700
 msgid "Need exactly one range."
@@ -2224,11 +2247,11 @@ msgstr ""
 #: builtin/log.c:1536 builtin/log.c:1538 builtin/log.c:1550
 #, c-format
 msgid "Unknown commit %s"
-msgstr ""
+msgstr "Óþekkt færsla %s"
 
 #: builtin/merge.c:90
 msgid "switch `m' requires a value"
-msgstr ""
+msgstr "rofinn `m' þarfnast gildist"
 
 #: builtin/merge.c:127
 #, c-format
@@ -2256,11 +2279,11 @@ msgstr ""
 #: builtin/merge.c:250
 #, c-format
 msgid "not a valid object: %s"
-msgstr ""
+msgstr "ógildur hlutur: %s"
 
 #: builtin/merge.c:269 builtin/merge.c:286
 msgid "read-tree failed"
-msgstr ""
+msgstr "read-tree mistókst"
 
 #: builtin/merge.c:316
 msgid " (nothing to squash)"
@@ -2273,11 +2296,11 @@ msgstr ""
 
 #: builtin/merge.c:361
 msgid "Writing SQUASH_MSG"
-msgstr ""
+msgstr "Skrifa SQUASH_MSG"
 
 #: builtin/merge.c:363
 msgid "Finishing SQUASH_MSG"
-msgstr ""
+msgstr "Klára SQUASH_MSG"
 
 #: builtin/merge.c:386
 #, c-format
@@ -2287,7 +2310,7 @@ msgstr ""
 #: builtin/merge.c:437
 #, c-format
 msgid "'%s' does not point to a commit"
-msgstr ""
+msgstr "'%s' bendir ekki á færslu"
 
 #: builtin/merge.c:536
 #, c-format
@@ -2304,7 +2327,7 @@ msgstr ""
 
 #: builtin/merge.c:697
 msgid "Unable to write index."
-msgstr ""
+msgstr "Gat ekki skrifað færslusvæðið."
 
 #: builtin/merge.c:710
 msgid "Not handling anything other than two heads merge."
@@ -2313,22 +2336,22 @@ msgstr ""
 #: builtin/merge.c:724
 #, c-format
 msgid "Unknown option for merge-recursive: -X%s"
-msgstr ""
+msgstr "Óþekktur rofi fyrir merge-recursive: -X%s"
 
 #: builtin/merge.c:738
 #, c-format
 msgid "unable to write %s"
-msgstr ""
+msgstr "gat ekki skrifað %s"
 
 #: builtin/merge.c:877
 #, c-format
 msgid "Could not read from '%s'"
-msgstr ""
+msgstr "Gat ekki lesið úr '%s'"
 
 #: builtin/merge.c:886
 #, c-format
 msgid "Not committing merge; use 'git commit' to complete the merge.\n"
-msgstr ""
+msgstr "Bókfæri ekki sameiningu, notaðu 'git commit' til að ljúka sameiningunni.\n"
 
 #: builtin/merge.c:892
 msgid ""
@@ -2341,12 +2364,12 @@ msgstr ""
 
 #: builtin/merge.c:916
 msgid "Empty commit message."
-msgstr ""
+msgstr "Tóm færsluskilaboð."
 
 #: builtin/merge.c:928
 #, c-format
 msgid "Wonderful.\n"
-msgstr ""
+msgstr "Frábært.\n"
 
 #: builtin/merge.c:993
 #, c-format
@@ -2356,7 +2379,7 @@ msgstr ""
 #: builtin/merge.c:1009
 #, c-format
 msgid "'%s' is not a commit"
-msgstr ""
+msgstr "'%s' er ekki færsla"
 
 #: builtin/merge.c:1050
 msgid "No current branch."
@@ -2392,7 +2415,7 @@ msgstr ""
 
 #: builtin/merge.c:1233 git-pull.sh:34
 msgid "You have not concluded your merge (MERGE_HEAD exists)."
-msgstr ""
+msgstr "Þú hefur ekki lokið sameiningunni þinni (MERGE_HEAD er til)."
 
 #: builtin/merge.c:1237
 msgid ""
@@ -2431,7 +2454,7 @@ msgstr ""
 #: builtin/merge.c:1413
 #, c-format
 msgid "Updating %s..%s\n"
-msgstr ""
+msgstr "Uppfæri %s..%s\n"
 
 #: builtin/merge.c:1451
 #, c-format
@@ -2465,7 +2488,7 @@ msgstr ""
 #: builtin/merge.c:1585
 #, c-format
 msgid "Merge with strategy %s failed.\n"
-msgstr ""
+msgstr "Sameining með aðferð %s mistókst.\n"
 
 #: builtin/merge.c:1594
 #, c-format
@@ -2518,7 +2541,7 @@ msgstr ""
 
 #: builtin/mv.c:184
 msgid "Cannot overwrite"
-msgstr ""
+msgstr "Get ekki yfirskrifað"
 
 #: builtin/mv.c:187
 msgid "multiple sources for the same target"
@@ -2561,7 +2584,7 @@ msgstr ""
 #: builtin/notes.c:175 builtin/tag.c:343
 #, c-format
 msgid "could not create file '%s'"
-msgstr ""
+msgstr "gat ekki búið til skránna '%s'"
 
 #: builtin/notes.c:189
 msgid "Please supply the note contents using either -m or -F option"
@@ -2589,7 +2612,7 @@ msgstr ""
 #: builtin/notes.c:253 builtin/tag.c:524
 #, c-format
 msgid "could not open or read '%s'"
-msgstr ""
+msgstr "gat ekki opnað eða lesið '%s'"
 
 #: builtin/notes.c:272 builtin/notes.c:445 builtin/notes.c:447
 #: builtin/notes.c:507 builtin/notes.c:561 builtin/notes.c:644
@@ -2602,7 +2625,7 @@ msgstr ""
 #: builtin/notes.c:275
 #, c-format
 msgid "Failed to read object '%s'."
-msgstr ""
+msgstr "Gat ekki lesið hlutinn '%s'."
 
 #: builtin/notes.c:299
 msgid "Cannot commit uninitialized/unreferenced notes tree"
@@ -2783,17 +2806,17 @@ msgstr ""
 #: builtin/push.c:190
 #, c-format
 msgid "Pushing to %s\n"
-msgstr ""
+msgstr "Sendi til %s\n"
 
 #: builtin/push.c:194
 #, c-format
 msgid "failed to push some refs to '%s'"
-msgstr ""
+msgstr "gat ekki sent sumar tilvísanir til '%s'"
 
 #: builtin/push.c:226
 #, c-format
 msgid "bad repository '%s'"
-msgstr ""
+msgstr "ógild hirsla '%s'"
 
 #: builtin/push.c:227
 msgid ""
@@ -2810,7 +2833,7 @@ msgstr ""
 
 #: builtin/push.c:242
 msgid "--all and --tags are incompatible"
-msgstr ""
+msgstr "--all og --tags eru ósamhæfir"
 
 #: builtin/push.c:243
 msgid "--all can't be combined with refspecs"
@@ -2818,7 +2841,7 @@ msgstr ""
 
 #: builtin/push.c:248
 msgid "--mirror and --tags are incompatible"
-msgstr ""
+msgstr "--mirror og --tags eru ósamhæfir"
 
 #: builtin/push.c:249
 msgid "--mirror can't be combined with refspecs"
@@ -2826,7 +2849,7 @@ msgstr ""
 
 #: builtin/push.c:254
 msgid "--all and --mirror are incompatible"
-msgstr ""
+msgstr "--all og --mirror eru ósamhæfir"
 
 #: builtin/push.c:342
 msgid "--delete is incompatible with --all, --mirror and --tags"
@@ -2854,11 +2877,11 @@ msgstr ""
 
 #: builtin/reset.c:77
 msgid "You do not have a valid HEAD."
-msgstr ""
+msgstr "Þú ert ekki með gildann HAUS."
 
 #: builtin/reset.c:79
 msgid "Failed to find tree of HEAD."
-msgstr ""
+msgstr "Gat ekki fundið tré fyrir HAUS."
 
 #: builtin/reset.c:85
 #, c-format
@@ -2867,7 +2890,7 @@ msgstr ""
 
 #: builtin/reset.c:96
 msgid "Could not write new index file."
-msgstr ""
+msgstr "Gat ekki skrifað nýtt færslusvæði."
 
 #: builtin/reset.c:106
 #, c-format
@@ -2961,12 +2984,12 @@ msgstr ""
 #: builtin/rm.c:230
 #, c-format
 msgid "git rm: unable to remove %s"
-msgstr ""
+msgstr "git rm: gat ekki fjarlægt %s"
 
 #: builtin/shortlog.c:157
 #, c-format
 msgid "Missing author: %s"
-msgstr ""
+msgstr "Höfund vantar: %s"
 
 #: builtin/tag.c:58
 #, c-format
@@ -2981,12 +3004,12 @@ msgstr ""
 #: builtin/tag.c:210
 #, c-format
 msgid "tag '%s' not found."
-msgstr ""
+msgstr "merkið '%s' fannst ekki."
 
 #: builtin/tag.c:225
 #, c-format
 msgid "Deleted tag '%s' (was %s)\n"
-msgstr ""
+msgstr "Eyddi merkinu '%s' (var %s)\n"
 
 #: builtin/tag.c:237
 #, c-format
@@ -3074,7 +3097,7 @@ msgstr ""
 #: builtin/tag.c:545
 #, c-format
 msgid "tag '%s' already exists"
-msgstr ""
+msgstr "merkið '%s' er þegar til"
 
 #: builtin/tag.c:563
 #, c-format
@@ -3089,7 +3112,7 @@ msgstr ""
 #: builtin/tag.c:567
 #, c-format
 msgid "Updated tag '%s' (was %s)\n"
-msgstr ""
+msgstr "Uppfærði merkið '%s' (var %s)\n"
 
 #. TRANSLATORS: This is a test. You don't need to translate it.
 #: t/t0200/test.c:5
@@ -3131,7 +3154,7 @@ msgstr ""
 
 #: git-am.sh:137
 msgid "Repository lacks necessary blobs to fall back on 3-way merge."
-msgstr ""
+msgstr "Hirslunar skortar hlussur sem við þurfum fyrir þrigga færslna sameiningu."
 
 #: git-am.sh:154
 msgid ""
@@ -3167,7 +3190,7 @@ msgstr ""
 
 #: git-am.sh:486
 msgid "Please make up your mind. --skip or --abort?"
-msgstr ""
+msgstr "Vinsamlegast ákveddu þig --skip eða --abort?"
 
 #: git-am.sh:513
 msgid "Resolve operation not in progress, we are not resuming."
@@ -3221,7 +3244,7 @@ msgstr ""
 
 #: git-bisect.sh:117
 msgid "Bad HEAD - I need a HEAD"
-msgstr ""
+msgstr "Ögildur HAUS - Ég þarf HAUS"
 
 #: git-bisect.sh:130
 #, sh-format
@@ -3375,7 +3398,7 @@ msgstr ""
 #: git-stash.sh:365
 #, sh-format
 msgid "$reference is not valid reference"
-msgstr ""
+msgstr "$reference er ekki gildur bendill"
 
 #: git-stash.sh:393
 #, sh-format
@@ -3389,7 +3412,7 @@ msgstr ""
 
 #: git-stash.sh:412
 msgid "unable to refresh index"
-msgstr ""
+msgstr "gat ekki hresst færslusvæðið"
 
 #: git-stash.sh:416
 msgid "Cannot apply a stash in the middle of a merge"
