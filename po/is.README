@@ -41,6 +41,8 @@ Repositories / tracking concepts:
     upstream branch        = -||-
     tracking branch        = fylgigrein
 
+    remote repository      = fjarhirsla
+
 Authorship:
 
     author    = höfundur
@@ -117,3 +119,7 @@ Still being worked out:
 
     stash        = forði (forðabúr)
     add to stash = bæta í forðabúr / bæta við forðan
+
+    symbolic link = táknrænn tengill
+    path = slóð (skráarslóð)
+    link = slóð (vefslóð / hirsluslóð)
