@@ -1,0 +1,106 @@
+Icelandic Translation of Git
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a document to aid in the translation of Git into Icelandic, a
+lot of the terms needed for the translation are general and familiar
+to people used to doing software translations, but some Git-specific
+terms are fairly novel without prior art.
+
+Glossary of terms
+~~~~~~~~~~~~~~~~~
+
+This ever-expanding glossary of terms started at
+https://gist.github.com/425917 serves as a reference and point of
+debate about how to translate the core Git concepts.
+
+Basic repository objects:
+
+    blob           = hlussa (or maybe "klessa" or "klumpur")
+    tree           = tré
+    submodule      = undirhirsla
+    pack(noun)     = pakki
+    pack(verb)     = pakka
+
+Content in a repository:
+
+    file(s)        = skrá(r)
+    tracked file   = rakin skrá
+    track file     = rekja skrá
+    untracked file = órakin skrá
+    directory      = mappa
+
+Repositories / tracking concepts:
+
+    clone                  = klóna
+    repository             = hirsla
+    bare repository        = auð hirsla
+    working directory      = vinnusvæði / vinnumappa
+
+    remote branch          = fjarlæg grein
+    remote tracking branch = fjarlæg fylgigrein
+    upstream branch        = -||-
+    tracking branch        = fylgigrein
+
+Authorship:
+
+    author    = höfundur
+    committer = bókfærandi
+    tagger    = merkjari
+
+Commits, tags and other references:
+
+    HEAD           = HAUS
+
+    commit(noun)   = færsla
+    commit(verb)   = innfæra
+    parent commit  = yfirfærsla
+    child commit   = underfærsla
+    commit message = færsluskilaboð
+
+    reference      = bendill
+    branch         = grein
+    tag(noun)      = merki
+    tag(verb)      = merkja
+    annotated tag  = áletrað merki
+    tag message    = merkisskilaboð
+
+    orphan commit    = einstæð færsla
+    orphan reference = einstæður bendill
+
+    stage/index   = færslusvæði
+
+The DAG:
+
+    commit graph = færslugraf
+    merge        = sameining
+
+References in relation to other references:
+
+    branches that have diverged = greinar sem hafa tvístrast
+    diverging references        = bendlar sem hafa tvístrast
+    your branch is ahead        = greinin þín er á undan
+    your branch is behind       = greinin þín er á eftir
+
+Moving data around:
+
+    fetch = sækja
+    pull  = draga
+    push  = ýta
+
+    fast-forward     = bein uppfærsla
+    non-fast-forward = óbein uppfærsla
+
+Commands:
+
+    log                = annáll
+    interactive commit = gagnvirk færsla
+    cherry-pick        = tína
+    rebase             = umfæra
+    archive            = safnvista
+
+    bundle(noun)       = böggull
+    bundle(verb)       = böggla
+    unbundle(verb)     = afböggla
+
+    bisect             = tvískipta
+    bisecting          = tvískipti / tvískipting
