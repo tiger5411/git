@@ -1297,12 +1297,12 @@ msgstr "hirslan '%s' er ekki til"
 
 #: builtin/clone.c:673
 msgid "--depth is ignored in local clones; use file:// instead."
-msgstr ""
+msgstr "--depth rofinn er hunsaður í staðværum klónum, notaðu file:// í staðin."
 
 #: builtin/clone.c:683
 #, c-format
 msgid "destination path '%s' already exists and is not an empty directory."
-msgstr ""
+msgstr "slóðin '%s' er þegar til og er ekki tóm mappa."
 
 #: builtin/clone.c:693
 #, c-format
@@ -1337,7 +1337,7 @@ msgstr "Ég veit ekki hvernig ég á að klóna %s"
 #: builtin/clone.c:835
 #, c-format
 msgid "Remote branch %s not found in upstream %s"
-msgstr ""
+msgstr "Fjarlæg grein %s fannst ekki í fjarhirslunni %s"
 
 #: builtin/clone.c:842
 msgid "You appear to have cloned an empty repository."
