@@ -113,6 +113,12 @@ Still being worked out:
 
     prune              = snyrta
     checkout           = útskráning / færsluval
+    checkout(verb)     = útskrá / færsluvelja
+
+    git add      = innskrá
+    add to index = innskrá í færslusvæðið
+    add to index = skrá inn í færslusvæði
+    add to index = skrá í færslusvæði
 
     merge conflict = sameiningarvesen
     3-way merge    = þriggja færslna sameining
