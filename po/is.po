@@ -33,6 +33,9 @@ msgid ""
 "appropriate to mark resolution and make a commit,\n"
 "or use 'git commit -a'."
 msgstr ""
+"Lagaðu skrárnar í vinnumöppunni og notaðu svo\n"
+"'git add/rm <skrá>' eins og við á til að laga\n"
+"sameiningarvesenið og búðu svo til nýja færslu."
 
 #: commit.c:48
 #, c-format
@@ -198,6 +201,8 @@ msgid ""
 "after resolving the conflicts, mark the corrected paths\n"
 "with 'git add <paths>' or 'git rm <paths>'"
 msgstr ""
+"eftir að þú ert búinn að laga sameiningarvesenið merktu\n"
+"viðkomandi skrár með 'git add <skrár>' eða 'git rm <skrár>'"
 
 #: sequencer.c:146
 msgid ""
@@ -205,6 +210,9 @@ msgid ""
 "with 'git add <paths>' or 'git rm <paths>'\n"
 "and commit the result with 'git commit'"
 msgstr ""
+"eftir að þú ert búinn að laga sameiningarvesenið merktu\n"
+"viðkomandi skrár með 'git add <skrár>' eða 'git rm <skrár>'\n"
+"og bókfærðu afraksturinn með 'git commit'"
 
 #: sequencer.c:159 sequencer.c:685 sequencer.c:768
 #, c-format
@@ -214,7 +222,7 @@ msgstr "Gat ekki skrifað skránna %s"
 #: sequencer.c:162
 #, c-format
 msgid "Error wrapping up %s"
-msgstr ""
+msgstr "Villa við að ljúka %s"
 
 #: sequencer.c:177
 msgid "Your local changes would be overwritten by cherry-pick."
@@ -226,13 +234,13 @@ msgstr "Breytingarnar þínar yrðu yfirskrifaðar af afturköllun."
 
 #: sequencer.c:182
 msgid "Commit your changes or stash them to proceed."
-msgstr ""
+msgstr "Bókfærðu breytingarnar þínar eða bættu þeim í forðann til að halda áfrám."
 
 #. TRANSLATORS: %s will be "revert" or "cherry-pick"
 #: sequencer.c:232
 #, c-format
 msgid "%s: Unable to write new index file"
-msgstr ""
+msgstr "%s: Gat ekki skrifað nýtt færslusvæði"
 
 #: sequencer.c:298
 msgid "Your index file is unmerged."
@@ -3154,7 +3162,7 @@ msgstr ""
 
 #: git-am.sh:137
 msgid "Repository lacks necessary blobs to fall back on 3-way merge."
-msgstr "Hirslunar skortar hlussur sem við þurfum fyrir þrigga færslna sameiningu."
+msgstr "Hirslan inniheldur ekki nauðsynlegar hlussur fyrir þriggja færslna sameiningu."
 
 #: git-am.sh:154
 msgid ""
@@ -3587,25 +3595,25 @@ msgstr ""
 #: git-submodule.sh:770
 #, sh-format
 msgid "  Warn: $name doesn't contain commit $sha1_src"
-msgstr ""
+msgstr "  Aðvörun: $name inniheldur ekki færsluna $sha1_src"
 
 #: git-submodule.sh:773
 #, sh-format
 msgid "  Warn: $name doesn't contain commit $sha1_dst"
-msgstr ""
+msgstr "  Aðvörun: $name inniheldur ekki færslurnar $sha1_src og $sha1_dst"
 
 #: git-submodule.sh:776
 #, sh-format
 msgid "  Warn: $name doesn't contain commits $sha1_src and $sha1_dst"
-msgstr ""
+msgstr "  Aðvörun: $name inniheldur ekki færslurnar $sha1_src og $sha1_dst"
 
 #: git-submodule.sh:801
 msgid "blob"
-msgstr ""
+msgstr "hlussa"
 
 #: git-submodule.sh:802
 msgid "submodule"
-msgstr ""
+msgstr "undirhirsla"
 
 #: git-submodule.sh:973
 #, sh-format
