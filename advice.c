@@ -37,6 +37,9 @@ void advise(const char *advice, ...)
 
 	for (cp = buf.buf; *cp; cp = np) {
 		np = strchrnul(cp, '\n');
+		/* TRANSLATORS: This will be used to prefix each line of an
+		 * advice message, with the format string being the line
+		 */
 		fprintf(stderr,	_("hint: %.*s\n"), (int)(np - cp), cp);
 		if (*np)
 			np++;

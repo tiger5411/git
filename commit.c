@@ -45,8 +45,12 @@ struct commit *lookup_commit_or_die(const unsigned char *sha1, const char *ref_n
 {
 	struct commit *c = lookup_commit_reference(sha1);
 	if (!c)
+		/* TRANSLATORS: The argument is a reference name */
 		die(_("could not parse %s"), ref_name);
 	if (hashcmp(sha1, c->object.sha1)) {
+		/* TRANSLATORS: The first argument is a refname, the second is
+		 * a commit hash
+		 */
 		warning(_("%s %s is not a commit!"),
 			ref_name, sha1_to_hex(sha1));
 	}

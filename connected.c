@@ -45,6 +45,9 @@ int check_everything_connected(sha1_iterate_fn fn, int quiet, void *cb_data)
 		memcpy(commit, sha1_to_hex(sha1), 40);
 		if (write_in_full(rev_list.in, commit, 41) < 0) {
 			if (errno != EPIPE && errno != EINVAL)
+				/* TRANSLATORS: The argument is a strerror()
+				 * message
+				 */
 				error(_("failed write to rev-list: %s"),
 				      strerror(errno));
 			err = -1;

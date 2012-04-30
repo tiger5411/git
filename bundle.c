@@ -86,6 +86,7 @@ int read_bundle_header(const char *path, struct bundle_header *header)
 	int fd = open(path, O_RDONLY);
 
 	if (fd < 0)
+		/* TRANSLATORS: The argument is a path that can't be opened */
 		return error(_("could not open '%s'"), path);
 	return parse_bundle_header(fd, header, path);
 }
@@ -137,6 +138,9 @@ int verify_bundle(struct bundle_header *header, int verbose)
 	struct object_array refs;
 	struct commit *commit;
 	int i, ret = 0, req_nr;
+	/* TRANSLATORS: This is a heading that'll precede a list of commit
+	 * hashes and reference names
+	 */
 	const char *message = _("Repository lacks these prerequisite commits:");
 
 	init_revisions(&revs, NULL);
@@ -412,6 +416,7 @@ int create_bundle(struct bundle_header *header, const char *path,
 		return error(_("pack-objects died"));
 	if (!bundle_to_stdout) {
 		if (commit_lock_file(&lock))
+			/* TRANSLATORS: The argument is a path we can't create */
 			die_errno(_("cannot create '%s'"), path);
 	}
 	return 0;

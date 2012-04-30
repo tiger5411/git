@@ -3436,6 +3436,7 @@ static int parse_dirstat_opt(struct diff_options *options, const char *params)
 {
 	struct strbuf errmsg = STRBUF_INIT;
 	if (parse_dirstat_params(options, params, &errmsg))
+		/* TRANSLATORS: The argument is an error message */
 		die(_("Failed to parse --dirstat/-X option parameter:\n%s"),
 		    errmsg.buf);
 	strbuf_release(&errmsg);

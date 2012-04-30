@@ -1604,12 +1604,18 @@ int format_tracking_info(struct branch *branch, struct strbuf *sb)
 	base = shorten_unambiguous_ref(base, 0);
 	if (!num_theirs)
 		strbuf_addf(sb,
+			/* TRANSLATORS: the first argument is a branch name, the
+			 * second is a count of how many commits we're ahead of it
+			 */
 			Q_("Your branch is ahead of '%s' by %d commit.\n",
 			   "Your branch is ahead of '%s' by %d commits.\n",
 			   num_ours),
 			base, num_ours);
 	else if (!num_ours)
 		strbuf_addf(sb,
+			/* TRANSLATORS: the first argument is a branch name, the
+			 * second is a count of how many commits we're behind it
+			 */
 			Q_("Your branch is behind '%s' by %d commit, "
 			       "and can be fast-forwarded.\n",
 			   "Your branch is behind '%s' by %d commits, "
@@ -1618,6 +1624,10 @@ int format_tracking_info(struct branch *branch, struct strbuf *sb)
 			base, num_theirs);
 	else
 		strbuf_addf(sb,
+			/* TRANSLATORS: the first argument is a branch name, the
+			 * second and third arguments are counts of how many
+			 * commits they've diverged by
+			 */
 			Q_("Your branch and '%s' have diverged,\n"
 			       "and have %d and %d different commit each, "
 			       "respectively.\n",

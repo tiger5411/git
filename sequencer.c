@@ -118,8 +118,14 @@ static void write_cherry_pick_head(struct commit *commit, const char *pseudoref)
 	filename = git_path("%s", pseudoref);
 	fd = open(filename, O_WRONLY | O_CREAT, 0666);
 	if (fd < 0)
+		/* TRANSLATORS: The argument is a filename that can't be
+		 * opened for writing
+		 */
 		die_errno(_("Could not open '%s' for writing"), filename);
 	if (write_in_full(fd, buf.buf, buf.len) != buf.len || close(fd))
+		/* TRANSLATORS: The argument is a filename that can't be
+		 * opened for writing
+		 */
 		die_errno(_("Could not write to '%s'"), filename);
 	strbuf_release(&buf);
 }
@@ -157,6 +163,9 @@ static void write_message(struct strbuf *msgbuf, const char *filename)
 	int msg_fd = hold_lock_file_for_update(&msg_file, filename,
 					       LOCK_DIE_ON_ERROR);
 	if (write_in_full(msg_fd, msgbuf->buf, msgbuf->len) < 0)
+		/* TRANSLATORS: The argument is a filename that can't be
+		 * written to
+		 */
 		die_errno(_("Could not write to %s"), filename);
 	strbuf_release(msgbuf);
 	if (commit_lock_file(&msg_file) < 0)
@@ -365,6 +374,7 @@ static int do_pick_commit(struct commit *commit, struct replay_opts *opts)
 		struct commit_list *p;
 
 		if (!opts->mainline)
+			/* TRANSLATORS: The argument is a commit digest */
 			return error(_("Commit %s is a merge but no -m option was given."),
 				sha1_to_hex(commit->object.sha1));
 
