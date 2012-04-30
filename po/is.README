@@ -76,6 +76,7 @@ The DAG:
 
     commit graph = færslugraf
     merge        = sameining
+    merge        = samruni (better?)
 
 References in relation to other references:
 
@@ -123,3 +124,5 @@ Still being worked out:
     symbolic link = táknrænn tengill
     path = slóð (skráarslóð)
     link = slóð (vefslóð / hirsluslóð)
+
+    reflog = bendlaannáll
