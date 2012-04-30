@@ -68,7 +68,7 @@ msgstr "gat ekki losað stdin á rev-list: %s"
 #: diff.c:105
 #, c-format
 msgid "  Failed to parse dirstat cut-off percentage '%.*s'\n"
-msgstr ""
+msgstr "  Gat ekki skilið afhökunar prósentu '%.*s' fyrir dirstat\n"
 
 #: diff.c:110
 #, c-format
@@ -258,24 +258,24 @@ msgstr "Færslan %s er sameining en þú gafst ekki -m rofann."
 #: sequencer.c:324
 #, c-format
 msgid "Commit %s does not have parent %d"
-msgstr ""
+msgstr "Færslan %s er ekki með yfirfærslu %d"
 
 #: sequencer.c:328
 #, c-format
 msgid "Mainline was specified but commit %s is not a merge."
-msgstr ""
+msgstr "Aðalbálkur var gefin upp en færslan %s er ekki sameining"
 
 #. TRANSLATORS: The first %s will be "revert" or
 #. "cherry-pick", the second %s a SHA1
 #: sequencer.c:339
 #, c-format
 msgid "%s: cannot parse parent commit %s"
-msgstr ""
+msgstr "%s: get ekki rínt yfirfærsluna %s"
 
 #: sequencer.c:343
 #, c-format
 msgid "Cannot get commit message for %s"
-msgstr ""
+msgstr "Get ekki náð í færsluskilaboð fyrir %s"
 
 #: sequencer.c:427
 #, c-format
@@ -367,7 +367,7 @@ msgstr ""
 #: sequencer.c:687 sequencer.c:772
 #, c-format
 msgid "Error wrapping up %s."
-msgstr ""
+msgstr "Villa við að ljúka %s."
 
 #: sequencer.c:706 sequencer.c:840
 msgid "no cherry-pick or revert in progress"
@@ -398,7 +398,7 @@ msgstr "bjóst ekki við enda á skrá"
 #: sequencer.c:742
 #, c-format
 msgid "stored pre-cherry-pick HEAD file '%s' is corrupt"
-msgstr ""
+msgstr "HAUS skráin '%s' sem við geymdum áður en tínsla hófst er skemmd"
 
 #: sequencer.c:765
 #, c-format
