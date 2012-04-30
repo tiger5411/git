@@ -51,11 +51,12 @@ Commits, tags and other references:
 
     HEAD           = HAUS
 
-    commit(noun)   = færsla
-    commit(verb)   = innfæra
-    parent commit  = yfirfærsla
-    child commit   = underfærsla
-    commit message = færsluskilaboð
+    commit(noun)      = færsla / bókfærsla
+    commit(verb)      = innfæra / bókfæra
+    commit the result = bókfærðu afraksturinn
+    parent commit     = yfirfærsla
+    child commit      = underfærsla
+    commit message    = færsluskilaboð
 
     reference      = bendill
     branch         = grein
@@ -104,3 +105,15 @@ Commands:
 
     bisect             = tvískipta
     bisecting          = tvískipti / tvískipting
+
+Still being worked out:
+
+    prune              = snyrta
+    checkout           = útskráning / færsluval
+
+    merge conflict = sameiningarvesen
+    3-way merge    = þriggja færslna sameining
+    paths          = ?
+
+    stash        = forði (forðabúr)
+    add to stash = bæta í forðabúr / bæta við forðan
