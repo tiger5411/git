@@ -1499,6 +1499,10 @@ msgid ""
 "with '#' will be kept; you may remove them yourself if you want to.\n"
 "An empty message aborts the commit.\n"
 msgstr ""
+"Línur\n"
+"sem byrja á '#' verða ekki hunsaðar, þú getur fjarrlægt þær\n"
+"sjálfur ef þú vilt. Engin færsla verður búin til ef skilaboðin\n"
+"eru tóm."
 
 #: builtin/commit.c:832
 #, c-format
@@ -1521,7 +1525,7 @@ msgstr "Villa við að búa til tré"
 #: builtin/commit.c:911 builtin/tag.c:357
 #, c-format
 msgid "Please supply the message using either -m or -F option.\n"
-msgstr ""
+msgstr "Vinsamlegast gefðu upp skilaboð með -m eða -F rofunum.\n"
 
 #: builtin/commit.c:1008
 #, c-format
@@ -1548,23 +1552,25 @@ msgstr ""
 
 #: builtin/commit.c:1078
 msgid "Options --squash and --fixup cannot be used together"
-msgstr ""
+msgstr "Rofarnir --squash og --fixup geta ekki verið notaðir saman"
 
 #: builtin/commit.c:1088
 msgid "Only one of -c/-C/-F/--fixup can be used."
-msgstr ""
+msgstr "Aðeins hægt að nota einn af -c, -C, -F eða --fixup rofunum."
 
 #: builtin/commit.c:1090
 msgid "Option -m cannot be combined with -c/-C/-F/--fixup."
-msgstr ""
+msgstr "Það er ekki hægt að nota -m með -c, -C, -F eða --fixup rofunum."
 
 #: builtin/commit.c:1098
 msgid "--reset-author can be used only with -C, -c or --amend."
-msgstr ""
+msgstr "Það er aðeins hægt að nota--reset-author með -C, -c eða --amend."
 
 #: builtin/commit.c:1115
 msgid "Only one of --include/--only/--all/--interactive/--patch can be used."
 msgstr ""
+"Það er aðeins hægt að nota einn af --include, --only, --all, --interactive eða\n"
+"--patch."
 
 #: builtin/commit.c:1117
 msgid "No paths with --include/--only does not make sense."
