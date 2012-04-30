@@ -1502,7 +1502,7 @@ msgstr ""
 "Línur\n"
 "sem byrja á '#' verða ekki hunsaðar, þú getur fjarrlægt þær\n"
 "sjálfur ef þú vilt. Engin færsla verður búin til ef skilaboðin\n"
-"eru tóm."
+"eru tóm.\n"
 
 #: builtin/commit.c:832
 #, c-format
@@ -1729,7 +1729,7 @@ msgstr ""
 
 #: builtin/describe.c:436
 msgid "--long is incompatible with --abbrev=0"
-msgstr ""
+msgstr "--long rofinn er ósamhæfur --abbrev=0"
 
 #: builtin/describe.c:462
 msgid "No names found, cannot describe anything."
@@ -1742,7 +1742,7 @@ msgstr ""
 #: builtin/diff.c:77
 #, c-format
 msgid "'%s': not a regular file or symlink"
-msgstr ""
+msgstr "'%s': ekki venjuleg skrá eða tákrænn tengill"
 
 #: builtin/diff.c:220
 #, c-format
@@ -1771,11 +1771,11 @@ msgstr "meira en tvær hlussur gefnar: '%s'"
 #: builtin/diff.c:370
 #, c-format
 msgid "unhandled object '%s' given."
-msgstr ""
+msgstr "óhöndlaður hlutur '%s' gefin."
 
 #: builtin/fetch.c:200
 msgid "Couldn't find remote ref HEAD"
-msgstr ""
+msgstr "Gat ekki fundið fjartengil fyrir HEAD"
 
 #: builtin/fetch.c:253
 #, c-format
