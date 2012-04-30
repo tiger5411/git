@@ -1127,19 +1127,19 @@ msgstr "--detach getur ekki verið notaður með -t"
 
 #: builtin/checkout.c:993
 msgid "--track needs a branch name"
-msgstr ""
+msgstr "--track þarf greinanafn"
 
 #: builtin/checkout.c:1000
 msgid "Missing branch name; try -b"
-msgstr ""
+msgstr "Greinanafn vantar, prófaðu -b"
 
 #: builtin/checkout.c:1006
 msgid "--orphan and -b|-B are mutually exclusive"
-msgstr ""
+msgstr "Það er ekki hægt að nota --orphan með -b og -B rofunum"
 
 #: builtin/checkout.c:1008
 msgid "--orphan cannot be used with -t"
-msgstr ""
+msgstr "--orphan getur ekki verið notaður með -t"
 
 #: builtin/checkout.c:1018
 msgid "git checkout: -f and -m are incompatible"
@@ -1147,7 +1147,7 @@ msgstr "git checkout: -f og -m eru ósamhæf"
 
 #: builtin/checkout.c:1052
 msgid "invalid path specification"
-msgstr ""
+msgstr "ógild skráarslóð"
 
 #: builtin/checkout.c:1060
 #, c-format
@@ -1172,15 +1172,15 @@ msgstr ""
 
 #: builtin/checkout.c:1089
 msgid "Cannot switch branch to a non-commit."
-msgstr ""
+msgstr "Get ekki breytt greininni í bendil sem er ekki færsla."
 
 #: builtin/checkout.c:1092
 msgid "--ours/--theirs is incompatible with switching branches."
-msgstr ""
+msgstr "--ours og --theirs eru ósamhæfir rofar þegar skipt er um greinar."
 
 #: builtin/clean.c:78
 msgid "-x and -X cannot be used together"
-msgstr ""
+msgstr "-x og -X rofarnir geta ekki verið notaðir saman"
 
 #: builtin/clean.c:82
 msgid ""
@@ -1246,22 +1246,22 @@ msgstr ""
 #: builtin/clone.c:324
 #, c-format
 msgid "failed to stat %s\n"
-msgstr ""
+msgstr "„stat“ mistókst fyrir %s\n"
 
 #: builtin/clone.c:341
 #, c-format
 msgid "failed to unlink '%s'"
-msgstr ""
+msgstr "„unlink“ mistókst fyrir '%s'"
 
 #: builtin/clone.c:346
 #, c-format
 msgid "failed to create link '%s'"
-msgstr ""
+msgstr "gat ekki búið til tengil '%s'"
 
 #: builtin/clone.c:350
 #, c-format
 msgid "failed to copy file to '%s'"
-msgstr ""
+msgstr "gat ekki afritað skrá til '%s'"
 
 #: builtin/clone.c:373
 #, c-format
@@ -1271,7 +1271,7 @@ msgstr "búinn.\n"
 #: builtin/clone.c:440
 #, c-format
 msgid "Could not find remote branch %s to clone."
-msgstr ""
+msgstr "Gat ekki fundið fjarlæga grein %s til að klóna."
 
 #: builtin/clone.c:549
 msgid "remote HEAD refers to nonexistent ref, unable to checkout.\n"
