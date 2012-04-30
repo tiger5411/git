@@ -1396,12 +1396,12 @@ msgstr "gagnvirk viðbót mistókst"
 
 #: builtin/commit.c:406 builtin/commit.c:427 builtin/commit.c:473
 msgid "unable to write new_index file"
-msgstr ""
+msgstr "gat ekki skrifað nýja færslusvæðisskrá"
 
 #: builtin/commit.c:457
 #, c-format
 msgid "cannot do a partial commit during a %s."
-msgstr ""
+msgstr "get ekki gert hlutafærslu á meðan á %s stendur."
 
 #: builtin/commit.c:466
 msgid "cannot read the index"
@@ -1433,16 +1433,16 @@ msgstr "gat ekki fundið færslu %s"
 #: builtin/commit.c:701 builtin/shortlog.c:296
 #, c-format
 msgid "(reading log message from standard input)\n"
-msgstr ""
+msgstr "(les færsluskilaboð úr inntaki)\n"
 
 #: builtin/commit.c:703
 msgid "could not read log from standard input"
-msgstr ""
+msgstr "gat ekki lesið ánnal úr inntaki"
 
 #: builtin/commit.c:707
 #, c-format
 msgid "could not read log file '%s'"
-msgstr ""
+msgstr "gat ekki lesið annálsskrá '%s'"
 
 #: builtin/commit.c:713
 msgid "commit has empty message"
