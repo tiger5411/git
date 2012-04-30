@@ -1413,22 +1413,22 @@ int print_stat_summary(FILE *fp, int files, int insertions, int deletions)
 	 * but nothing about added/removed lines? Is this a bug in Git?").
 	 */
 	if (insertions || deletions == 0) {
-		/*
-		 * TRANSLATORS: "+" in (+) is a line addition marker;
-		 * do not translate it.
-		 */
 		strbuf_addf(&sb,
+			    /*
+			     * TRANSLATORS: "+" in (+) is a line addition marker;
+			     * do not translate it.
+			     */
 			    Q_(", %d insertion(+)", ", %d insertions(+)",
 			       insertions),
 			    insertions);
 	}
 
 	if (deletions || insertions == 0) {
-		/*
-		 * TRANSLATORS: "-" in (-) is a line removal marker;
-		 * do not translate it.
-		 */
 		strbuf_addf(&sb,
+			    /*
+			     * TRANSLATORS: "-" in (-) is a line removal marker;
+			     * do not translate it.
+			     */
 			    Q_(", %d deletion(-)", ", %d deletions(-)",
 			       deletions),
 			    deletions);
