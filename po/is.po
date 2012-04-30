@@ -403,7 +403,7 @@ msgstr "HAUS skráin '%s' sem við geymdum áður en tínsla hófst er skemmd"
 #: sequencer.c:765
 #, c-format
 msgid "Could not format %s."
-msgstr ""
+msgstr "Gat ekki sniðið %s."
 
 #: sequencer.c:927
 msgid "Can't revert as initial commit"
@@ -411,7 +411,7 @@ msgstr ""
 
 #: sequencer.c:928
 msgid "Can't cherry-pick into empty head"
-msgstr ""
+msgstr "Get ekki tínt í tóman haus"
 
 #: sha1_name.c:864
 msgid "HEAD does not point to a branch"
@@ -664,7 +664,7 @@ msgstr ", á eftir: "
 #: builtin/add.c:62
 #, c-format
 msgid "unexpected diff status %c"
-msgstr ""
+msgstr "bjóst ekki við diff stöðu %c"
 
 #: builtin/add.c:67 builtin/commit.c:298
 msgid "updating files failed"
@@ -723,28 +723,28 @@ msgstr ""
 
 #: builtin/add.c:312
 msgid "The following paths are ignored by one of your .gitignore files:\n"
-msgstr ""
+msgstr "Eftirfarandi slóðir eru hunsaðar af einum af .gitignore skránnum þínum:\n"
 
 #: builtin/add.c:352
 #, c-format
 msgid "Use -f if you really want to add them.\n"
-msgstr ""
+msgstr "Notaðu -f ef þú vilt bæta þeim við.\n"
 
 #: builtin/add.c:353
 msgid "no files added"
-msgstr ""
+msgstr "engum skrám bætt við"
 
 #: builtin/add.c:359
 msgid "adding files failed"
-msgstr ""
+msgstr "mistókst að bæta við skrám"
 
 #: builtin/add.c:391
 msgid "-A and -u are mutually incompatible"
-msgstr ""
+msgstr "Þú getur ekki notað -A og -u saman"
 
 #: builtin/add.c:393
 msgid "Option --ignore-missing can only be used together with --dry-run"
-msgstr ""
+msgstr "Rofinn --ignore-missing getur aðeins verið notaður með --dry-run"
 
 #: builtin/add.c:413
 #, c-format
@@ -768,7 +768,7 @@ msgstr "Gat ekki skrifað nýja færslusvæðisskrá"
 #: builtin/archive.c:17
 #, c-format
 msgid "could not create archive file '%s'"
-msgstr ""
+msgstr "gat ekki búið til safnvistunarskrá '%s'"
 
 #: builtin/archive.c:20
 msgid "could not redirect output"
@@ -776,7 +776,7 @@ msgstr ""
 
 #: builtin/archive.c:37
 msgid "git archive: Remote with no URL"
-msgstr ""
+msgstr "git archive: Fjarhirsla án slóðar"
 
 #: builtin/archive.c:58
 msgid "git archive: expected ACK/NAK, got EOF"
@@ -790,11 +790,11 @@ msgstr "git archive: NACK %s"
 #: builtin/archive.c:65
 #, c-format
 msgid "remote error: %s"
-msgstr ""
+msgstr "villa í systurhirslu: %s"
 
 #: builtin/archive.c:66
 msgid "git archive: protocol error"
-msgstr ""
+msgstr "git archive: villa í samskiptalagi"
 
 #: builtin/archive.c:71
 msgid "git archive: expected a flush"
@@ -825,7 +825,7 @@ msgstr "get ekki notað -a með -d"
 
 #: builtin/branch.c:178
 msgid "Couldn't look up commit object for HEAD"
-msgstr ""
+msgstr "Gat ekki flett upp færsluhlut fyrir HAUS"
 
 #: builtin/branch.c:183
 #, c-format
@@ -895,7 +895,7 @@ msgstr "get ekki lesið suma bendla"
 
 #: builtin/branch.c:581
 msgid "cannot rename the current branch while not on any."
-msgstr ""
+msgstr "get ekki endurnefnt núverandi grein ef þú ert ekki á grein."
 
 #: builtin/branch.c:591
 #, c-format
@@ -918,7 +918,7 @@ msgstr ""
 
 #: builtin/branch.c:621
 msgid "Branch is renamed, but update of config-file failed"
-msgstr ""
+msgstr "Greinin var endurnefnd, en uppfærsla á stillingarskrá mistókst"
 
 #: builtin/branch.c:636
 #, c-format
@@ -940,7 +940,7 @@ msgstr "HAUS fannst ekki undir refs/heads!"
 
 #: builtin/branch.c:813
 msgid "-a and -r options to 'git branch' do not make sense with a branch name"
-msgstr ""
+msgstr "það er ekkert vit í -a og -r rofunum fyrir 'git branch' ef þú getur upp greinarnafn"
 
 #: builtin/bundle.c:47
 #, c-format
@@ -997,7 +997,7 @@ msgstr "skemmd færslusvæðisskrá"
 #: builtin/checkout.c:264 builtin/checkout.c:271
 #, c-format
 msgid "path '%s' is unmerged"
-msgstr ""
+msgstr "slóðin '%s' er ósameinuð"
 
 #: builtin/checkout.c:302 builtin/checkout.c:498 builtin/clone.c:583
 #: builtin/merge.c:812
@@ -1095,7 +1095,7 @@ msgstr "Fyrri HAUS bendill var"
 
 #: builtin/checkout.c:723
 msgid "You are on a branch yet to be born"
-msgstr ""
+msgstr "Þú ert á grein sem er ekki til ennþá"
 
 #. case (1)
 #: builtin/checkout.c:854
@@ -1111,19 +1111,19 @@ msgstr "bendillinn er ekki tré: %s"
 
 #: builtin/checkout.c:973
 msgid "-B cannot be used with -b"
-msgstr ""
+msgstr "Það er ekki hægt að nota -B með -b"
 
 #: builtin/checkout.c:982
 msgid "--patch is incompatible with all other options"
-msgstr ""
+msgstr "--patch rofinn er ósamhæfur öllum öðrum rofum"
 
 #: builtin/checkout.c:985
 msgid "--detach cannot be used with -b/-B/--orphan"
-msgstr ""
+msgstr "--detach getur ekki verið notaður með -b, -B eða --orphan"
 
 #: builtin/checkout.c:987
 msgid "--detach cannot be used with -t"
-msgstr ""
+msgstr "--detach getur ekki verið notaður með -t"
 
 #: builtin/checkout.c:993
 msgid "--track needs a branch name"
