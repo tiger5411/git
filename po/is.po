@@ -1635,7 +1635,7 @@ msgstr "gat ekki lesið færsluboð: %s"
 #: builtin/commit.c:1534
 #, c-format
 msgid "Aborting commit; you did not edit the message.\n"
-msgstr ""
+msgstr "Hætti við bókfærsluna, þú breyttir ekki færsluskilaboðunum.\n"
 
 #: builtin/commit.c:1539
 #, c-format
@@ -1664,12 +1664,12 @@ msgstr ""
 #: builtin/describe.c:234
 #, c-format
 msgid "annotated tag %s not available"
-msgstr ""
+msgstr "áletraða merkið %s er ekki til"
 
 #: builtin/describe.c:238
 #, c-format
 msgid "annotated tag %s has no embedded name"
-msgstr ""
+msgstr "áletraða merkið %s er ekki með innbyggt nafn"
 
 #: builtin/describe.c:240
 #, c-format
@@ -1694,7 +1694,7 @@ msgstr "ekkert merki passar við '%s'"
 #: builtin/describe.c:289
 #, c-format
 msgid "searching to describe %s\n"
-msgstr ""
+msgstr "leita til að lýsa %s\n"
 
 #: builtin/describe.c:329
 #, c-format
