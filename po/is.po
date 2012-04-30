@@ -3600,7 +3600,7 @@ msgstr "  Aðvörun: $name inniheldur ekki færsluna $sha1_src"
 #: git-submodule.sh:773
 #, sh-format
 msgid "  Warn: $name doesn't contain commit $sha1_dst"
-msgstr "  Aðvörun: $name inniheldur ekki færslurnar $sha1_src og $sha1_dst"
+msgstr "  Aðvörun: $name inniheldur ekki færsluna $sha1_dst"
 
 #: git-submodule.sh:776
 #, sh-format
