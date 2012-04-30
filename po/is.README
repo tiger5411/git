@@ -126,3 +126,10 @@ Still being worked out:
     link = slóð (vefslóð / hirsluslóð)
 
     reflog = bendlaannáll
+    partial commit = hlutafærsla? deildarfærsla?
+
+Alternate proposals:
+
+    merge = tvinna
+    merge conflict = tvinnaflækja
+    3-way merge    = 3-átta tvinnun
