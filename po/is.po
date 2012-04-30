@@ -651,15 +651,15 @@ msgstr "Fyrsta færsla á "
 
 #: wt-status.c:905
 msgid "behind "
-msgstr ""
+msgstr "á eftir: "
 
 #: wt-status.c:908 wt-status.c:911
 msgid "ahead "
-msgstr ""
+msgstr "á undan: "
 
 #: wt-status.c:913
 msgid ", behind "
-msgstr ""
+msgstr ", á eftir: "
 
 #: builtin/add.c:62
 #, c-format
