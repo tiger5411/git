@@ -44,7 +44,7 @@ man5dir=$(mandir)/man5
 man7dir=$(mandir)/man7
 # DESTDIR=
 
-ASCIIDOC=asciidoc
+ASCIIDOC=./asciidoc.sh
 ASCIIDOC_EXTRA =
 MANPAGE_XSL = manpage-normal.xsl
 XMLTO_EXTRA =
