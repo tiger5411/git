@@ -7387,7 +7387,7 @@ sub git_log_generic {
 	}
 	my @commitlist =
 		parse_commits($commit_hash, 101, (100 * $page),
-		              defined $file_name ? ($file_name, "--full-history") : ());
+		              defined $file_name ? $file_name : ());
 
 	my $ftype;
 	if (!defined $file_hash && defined $file_name) {
