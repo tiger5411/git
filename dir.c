@@ -1918,11 +1918,6 @@ static struct untracked_cache_dir *validate_untracked_cache(struct dir_struct *d
 	if (dir->exclude_list_group[EXC_CMDL].nr)
 		return NULL;
 
-	if (!ident_in_untracked(dir->untracked)) {
-		warning(_("Untracked cache is disabled on this system."));
-		return NULL;
-	}
-
 	if (!dir->untracked->root) {
 		const int len = sizeof(*dir->untracked->root);
 		dir->untracked->root = xmalloc(len);
