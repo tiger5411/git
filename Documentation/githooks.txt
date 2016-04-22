@@ -13,12 +13,15 @@ $GIT_DIR/hooks/*
 DESCRIPTION
 -----------
 
-Hooks are little scripts you can place in `$GIT_DIR/hooks`
+Hooks are little scripts you can place in the `hooks`
 directory to trigger action at certain points.  When
 'git init' is run, a handful of example hooks are copied into the
 `hooks` directory of the new repository, but by default they are
 all disabled.  To enable a hook, rename it by removing its `.sample`
 suffix.
+
+By default the hooks directory is `$GIT_DIR/hooks`, but that can be
+changed via the `core.hooksDirectory` (see linkgit:git-config[1]).
 
 NOTE: It is also a requirement for a given hook to be executable.
 However - in a freshly initialized repository - the `.sample` files are

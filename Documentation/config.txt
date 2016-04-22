@@ -618,6 +618,16 @@ core.attributesFile::
 	$XDG_CONFIG_HOME/git/attributes. If $XDG_CONFIG_HOME is either not
 	set or empty, $HOME/.config/git/attributes is used instead.
 
+core.hooksDirectory::
+	By default Git will look for your hooks in the '$GIT_DIR/hooks'
+	directory. Set this to different absolute directory name,
+	e.g. '/etc/git/hooks', and Git will try to find your hooks that
+	directory, e.g. '/etc/git/hooks/pre-receive' instead of in
+	'$GIT_DIR/hooks'.
++
+This is useful in cases where you'd like to centrally configure your
+Git hooks instead of configuring them on a per-repository basis.
+
 core.editor::
 	Commands such as `commit` and `tag` that lets you edit
 	messages by launching an editor uses the value of this
