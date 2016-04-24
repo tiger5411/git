@@ -130,7 +130,11 @@ The template directory will be one of the following (in order):
  - the default template directory: `/usr/share/git-core/templates`.
 
 The default template directory includes some directory structure, suggested
-"exclude patterns" (see linkgit:gitignore[5]), and sample hook files (see linkgit:githooks[5]).
+"exclude patterns" (see linkgit:gitignore[5]), and example hook files.
+
+The example hooks are all disabled by default. To enable a hook,
+rename it by removing its `.sample` suffix. See linkgit:githooks[5]
+for more info on hook execution.
 
 EXAMPLES
 --------
