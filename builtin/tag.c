@@ -54,6 +54,8 @@ static int list_tags(struct ref_filter *filter, struct ref_sorting *sorting, con
 
 	verify_ref_format(format);
 	filter->with_commit_tag_algo = 1;
+	if (getenv("GIT_NO_TAG_ALGO"))
+		filter->with_commit_tag_algo = 0;
 	filter_refs(&array, filter, FILTER_REFS_TAGS);
 	ref_array_sort(sorting, &array);
 
