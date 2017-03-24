@@ -1500,7 +1500,6 @@ static int git_commit_config(const char *k, const char *v, void *cb)
 
 	if (!strcmp(k, "commit.template"))
 		return git_config_pathname(&template_file, k, v);
-
 	if (!strcmp(k, "commit.cleanup"))
 		return git_config_string(&cleanup_arg, k, v);
 	if (!strcmp(k, "commit.gpgsign")) {
