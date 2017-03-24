@@ -236,6 +236,10 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 
 static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
                           struct option *options)
+                          /* NOTE: That this is -const is a bug, I'm
+			     too lazy for now to keep state on the
+			     side, so I'm keeping it in the options
+			     struct via PARSE_OPT_VIA_CLI */
 {
 	const struct option *all_opts = options;
 	const char *arg_end = strchrnul(arg, '=');
