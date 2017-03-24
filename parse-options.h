@@ -110,6 +110,10 @@ struct option {
 	int flags;
 	parse_opt_cb *callback;
 	intptr_t defval;
+
+	int conf_enabled;
+	const char *conf_key;
+	parse_opt_cb *conf_callback;
 };
 
 #define OPT_END()                   { OPTION_END }
