@@ -1575,6 +1575,20 @@ int run_commit_hook(int editor_is_used, const char *index_file, const char *name
 	return ret;
 }
 
+int parse_opt_bool(const struct option *opt, const char *arg, int unset)
+{
+	int value;
+
+	if (!arg)
+		arg = unset ? "never" : (const char *)opt->defval;
+	value = git_config_colorbool(NULL, arg);
+	if (value < 0)
+		return opterror(opt,
+			"expects \"always\", \"auto\", or \"never\"", 0);
+	*(int *)opt->value = value;
+	return 0;
+}
+
 int cmd_commit(int argc, const char **argv, const char *prefix)
 {
 	static struct wt_status s;
@@ -1596,7 +1610,8 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_FILENAME('t', "template", &template_file, N_("use specified template file")),
 		OPT_BOOL('e', "edit", &edit_flag, N_("force edit of commit")),
 		OPT_STRING(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message")),
-		OPT_BOOL(0, "status", &include_status, N_("include status in commit message template")),
+		OPT_BOOL_C(0, "status", &include_status, N_("include status in commit message template"),
+		           "commit.status", parse_opt_bool),
 		{ OPTION_STRING, 'S', "gpg-sign", &sign_commit, N_("key-id"),
 		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
 		/* end commit message options */

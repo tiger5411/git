@@ -235,17 +235,19 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 }
 
 static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
-                          const struct option *options)
+                          struct option *options)
 {
 	const struct option *all_opts = options;
 	const char *arg_end = strchrnul(arg, '=');
 	const struct option *abbrev_option = NULL, *ambiguous_option = NULL;
 	int abbrev_flags = 0, ambiguous_flags = 0;
+	int ret;
 
 	for (; options->type != OPTION_END; options++) {
 		const char *rest, *long_name = options->long_name;
 		int flags = 0, opt_flags = 0;
 
+		fprintf(stderr, "golong name = %s\n", long_name);
 		if (!long_name)
 			continue;
 
@@ -313,7 +315,11 @@ is_abbreviated:
 				continue;
 			p->opt = rest + 1;
 		}
-		return get_value(p, options, all_opts, flags ^ opt_flags);
+
+		if (!(ret = get_value(p, options, all_opts, flags ^ opt_flags))) {
+			options->flags |= PARSE_OPT_VIA_CLI;
+			return ret;
+		}
 	}
 
 	if (ambiguous_option)
@@ -429,7 +435,7 @@ static int usage_with_options_internal(struct parse_opt_ctx_t *,
 				       const struct option *, int, int);
 
 int parse_options_step(struct parse_opt_ctx_t *ctx,
-		       const struct option *options,
+		       struct option *options,
 		       const char * const usagestr[])
 {
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
@@ -514,6 +520,27 @@ unknown:
 		ctx->out[ctx->cpidx++] = ctx->argv[0];
 		ctx->opt = NULL;
 	}
+
+	/* The loop above is driven by the argument vector, so we need
+	 * to make a second pass and find those options that are
+	 * configurable, and haven't been set via the command-line */
+	for (; options->type != OPTION_END; options++) {
+		if (!(options->flags & PARSE_OPT_CONFIGURABLE))
+			continue;
+
+		if (options->flags & PARSE_OPT_VIA_CLI)
+			continue;
+
+		/* TODO: Factor the handling of OPTION_CALLBACK in
+		 * get_value() into a function, do we also need to
+		 * save away the state from the loop above to handle
+		 * unset? I think not, I think we're always unset here
+		 * by definition, right? */
+		fprintf(stderr, "long name = %s (via cli?: %d)\n", options->long_name, (options->flags & PARSE_OPT_VIA_CLI ? 1 : 0));
+
+		return (*options->conf_callback)(opt, NULL, 1) ? (-1) : 0;
+	}
+
 	return PARSE_OPT_DONE;
 
  show_usage_error:
@@ -530,7 +557,7 @@ int parse_options_end(struct parse_opt_ctx_t *ctx)
 }
 
 int parse_options(int argc, const char **argv, const char *prefix,
-		  const struct option *options, const char * const usagestr[],
+		  struct option *options, const char * const usagestr[],
 		  int flags)
 {
 	struct parse_opt_ctx_t ctx;
