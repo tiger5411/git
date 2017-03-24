@@ -322,8 +322,8 @@ is_abbreviated:
 			 * the 'options' non-const
 			 */
 			options->flags |= PARSE_OPT_VIA_CLI;
-			return ret;
 		}
+		return ret;
 	}
 
 	if (ambiguous_option)
