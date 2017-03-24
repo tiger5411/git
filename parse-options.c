@@ -318,8 +318,8 @@ is_abbreviated:
 			/* TODO: Keep some different state on the side
 			 * with info about what options we've
 			 * retrieved via the CLI for use in the loop
-			 * below, instead of making the 'options'
-			 * non-const
+			 * in parse_options_step, instead of making
+			 * the 'options' non-const
 			 */
 			options->flags |= PARSE_OPT_VIA_CLI;
 			return ret;
