@@ -538,7 +538,7 @@ unknown:
 		 * by definition, right? */
 		fprintf(stderr, "long name = %s (via cli?: %d)\n", options->long_name, (options->flags & PARSE_OPT_VIA_CLI ? 1 : 0));
 
-		return (*options->conf_callback)(opt, NULL, 1) ? (-1) : 0;
+		return (*options->conf_callback)(options, NULL, 1) ? (-1) : 0;
 	}
 
 	return PARSE_OPT_DONE;

@@ -1577,15 +1577,13 @@ int run_commit_hook(int editor_is_used, const char *index_file, const char *name
 
 int parse_opt_bool(const struct option *opt, const char *arg, int unset)
 {
-	int value;
+	const char *value;
 
-	if (!arg)
-		arg = unset ? "never" : (const char *)opt->defval;
-	value = git_config_colorbool(NULL, arg);
-	if (value < 0)
-		return opterror(opt,
-			"expects \"always\", \"auto\", or \"never\"", 0);
-	*(int *)opt->value = value;
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	*(int *)opt->value = git_config_bool(opt->conf_key, value);
+
 	return 0;
 }
 
