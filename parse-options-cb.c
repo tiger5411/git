@@ -247,8 +247,8 @@ int parse_opt_passthru_argv(const struct option *opt, const char *arg, int unset
  * interface is expensive, or is it just fine?
 */ 
 
-int parse_opt_confkey_bool(const struct option *opt, const char *arg, int
-unset) { const char *value;
+int parse_opt_confkey_bool(const struct option *opt, const char *arg, int unset) {
+	const char *value;
 
 	if (git_config_get_value(opt->conf_key, &value))
 		return 0;
