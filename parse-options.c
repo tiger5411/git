@@ -321,7 +321,8 @@ is_abbreviated:
 			 * in parse_options_step, instead of making
 			 * the 'options' non-const
 			 */
-			options->flags |= PARSE_OPT_VIA_CLI;
+		    	if (options->flags & PARSE_OPT_CONFIGURABLE)
+				options->flags |= PARSE_OPT_VIA_CLI;
 		}
 		return ret;
 	}
