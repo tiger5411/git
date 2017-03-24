@@ -236,10 +236,6 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 
 static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
                           struct option *options)
-                          /* NOTE: That this is -const is a bug, I'm
-			     too lazy for now to keep state on the
-			     side, so I'm keeping it in the options
-			     struct via PARSE_OPT_VIA_CLI */
 {
 	const struct option *all_opts = options;
 	const char *arg_end = strchrnul(arg, '=');
@@ -251,7 +247,6 @@ static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
 		const char *rest, *long_name = options->long_name;
 		int flags = 0, opt_flags = 0;
 
-		fprintf(stderr, "golong name = %s\n", long_name);
 		if (!long_name)
 			continue;
 
@@ -319,8 +314,13 @@ is_abbreviated:
 				continue;
 			p->opt = rest + 1;
 		}
-
 		if (!(ret = get_value(p, options, all_opts, flags ^ opt_flags))) {
+			/* TODO: Keep some different state on the side
+			 * with info about what options we've
+			 * retrieved via the CLI for use in the loop
+			 * below, instead of making the 'options'
+			 * non-const
+			 */
 			options->flags |= PARSE_OPT_VIA_CLI;
 			return ret;
 		}
