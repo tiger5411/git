@@ -540,8 +540,6 @@ unknown:
 		 * save away the state from the loop above to handle
 		 * unset? I think not, I think we're always unset here
 		 * by definition, right? */
-		fprintf(stderr, "long name = %s (via cli?: %d)\n", options->long_name, (options->flags & PARSE_OPT_VIA_CLI ? 1 : 0));
-
 		return (*options->conf_callback)(options, NULL, 1) ? (-1) : 0;
 	}
 
