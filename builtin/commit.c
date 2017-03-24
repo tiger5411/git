@@ -1500,10 +1500,7 @@ static int git_commit_config(const char *k, const char *v, void *cb)
 
 	if (!strcmp(k, "commit.template"))
 		return git_config_pathname(&template_file, k, v);
-	if (!strcmp(k, "commit.status")) {
-		include_status = git_config_bool(k, v);
-		return 0;
-	}
+
 	if (!strcmp(k, "commit.cleanup"))
 		return git_config_string(&cleanup_arg, k, v);
 	if (!strcmp(k, "commit.gpgsign")) {
@@ -1575,18 +1572,6 @@ int run_commit_hook(int editor_is_used, const char *index_file, const char *name
 	return ret;
 }
 
-int parse_opt_bool(const struct option *opt, const char *arg, int unset)
-{
-	const char *value;
-
-	if (git_config_get_value(opt->conf_key, &value))
-		return 0;
-
-	*(int *)opt->value = git_config_bool(opt->conf_key, value);
-
-	return 0;
-}
-
 int cmd_commit(int argc, const char **argv, const char *prefix)
 {
 	static struct wt_status s;
@@ -1609,7 +1594,7 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_BOOL('e', "edit", &edit_flag, N_("force edit of commit")),
 		OPT_STRING(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message")),
 		OPT_BOOL_C(0, "status", &include_status, N_("include status in commit message template"),
-		           "commit.status", parse_opt_bool),
+		           "commit.status", parse_opt_confkey_bool),
 		{ OPTION_STRING, 'S', "gpg-sign", &sign_commit, N_("key-id"),
 		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
 		/* end commit message options */

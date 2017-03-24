@@ -236,3 +236,15 @@ int parse_opt_passthru_argv(const struct option *opt, const char *arg, int unset
 
 	return 0;
 }
+
+int parse_opt_confkey_bool(const struct option *opt, const char *arg, int unset)
+{
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	*(int *)opt->value = git_config_bool(opt->conf_key, value);
+
+	return 0;
+}
