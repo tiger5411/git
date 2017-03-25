@@ -108,6 +108,7 @@ static void gc_config(void)
 {
 	const char *value;
 
+	/* TODO: No command-line option */
 	if (!git_config_get_value("gc.packrefs", &value)) {
 		if (value && !strcmp(value, "notbare"))
 			pack_refs = -1;
@@ -115,9 +116,12 @@ static void gc_config(void)
 			pack_refs = git_config_bool("gc.packrefs", value);
 	}
 
+	/* TODO: Is this the same as --depth and --window? */
 	git_config_get_int("gc.aggressivewindow", &aggressive_window);
 	git_config_get_int("gc.aggressivedepth", &aggressive_depth);
+	/* TODO: This is not the same as --auto but the same as an option --auto-depth that doesn't exist */
 	git_config_get_int("gc.auto", &gc_auto_threshold);
+	/* TODO: Ditto for the rest of this, all just custom non-cli options */
 	git_config_get_int("gc.autopacklimit", &gc_auto_pack_limit);
 	git_config_get_bool("gc.autodetach", &detach_auto);
 	git_config_get_expiry("gc.pruneexpire", &prune_expire);

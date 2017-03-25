@@ -119,6 +119,7 @@ static int git_clean_config(const char *var, const char *value, void *cb)
 		return color_parse(value, clean_colors[slot]);
 	}
 
+	/* TODO: The --force option (bool) */
 	if (!strcmp(var, "clean.requireforce")) {
 		force = !git_config_bool(var, value);
 		return 0;

@@ -69,6 +69,7 @@ static int option_parse_recurse_submodules(const struct option *opt,
 
 static int git_fetch_config(const char *k, const char *v, void *cb)
 {
+	/* TODO: The --prune option. It's not documented in git-fetch(1), just git-config(1) (bool) */
 	if (!strcmp(k, "fetch.prune")) {
 		fetch_prune_config = git_config_bool(k, v);
 		return 0;
@@ -502,6 +503,7 @@ static void prepare_format_display(struct ref *ref_map)
 	struct ref *rm;
 	const char *format = "full";
 
+	/* TODO: No command-line option that I can see... */
 	git_config_get_string_const("fetch.output", &format);
 	if (!strcasecmp(format, "full"))
 		compact_format = 0;

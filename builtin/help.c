@@ -251,12 +251,14 @@ static int git_help_config(const char *var, const char *value, void *cb)
 {
 	if (starts_with(var, "column."))
 		return git_column_config(var, value, "help", &colopts);
+	/* TODO: Corresponds to multiple options. I.e. --man, --html etc.*/
 	if (!strcmp(var, "help.format")) {
 		if (!value)
 			return config_error_nonbool(var);
 		help_format = parse_help_format(value);
 		return 0;
 	}
+	/* TODO: No options for these */
 	if (!strcmp(var, "help.htmlpath")) {
 		if (!value)
 			return config_error_nonbool(var);

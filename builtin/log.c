@@ -390,6 +390,7 @@ static int git_log_config(const char *var, const char *value, void *cb)
 {
 	const char *slot_name;
 
+	/* TODO: Hard to untangle the below, but it's all/most overrides for one option or other */
 	if (!strcmp(var, "format.pretty"))
 		return git_config_string(&fmt_pretty, var, value);
 	if (!strcmp(var, "format.subjectprefix"))

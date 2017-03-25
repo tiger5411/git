@@ -31,11 +31,13 @@ static const char *const builtin_difftool_usage[] = {
 
 static int difftool_config(const char *var, const char *value, void *cb)
 {
+	/* TODO: Seemingly no corresponding command-line option, used if the --gui flag is on (string) */
 	if (!strcmp(var, "diff.guitool")) {
 		diff_gui_tool = xstrdup(value);
 		return 0;
 	}
 
+	/* TODO: The --trust-exit-code option, camel-cased actually (oh this whole thing is icase'd) (bool) */
 	if (!strcmp(var, "difftool.trustexitcode")) {
 		trust_exit_code = git_config_bool(var, value);
 		return 0;

@@ -2193,14 +2193,17 @@ static const char *add_prefix(const char *prefix, const char *path)
 
 static int git_blame_config(const char *var, const char *value, void *cb)
 {
+	/* TODO: The --root option (bool) */
 	if (!strcmp(var, "blame.showroot")) {
 		show_root = git_config_bool(var, value);
 		return 0;
 	}
+	/* TODO: The -b option (bool) */
 	if (!strcmp(var, "blame.blankboundary")) {
 		blank_boundary = git_config_bool(var, value);
 		return 0;
 	}
+	/* TODO: The --show-email option (bit) */
 	if (!strcmp(var, "blame.showemail")) {
 		int *output_option = cb;
 		if (git_config_bool(var, value))
@@ -2209,6 +2212,7 @@ static int git_blame_config(const char *var, const char *value, void *cb)
 			*output_option &= ~OUTPUT_SHOW_EMAIL;
 		return 0;
 	}
+	/* TODO: The --date option (string, date format) */
 	if (!strcmp(var, "blame.date")) {
 		if (!value)
 			return config_error_nonbool(var);

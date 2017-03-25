@@ -148,10 +148,12 @@ static void am_state_init(struct am_state *state, const char *dir)
 
 	state->prec = 4;
 
+	/* TODO: Another example of something with no 1=1 mapping to the option name (-3 || --3way) */
 	git_config_get_bool("am.threeway", &state->threeway);
 
 	state->utf8 = 1;
 
+	/* TODO: Here we map --message-id as "messageid" not "messageId" as some other commands do */
 	git_config_get_bool("am.messageid", &state->message_id);
 
 	state->scissors = SCISSORS_UNSET;
@@ -947,6 +949,7 @@ static int split_mail(struct am_state *state, enum patch_format patch_format,
 {
 	if (keep_cr < 0) {
 		keep_cr = 0;
+		/* TODO: Ditto comment about --message-id, this is --keep-cr */
 		git_config_get_bool("am.keepcr", &keep_cr);
 	}
 
