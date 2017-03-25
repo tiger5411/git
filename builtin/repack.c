@@ -26,14 +26,17 @@ static const char incremental_bitmap_conflict_error[] = N_(
 
 static int repack_config(const char *var, const char *value, void *cb)
 {
+	/* TODO: The --delta-base-offset option passed to pack-objects (bool) */
 	if (!strcmp(var, "repack.usedeltabaseoffset")) {
 		delta_base_offset = git_config_bool(var, value);
 		return 0;
 	}
+	/* TODO: The --pack-kept-objects option, not documented in the manpage, just git-config (bool) */
 	if (!strcmp(var, "repack.packkeptobjects")) {
 		pack_kept_objects = git_config_bool(var, value);
 		return 0;
 	}
+	/* TODO: The --write-bitmap-index option (bool) */
 	if (!strcmp(var, "repack.writebitmaps") ||
 	    !strcmp(var, "pack.writebitmaps")) {
 		write_bitmaps = git_config_bool(var, value);

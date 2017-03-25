@@ -36,6 +36,7 @@ enum rebase_type {
 static enum rebase_type parse_config_rebase(const char *key, const char *value,
 		int fatal)
 {
+	/* TODO: The --rebase[=...] option (bool & str) */
 	int v = git_config_maybe_bool("pull.rebase", value);
 
 	if (!v)
@@ -268,6 +269,7 @@ static const char *config_get_ff(void)
 {
 	const char *value;
 
+	/* TODO: The --ff option (bool?) */
 	if (git_config_get_value("pull.ff", &value))
 		return NULL;
 
