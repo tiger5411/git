@@ -145,6 +145,8 @@ struct option {
 #define OPT_MAGNITUDE(s, l, v, h)   { OPTION_MAGNITUDE, (s), (l), (v), \
 				      N_("n"), (h), PARSE_OPT_NONEG }
 #define OPT_STRING(s, l, v, a, h)   { OPTION_STRING,  (s), (l), (v), (a), (h) }
+#define OPT_STRING_C(s, l, v, a, h, ck, cb)   { OPTION_STRING,  (s), (l), (v), (a), (h), \
+			                        PARSE_OPT_CONFIGURABLE, NULL, 0, ck, cb }
 #define OPT_STRING_LIST(s, l, v, a, h) \
 				    { OPTION_CALLBACK, (s), (l), (v), (a), \
 				      (h), 0, &parse_opt_string_list }
@@ -248,6 +250,7 @@ extern int parse_opt_passthru(const struct option *, const char *, int);
 extern int parse_opt_passthru_argv(const struct option *, const char *, int);
 extern int parse_opt_confkey_bool(const struct option *, const char *, int);
 extern int parse_opt_confkey_bool_neg(const struct option *, const char *, int);
+extern int parse_opt_confkey_string(const struct option *, const char *, int);
 extern int parse_opt_confkey_pathname(const struct option *, const char *, int);
 
 #define OPT__VERBOSE(var, h)  OPT_COUNTUP('v', "verbose", (var), (h))

@@ -1498,9 +1498,6 @@ static int git_commit_config(const char *k, const char *v, void *cb)
 	struct wt_status *s = cb;
 	int status;
 
-	/* TODO: The --cleanup option (string) */
-	if (!strcmp(k, "commit.cleanup"))
-		return git_config_string(&cleanup_arg, k, v);
 	/* TODO: The --gpg-sign option (string or bool? confusing) */
 	if (!strcmp(k, "commit.gpgsign")) {
 		sign_commit = git_config_bool(k, v) ? "" : NULL;
@@ -1593,7 +1590,8 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_FILENAME_C('t', "template", &template_file, N_("use specified template file"),
 			       "commit.template", parse_opt_confkey_pathname),
 		OPT_BOOL('e', "edit", &edit_flag, N_("force edit of commit")),
-		OPT_STRING(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message")),
+		OPT_STRING_C(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message"),
+			     "commit.cleanup", parse_opt_confkey_string),
 		OPT_BOOL_C(0, "status", &include_status, N_("include status in commit message template"),
 		           "commit.status", parse_opt_confkey_bool),
 		{ OPTION_STRING, 'S', "gpg-sign", &sign_commit, N_("key-id"),
