@@ -261,13 +261,15 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 }
 
 static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
-                          const struct option *options)
+                          const struct option *options,
+                          struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
 	const char *arg_end = strchrnul(arg, '=');
 	const struct option *abbrev_option = NULL, *ambiguous_option = NULL;
 	int abbrev_flags = 0, ambiguous_flags = 0;
 	int ret;
+	char *hkey = NULL;
 
 	for (; options->type != OPTION_END; options++) {
 		const char *rest, *long_name = options->long_name;
@@ -340,16 +342,14 @@ is_abbreviated:
 				continue;
 			p->opt = rest + 1;
 		}
-		if (!(ret = get_value(p, options, all_opts, flags ^ opt_flags))) {
-			/* TODO: Keep some different state on the side
-			 * with info about what options we've
-			 * retrieved via the CLI for use in the loop
-			 * in parse_options_step, instead of making
-			 * the 'options' non-const
-			 */
-		    	if (options->flags & PARSE_OPT_CONFIGURABLE)
-				options->flags |= PARSE_OPT_VIA_CLI;
+
+		ret = get_value(p, options, all_opts, flags ^ opt_flags);
+
+		if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+			hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+			hashmap_put(options_map, alloc_option_hash_entry(hkey));
 		}
+
 		return ret;
 	}
 
@@ -473,15 +473,9 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 	int err = 0;
 	struct hashmap options_map;
 	struct option_hash_entry *entry;
-	char *str = "hello there";
+	char *hkey = NULL;
 
 	hashmap_init(&options_map, option_hash_cmp, 0); 
-	hashmap_put(&options_map, alloc_option_hash_entry(str));
-	fprintf(stderr, "str = %s\n", str);
-	entry = hashmap_get_from_hash(&options_map, strhash(str), str);
-	fprintf(stderr, "entryptr = %p\n", entry);
-	fprintf(stderr, "entry = %s\n", entry ? entry->option : "noes");
-	hashmap_free(&options_map, 1);
 
 	/* we must reset ->opt, unknown short option leave it dangling */
 	ctx->opt = NULL;
@@ -492,8 +486,10 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 		if (*arg != '-' || !arg[1]) {
 			if (parse_nodash_opt(ctx, arg, options) == 0)
 				continue;
-			if (ctx->flags & PARSE_OPT_STOP_AT_NON_OPTION)
+			if (ctx->flags & PARSE_OPT_STOP_AT_NON_OPTION) {
+				hashmap_free(&options_map, 1);
 				return PARSE_OPT_NON_OPTION;
+			}
 			ctx->out[ctx->cpidx++] = ctx->argv[0];
 			continue;
 		}
@@ -545,11 +541,13 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 			break;
 		}
 
-		if (internal_help && !strcmp(arg + 2, "help-all"))
+		if (internal_help && !strcmp(arg + 2, "help-all")) {
+			hashmap_free(&options_map, 1);
 			return usage_with_options_internal(ctx, usagestr, options, 1, 0);
+		}
 		if (internal_help && !strcmp(arg + 2, "help"))
 			goto show_usage;
-		switch (parse_long_opt(ctx, arg + 2, options)) {
+		switch (parse_long_opt(ctx, arg + 2, options, &options_map)) {
 		case -1:
 			goto show_usage_error;
 		case -2:
@@ -557,8 +555,10 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 		}
 		continue;
 unknown:
-		if (!(ctx->flags & PARSE_OPT_KEEP_UNKNOWN))
+		if (!(ctx->flags & PARSE_OPT_KEEP_UNKNOWN)) {
+			hashmap_free(&options_map, 1);
 			return PARSE_OPT_UNKNOWN;
+		}
 		ctx->out[ctx->cpidx++] = ctx->argv[0];
 		ctx->opt = NULL;
 	}
@@ -570,8 +570,12 @@ unknown:
 		if (!(options->flags & PARSE_OPT_CONFIGURABLE))
 			continue;
 
-		if (options->flags & PARSE_OPT_VIA_CLI)
+		hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+		entry = hashmap_get_from_hash(&options_map, strhash(hkey), hkey);
+		if (entry) {
+			free(hkey);
 			continue;
+		}
 
 		/* TODO: Maybe factor the handling of OPTION_CALLBACK
 		 * in get_value() into a function.
@@ -580,14 +584,17 @@ unknown:
 		 * loop above to handle unset? I think not, I think
 		 * we're always unset here by definition, right?
 		 */
+		hashmap_free(&options_map, 1);
 		return (*options->conf_callback)(options, NULL, 1) ? (-1) : 0;
 	}
 
+	hashmap_free(&options_map, 1);
 	return PARSE_OPT_DONE;
 
  show_usage_error:
 	err = 1;
  show_usage:
+	hashmap_free(&options_map, 1);
 	return usage_with_options_internal(ctx, usagestr, options, 0, err);
 }
 
