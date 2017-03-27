@@ -346,6 +346,8 @@ is_abbreviated:
 		ret = get_value(p, options, all_opts, flags ^ opt_flags);
 
 		if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+			/* TODO: This leaks memory. See:
+			   valgrind --tool=memcheck --leak-check=yes ./git commit --status */
 			hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
 			hashmap_put(options_map, alloc_option_hash_entry(hkey));
 		}
