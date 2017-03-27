@@ -37,12 +37,6 @@ static int difftool_config(const char *var, const char *value, void *cb)
 		return 0;
 	}
 
-	/* TODO: The --trust-exit-code option, camel-cased actually (oh this whole thing is icase'd) (bool) */
-	if (!strcmp(var, "difftool.trustexitcode")) {
-		trust_exit_code = git_config_bool(var, value);
-		return 0;
-	}
-
 	return git_default_config(var, value, cb);
 }
 
@@ -682,9 +676,10 @@ int cmd_difftool(int argc, const char **argv, const char *prefix)
 		OPT_BOOL(0, "tool-help", &tool_help,
 			 N_("print a list of diff tools that may be used with "
 			    "`--tool`")),
-		OPT_BOOL(0, "trust-exit-code", &trust_exit_code,
-			 N_("make 'git-difftool' exit when an invoked diff "
-			    "tool returns a non - zero exit code")),
+		OPT_BOOL_C(0, "trust-exit-code", &trust_exit_code,
+			   N_("make 'git-difftool' exit when an invoked diff "
+			      "tool returns a non - zero exit code"),
+			   "difftool.trustexitcode", parse_opt_confkey_bool),
 		OPT_STRING('x', "extcmd", &extcmd, N_("<command>"),
 			   N_("specify a custom command for viewing diffs")),
 		OPT_END()
