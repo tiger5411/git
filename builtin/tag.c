@@ -376,6 +376,17 @@ static int strbuf_check_tag_ref(struct strbuf *sb, const char *name)
 	return check_refname_format(sb->buf, 0);
 }
 
+static int parse_opt_confkey_sign_bool(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	force_sign_annotate = git_config_bool(opt->conf_key, value);
+
+	return 0;
+}
+
 int cmd_tag(int argc, const char **argv, const char *prefix)
 {
 	struct strbuf buf = STRBUF_INIT;
@@ -411,7 +422,7 @@ int cmd_tag(int argc, const char **argv, const char *prefix)
 			     N_("tag message"), parse_msg_arg),
 		OPT_FILENAME('F', "file", &msgfile, N_("read message from file")),
 		OPT_BOOL_C('s', "sign", &opt.sign, N_("annotated and GPG-signed tag"),
-		           "tag.forcesignannotated", parse_opt_confkey_bool),
+		           "tag.forcesignannotated", parse_opt_confkey_sign_bool),
 		OPT_STRING(0, "cleanup", &cleanup_arg, N_("mode"),
 			N_("how to strip spaces and #comments from message")),
 		OPT_STRING('u', "local-user", &keyid, N_("key-id"),
