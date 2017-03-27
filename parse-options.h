@@ -175,7 +175,7 @@ struct option {
  * Returns the number of arguments left in argv[].
  */
 extern int parse_options(int argc, const char **argv, const char *prefix,
-                         struct option *options,
+                         const struct option *options,
                          const char * const usagestr[], int flags);
 
 extern NORETURN void usage_with_options(const char * const *usagestr,
@@ -219,7 +219,7 @@ extern void parse_options_start(struct parse_opt_ctx_t *ctx,
 				const struct option *options, int flags);
 
 extern int parse_options_step(struct parse_opt_ctx_t *ctx,
-			      struct option *options,
+			      const struct option *options,
 			      const char * const usagestr[]);
 
 extern int parse_options_end(struct parse_opt_ctx_t *ctx);

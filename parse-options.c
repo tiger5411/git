@@ -261,7 +261,7 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 }
 
 static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
-                          struct option *options)
+                          const struct option *options)
 {
 	const struct option *all_opts = options;
 	const char *arg_end = strchrnul(arg, '=');
@@ -466,7 +466,7 @@ static int usage_with_options_internal(struct parse_opt_ctx_t *,
 				       const struct option *, int, int);
 
 int parse_options_step(struct parse_opt_ctx_t *ctx,
-		       struct option *options,
+		       const struct option *options,
 		       const char * const usagestr[])
 {
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
@@ -599,7 +599,7 @@ int parse_options_end(struct parse_opt_ctx_t *ctx)
 }
 
 int parse_options(int argc, const char **argv, const char *prefix,
-		  struct option *options, const char * const usagestr[],
+		  const struct option *options, const char * const usagestr[],
 		  int flags)
 {
 	struct parse_opt_ctx_t ctx;
