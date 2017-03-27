@@ -67,6 +67,16 @@ static int option_parse_recurse_submodules(const struct option *opt,
 	return 0;
 }
 
+static int git_fetch_config(const char *k, const char *v, void *cb)
+{
+	/* TODO: The --prune option. It's not documented in git-fetch(1), just git-config(1) (bool) */
+	if (!strcmp(k, "fetch.prune")) {
+		fetch_prune_config = git_config_bool(k, v);
+		return 0;
+	}
+	return git_default_config(k, v, cb);
+}
+
 static int parse_refmap_arg(const struct option *opt, const char *arg, int unset)
 {
 	ALLOC_GROW(refmap_array, refmap_nr + 1, refmap_alloc);
@@ -97,9 +107,8 @@ static struct option builtin_fetch_options[] = {
 		    N_("do not fetch all tags (--no-tags)"), TAGS_UNSET),
 	OPT_INTEGER('j', "jobs", &max_children,
 		    N_("number of submodules fetched in parallel")),
-	OPT_BOOL_C('p', "prune", &prune,
-		 N_("prune remote-tracking branches no longer on remote"),
-		 "fetch.prune", parse_opt_confkey_bool),
+	OPT_BOOL('p', "prune", &prune,
+		 N_("prune remote-tracking branches no longer on remote")),
 	{ OPTION_CALLBACK, 0, "recurse-submodules", NULL, N_("on-demand"),
 		    N_("control recursive fetching of submodules"),
 		    PARSE_OPT_OPTARG, option_parse_recurse_submodules },
@@ -1302,7 +1311,7 @@ int cmd_fetch(int argc, const char **argv, const char *prefix)
 	for (i = 1; i < argc; i++)
 		strbuf_addf(&default_rla, " %s", argv[i]);
 
-	git_config(git_default_config, NULL);
+	git_config(git_fetch_config, NULL);
 
 	argc = parse_options(argc, argv, prefix,
 			     builtin_fetch_options, builtin_fetch_usage, 0);
