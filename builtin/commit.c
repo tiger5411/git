@@ -1498,9 +1498,6 @@ static int git_commit_config(const char *k, const char *v, void *cb)
 	struct wt_status *s = cb;
 	int status;
 
-	/* TODO: The --template option (pathname) */
-	if (!strcmp(k, "commit.template"))
-		return git_config_pathname(&template_file, k, v);
 	/* TODO: The --cleanup option (string) */
 	if (!strcmp(k, "commit.cleanup"))
 		return git_config_string(&cleanup_arg, k, v);
@@ -1593,7 +1590,8 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_STRING(0, "squash", &squash_message, N_("commit"), N_("use autosquash formatted message to squash specified commit")),
 		OPT_BOOL(0, "reset-author", &renew_authorship, N_("the commit is authored by me now (used with -C/-c/--amend)")),
 		OPT_BOOL('s', "signoff", &signoff, N_("add Signed-off-by:")),
-		OPT_FILENAME('t', "template", &template_file, N_("use specified template file")),
+		OPT_FILENAME_C('t', "template", &template_file, N_("use specified template file"),
+			       "commit.template", parse_opt_confkey_pathname),
 		OPT_BOOL('e', "edit", &edit_flag, N_("force edit of commit")),
 		OPT_STRING(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message")),
 		OPT_BOOL_C(0, "status", &include_status, N_("include status in commit message template"),

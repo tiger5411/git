@@ -272,3 +272,16 @@ int parse_opt_confkey_bool_neg(const struct option *opt, const char *arg, int un
 
 	return 0;
 }
+
+int parse_opt_confkey_pathname(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	git_config_pathname((const char **)opt->value, opt->conf_key, value);
+
+	trace_printf("getopt/parse_opt_confkey_pathname: Parsed pathname value for %s got %s\n", opt->long_name, *(char**)opt->value);
+
+	return 0;
+}

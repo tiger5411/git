@@ -163,6 +163,9 @@ struct option {
 	  PARSE_OPT_NOARG | PARSE_OPT_NONEG, (f) }
 #define OPT_FILENAME(s, l, v, h)    { OPTION_FILENAME, (s), (l), (v), \
 				       N_("file"), (h) }
+#define OPT_FILENAME_C(s, l, v, h, ck, cb) { OPTION_FILENAME, (s), (l), (v), \
+			                     N_("file"), (h), PARSE_OPT_NOARG | PARSE_OPT_CONFIGURABLE, \
+			                     NULL, 0, ck, cb }
 #define OPT_COLOR_FLAG(s, l, v, h) \
 	{ OPTION_CALLBACK, (s), (l), (v), N_("when"), (h), PARSE_OPT_OPTARG, \
 		parse_opt_color_flag_cb, (intptr_t)"always" }
@@ -245,6 +248,7 @@ extern int parse_opt_passthru(const struct option *, const char *, int);
 extern int parse_opt_passthru_argv(const struct option *, const char *, int);
 extern int parse_opt_confkey_bool(const struct option *, const char *, int);
 extern int parse_opt_confkey_bool_neg(const struct option *, const char *, int);
+extern int parse_opt_confkey_pathname(const struct option *, const char *, int);
 
 #define OPT__VERBOSE(var, h)  OPT_COUNTUP('v', "verbose", (var), (h))
 #define OPT__QUIET(var, h)    OPT_COUNTUP('q', "quiet",   (var), (h))
