@@ -586,8 +586,8 @@ unknown:
 		 * loop above to handle unset? I think not, I think
 		 * we're always unset here by definition, right?
 		 */
-		hashmap_free(&options_map, 1);
-		return (*options->conf_callback)(options, NULL, 1) ? (-1) : 0;
+		trace_printf("getopt/parse_options_step: Calling callback for configurable option %s\n", options->long_name);
+		(*options->conf_callback)(options, NULL, 1) ? (-1) : 0;
 	}
 
 	hashmap_free(&options_map, 1);

@@ -255,5 +255,7 @@ int parse_opt_confkey_bool(const struct option *opt, const char *arg, int unset)
 
 	*(int *)opt->value = git_config_bool(opt->conf_key, value);
 
+	trace_printf("getopt/parse_opt_confkey_bool: Parsed bool value for %s got %d\n", opt->long_name, *(int*)opt->value);
+
 	return 0;
 }
