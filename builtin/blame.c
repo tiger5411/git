@@ -2193,16 +2193,6 @@ static const char *add_prefix(const char *prefix, const char *path)
 
 static int git_blame_config(const char *var, const char *value, void *cb)
 {
-	/* TODO: The --root option (bool) */
-	if (!strcmp(var, "blame.showroot")) {
-		show_root = git_config_bool(var, value);
-		return 0;
-	}
-	/* TODO: The -b option (bool) */
-	if (!strcmp(var, "blame.blankboundary")) {
-		blank_boundary = git_config_bool(var, value);
-		return 0;
-	}
 	/* TODO: The --show-email option (bit) */
 	if (!strcmp(var, "blame.showemail")) {
 		int *output_option = cb;
@@ -2575,8 +2565,10 @@ int cmd_blame(int argc, const char **argv, const char *prefix)
 	const char *contents_from = NULL;
 	const struct option options[] = {
 		OPT_BOOL(0, "incremental", &incremental, N_("Show blame entries as we find them, incrementally")),
-		OPT_BOOL('b', NULL, &blank_boundary, N_("Show blank SHA-1 for boundary commits (Default: off)")),
-		OPT_BOOL(0, "root", &show_root, N_("Do not treat root commits as boundaries (Default: off)")),
+		OPT_BOOL_C('b', NULL, &blank_boundary, N_("Show blank SHA-1 for boundary commits (Default: off)"),
+		           "blame.blankboundary", parse_opt_confkey_bool),
+		OPT_BOOL_C(0, "root", &show_root, N_("Do not treat root commits as boundaries (Default: off)"),
+		           "blame.showroot", parse_opt_confkey_bool),
 		OPT_BOOL(0, "show-stats", &show_stats, N_("Show work cost statistics")),
 		OPT_BOOL(0, "progress", &show_progress, N_("Force progress reporting")),
 		OPT_BIT(0, "score-debug", &output_option, N_("Show output score for blame entries"), OUTPUT_SHOW_SCORE),
