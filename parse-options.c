@@ -610,7 +610,10 @@ unknown:
 		 * we're always unset here by definition, right?
 		 */
 		trace_printf("getopt/parse_options_step: Calling callback for configurable option %s\n", options->long_name);
-		(*options->conf_callback)(options, NULL, 1) ? (-1) : 0;
+		if ((*options->conf_callback)(options, NULL, 1))
+			trace_printf("getopt/parse_options_step: Callback for configurable option %s gave us a value\n", options->long_name);
+		else
+			trace_printf("getopt/parse_options_step: Callback for configurable option %s gave us NO value\n", options->long_name);
 	}
 
 	hashmap_free(&options_map, 1);
