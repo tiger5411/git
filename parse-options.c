@@ -226,16 +226,26 @@ static int get_value(struct parse_opt_ctx_t *p,
 	}
 }
 
-static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *options)
+static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *options,
+                           struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
 	const struct option *numopt = NULL;
+	int ret;
+	char *hkey = NULL;
 
 	for (; options->type != OPTION_END; options++) {
 		if (options->short_name == *p->opt) {
 			p->opt = p->opt[1] ? p->opt + 1 : NULL;
-			return get_value(p, options, all_opts, OPT_SHORT);
+			ret = get_value(p, options, all_opts, OPT_SHORT);
+
+			if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+				hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+				hashmap_put(options_map, alloc_option_hash_entry(hkey));
+			}
+			return ret;
 		}
+
 
 		/*
 		 * Handle the numerical option later, explicit one-digit
@@ -254,6 +264,10 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 		arg = xmemdupz(p->opt, len);
 		p->opt = p->opt[len] ? p->opt + len : NULL;
 		rc = (*numopt->callback)(numopt, arg, 0) ? (-1) : 0;
+		if (!rc && numopt->flags & PARSE_OPT_CONFIGURABLE) {
+			hkey = xstrfmt("%d:%s", numopt->short_name, numopt->long_name);
+			hashmap_put(options_map, alloc_option_hash_entry(hkey));
+		}
 		free(arg);
 		return rc;
 	}
@@ -502,7 +516,7 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 
 		if (arg[1] != '-') {
 			ctx->opt = arg + 1;
-			switch (parse_short_opt(ctx, options)) {
+			switch (parse_short_opt(ctx, options, &options_map)) {
 			case -1:
 				goto show_usage_error;
 			case -2:
@@ -515,7 +529,7 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 			if (ctx->opt)
 				check_typos(arg + 1, options);
 			while (ctx->opt) {
-				switch (parse_short_opt(ctx, options)) {
+				switch (parse_short_opt(ctx, options, &options_map)) {
 				case -1:
 					goto show_usage_error;
 				case -2:

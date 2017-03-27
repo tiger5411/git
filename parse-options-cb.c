@@ -259,3 +259,16 @@ int parse_opt_confkey_bool(const struct option *opt, const char *arg, int unset)
 
 	return 0;
 }
+
+int parse_opt_confkey_bool_neg(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	*(int *)opt->value = !git_config_bool(opt->conf_key, value);
+
+	trace_printf("getopt/parse_opt_confkey_bool_neg: Parsed bool value for %s got %d\n", opt->long_name, *(int*)opt->value);
+
+	return 0;
+}
