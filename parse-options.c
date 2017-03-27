@@ -472,11 +472,16 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
 	int err = 0;
 	struct hashmap options_map;
+	struct option_hash_entry *entry;
+	char *str = "hello there";
 
 	hashmap_init(&options_map, option_hash_cmp, 0); 
-	hashmap_put(&options_map, alloc_option_hash_entry("hello there"));
+	hashmap_put(&options_map, alloc_option_hash_entry(str));
+	fprintf(stderr, "str = %s\n", str);
+	entry = hashmap_get_from_hash(&options_map, strhash(str), str);
+	fprintf(stderr, "entryptr = %p\n", entry);
+	fprintf(stderr, "entry = %s\n", entry ? entry->option : "noes");
 	hashmap_free(&options_map, 1);
-
 
 	/* we must reset ->opt, unknown short option leave it dangling */
 	ctx->opt = NULL;
