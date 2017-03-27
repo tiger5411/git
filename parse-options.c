@@ -383,15 +383,24 @@ is_abbreviated:
 }
 
 static int parse_nodash_opt(struct parse_opt_ctx_t *p, const char *arg,
-			    const struct option *options)
+			    const struct option *options,
+                            struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
+	int ret;
+	char *hkey = NULL;
 
 	for (; options->type != OPTION_END; options++) {
 		if (!(options->flags & PARSE_OPT_NODASH))
 			continue;
-		if (options->short_name == arg[0] && arg[1] == '\0')
-			return get_value(p, options, all_opts, OPT_SHORT);
+		if (options->short_name == arg[0] && arg[1] == '\0') {
+			ret = get_value(p, options, all_opts, OPT_SHORT);
+			if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+				hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+				hashmap_put(options_map, alloc_option_hash_entry(hkey));
+			}
+			return ret;
+		}
 	}
 	return -2;
 }
@@ -500,7 +509,7 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 		const char *arg = ctx->argv[0];
 
 		if (*arg != '-' || !arg[1]) {
-			if (parse_nodash_opt(ctx, arg, options) == 0)
+			if (parse_nodash_opt(ctx, arg, options, &options_map) == 0)
 				continue;
 			if (ctx->flags & PARSE_OPT_STOP_AT_NON_OPTION) {
 				hashmap_free(&options_map, 1);
