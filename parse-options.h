@@ -254,6 +254,7 @@ extern int parse_opt_confkey_string(const struct option *, const char *, int);
 extern int parse_opt_confkey_pathname(const struct option *, const char *, int);
 
 #define OPT__VERBOSE(var, h)  OPT_COUNTUP('v', "verbose", (var), (h))
+#define OPT__VERBOSE_C(var, h, ck, cb)  OPT_COUNTUP_C('v', "verbose", (var), (h), ck, cb)
 #define OPT__QUIET(var, h)    OPT_COUNTUP('q', "quiet",   (var), (h))
 #define OPT__VERBOSITY(var) \
 	{ OPTION_CALLBACK, 'v', "verbose", (var), NULL, N_("be more verbose"), \
