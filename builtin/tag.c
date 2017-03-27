@@ -176,11 +176,6 @@ static int git_tag_config(const char *var, const char *value, void *cb)
 	status = git_gpg_config(var, value, cb);
 	if (status)
 		return status;
-	/* TODO: The --annotate option. Not documented in git-tag, just git-config (bool) */
-	if (!strcmp(var, "tag.forcesignannotated")) {
-		force_sign_annotate = git_config_bool(var, value);
-		return 0;
-	}
 
 	if (starts_with(var, "column."))
 		return git_column_config(var, value, "tag", &colopts);
@@ -415,7 +410,8 @@ int cmd_tag(int argc, const char **argv, const char *prefix)
 		OPT_CALLBACK('m', "message", &msg, N_("message"),
 			     N_("tag message"), parse_msg_arg),
 		OPT_FILENAME('F', "file", &msgfile, N_("read message from file")),
-		OPT_BOOL('s', "sign", &opt.sign, N_("annotated and GPG-signed tag")),
+		OPT_BOOL_C('s', "sign", &opt.sign, N_("annotated and GPG-signed tag"),
+		           "tag.forcesignannotated", parse_opt_confkey_bool),
 		OPT_STRING(0, "cleanup", &cleanup_arg, N_("mode"),
 			N_("how to strip spaces and #comments from message")),
 		OPT_STRING('u', "local-user", &keyid, N_("key-id"),
