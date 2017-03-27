@@ -445,9 +445,15 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 {
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
 	int err = 0;
+	struct hashmap map;
+	hashmap_init(&map, NULL, 0);
+	hashmap_free(&map, 1);
+	char *str = xstrdup("hello");
+	hashmap_entry_init(str, strhash(str));
+	hashmap_add(&map, 
 
 	/* we must reset ->opt, unknown short option leave it dangling */
-	ctx->opt = NULL;
+	ctx->opt = NULL;p
 
 	for (; ctx->argc; ctx->argc--, ctx->argv++) {
 		const char *arg = ctx->argv[0];
