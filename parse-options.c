@@ -246,7 +246,6 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 			return ret;
 		}
 
-
 		/*
 		 * Handle the numerical option later, explicit one-digit
 		 * options take precedence over it.
@@ -356,16 +355,13 @@ is_abbreviated:
 				continue;
 			p->opt = rest + 1;
 		}
-
 		ret = get_value(p, options, all_opts, flags ^ opt_flags);
-
 		if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
 			/* TODO: This leaks memory. See:
 			   valgrind --tool=memcheck --leak-check=yes ./git commit --status */
 			hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
 			hashmap_put(options_map, alloc_option_hash_entry(hkey));
 		}
-
 		return ret;
 	}
 
@@ -384,7 +380,7 @@ is_abbreviated:
 
 static int parse_nodash_opt(struct parse_opt_ctx_t *p, const char *arg,
 			    const struct option *options,
-                            struct hashmap *options_map)
+			    struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
 	int ret;
@@ -595,6 +591,10 @@ unknown:
 		if (!(options->flags & PARSE_OPT_CONFIGURABLE))
 			continue;
 
+		/* In some cases options->long_name is null, then we
+		 * just use :(null) as part of the key, it's
+		 * harmless
+		 */
 		hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
 		entry = hashmap_get_from_hash(&options_map, strhash(hkey), hkey);
 		if (entry) {
@@ -602,13 +602,6 @@ unknown:
 			continue;
 		}
 
-		/* TODO: Maybe factor the handling of OPTION_CALLBACK
-		 * in get_value() into a function.
-		 *
-		 * Do we also need to save away the state from the
-		 * loop above to handle unset? I think not, I think
-		 * we're always unset here by definition, right?
-		 */
 		trace_printf("getopt/parse_options_step: Calling callback for configurable option %s\n", options->long_name);
 		if ((*options->conf_callback)(options, NULL, 1))
 			trace_printf("getopt/parse_options_step: Callback for configurable option %s gave us a value\n", options->long_name);
