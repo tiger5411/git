@@ -3,10 +3,36 @@
 #include "cache.h"
 #include "commit.h"
 #include "color.h"
+#include "hashmap.h"
 #include "utf8.h"
 
 #define OPT_SHORT 1
 #define OPT_UNSET 2
+
+struct option_hash_entry
+{
+	struct hashmap_entry ent; /* must be the first member! */
+
+	char option[FLEX_ARRAY]; /* NUL-terminated canonical option name: */
+};
+
+static int option_hash_cmp(const void *entry, const void *entry_or_key,
+			   const void *keydata)
+{
+	const struct option_hash_entry *e1 = entry, *e2 = entry_or_key;
+	const char *option = keydata ? keydata : e2->option;
+
+	return strcmp(e1->option, option);
+}
+
+static struct option_hash_entry *alloc_option_hash_entry(const char *option)
+{
+	struct option_hash_entry *entry;
+
+	FLEX_ALLOC_STR(entry, option, option);
+	hashmap_entry_init(entry, strhash(option));
+	return entry;
+}
 
 int optbug(const struct option *opt, const char *reason)
 {
@@ -445,15 +471,15 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 {
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
 	int err = 0;
-	struct hashmap map;
-	hashmap_init(&map, NULL, 0);
-	hashmap_free(&map, 1);
-	char *str = xstrdup("hello");
-	hashmap_entry_init(str, strhash(str));
-	hashmap_add(&map, 
+	struct hashmap options_map;
+
+	hashmap_init(&options_map, option_hash_cmp, 0); 
+	hashmap_put(&options_map, alloc_option_hash_entry("hello there"));
+	hashmap_free(&options_map, 1);
+
 
 	/* we must reset ->opt, unknown short option leave it dangling */
-	ctx->opt = NULL;p
+	ctx->opt = NULL;
 
 	for (; ctx->argc; ctx->argc--, ctx->argv++) {
 		const char *arg = ctx->argv[0];
