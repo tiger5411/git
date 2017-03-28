@@ -834,6 +834,7 @@ static int merge(int argc, const char **argv, const char *prefix)
 		strbuf_addf(&merge_key, "notes.%s.mergeStrategy", short_ref);
 
 		if (git_config_get_notes_strategy(merge_key.buf, &o.strategy))
+			/* TODO: The -s option (str) */
 			git_config_get_notes_strategy("notes.mergeStrategy", &o.strategy);
 
 		strbuf_release(&merge_key);

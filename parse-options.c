@@ -3,10 +3,39 @@
 #include "cache.h"
 #include "commit.h"
 #include "color.h"
+#include "hashmap.h"
 #include "utf8.h"
 
 #define OPT_SHORT 1
 #define OPT_UNSET 2
+
+struct option_hash_entry
+{
+	struct hashmap_entry ent; /* must be the first member! */
+
+	char option[FLEX_ARRAY]; /* NUL-terminated canonical option name: */
+};
+
+static int option_hash_cmp(const void *entry, const void *entry_or_key,
+			   const void *keydata)
+{
+	const struct option_hash_entry *e1 = entry, *e2 = entry_or_key;
+	const char *option = keydata ? keydata : e2->option;
+
+	return strcmp(e1->option, option);
+}
+
+/* TODO: This is just something I copied from 7d4558c462, but I could
+ * skip this alloc indirection since I'm malloc-ing the key with
+ * xstrfmt */
+static struct option_hash_entry *alloc_option_hash_entry(const char *option)
+{
+	struct option_hash_entry *entry;
+
+	FLEX_ALLOC_STR(entry, option, option);
+	hashmap_entry_init(entry, strhash(option));
+	return entry;
+}
 
 int optbug(const struct option *opt, const char *reason)
 {
@@ -200,15 +229,24 @@ static int get_value(struct parse_opt_ctx_t *p,
 	}
 }
 
-static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *options)
+static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *options,
+                           struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
 	const struct option *numopt = NULL;
+	int ret;
+	char *hkey = NULL;
 
 	for (; options->type != OPTION_END; options++) {
 		if (options->short_name == *p->opt) {
 			p->opt = p->opt[1] ? p->opt + 1 : NULL;
-			return get_value(p, options, all_opts, OPT_SHORT);
+			ret = get_value(p, options, all_opts, OPT_SHORT);
+
+			if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+				hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+				hashmap_put(options_map, alloc_option_hash_entry(hkey));
+			}
+			return ret;
 		}
 
 		/*
@@ -228,6 +266,10 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 		arg = xmemdupz(p->opt, len);
 		p->opt = p->opt[len] ? p->opt + len : NULL;
 		rc = (*numopt->callback)(numopt, arg, 0) ? (-1) : 0;
+		if (!rc && numopt->flags & PARSE_OPT_CONFIGURABLE) {
+			hkey = xstrfmt("%d:%s", numopt->short_name, numopt->long_name);
+			hashmap_put(options_map, alloc_option_hash_entry(hkey));
+		}
 		free(arg);
 		return rc;
 	}
@@ -235,12 +277,15 @@ static int parse_short_opt(struct parse_opt_ctx_t *p, const struct option *optio
 }
 
 static int parse_long_opt(struct parse_opt_ctx_t *p, const char *arg,
-                          const struct option *options)
+                          const struct option *options,
+                          struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
 	const char *arg_end = strchrnul(arg, '=');
 	const struct option *abbrev_option = NULL, *ambiguous_option = NULL;
 	int abbrev_flags = 0, ambiguous_flags = 0;
+	int ret;
+	char *hkey = NULL;
 
 	for (; options->type != OPTION_END; options++) {
 		const char *rest, *long_name = options->long_name;
@@ -313,7 +358,14 @@ is_abbreviated:
 				continue;
 			p->opt = rest + 1;
 		}
-		return get_value(p, options, all_opts, flags ^ opt_flags);
+		ret = get_value(p, options, all_opts, flags ^ opt_flags);
+		if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+			/* TODO: This leaks memory. See:
+			   valgrind --tool=memcheck --leak-check=yes ./git commit --status */
+			hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+			hashmap_put(options_map, alloc_option_hash_entry(hkey));
+		}
+		return ret;
 	}
 
 	if (ambiguous_option)
@@ -330,15 +382,24 @@ is_abbreviated:
 }
 
 static int parse_nodash_opt(struct parse_opt_ctx_t *p, const char *arg,
-			    const struct option *options)
+			    const struct option *options,
+			    struct hashmap *options_map)
 {
 	const struct option *all_opts = options;
+	int ret;
+	char *hkey = NULL;
 
 	for (; options->type != OPTION_END; options++) {
 		if (!(options->flags & PARSE_OPT_NODASH))
 			continue;
-		if (options->short_name == arg[0] && arg[1] == '\0')
-			return get_value(p, options, all_opts, OPT_SHORT);
+		if (options->short_name == arg[0] && arg[1] == '\0') {
+			ret = get_value(p, options, all_opts, OPT_SHORT);
+			if (!ret && options->flags & PARSE_OPT_CONFIGURABLE) {
+				hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+				hashmap_put(options_map, alloc_option_hash_entry(hkey));
+			}
+			return ret;
+		}
 	}
 	return -2;
 }
@@ -434,6 +495,21 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 {
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
 	int err = 0;
+	struct hashmap options_map;
+	struct option_hash_entry *entry;
+	char *hkey = NULL;
+
+	/* TODO: This hashmap init would be so much less painful in
+	 * parse_options(), but blame/shortlog/update-index call
+	 * parse_options_step() directly. Maybe we should just
+	 * simplify this and say they can't use this config interface
+	 * unless they're refactored to behave like everything else
+	 *
+	 * TODO: Does I think hashmap_free(..., 1) doesn't free my
+	 * xstrfmt'd strings. Do I need to iter over the hashmap to
+	 * properly free it?
+	 */
+	hashmap_init(&options_map, option_hash_cmp, 0);
 
 	/* we must reset ->opt, unknown short option leave it dangling */
 	ctx->opt = NULL;
@@ -442,10 +518,12 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 		const char *arg = ctx->argv[0];
 
 		if (*arg != '-' || !arg[1]) {
-			if (parse_nodash_opt(ctx, arg, options) == 0)
+			if (parse_nodash_opt(ctx, arg, options, &options_map) == 0)
 				continue;
-			if (ctx->flags & PARSE_OPT_STOP_AT_NON_OPTION)
+			if (ctx->flags & PARSE_OPT_STOP_AT_NON_OPTION) {
+				hashmap_free(&options_map, 1);
 				return PARSE_OPT_NON_OPTION;
+			}
 			ctx->out[ctx->cpidx++] = ctx->argv[0];
 			continue;
 		}
@@ -456,7 +534,7 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 
 		if (arg[1] != '-') {
 			ctx->opt = arg + 1;
-			switch (parse_short_opt(ctx, options)) {
+			switch (parse_short_opt(ctx, options, &options_map)) {
 			case -1:
 				goto show_usage_error;
 			case -2:
@@ -469,7 +547,7 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 			if (ctx->opt)
 				check_typos(arg + 1, options);
 			while (ctx->opt) {
-				switch (parse_short_opt(ctx, options)) {
+				switch (parse_short_opt(ctx, options, &options_map)) {
 				case -1:
 					goto show_usage_error;
 				case -2:
@@ -497,11 +575,13 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 			break;
 		}
 
-		if (internal_help && !strcmp(arg + 2, "help-all"))
+		if (internal_help && !strcmp(arg + 2, "help-all")) {
+			hashmap_free(&options_map, 1);
 			return usage_with_options_internal(ctx, usagestr, options, 1, 0);
+		}
 		if (internal_help && !strcmp(arg + 2, "help"))
 			goto show_usage;
-		switch (parse_long_opt(ctx, arg + 2, options)) {
+		switch (parse_long_opt(ctx, arg + 2, options, &options_map)) {
 		case -1:
 			goto show_usage_error;
 		case -2:
@@ -509,16 +589,46 @@ int parse_options_step(struct parse_opt_ctx_t *ctx,
 		}
 		continue;
 unknown:
-		if (!(ctx->flags & PARSE_OPT_KEEP_UNKNOWN))
+		if (!(ctx->flags & PARSE_OPT_KEEP_UNKNOWN)) {
+			hashmap_free(&options_map, 1);
 			return PARSE_OPT_UNKNOWN;
+		}
 		ctx->out[ctx->cpidx++] = ctx->argv[0];
 		ctx->opt = NULL;
 	}
+
+	/* The loop above is driven by the argument vector, so we need
+	 * to make a second pass and find those options that are
+	 * configurable, and haven't been set via the command-line */
+	for (; options->type != OPTION_END; options++) {
+		if (!(options->flags & PARSE_OPT_CONFIGURABLE))
+			continue;
+
+		/* In some cases options->long_name is null, then we
+		 * just use :(null) as part of the key, it's
+		 * harmless
+		 */
+		hkey = xstrfmt("%d:%s", options->short_name, options->long_name);
+		entry = hashmap_get_from_hash(&options_map, strhash(hkey), hkey);
+		if (entry) {
+			free(hkey);
+			continue;
+		}
+
+		trace_printf("getopt/parse_options_step: Calling callback for configurable option %s\n", options->long_name);
+		if ((*options->conf_callback)(options, NULL, 1))
+			trace_printf("getopt/parse_options_step: Callback for configurable option %s gave us a value\n", options->long_name);
+		else
+			trace_printf("getopt/parse_options_step: Callback for configurable option %s gave us NO value\n", options->long_name);
+	}
+
+	hashmap_free(&options_map, 1);
 	return PARSE_OPT_DONE;
 
  show_usage_error:
 	err = 1;
  show_usage:
+	hashmap_free(&options_map, 1);
 	return usage_with_options_internal(ctx, usagestr, options, 0, err);
 }
 

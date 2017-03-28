@@ -38,7 +38,8 @@ enum parse_opt_option_flags {
 	PARSE_OPT_LASTARG_DEFAULT = 16,
 	PARSE_OPT_NODASH = 32,
 	PARSE_OPT_LITERAL_ARGHELP = 64,
-	PARSE_OPT_SHELL_EVAL = 256
+	PARSE_OPT_SHELL_EVAL = 256,
+	PARSE_OPT_CONFIGURABLE = 512
 };
 
 struct option;
@@ -110,6 +111,9 @@ struct option {
 	int flags;
 	parse_opt_cb *callback;
 	intptr_t defval;
+
+	const char *conf_key;
+	parse_opt_cb *conf_callback;
 };
 
 #define OPT_END()                   { OPTION_END }
@@ -122,9 +126,17 @@ struct option {
 				      (h), PARSE_OPT_NOARG, NULL, (b) }
 #define OPT_COUNTUP(s, l, v, h)     { OPTION_COUNTUP, (s), (l), (v), NULL, \
 				      (h), PARSE_OPT_NOARG }
+#define OPT_COUNTUP_C(s, l, v, h, ck, cb) \
+				      { OPTION_COUNTUP, (s), (l), (v), NULL, \
+				      (h), PARSE_OPT_NOARG | PARSE_OPT_CONFIGURABLE, \
+				      NULL, 0, ck, cb }
 #define OPT_SET_INT(s, l, v, h, i)  { OPTION_SET_INT, (s), (l), (v), NULL, \
 				      (h), PARSE_OPT_NOARG, NULL, (i) }
+#define OPT_SET_INT_C(s, l, v, h, i, ck, cb) \
+				    { OPTION_SET_INT, (s), (l), (v), NULL, \
+				      (h), PARSE_OPT_NOARG | PARSE_OPT_CONFIGURABLE, NULL, (i), ck, cb }
 #define OPT_BOOL(s, l, v, h)        OPT_SET_INT(s, l, v, h, 1)
+#define OPT_BOOL_C(s, l, v, h, ck, cb) OPT_SET_INT_C(s, l, v, h, 1, ck, cb)
 #define OPT_HIDDEN_BOOL(s, l, v, h) { OPTION_SET_INT, (s), (l), (v), NULL, \
 				      (h), PARSE_OPT_NOARG | PARSE_OPT_HIDDEN, NULL, 1}
 #define OPT_CMDMODE(s, l, v, h, i)  { OPTION_CMDMODE, (s), (l), (v), NULL, \
@@ -133,6 +145,8 @@ struct option {
 #define OPT_MAGNITUDE(s, l, v, h)   { OPTION_MAGNITUDE, (s), (l), (v), \
 				      N_("n"), (h), PARSE_OPT_NONEG }
 #define OPT_STRING(s, l, v, a, h)   { OPTION_STRING,  (s), (l), (v), (a), (h) }
+#define OPT_STRING_C(s, l, v, a, h, ck, cb)   { OPTION_STRING,  (s), (l), (v), (a), (h), \
+			                        PARSE_OPT_CONFIGURABLE, NULL, 0, ck, cb }
 #define OPT_STRING_LIST(s, l, v, a, h) \
 				    { OPTION_CALLBACK, (s), (l), (v), (a), \
 				      (h), 0, &parse_opt_string_list }
@@ -151,6 +165,9 @@ struct option {
 	  PARSE_OPT_NOARG | PARSE_OPT_NONEG, (f) }
 #define OPT_FILENAME(s, l, v, h)    { OPTION_FILENAME, (s), (l), (v), \
 				       N_("file"), (h) }
+#define OPT_FILENAME_C(s, l, v, h, ck, cb) { OPTION_FILENAME, (s), (l), (v), \
+			                     N_("file"), (h), PARSE_OPT_NOARG | PARSE_OPT_CONFIGURABLE, \
+			                     NULL, 0, ck, cb }
 #define OPT_COLOR_FLAG(s, l, v, h) \
 	{ OPTION_CALLBACK, (s), (l), (v), N_("when"), (h), PARSE_OPT_OPTARG, \
 		parse_opt_color_flag_cb, (intptr_t)"always" }
@@ -231,8 +248,13 @@ extern int parse_opt_noop_cb(const struct option *, const char *, int);
 extern int parse_opt_unknown_cb(const struct option *, const char *, int);
 extern int parse_opt_passthru(const struct option *, const char *, int);
 extern int parse_opt_passthru_argv(const struct option *, const char *, int);
+extern int parse_opt_confkey_bool(const struct option *, const char *, int);
+extern int parse_opt_confkey_bool_neg(const struct option *, const char *, int);
+extern int parse_opt_confkey_string(const struct option *, const char *, int);
+extern int parse_opt_confkey_pathname(const struct option *, const char *, int);
 
 #define OPT__VERBOSE(var, h)  OPT_COUNTUP('v', "verbose", (var), (h))
+#define OPT__VERBOSE_C(var, h, ck, cb)  OPT_COUNTUP_C('v', "verbose", (var), (h), ck, cb)
 #define OPT__QUIET(var, h)    OPT_COUNTUP('q', "quiet",   (var), (h))
 #define OPT__VERBOSITY(var) \
 	{ OPTION_CALLBACK, 'v', "verbose", (var), NULL, N_("be more verbose"), \
@@ -241,6 +263,8 @@ extern int parse_opt_passthru_argv(const struct option *, const char *, int);
 	  PARSE_OPT_NOARG, &parse_opt_verbosity_cb, 0 }
 #define OPT__DRY_RUN(var, h)  OPT_BOOL('n', "dry-run", (var), (h))
 #define OPT__FORCE(var, h)    OPT_COUNTUP('f', "force",   (var), (h))
+#define OPT__FORCE_C(var, h, ck, cb) \
+	OPT_COUNTUP_C('f', "force", (var), (h), ck, cb)
 #define OPT__ABBREV(var)  \
 	{ OPTION_CALLBACK, 0, "abbrev", (var), N_("n"),	\
 	  N_("use <n> digits to display SHA-1s"),	\

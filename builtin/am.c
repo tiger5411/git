@@ -147,12 +147,7 @@ static void am_state_init(struct am_state *state, const char *dir)
 	state->dir = xstrdup(dir);
 
 	state->prec = 4;
-
-	git_config_get_bool("am.threeway", &state->threeway);
-
 	state->utf8 = 1;
-
-	git_config_get_bool("am.messageid", &state->message_id);
 
 	state->scissors = SCISSORS_UNSET;
 
@@ -947,6 +942,7 @@ static int split_mail(struct am_state *state, enum patch_format patch_format,
 {
 	if (keep_cr < 0) {
 		keep_cr = 0;
+		/* TODO: This is --keep-cr */
 		git_config_get_bool("am.keepcr", &keep_cr);
 	}
 
@@ -2240,8 +2236,9 @@ int cmd_am(int argc, const char **argv, const char *prefix)
 			N_("run interactively")),
 		OPT_HIDDEN_BOOL('b', "binary", &binary,
 			N_("historical option -- no-op")),
-		OPT_BOOL('3', "3way", &state.threeway,
-			N_("allow fall back on 3way merging if needed")),
+		OPT_BOOL_C('3', "3way", &state.threeway,
+			N_("allow fall back on 3way merging if needed"),
+			"am.threeway", parse_opt_confkey_bool),
 		OPT__QUIET(&state.quiet, N_("be quiet")),
 		OPT_SET_INT('s', "signoff", &state.signoff,
 			N_("add a Signed-off-by line to the commit message"),
@@ -2252,8 +2249,9 @@ int cmd_am(int argc, const char **argv, const char *prefix)
 			N_("pass -k flag to git-mailinfo"), KEEP_TRUE),
 		OPT_SET_INT(0, "keep-non-patch", &state.keep,
 			N_("pass -b flag to git-mailinfo"), KEEP_NON_PATCH),
-		OPT_BOOL('m', "message-id", &state.message_id,
-			N_("pass -m flag to git-mailinfo")),
+		OPT_BOOL_C('m', "message-id", &state.message_id,
+			N_("pass -m flag to git-mailinfo"),
+			"am.messageid", parse_opt_confkey_bool),
 		{ OPTION_SET_INT, 0, "keep-cr", &keep_cr, NULL,
 		  N_("pass --keep-cr flag to git-mailsplit for mbox format"),
 		  PARSE_OPT_NOARG | PARSE_OPT_NONEG, NULL, 1},

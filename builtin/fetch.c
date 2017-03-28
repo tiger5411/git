@@ -69,6 +69,7 @@ static int option_parse_recurse_submodules(const struct option *opt,
 
 static int git_fetch_config(const char *k, const char *v, void *cb)
 {
+	/* TODO: The --prune option. Non-trivial to migrate due to tri-state interaction. Debug it */
 	if (!strcmp(k, "fetch.prune")) {
 		fetch_prune_config = git_config_bool(k, v);
 		return 0;

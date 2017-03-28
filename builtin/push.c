@@ -471,12 +471,14 @@ static int git_push_config(const char *k, const char *v, void *cb)
 	if (status)
 		return status;
 
+	/* TODO: The --follow-tags option (bool?) */
 	if (!strcmp(k, "push.followtags")) {
 		if (git_config_bool(k, v))
 			*flags |= TRANSPORT_PUSH_FOLLOW_TAGS;
 		else
 			*flags &= ~TRANSPORT_PUSH_FOLLOW_TAGS;
 		return 0;
+	/* TODO: The --sign option? (bool & str) */
 	} else if (!strcmp(k, "push.gpgsign")) {
 		const char *value;
 		if (!git_config_get_value("push.gpgsign", &value)) {
@@ -494,6 +496,7 @@ static int git_push_config(const char *k, const char *v, void *cb)
 					return error("Invalid value for '%s'", k);
 			}
 		}
+	/* TODO: The --recurse-submodules option (bool & str?) */
 	} else if (!strcmp(k, "push.recursesubmodules")) {
 		const char *value;
 		if (!git_config_get_value("push.recursesubmodules", &value))

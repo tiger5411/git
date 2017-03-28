@@ -557,6 +557,7 @@ static int git_merge_config(const char *k, const char *v, void *cb)
 		return 0;
 	}
 
+	/* TODO: --stat, documented in git-config. This has *no* tests (bool) */
 	if (!strcmp(k, "merge.diffstat") || !strcmp(k, "merge.stat"))
 		show_diffstat = git_config_bool(k, v);
 	else if (!strcmp(k, "pull.twohead"))
@@ -565,6 +566,7 @@ static int git_merge_config(const char *k, const char *v, void *cb)
 		return git_config_string(&pull_octopus, k, v);
 	else if (!strcmp(k, "merge.renormalize"))
 		option_renormalize = git_config_bool(k, v);
+	/* TODO: --ff option, bool + custom values (bool + str) */
 	else if (!strcmp(k, "merge.ff")) {
 		int boolval = git_config_maybe_bool(k, v);
 		if (0 <= boolval) {

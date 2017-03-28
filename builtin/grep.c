@@ -284,6 +284,7 @@ static int grep_cmd_config(const char *var, const char *value, void *cb)
 	if (git_color_default_config(var, value, cb) < 0)
 		st = -1;
 
+	/* TODO: The --threads option (int) */
 	if (!strcmp(var, "grep.threads")) {
 		num_threads = git_config_int(var, value);
 		if (num_threads < 0)

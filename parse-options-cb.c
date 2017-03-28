@@ -236,3 +236,65 @@ int parse_opt_passthru_argv(const struct option *opt, const char *arg, int unset
 
 	return 0;
 }
+
+/* Does it suck that I have to use the cache interface to the config
+ * here? Should we somehow unroll this whole thing so
+ * parse_options_step loops over the config values, and maybe
+ * populates opt->conf_key (which we'd need to add) for all the
+ * options that need it?
+ *
+ * I.e. should we make this more complex because this one-shot
+ * interface is expensive, or is it just fine?
+*/ 
+
+int parse_opt_confkey_bool(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	*(int *)opt->value = git_config_bool(opt->conf_key, value);
+
+	trace_printf("getopt/parse_opt_confkey_bool: Parsed bool value for %s got %d\n", opt->long_name, *(int*)opt->value);
+
+	return 0;
+}
+
+int parse_opt_confkey_bool_neg(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	*(int *)opt->value = !git_config_bool(opt->conf_key, value);
+
+	trace_printf("getopt/parse_opt_confkey_bool_neg: Parsed bool value for %s got %d\n", opt->long_name, *(int*)opt->value);
+
+	return 0;
+}
+
+int parse_opt_confkey_string(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	git_config_string((const char **)opt->value, opt->conf_key, value);
+
+	trace_printf("getopt/parse_opt_confkey_string: Parsed string value for %s got %s\n", opt->long_name, *(char**)opt->value);
+
+	return 0;
+}
+
+int parse_opt_confkey_pathname(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	git_config_pathname((const char **)opt->value, opt->conf_key, value);
+
+	trace_printf("getopt/parse_opt_confkey_pathname: Parsed pathname value for %s got %s\n", opt->long_name, *(char**)opt->value);
+
+	return 0;
+}

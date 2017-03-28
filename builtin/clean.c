@@ -119,11 +119,6 @@ static int git_clean_config(const char *var, const char *value, void *cb)
 		return color_parse(value, clean_colors[slot]);
 	}
 
-	if (!strcmp(var, "clean.requireforce")) {
-		force = !git_config_bool(var, value);
-		return 0;
-	}
-
 	/* inspect the color.ui config variable and others */
 	return git_color_default_config(var, value, cb);
 }
@@ -874,7 +869,8 @@ int cmd_clean(int argc, const char **argv, const char *prefix)
 	struct option options[] = {
 		OPT__QUIET(&quiet, N_("do not print names of files removed")),
 		OPT__DRY_RUN(&dry_run, N_("dry run")),
-		OPT__FORCE(&force, N_("force")),
+		OPT__FORCE_C(&force, N_("force"),
+		            "clean.requireForce", parse_opt_confkey_bool_neg),
 		OPT_BOOL('i', "interactive", &interactive, N_("interactive cleaning")),
 		OPT_BOOL('d', NULL, &remove_directories,
 				N_("remove whole directories")),

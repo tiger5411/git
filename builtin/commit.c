@@ -1493,26 +1493,28 @@ static void print_summary(const char *prefix, const struct object_id *oid,
 	strbuf_release(&format);
 }
 
+int parse_opt_confkey_verbose_bool_or_int(const struct option *opt, const char *arg, int unset) {
+	const char *value;
+	int is_bool;
+
+	if (git_config_get_value(opt->conf_key, &value))
+		return 0;
+
+	config_commit_verbose = git_config_bool_or_int(opt->conf_key, value, &is_bool);
+
+	trace_printf("getopt/parse_opt_confkey_verbose_bool_or_int: Parsed bool_or_int value for %s got %d\n", opt->long_name, config_commit_verbose);
+
+	return 0;
+}
+
 static int git_commit_config(const char *k, const char *v, void *cb)
 {
 	struct wt_status *s = cb;
 	int status;
 
-	if (!strcmp(k, "commit.template"))
-		return git_config_pathname(&template_file, k, v);
-	if (!strcmp(k, "commit.status")) {
-		include_status = git_config_bool(k, v);
-		return 0;
-	}
-	if (!strcmp(k, "commit.cleanup"))
-		return git_config_string(&cleanup_arg, k, v);
+	/* TODO: The --gpg-sign option (string or bool? confusing) */
 	if (!strcmp(k, "commit.gpgsign")) {
 		sign_commit = git_config_bool(k, v) ? "" : NULL;
-		return 0;
-	}
-	if (!strcmp(k, "commit.verbose")) {
-		int is_bool;
-		config_commit_verbose = git_config_bool_or_int(k, v, &is_bool);
 		return 0;
 	}
 
@@ -1580,7 +1582,8 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 	static struct wt_status s;
 	static struct option builtin_commit_options[] = {
 		OPT__QUIET(&quiet, N_("suppress summary after successful commit")),
-		OPT__VERBOSE(&verbose, N_("show diff in commit message template")),
+		OPT__VERBOSE_C(&verbose, N_("show diff in commit message template"),
+			      "commit.verbose", parse_opt_confkey_verbose_bool_or_int),
 
 		OPT_GROUP(N_("Commit message options")),
 		OPT_FILENAME('F', "file", &logfile, N_("read message from file")),
@@ -1593,10 +1596,13 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_STRING(0, "squash", &squash_message, N_("commit"), N_("use autosquash formatted message to squash specified commit")),
 		OPT_BOOL(0, "reset-author", &renew_authorship, N_("the commit is authored by me now (used with -C/-c/--amend)")),
 		OPT_BOOL('s', "signoff", &signoff, N_("add Signed-off-by:")),
-		OPT_FILENAME('t', "template", &template_file, N_("use specified template file")),
+		OPT_FILENAME_C('t', "template", &template_file, N_("use specified template file"),
+			       "commit.template", parse_opt_confkey_pathname),
 		OPT_BOOL('e', "edit", &edit_flag, N_("force edit of commit")),
-		OPT_STRING(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message")),
-		OPT_BOOL(0, "status", &include_status, N_("include status in commit message template")),
+		OPT_STRING_C(0, "cleanup", &cleanup_arg, N_("default"), N_("how to strip spaces and #comments from message"),
+			     "commit.cleanup", parse_opt_confkey_string),
+		OPT_BOOL_C(0, "status", &include_status, N_("include status in commit message template"),
+		           "commit.status", parse_opt_confkey_bool),
 		{ OPTION_STRING, 'S', "gpg-sign", &sign_commit, N_("key-id"),
 		  N_("GPG sign commit"), PARSE_OPT_OPTARG, NULL, (intptr_t) "" },
 		/* end commit message options */
