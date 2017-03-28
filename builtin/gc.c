@@ -115,12 +115,9 @@ static void gc_config(void)
 			pack_refs = git_config_bool("gc.packrefs", value);
 	}
 
-	/* TODO: This is --depth and --window passed to git-repack. But git-gc has no CLI flags for it */
 	git_config_get_int("gc.aggressivewindow", &aggressive_window);
 	git_config_get_int("gc.aggressivedepth", &aggressive_depth);
-	/* TODO: This is not the same as --auto but the same as an option --auto-depth that doesn't exist */
 	git_config_get_int("gc.auto", &gc_auto_threshold);
-	/* TODO: Ditto for the rest of this, all just custom non-cli options */
 	git_config_get_int("gc.autopacklimit", &gc_auto_pack_limit);
 	git_config_get_bool("gc.autodetach", &detach_auto);
 	git_config_get_expiry("gc.pruneexpire", &prune_expire);

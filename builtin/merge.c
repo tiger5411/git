@@ -560,7 +560,6 @@ static int git_merge_config(const char *k, const char *v, void *cb)
 	/* TODO: --stat, documented in git-config. This has *no* tests (bool) */
 	if (!strcmp(k, "merge.diffstat") || !strcmp(k, "merge.stat"))
 		show_diffstat = git_config_bool(k, v);
-	/* TODO: pull.twohead & pull.octopus have no cli option */
 	else if (!strcmp(k, "pull.twohead"))
 		return git_config_string(&pull_twohead, k, v);
 	else if (!strcmp(k, "pull.octopus"))

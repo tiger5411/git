@@ -1107,7 +1107,6 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 
 	if (use_index && !startup_info->have_repository) {
 		int fallback = 0;
-		/* TODO: There's no option for --fallback-to-no-index */
 		git_config_get_bool("grep.fallbacktonoindex", &fallback);
 		if (fallback)
 			use_index = 0;

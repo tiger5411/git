@@ -258,7 +258,6 @@ static int git_help_config(const char *var, const char *value, void *cb)
 		help_format = parse_help_format(value);
 		return 0;
 	}
-	/* TODO: No options for these */
 	if (!strcmp(var, "help.htmlpath")) {
 		if (!value)
 			return config_error_nonbool(var);

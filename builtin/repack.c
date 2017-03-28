@@ -31,12 +31,12 @@ static int repack_config(const char *var, const char *value, void *cb)
 		delta_base_offset = git_config_bool(var, value);
 		return 0;
 	}
-	/* TODO: The --pack-kept-objects option, not documented in the manpage, just git-config (bool) */
+	/* TODO: The --pack-kept-objects option, not documented in the git-repack manpage, just git-config (bool) */
 	if (!strcmp(var, "repack.packkeptobjects")) {
 		pack_kept_objects = git_config_bool(var, value);
 		return 0;
 	}
-	/* TODO: The --write-bitmap-index option (bool) */
+	/* TODO: The --write-bitmap-index option (bool). Has synonym */
 	if (!strcmp(var, "repack.writebitmaps") ||
 	    !strcmp(var, "pack.writebitmaps")) {
 		write_bitmaps = git_config_bool(var, value);

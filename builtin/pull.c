@@ -269,10 +269,10 @@ static const char *config_get_ff(void)
 {
 	const char *value;
 
-	/* TODO: The --ff option (bool?) */
 	if (git_config_get_value("pull.ff", &value))
 		return NULL;
 
+	/* TODO: The --ff option (bool?) */
 	switch (git_config_maybe_bool("pull.ff", value)) {
 	case 0:
 		return "--no-ff";
