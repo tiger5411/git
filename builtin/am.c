@@ -942,7 +942,7 @@ static int split_mail(struct am_state *state, enum patch_format patch_format,
 {
 	if (keep_cr < 0) {
 		keep_cr = 0;
-		/* TODO: Ditto comment about --message-id, this is --keep-cr */
+		/* TODO: This is --keep-cr */
 		git_config_get_bool("am.keepcr", &keep_cr);
 	}
 

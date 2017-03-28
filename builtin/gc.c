@@ -108,7 +108,6 @@ static void gc_config(void)
 {
 	const char *value;
 
-	/* TODO: No command-line option */
 	if (!git_config_get_value("gc.packrefs", &value)) {
 		if (value && !strcmp(value, "notbare"))
 			pack_refs = -1;
@@ -116,7 +115,7 @@ static void gc_config(void)
 			pack_refs = git_config_bool("gc.packrefs", value);
 	}
 
-	/* TODO: Is this the same as --depth and --window? */
+	/* TODO: This is --depth and --window passed to git-repack. But git-gc has no CLI flags for it */
 	git_config_get_int("gc.aggressivewindow", &aggressive_window);
 	git_config_get_int("gc.aggressivedepth", &aggressive_depth);
 	/* TODO: This is not the same as --auto but the same as an option --auto-depth that doesn't exist */

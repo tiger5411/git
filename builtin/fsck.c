@@ -75,7 +75,6 @@ static const char *printable_type(struct object *obj)
 
 static int fsck_config(const char *var, const char *value, void *cb)
 {
-	/* TODO: No corresponding cli option */
 	if (strcmp(var, "fsck.skiplist") == 0) {
 		const char *path;
 		struct strbuf sb = STRBUF_INIT;

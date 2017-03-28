@@ -31,7 +31,6 @@ static const char *const builtin_difftool_usage[] = {
 
 static int difftool_config(const char *var, const char *value, void *cb)
 {
-	/* TODO: Seemingly no corresponding command-line option, used if the --gui flag is on (string) */
 	if (!strcmp(var, "diff.guitool")) {
 		diff_gui_tool = xstrdup(value);
 		return 0;
