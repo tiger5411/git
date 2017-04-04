@@ -12,10 +12,6 @@
 
 #define DEFAULT_MAX_REQUESTS 5
 
-#if LIBCURL_VERSION_NUM == 0x071000
-#define NO_CURL_EASY_DUPHANDLE
-#endif
-
 struct slot_results {
 	CURLcode curl_result;
 	long http_code;
