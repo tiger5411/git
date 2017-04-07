@@ -161,8 +161,8 @@ OPTIONS
 
 -P::
 --perl-regexp::
-	Use Perl-compatible regexp for patterns. Requires libpcre to be
-	compiled in.
+	Use Perl-compatible regular expressions for patterns. Uses the
+	PCRE library, which Git needs to be compiled against.
 
 -F::
 --fixed-strings::

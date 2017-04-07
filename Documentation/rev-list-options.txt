@@ -93,8 +93,9 @@ endif::git-rev-list[]
 
 -P::
 --perl-regexp::
-	Consider the limiting patterns to be Perl-compatible regular expressions.
-	Requires libpcre to be compiled in.
+	Consider the limiting patterns to be Perl-compatible regular
+	expressions. Uses the PCRE library, which Git needs to be
+	compiled against.
 
 --remove-empty::
 	Stop when a given path disappears from the tree.
