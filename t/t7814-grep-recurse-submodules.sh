@@ -347,7 +347,7 @@ test_expect_success 'grep --recurse-submodules should pass the pattern type alon
 	test_cmp expect actual &&
 
 	# Perl
-	if test_have_prereq LIBPCRE
+	if test_have_prereq PCRE
 	then
 		git grep -P --recurse-submodules -e "(.|.)[\d]" >actual &&
 		cat >expect <<-\EOF &&
