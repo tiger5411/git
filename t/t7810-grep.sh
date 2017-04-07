@@ -1522,4 +1522,14 @@ test_expect_success 'grep with thread options' '
 	test_must_fail git -c grep.threads=1 grep --threads=-1 st.*dio
 '
 
+test_expect_success LIBPCRE "grep with grep.patternType synonyms perl/pcre/pcre1" '
+	echo "#include <stdio.h>" >expected &&
+	git -c grep.patternType=perl  grep -h --no-line-number "st(?=dio)" >actual &&
+	test_cmp expected actual &&
+	git -c grep.patternType=pcre  grep -h --no-line-number "st(?=dio)" >actual &&
+	test_cmp expected actual &&
+	git -c grep.patternType=pcre1 grep -h --no-line-number "st(?=dio)" >actual &&
+	test_cmp expected actual
+'
+
 test_done
