@@ -265,7 +265,7 @@ test_expect_success 'log -F -E --grep=<ere> uses ere' '
 	test_cmp expect actual
 '
 
-test_expect_success LIBPCRE 'log -F -E --perl-regexp --grep=<pcre> uses PCRE' '
+test_expect_success PCRE 'log -F -E --perl-regexp --grep=<pcre> uses PCRE' '
 	echo second >expect &&
 	git log -1 --pretty="tformat:%s" -F -E --perl-regexp --grep="s(?=ec)econd" >actual &&
 	test_cmp expect actual
@@ -303,7 +303,7 @@ test_expect_success 'log with various grep.patternType configurations & command-
 			--grep="(.|.)" >actual.basic &&
 		git -c grep.patternType=extended log --pretty=tformat:%s \
 			--grep="\|2" >actual.extended &&
-		if test_have_prereq LIBPCRE
+		if test_have_prereq PCRE
 		then
 			git -c grep.patternType=perl log --pretty=tformat:%s \
 				--grep="\((?=1)" >actual.perl
@@ -311,7 +311,7 @@ test_expect_success 'log with various grep.patternType configurations & command-
 		test_cmp expect.fixed actual.fixed &&
 		test_cmp expect.basic actual.basic &&
 		test_cmp expect.extended actual.extended &&
-		if test_have_prereq LIBPCRE
+		if test_have_prereq PCRE
 		then
 			test_cmp expect.perl actual.perl
 		fi &&
@@ -338,7 +338,7 @@ test_expect_success 'log with various grep.patternType configurations & command-
 			--grep="(.|.)" >actual.basic.long-arg &&
 		git log --pretty=tformat:%s --extended-regexp \
 			--grep="\|2" >actual.extended.long-arg &&
-		if test_have_prereq LIBPCRE
+		if test_have_prereq PCRE
 		then
 			git log --pretty=tformat:%s --perl-regexp \
 				--grep="\((?=1)" >actual.perl.long-arg
@@ -346,7 +346,7 @@ test_expect_success 'log with various grep.patternType configurations & command-
 		test_cmp expect.fixed actual.fixed.long-arg &&
 		test_cmp expect.basic actual.basic.long-arg &&
 		test_cmp expect.extended actual.extended.long-arg &&
-		if test_have_prereq LIBPCRE
+		if test_have_prereq PCRE
 		then
 			test_cmp expect.perl actual.perl.long-arg
 		fi
