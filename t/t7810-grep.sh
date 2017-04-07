@@ -1505,4 +1505,14 @@ test_expect_success 'grep does not report i-t-a and assume unchanged with -L' '
 	test_cmp expected actual
 '
 
+test_expect_success 'grep with thread options' '
+	git -c grep.threads=4 grep st.*dio &&
+	git grep --threads=4 st.*dio &&
+	git -c grep.threads=4 grep --threads=6 st.*dio &&
+	test_must_fail git -c grep.threads=-1 grep st.*dio &&
+	test_must_fail git -c grep.threads=-1 grep --threads=-1 st.*dio &&
+	test_must_fail git -c grep.threads=-1 grep --threads=1 st.*dio &&
+	test_must_fail git -c grep.threads=1 grep --threads=-1 st.*dio
+'
+
 test_done

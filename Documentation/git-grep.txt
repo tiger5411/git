@@ -56,8 +56,8 @@ grep.extendedRegexp::
 	other than 'default'.
 
 grep.threads::
-	Number of grep worker threads to use.  If unset (or set to 0),
-	8 threads are used by default (for now).
+	Number of grep worker threads to use.  If unset, 8 threads are
+	used by default (for now). Set to 0 to disable threading.
 
 grep.fullName::
 	If set to true, enable `--full-name` option by default.
