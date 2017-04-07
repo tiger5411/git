@@ -35,7 +35,7 @@ static int grep_submodule_launch(struct grep_opt *opt,
 				 const struct grep_source *gs);
 
 #define GREP_NUM_THREADS_DEFAULT 8
-static int num_threads;
+static int num_threads = -1;
 
 #ifndef NO_PTHREADS
 static pthread_t *threads;
@@ -897,6 +897,24 @@ static int context_callback(const struct option *opt, const char *arg,
 	return 0;
 }
 
+static int thread_callback(const struct option *opt,
+			   const char *arg, int unset)
+{
+	int *threads = (int*)opt->value;
+	char *end;
+
+	if (unset) {
+		*threads = GREP_NUM_THREADS_DEFAULT;
+		return 0;
+	}
+
+	*threads = strtol(arg, &end, 10);
+	if (*end || *threads < 0)
+		return opterror(opt, "invalid number of threads specified", 0);
+
+	return 0;
+}
+
 static int file_callback(const struct option *opt, const char *arg, int unset)
 {
 	struct grep_opt *grep_opt = opt->value;
@@ -1049,8 +1067,8 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 			N_("show <n> context lines before matches")),
 		OPT_INTEGER('A', "after-context", &opt.post_context,
 			N_("show <n> context lines after matches")),
-		OPT_INTEGER(0, "threads", &num_threads,
-			N_("use <n> worker threads")),
+		OPT_CALLBACK(0, "threads", &num_threads, N_("n"),
+			N_("use <n> worker threads"), thread_callback),
 		OPT_NUMBER_CALLBACK(&opt, N_("shortcut for -C NUM"),
 			context_callback),
 		OPT_BOOL('p', "show-function", &opt.funcname,
@@ -1222,7 +1240,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 #ifndef NO_PTHREADS
 	if (list.nr || cached || show_in_pager)
 		num_threads = 0;
-	else if (num_threads == 0)
+	else if (num_threads == -1)
 		num_threads = GREP_NUM_THREADS_DEFAULT;
 	else if (num_threads < 0)
 		die(_("invalid number of threads specified (%d)"), num_threads);
