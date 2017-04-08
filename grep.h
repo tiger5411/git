@@ -7,6 +7,14 @@
 typedef int pcre;
 typedef int pcre_extra;
 #endif
+#ifdef USE_LIBPCRE2
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
+#else
+typedef int pcre2_code;
+typedef int pcre2_match_data;
+typedef int pcre2_compile_context;
+#endif
 #include "kwset.h"
 #include "thread-utils.h"
 #include "userdiff.h"
@@ -49,6 +57,9 @@ struct grep_pat {
 	pcre *pcre1_regexp;
 	pcre_extra *pcre1_extra_info;
 	const unsigned char *pcre1_tables;
+	pcre2_code *pcre2_pattern;
+	pcre2_match_data *pcre2_match_data;
+	pcre2_compile_context *pcre2_ccontext;
 	kwset_t kws;
 	unsigned fixed:1;
 	unsigned ignore_case:1;
@@ -68,7 +79,9 @@ enum grep_pattern_type {
 	GREP_PATTERN_TYPE_BRE,
 	GREP_PATTERN_TYPE_ERE,
 	GREP_PATTERN_TYPE_FIXED,
-	GREP_PATTERN_TYPE_PCRE1
+	GREP_PATTERN_TYPE_PCRE,
+	GREP_PATTERN_TYPE_PCRE1,
+	GREP_PATTERN_TYPE_PCRE2
 };
 
 struct grep_expr {
@@ -112,6 +125,7 @@ struct grep_opt {
 	int extended;
 	int use_reflog_filter;
 	int pcre1;
+	int pcre2;
 	int relative;
 	int pathname;
 	int null_following_name;
