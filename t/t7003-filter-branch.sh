@@ -60,6 +60,7 @@ test_expect_success 'correct GIT_DIR while using -d' '
 	git init &&
 	test_commit drepo &&
 	git filter-branch -d "$TRASHDIR/dfoo" \
+		# TODO: This cp isn't escaped
 		--index-filter "cp \"$TRASHDIR\"/dfoo/backup-refs \"$TRASHDIR\"" \
 	) &&
 	grep drepo "$TRASHDIR/backup-refs"

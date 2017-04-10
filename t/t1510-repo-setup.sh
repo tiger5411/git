@@ -58,6 +58,8 @@ test_repo () {
 		fi &&
 		rm -f trace &&
 		GIT_TRACE_SETUP="$(pwd)/trace" git symbolic-ref HEAD >/dev/null &&
+		# Fails on lots of characters because symbolic-ref
+		# will quote things, e.g. we expect \ but get \\
 		grep '^setup: ' trace >result &&
 		test_cmp expected result
 	)

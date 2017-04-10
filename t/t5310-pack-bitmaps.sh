@@ -131,7 +131,7 @@ test_expect_success 'incremental repack can disable bitmaps' '
 
 test_expect_success 'pack-objects respects --local (non-local loose)' '
 	git init --bare alt.git &&
-	echo $(pwd)/alt.git/objects >.git/objects/info/alternates &&
+	echo "$(pwd)/alt.git/objects" >.git/objects/info/alternates &&
 	echo content1 >file1 &&
 	# non-local loose object which is not present in bitmapped pack
 	altblob=$(GIT_DIR=alt.git git hash-object -w file1) &&

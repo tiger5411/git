@@ -396,6 +396,7 @@ test_expect_success 'double quoted plink.exe in GIT_SSH_COMMAND' '
 SQ="'"
 test_expect_success 'single quoted plink.exe in GIT_SSH_COMMAND' '
 	copy_ssh_wrapper_as "$TRASH_DIRECTORY/plink.exe" &&
+	# segfaults!
 	GIT_SSH_COMMAND="$SQ$TRASH_DIRECTORY/plink.exe$SQ -v" \
 		git clone "[myhost:123]:src" ssh-bracket-clone-plink-4 &&
 	expect_ssh "-v -P 123" myhost src

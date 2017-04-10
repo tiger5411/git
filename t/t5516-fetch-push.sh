@@ -156,7 +156,7 @@ test_expect_success 'fetch with wildcard' '
 test_expect_success 'fetch with insteadOf' '
 	mk_empty testrepo &&
 	(
-		TRASH=$(pwd)/ &&
+		TRASH="$(pwd)/" &&
 		cd testrepo &&
 		git config "url.$TRASH.insteadOf" trash/ &&
 		git config remote.up.url trash/. &&

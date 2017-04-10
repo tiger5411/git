@@ -21,6 +21,7 @@ mkdir .git/hooks
 
 cat >.git/hooks/post-rewrite <<EOF
 #!/bin/sh
+# This isn't quoted
 echo \$@ > "$TRASH_DIRECTORY"/post-rewrite.args
 cat > "$TRASH_DIRECTORY"/post-rewrite.data
 EOF
