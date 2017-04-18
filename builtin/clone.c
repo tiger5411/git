@@ -558,7 +558,7 @@ static struct ref *wanted_peer_refs(const struct ref *refs,
 			get_fetch_map(remote_head, refspec, &tail, 0);
 
 			/* if --branch=tag, pull the requested tag explicitly */
-			get_fetch_map(remote_head, tag_refspec, &tail, 0);
+			/*get_fetch_map(remote_head, tag_refspec, &tail, 0);*/
 		}
 	} else
 		get_fetch_map(refs, refspec, &tail, 0);
@@ -583,6 +583,7 @@ static void write_remote_refs(const struct ref *local_refs)
 	for (r = local_refs; r; r = r->next) {
 		if (!r->peer_ref)
 			continue;
+		fprintf(stderr, "hi there %s\n", r->peer_ref->name);
 		if (ref_transaction_create(t, r->peer_ref->name, r->old_oid.hash,
 					   0, NULL, &err))
 			die("%s", err.buf);
@@ -605,6 +606,7 @@ static void write_followtags(const struct ref *refs, const char *msg)
 			continue;
 		if (!has_object_file(&ref->old_oid))
 			continue;
+		fprintf(stderr, "followwags %s\n", ref->name);
 		update_ref(msg, ref->name, ref->old_oid.hash,
 			   NULL, 0, UPDATE_REFS_DIE_ON_ERR);
 	}
@@ -652,7 +654,7 @@ static void update_remote_refs(const struct ref *refs,
 
 	if (refs) {
 		write_remote_refs(mapped_refs);
-		if (option_single_branch)
+		if (0 && option_single_branch) 
 			write_followtags(refs, msg);
 	}
 
