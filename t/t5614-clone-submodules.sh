@@ -9,17 +9,21 @@ pwd=$(pwd)
 test_expect_success 'setup' '
 	git checkout -b master &&
 	test_commit commit1 &&
+	git tag tag1 &&
 	test_commit commit2 &&
 	mkdir sub &&
 	(
 		cd sub &&
 		git init &&
 		test_commit subcommit1 &&
+		git tag subtag1 &&
 		test_commit subcommit2 &&
-		test_commit subcommit3
+		test_commit subcommit3 &&
+		git tag subtag2
 	) &&
 	git submodule add "file://$pwd/sub" sub &&
-	git commit -m "add submodule"
+	git commit -m "add submodule" &&
+	git tag tag2
 '
 
 test_expect_success 'nonshallow clone implies nonshallow submodule' '
@@ -28,7 +32,13 @@ test_expect_success 'nonshallow clone implies nonshallow submodule' '
 	git -C super_clone log --oneline >lines &&
 	test_line_count = 3 lines &&
 	git -C super_clone/sub log --oneline >lines &&
-	test_line_count = 3 lines
+	test_line_count = 3 lines &&
+	test_write_lines master commit1 commit2 tag1 tag2 >expected &&
+	git -C super_clone for-each-ref --format="%(refname:strip=2)" refs/heads refs/tags >actual &&
+	test_cmp expected actual &&
+	test_write_lines master subcommit1 subcommit2 subcommit3 subtag1 subtag2 >expected &&
+	git -C super_clone/sub for-each-ref --format="%(refname:strip=2)" refs/heads refs/tags >actual &&
+	test_cmp expected actual
 '
 
 test_expect_success 'shallow clone with shallow submodule' '
@@ -37,7 +47,13 @@ test_expect_success 'shallow clone with shallow submodule' '
 	git -C super_clone log --oneline >lines &&
 	test_line_count = 2 lines &&
 	git -C super_clone/sub log --oneline >lines &&
-	test_line_count = 1 lines
+	test_line_count = 1 lines &&
+	test_write_lines master commit2 tag2 >expected &&
+	git -C super_clone for-each-ref --format="%(refname:strip=2)" refs/heads refs/tags >actual &&
+	test_cmp expected actual &&
+	test_write_lines master subcommit3 subtag2 >expected &&
+	git -C super_clone/sub for-each-ref --format="%(refname:strip=2)" refs/heads refs/tags >actual &&
+	test_cmp expected actual
 '
 
 test_expect_success 'shallow clone does not imply shallow submodule' '
