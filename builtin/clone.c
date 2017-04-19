@@ -42,6 +42,7 @@ static int option_no_checkout, option_bare, option_mirror, option_single_branch 
 static int option_local = -1, option_no_hardlinks, option_shared;
 static int option_no_tags;
 static int option_shallow_submodules;
+static int option_no_tags_submodules;
 static int deepen;
 static char *option_template, *option_depth, *option_since;
 static char *option_origin = NULL;
@@ -123,6 +124,8 @@ static struct option builtin_clone_options[] = {
 		    N_("clone only one branch, HEAD or --branch")),
 	OPT_BOOL(0, "no-tags", &option_no_tags,
 		 N_("don't clone any tags, and make later fetches not to follow them")),
+	OPT_BOOL(0, "no-tags-submodules", &option_no_tags_submodules,
+		    N_("any cloned submodules will be cloned with --no-tags")),
 	OPT_BOOL(0, "shallow-submodules", &option_shallow_submodules,
 		    N_("any cloned submodules will be shallow")),
 	OPT_STRING(0, "separate-git-dir", &real_git_dir, N_("gitdir"),
@@ -760,6 +763,9 @@ static int checkout(int submodule_progress)
 
 		if (option_shallow_submodules == 1)
 			argv_array_push(&args, "--depth=1");
+
+		if (option_no_tags_submodules)
+			argv_array_push(&args, "--no-tags");
 
 		if (max_jobs != -1)
 			argv_array_pushf(&args, "--jobs=%d", max_jobs);

@@ -19,7 +19,8 @@ test_expect_success 'setup' '
 		test_commit subcommit3
 	) &&
 	git submodule add "file://$pwd/sub" sub &&
-	git commit -m "add submodule"
+	git commit -m "add submodule" &&
+	git tag addsubcommit1
 '
 
 test_expect_success 'nonshallow clone implies nonshallow submodule' '
