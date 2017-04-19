@@ -8,7 +8,7 @@ dashless=$(basename "$0" | sed -e 's/-/ /')
 USAGE="[--quiet] add [-b <branch>] [-f|--force] [--name <name>] [--reference <repository>] [--] <repository> [<path>]
    or: $dashless [--quiet] status [--cached] [--recursive] [--] [<path>...]
    or: $dashless [--quiet] init [--] [<path>...]
-   or: $dashless [--quiet] deinit [-f|--force] (--all| [--] <path>...)
+   or: $dashless [--quiet] deinit [-f|--force] (--all| [--] <path>...)s
    or: $dashless [--quiet] update [--init] [--remote] [-N|--no-fetch] [-f|--force] [--checkout|--merge|--rebase] [--[no-]recommend-shallow] [--reference <repository>] [--recursive] [--] [<path>...]
    or: $dashless [--quiet] summary [--cached|--files] [--summary-limit <n>] [commit] [--] [<path>...]
    or: $dashless [--quiet] foreach [--recursive] <command>
@@ -21,6 +21,8 @@ SUBDIRECTORY_OK=Yes
 require_work_tree
 wt_prefix=$(git rev-parse --show-prefix)
 cd_to_toplevel
+
+echo "Being called as <$@>" >&2
 
 # Tell the rest of git that any URLs we get don't come
 # directly from the user, so it can apply policy as appropriate.
@@ -41,6 +43,7 @@ update=
 prefix=
 custom_name=
 depth=
+no_tags=
 progress=
 
 die_if_unmatched ()
@@ -137,6 +140,9 @@ cmd_add()
 			;;
 		--depth=*)
 			depth=$1
+			;;
+		--no-tags)
+			no_tags=1
 			;;
 		--)
 			shift
@@ -254,7 +260,7 @@ or you are unsure what this means choose another name with the '--name' option."
 				eval_gettextln "Reactivating local git directory for submodule '\$sm_name'."
 			fi
 		fi
-		git submodule--helper clone ${GIT_QUIET:+--quiet} --prefix "$wt_prefix" --path "$sm_path" --name "$sm_name" --url "$realrepo" ${reference:+"$reference"} ${depth:+"$depth"} || exit
+		git submodule--helper clone ${GIT_QUIET:+--quiet} --prefix "$wt_prefix" --path "$sm_path" --name "$sm_name" --url "$realrepo" ${reference:+"$reference"} ${depth:+"$depth"} ${no_tags:+--no-tags} || exit
 		(
 			sanitize_submodule_env
 			cd "$sm_path" &&
@@ -600,6 +606,7 @@ cmd_update()
 		${update:+--update "$update"} \
 		${reference:+"$reference"} \
 		${depth:+--depth "$depth"} \
+		${no_tags:+--no-tags} \
 		${recommend_shallow:+"$recommend_shallow"} \
 		${jobs:+$jobs} \
 		"$@" || echo "#unmatched" $?
