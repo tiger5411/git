@@ -761,6 +761,9 @@ static int checkout(int submodule_progress)
 		if (option_shallow_submodules == 1)
 			argv_array_push(&args, "--depth=1");
 
+		if (option_no_tags)
+			argv_array_push(&args, "--no-tags");
+
 		if (max_jobs != -1)
 			argv_array_pushf(&args, "--jobs=%d", max_jobs);
 

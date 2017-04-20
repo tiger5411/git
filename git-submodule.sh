@@ -565,6 +565,9 @@ cmd_update()
 		--depth=*)
 			depth=$1
 			;;
+		--no-tags)
+			no_tags=1
+			;;
 		-j|--jobs)
 			case "$2" in '') usage ;; esac
 			jobs="--jobs=$2"
@@ -601,6 +604,7 @@ cmd_update()
 		${reference:+"$reference"} \
 		${depth:+--depth "$depth"} \
 		${recommend_shallow:+"$recommend_shallow"} \
+		${no_tags:+--no-tags} \
 		${jobs:+$jobs} \
 		"$@" || echo "#unmatched" $?
 	} | {
