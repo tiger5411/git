@@ -489,7 +489,7 @@ static int module_name(int argc, const char **argv, const char *prefix)
 
 static int clone_submodule(const char *path, const char *gitdir, const char *url,
 			   const char *depth, struct string_list *reference,
-			   int quiet, int progress)
+			   int quiet, int progress, int no_tags)
 {
 	struct child_process cp = CHILD_PROCESS_INIT;
 
@@ -499,6 +499,8 @@ static int clone_submodule(const char *path, const char *gitdir, const char *url
 		argv_array_push(&cp.args, "--quiet");
 	if (progress)
 		argv_array_push(&cp.args, "--progress");
+	if (no_tags)
+		argv_array_push(&cp.args, "--no-tags");
 	if (depth && *depth)
 		argv_array_pushl(&cp.args, "--depth", depth, NULL);
 	if (reference->nr) {
@@ -623,6 +625,7 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 	struct strbuf sb = STRBUF_INIT;
 	struct string_list reference = STRING_LIST_INIT_NODUP;
 	char *sm_alternate = NULL, *error_strategy = NULL;
+	int no_tags = 0;
 
 	struct option module_clone_options[] = {
 		OPT_STRING(0, "prefix", &prefix,
@@ -643,6 +646,8 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 		OPT_STRING(0, "depth", &depth,
 			   N_("string"),
 			   N_("depth for shallow clones")),
+		OPT_BOOL(0, "no-tags", &no_tags,
+			 N_("don't clone any tags, and make later fetches not to follow them")),
 		OPT__QUIET(&quiet, "Suppress output for cloning a submodule"),
 		OPT_BOOL(0, "progress", &progress,
 			   N_("force cloning progress")),
@@ -680,7 +685,7 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 		prepare_possible_alternates(name, &reference);
 
 		if (clone_submodule(path, sm_gitdir, url, depth, &reference,
-				    quiet, progress))
+				    quiet, progress, no_tags))
 			die(_("clone of '%s' into submodule path '%s' failed"),
 			    url, path);
 	} else {
@@ -745,11 +750,12 @@ struct submodule_update_clone {
 	/* failed clones to be retried again */
 	const struct cache_entry **failed_clones;
 	int failed_clones_nr, failed_clones_alloc;
+	int no_tags;
 };
 #define SUBMODULE_UPDATE_CLONE_INIT {0, MODULE_LIST_INIT, 0, \
 	SUBMODULE_UPDATE_STRATEGY_INIT, 0, 0, -1, STRING_LIST_INIT_DUP, \
 	NULL, NULL, NULL, \
-	STRING_LIST_INIT_DUP, 0, NULL, 0, 0}
+	STRING_LIST_INIT_DUP, 0, NULL, 0, 0, 0}
 
 
 static void next_submodule_warn_missing(struct submodule_update_clone *suc,
@@ -849,6 +855,8 @@ static int prepare_to_clone_next_submodule(const struct cache_entry *ce,
 		argv_array_pushl(&child->args, "--prefix", suc->prefix, NULL);
 	if (suc->recommend_shallow && sub->recommend_shallow == 1)
 		argv_array_push(&child->args, "--depth=1");
+	if (suc->no_tags)
+		argv_array_push(&child->args, "--no-tags");
 	argv_array_pushl(&child->args, "--path", sub->path, NULL);
 	argv_array_pushl(&child->args, "--name", sub->name, NULL);
 	argv_array_pushl(&child->args, "--url", sub->url, NULL);
@@ -988,6 +996,8 @@ static int update_clone(int argc, const char **argv, const char *prefix)
 			    N_("parallel jobs")),
 		OPT_BOOL(0, "recommend-shallow", &suc.recommend_shallow,
 			    N_("whether the initial clone should follow the shallow recommendation")),
+		OPT_BOOL(0, "no-tags", &suc.no_tags,
+			 N_("don't clone any tags, and make later fetches not to follow them")),
 		OPT__QUIET(&suc.quiet, N_("don't print cloning progress")),
 		OPT_BOOL(0, "progress", &suc.progress,
 			    N_("force cloning progress")),

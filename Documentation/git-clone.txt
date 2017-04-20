@@ -13,7 +13,8 @@ SYNOPSIS
 	  [-l] [-s] [--no-hardlinks] [-q] [-n] [--bare] [--mirror]
 	  [-o <name>] [-b <name>] [-u <upload-pack>] [--reference <repository>]
 	  [--dissociate] [--separate-git-dir <git dir>]
-	  [--depth <depth>] [--[no-]single-branch] [--no-tags]
+	  [--depth <depth>] [--[no-]single-branch]
+	  [--no-tags] [--no-tags-submodules]
 	  [--recurse-submodules] [--[no-]shallow-submodules]
 	  [--jobs <n>] [--] <repository> [<directory>]
 
@@ -226,6 +227,10 @@ Can be used in conjunction with `--single-branch` to clone and
 maintain a branch with no references other than a single cloned
 branch. This is useful e.g. to maintain minimal clones of the default
 branch of some repository for search indexing.
++
+
+If you want to clone submodules without tags provide the
+`--no-tags-submodules` option.
 
 --recurse-submodules[=<pathspec]::
 	After the clone is created, initialize and clone submodules
@@ -242,6 +247,10 @@ branch of some repository for search indexing.
 
 --[no-]shallow-submodules::
 	All submodules which are cloned will be shallow with a depth of 1.
+
+--no-tags-submodules::
+	All submodules which are cloned will be cloned with the
+	`--no-tags` option.
 
 --separate-git-dir=<git dir>::
 	Instead of placing the cloned repository where it is supposed

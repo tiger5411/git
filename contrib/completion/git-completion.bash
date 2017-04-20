@@ -1314,6 +1314,7 @@ _git_clone ()
 			--recurse-submodules
 			--no-single-branch
 			--shallow-submodules
+			--no-tags-submodules
 			"
 		return
 		;;
