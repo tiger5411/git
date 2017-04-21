@@ -99,6 +99,103 @@ test_expect_success 'git grep y<NUL>x a' "
 	test_must_fail git grep -f f a
 "
 
+test_expect_success 'git grep æ<NUL>ð a' "
+	printf 'æQð' | q_to_nul >f &&
+	git grep -f f a
+"
+
+# kwset is disabled on -i & non-ASCII. No way to match non-ASCII
+# case-insensitively.
+test_expect_failure 'git grep Æ<NUL>Ð a' "
+	printf 'ÆQÐ' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_failure 'git grep y<NUL>[f] a' "
+	printf 'yQ[f]' | q_to_nul >f &&
+	git grep -f f a
+"
+
+test_expect_failure 'git grep [y]<NUL>f a' "
+	printf '[y]Qf' | q_to_nul >f &&
+	git grep -f f a
+"
+
+test_expect_failure 'git grep -i Y<NUL>[F] a' "
+	printf 'YQ[F]' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_failure 'git grep -i [Y]<NUL>F a' "
+	printf '[Y]QF' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_failure 'git grep -F y<NUL>[f] a' "
+	printf 'yQ[f]' | q_to_nul >f &&
+	git grep -F -f f a
+"
+
+test_expect_failure 'git grep -F [y]<NUL>f a' "
+	printf '[y]Qf' | q_to_nul >f &&
+	git grep -F -f f a
+"
+
+test_expect_failure 'git grep -F -i Y<NUL>[F] a' "
+	printf 'YQ[F]' | q_to_nul >f &&
+	git grep -F -i -f f a
+"
+
+test_expect_failure 'git grep -F -i [Y]<NUL>F a' "
+	printf '[Y]QF' | q_to_nul >f &&
+	git grep -F -i -f f a
+"
+
+test_expect_failure 'git grep e<NUL>m[*]c a' "
+	printf 'eQm[*]c' | q_to_nul >f &&
+	test_must_fail git grep -f f a
+"
+
+test_expect_failure 'git grep -i E<NUL>M[*]C a' "
+	printf 'EQM[*]C' | q_to_nul >f &&
+	test_must_fail git grep -i -f f a
+"
+
+test_expect_failure 'git grep e<NUL>m.*ac a' "
+	printf 'eQm.*ac' | q_to_nul >f &&
+	git grep -f f a
+"
+
+test_expect_failure 'git grep -i e<nul>m.*ac a' "
+	printf 'EQM.*AC' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_success 'git grep -F e<NUL>m[*]c a' "
+	printf 'eQm[*]c' | q_to_nul >f &&
+	git grep -F -f f a
+"
+
+test_expect_success 'git grep -F -i E<NUL>M[*]C a' "
+	printf 'EQM[*]C' | q_to_nul >f &&
+	git grep -F -i -f f a
+"
+
+test_expect_success 'git grep y<NUL>NOMATCH a' "
+	printf 'yQNOMATCH' | q_to_nul >f &&
+	test_must_fail git grep -f f a
+"
+
+test_expect_success 'git grep <NUL>NOMATCH a' "
+	printf 'QNOMATCH' | q_to_nul >f &&
+	test_must_fail git grep -f f a
+"
+
+test_expect_success 'git grep -i <NUL>NOMATCH a' "
+	printf 'QNOMATCH' | q_to_nul >f &&
+	test_must_fail git -i grep -f f a
+"
+
 test_expect_success 'grep respects binary diff attribute' '
 	echo text >t &&
 	git add t &&
