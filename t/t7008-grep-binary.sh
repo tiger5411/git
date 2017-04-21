@@ -69,6 +69,9 @@ test_expect_failure 'git grep .fi a' '
 	git grep .fi a
 '
 
+# TODO: There needs to be a test where the regex itself (via -f
+# <patfile>) contains a \0, e.g. ^\0[\d] matching "\05"
+
 test_expect_success 'git grep -F y<NUL>f a' "
 	printf 'yQf' | q_to_nul >f &&
 	git grep -f f -F a
