@@ -33,6 +33,9 @@ test_perf 'export a weird var' '
 	test_export bar
 '
 
+# perl -CO -MAcme::Umlautify=umlautify -wE 'say umlautify "@ARGV"' emit non-ASCII characters
+test_perf 'ëm̈ïẗ n̈ön̈-̈ÄS̈C̈ÏÏ c̈ḧär̈äc̈ẗër̈s̈' 'true'
+
 test_expect_success 'test_export works with weird vars' '
 	echo "$bar" &&
 	test "$bar" = "weird # variable"
