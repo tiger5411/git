@@ -590,7 +590,7 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 
 	p->word_regexp = opt->word_regexp;
 	p->ignore_case = opt->ignore_case;
-	icase	       = opt->regflags & REG_ICASE || p->ignore_case;
+	icase	       = opt->regflags & REG_ICASE || p->ignore_case; /* TODO: That diffcore flag is picked up here */
 	ascii_only     = !has_non_ascii(p->pattern);
 
 	/*
