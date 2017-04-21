@@ -605,7 +605,41 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 	 * simple string match using kws.  p->fixed tells us if we
 	 * want to use kws.
 	 */
-	if (opt->fixed /* || is_fixed(p->pattern, p->patternlen)*/)
+
+#ifdef USE_LIBPCRE2
+
+#define PO_WORD_MATCH     0x0001
+#define PO_LINE_MATCH     0x0002
+#define PO_FIXED_STRINGS  0x0004
+
+	unsigned int pattern_options = 0;
+	static const char *prefix[] = {
+		"", "\\b", "^(?:", "^(?:", "\\Q", "\\b\\Q", "^(?:\\Q", "^(?:\\Q" };
+
+	static const char *suffix[] = {
+		"", "\\b", ")$",   ")$",   "\\E", "\\E\\b", "\\E)$",   "\\E)$" };
+
+	if (opt->fixed)
+		pattern_options |= PO_FIXED_STRINGS;
+	if (opt->word_regexp)
+		pattern_options |= PO_WORD_MATCH;
+	
+	/* TODO: Add an -x (--line-regexp) option to git-grep */
+
+	if (opt->fixed || (opt->pcre2 && opt->word_regexp)) {
+		struct strbuf sb = STRBUF_INIT;
+		strbuf_add(&sb, prefix[pattern_options], strlen(prefix[pattern_options]));
+		strbuf_add(&sb, p->pattern, p->patternlen);
+		strbuf_add(&sb, suffix[pattern_options], strlen(suffix[pattern_options]));
+
+		/* TODO: Without my grep branch this gets done twice, once in the parent, once in the thread */
+		p->pattern = sb.buf;
+		p->patternlen = sb.len;
+		p->special_sauce = 1;
+		opt->pcre2 = 1;
+	}
+#else
+	if (opt->fixed || is_fixed(p->pattern, p->patternlen))
 		p->fixed = !icase || ascii_only;
 	else
 		p->fixed = 0;
@@ -624,6 +658,7 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		compile_fixed_regexp(p, opt);
 		return;
 	}
+#endif
 
 	if (opt->pcre1) {
 		compile_pcre1_regexp(p, opt);
@@ -1139,7 +1174,7 @@ static int match_one_pattern(struct grep_pat *p, char *bol, char *eol,
  again:
 	hit = patmatch(p, bol, eol, pmatch, eflags);
 
-	if (hit && p->word_regexp) {
+	if (hit && p->word_regexp && !p->special_sauce) {
 		if ((pmatch[0].rm_so < 0) ||
 		    (eol - bol) < pmatch[0].rm_so ||
 		    (pmatch[0].rm_eo < 0) ||

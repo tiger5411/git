@@ -74,6 +74,7 @@ struct grep_pat {
 	unsigned fixed:1;
 	unsigned ignore_case:1;
 	unsigned word_regexp:1;
+	int special_sauce;
 };
 
 enum grep_expr_node {
