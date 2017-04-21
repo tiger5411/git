@@ -628,6 +628,9 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 
 	if (opt->fixed || (opt->pcre2 && opt->word_regexp)) {
 		struct strbuf sb = STRBUF_INIT;
+		if (p->ignore_case)
+			/* TODO: Add to suffix/prefix */
+			strbuf_add(&sb, "(?i)", 4);
 		strbuf_add(&sb, prefix[pattern_options], strlen(prefix[pattern_options]));
 		strbuf_add(&sb, p->pattern, p->patternlen);
 		strbuf_add(&sb, suffix[pattern_options], strlen(suffix[pattern_options]));
