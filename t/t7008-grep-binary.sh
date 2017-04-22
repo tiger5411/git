@@ -69,9 +69,6 @@ test_expect_failure 'git grep .fi a' '
 	git grep .fi a
 '
 
-# TODO: There needs to be a test where the regex itself (via -f
-# <patfile>) contains a \0, e.g. ^\0[\d] matching "\05"
-
 test_expect_success 'git grep -F y<NUL>f a' "
 	printf 'yQf' | q_to_nul >f &&
 	git grep -f f -F a
@@ -100,6 +97,56 @@ test_expect_success 'git grep y<NUL>f a' "
 test_expect_success 'git grep y<NUL>x a' "
 	printf 'yQx' | q_to_nul >f &&
 	test_must_fail git grep -f f a
+"
+
+test_expect_failure 'git grep y<NUL>[f] a' "
+	printf 'yQ[f]' | q_to_nul >f &&
+	git grep -f f a
+"
+
+test_expect_failure 'git grep [y]<NUL>f a' "
+	printf '[y]Qf' | q_to_nul >f &&
+	git grep -f f a
+"
+
+test_expect_failure 'git grep -i Y<NUL>[F] a' "
+	printf 'YQ[F]' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_failure 'git grep -i [Y]<NUL>F a' "
+	printf '[Y]QF' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_failure 'git grep -F y<NUL>[f] a' "
+	printf 'yQ[f]' | q_to_nul >f &&
+	git grep -F -f f a
+"
+
+test_expect_failure 'git grep -F [y]<NUL>f a' "
+	printf '[y]Qf' | q_to_nul >f &&
+	git grep -F -f f a
+"
+
+test_expect_failure 'git grep -F -i Y<NUL>[F] a' "
+	printf 'YQ[F]' | q_to_nul >f &&
+	git grep -F -i -f f a
+"
+
+test_expect_failure 'git grep -F -i [Y]<NUL>F a' "
+	printf '[Y]QF' | q_to_nul >f &&
+	git grep -F -i -f f a
+"
+
+test_expect_success 'git grep <NUL>NOMATCH a' "
+	printf 'QNOMATCH' | q_to_nul >f &&
+	test_must_fail git grep -f f a
+"
+
+test_expect_success 'git grep -i <NUL>NOMATCH a' "
+	printf 'QNOMATCH' | q_to_nul >f &&
+	test_must_fail git -i grep -f f a
 "
 
 test_expect_success 'grep respects binary diff attribute' '
