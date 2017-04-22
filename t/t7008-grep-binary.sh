@@ -139,6 +139,36 @@ test_expect_failure 'git grep -F -i [Y]<NUL>F a' "
 	git grep -F -i -f f a
 "
 
+test_expect_failure 'git grep e<NUL>m[*]c a' "
+	printf 'eQm[*]c' | q_to_nul >f &&
+	test_must_fail git grep -f f a
+"
+
+test_expect_failure 'git grep -i E<NUL>M[*]C a' "
+	printf 'EQM[*]C' | q_to_nul >f &&
+	test_must_fail git grep -i -f f a
+"
+
+test_expect_failure 'git grep e<NUL>m.*ac a' "
+	printf 'eQm.*ac' | q_to_nul >f &&
+	git grep -f f a
+"
+
+test_expect_failure 'git grep -i e<nul>m.*ac a' "
+	printf 'EQM.*AC' | q_to_nul >f &&
+	git grep -i -f f a
+"
+
+test_expect_success 'git grep -F e<NUL>m[*]c a' "
+	printf 'eQm[*]c' | q_to_nul >f &&
+	git grep -F -f f a
+"
+
+test_expect_success 'git grep -F -i E<NUL>M[*]C a' "
+	printf 'EQM[*]C' | q_to_nul >f &&
+	git grep -F -i -f f a
+"
+
 test_expect_success 'git grep <NUL>NOMATCH a' "
 	printf 'QNOMATCH' | q_to_nul >f &&
 	test_must_fail git grep -f f a
