@@ -5,7 +5,7 @@ test_description='git grep in binary files'
 . ./test-lib.sh
 
 test_expect_success 'setup' "
-	echo 'binaryQfile' | q_to_nul >a &&
+	echo 'binaryQfileQm[*]c' | q_to_nul >a &&
 	git add a &&
 	git commit -m.
 "
@@ -165,7 +165,7 @@ test_expect_success 'grep does not honor textconv' '
 '
 
 test_expect_success 'grep --textconv honors textconv' '
-	echo "a:binaryQfile" >expect &&
+	echo "a:binaryQfileQm[*]c" >expect &&
 	git grep --textconv Qfile >actual &&
 	test_cmp expect actual
 '
@@ -175,7 +175,7 @@ test_expect_success 'grep --no-textconv does not honor textconv' '
 '
 
 test_expect_success 'grep --textconv blob honors textconv' '
-	echo "HEAD:a:binaryQfile" >expect &&
+	echo "HEAD:a:binaryQfileQm[*]c" >expect &&
 	git grep --textconv Qfile HEAD:a >actual &&
 	test_cmp expect actual
 '
