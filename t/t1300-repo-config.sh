@@ -447,7 +447,7 @@ test_expect_success 'get bool variable with empty value' '
 
 test_expect_success 'no arguments, but no crash' '
 	test_must_fail git config >output 2>&1 &&
-	test_i18ngrep usage output
+	grep usage output
 '
 
 cat > .git/config << EOF
@@ -700,12 +700,12 @@ test_expect_success 'invalid unit' '
 	git config aninvalid.unit >actual &&
 	test_cmp expect actual &&
 	test_must_fail git config --int --get aninvalid.unit 2>actual &&
-	test_i18ngrep "bad numeric config value .1auto. for .aninvalid.unit. in file .git/config: invalid unit" actual
+	grep "bad numeric config value .1auto. for .aninvalid.unit. in file .git/config: invalid unit" actual
 '
 
 test_expect_success 'invalid stdin config' '
 	echo "[broken" | test_must_fail git config --list --file - >output 2>&1 &&
-	test_i18ngrep "bad config line 1 in standard input" output
+	grep "bad config line 1 in standard input" output
 '
 
 cat > expect << EOF
@@ -886,7 +886,7 @@ test_expect_success !MINGW 'get --path copes with unset $HOME' '
 		git config --get --path path.normal >>result &&
 		git config --get --path path.trailingtilde >>result
 	) &&
-	test_i18ngrep "[Ff]ailed to expand.*~/" msg &&
+	grep "[Ff]ailed to expand.*~/" msg &&
 	test_cmp expect result
 '
 
@@ -1188,7 +1188,7 @@ test_expect_success 'barf on syntax error' '
 	key garbage
 	EOF
 	test_must_fail git config --get section.key >actual 2>error &&
-	test_i18ngrep " line 3 " error
+	grep " line 3 " error
 '
 
 test_expect_success 'barf on incomplete section header' '
@@ -1198,7 +1198,7 @@ test_expect_success 'barf on incomplete section header' '
 	key = value
 	EOF
 	test_must_fail git config --get section.key >actual 2>error &&
-	test_i18ngrep " line 2 " error
+	grep " line 2 " error
 '
 
 test_expect_success 'barf on incomplete string' '
@@ -1208,7 +1208,7 @@ test_expect_success 'barf on incomplete string' '
 	key = "value string
 	EOF
 	test_must_fail git config --get section.key >actual 2>error &&
-	test_i18ngrep " line 3 " error
+	grep " line 3 " error
 '
 
 test_expect_success 'urlmatch' '

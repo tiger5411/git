@@ -66,14 +66,14 @@ test_expect_success 'reset --hard message' '
 	hex=$(git log -1 --format="%h") &&
 	git reset --hard > .actual &&
 	echo HEAD is now at $hex $(commit_msg) > .expected &&
-	test_i18ncmp .expected .actual
+	test_cmp .expected .actual
 '
 
 test_expect_success 'reset --hard message (ISO8859-1 logoutputencoding)' '
 	hex=$(git log -1 --format="%h") &&
 	git -c "i18n.logOutputEncoding=$test_encoding" reset --hard > .actual &&
 	echo HEAD is now at $hex $(commit_msg $test_encoding) > .expected &&
-	test_i18ncmp .expected .actual
+	test_cmp .expected .actual
 '
 
 >.diff_expect
@@ -465,7 +465,7 @@ EOF
 test_expect_success '--mixed refreshes the index' '
 	echo 123 >> file2 &&
 	git reset --mixed HEAD > output &&
-	test_i18ncmp expect output
+	test_cmp expect output
 '
 
 test_expect_success 'resetting specific path that is unmerged' '

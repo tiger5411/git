@@ -51,7 +51,7 @@ test_expect_success 'advice from failed cherry-pick' "
 	EOF
 	test_must_fail git cherry-pick picked 2>actual &&
 
-	test_i18ncmp expected actual
+	test_cmp expected actual
 "
 
 test_expect_success 'advice from failed cherry-pick --no-commit' "
@@ -65,7 +65,7 @@ test_expect_success 'advice from failed cherry-pick --no-commit' "
 	EOF
 	test_must_fail git cherry-pick --no-commit picked 2>actual &&
 
-	test_i18ncmp expected actual
+	test_cmp expected actual
 "
 
 test_expect_success 'failed cherry-pick sets CHERRY_PICK_HEAD' '
@@ -338,7 +338,7 @@ test_expect_success 'revert conflict, diff3 -m style' '
 test_expect_success 'failed cherry-pick does not forget -s' '
 	pristine_detach initial &&
 	test_must_fail git cherry-pick -s picked &&
-	test_i18ngrep -e "Signed-off-by" .git/MERGE_MSG
+	grep -e "Signed-off-by" .git/MERGE_MSG
 '
 
 test_expect_success 'commit after failed cherry-pick does not add duplicated -s' '

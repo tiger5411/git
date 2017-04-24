@@ -182,7 +182,7 @@ test_expect_success 'typechanged submodule(submodule->blob), --cached' "
   < Add foo5
 
 EOF
-	test_i18ncmp actual expected
+	test_cmp actual expected
 "
 
 test_expect_success 'typechanged submodule(submodule->blob), --files' "
@@ -192,7 +192,7 @@ test_expect_success 'typechanged submodule(submodule->blob), --files' "
   > Add foo5
 
 EOF
-	test_i18ncmp actual expected
+	test_cmp actual expected
 "
 
 rm -rf sm1 &&
@@ -203,7 +203,7 @@ test_expect_success 'typechanged submodule(submodule->blob)' "
 * sm1 $head4(submodule)->$head5(blob):
 
 EOF
-	test_i18ncmp actual expected
+	test_cmp actual expected
 "
 
 rm -f sm1 &&
@@ -216,7 +216,7 @@ test_expect_success 'nonexistent commit' "
   Warn: sm1 doesn't contain commit $head4_full
 
 EOF
-	test_i18ncmp actual expected
+	test_cmp actual expected
 "
 
 commit_file
@@ -227,7 +227,7 @@ test_expect_success 'typechanged submodule(blob->submodule)' "
   > Add foo7
 
 EOF
-	test_i18ncmp expected actual
+	test_cmp expected actual
 "
 
 commit_file sm1 &&
@@ -282,7 +282,7 @@ EOF
 
 test_expect_success '--for-status' "
 	git submodule summary --for-status HEAD^ >actual &&
-	test_i18ncmp actual - <<EOF
+	test_cmp actual - <<EOF
 * sm1 $head6...0000000:
 
 * sm2 0000000...$head7 (2):

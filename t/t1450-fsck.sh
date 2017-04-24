@@ -217,9 +217,9 @@ test_expect_success 'unparseable tree object' '
 	commit_sha1=$(git commit-tree $tree_sha1) &&
 	git update-ref refs/heads/wrong $commit_sha1 &&
 	test_must_fail git fsck 2>out &&
-	test_i18ngrep "error: empty filename in tree entry" out &&
-	test_i18ngrep "$tree_sha1" out &&
-	test_i18ngrep ! "fatal: empty filename in tree entry" out
+	grep "error: empty filename in tree entry" out &&
+	grep "$tree_sha1" out &&
+	! grep "fatal: empty filename in tree entry" out
 '
 
 test_expect_success 'tag pointing to nonexistent' '
@@ -633,7 +633,7 @@ test_expect_success 'fsck detects trailing loose garbage (commit)' '
 	chmod +w "$file" &&
 	echo garbage >>"$file" &&
 	test_must_fail git fsck 2>out &&
-	test_i18ngrep "garbage.*$commit" out
+	grep "garbage.*$commit" out
 '
 
 test_expect_success 'fsck detects trailing loose garbage (blob)' '
@@ -643,7 +643,7 @@ test_expect_success 'fsck detects trailing loose garbage (blob)' '
 	chmod +w "$file" &&
 	echo garbage >>"$file" &&
 	test_must_fail git fsck 2>out &&
-	test_i18ngrep "garbage.*$blob" out
+	grep "garbage.*$blob" out
 '
 
 # for each of type, we have one version which is referenced by another object

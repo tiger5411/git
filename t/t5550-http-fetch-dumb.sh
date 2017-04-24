@@ -325,7 +325,7 @@ test_expect_success 'redirects can be forbidden/allowed' '
 
 test_expect_success 'redirects are reported to stderr' '
 	# just look for a snippet of the redirected-to URL
-	test_i18ngrep /dumb/ stderr
+	grep /dumb/ stderr
 '
 
 test_expect_success 'non-initial redirects can be forbidden' '
@@ -393,7 +393,7 @@ test_expect_success 'can redirect through non-"info/refs?service=git-upload-pack
 
 test_expect_success 'print HTTP error when any intermediate redirect throws error' '
 	test_must_fail git clone "$HTTPD_URL/redir-to/502" 2> stderr &&
-	test_i18ngrep "unable to access.*/redir-to/502" stderr
+	grep "unable to access.*/redir-to/502" stderr
 '
 
 stop_httpd

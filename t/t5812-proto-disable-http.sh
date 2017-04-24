@@ -21,8 +21,8 @@ test_expect_success 'curl redirects respect whitelist' '
 			   GIT_SMART_HTTP=0 \
 		git clone "$HTTPD_URL/ftp-redir/repo.git" 2>stderr &&
 	{
-		test_i18ngrep "ftp.*disabled" stderr ||
-		test_i18ngrep "your curl version is too old"
+		grep "ftp.*disabled" stderr ||
+		grep "your curl version is too old"
 	}
 '
 

@@ -30,7 +30,7 @@ test_expect_success 'branch -h in broken repository' '
 		>.git/refs/heads/master &&
 		test_expect_code 129 git branch -h >usage 2>&1
 	) &&
-	test_i18ngrep "[Uu]sage" broken/usage
+	grep "[Uu]sage" broken/usage
 '
 
 test_expect_success 'git branch abc should create a branch' '
@@ -76,7 +76,7 @@ test_expect_success 'git branch l should work after branch l/m has been deleted'
 
 test_expect_success 'git branch -m dumps usage' '
 	test_expect_code 128 git branch -m 2>err &&
-	test_i18ngrep "branch name required" err
+	grep "branch name required" err
 '
 
 test_expect_success 'git branch -m m broken_symref should work' '
@@ -348,7 +348,7 @@ test_expect_success 'deleting a symref' '
 	git branch -d symref >actual &&
 	test_path_is_file .git/refs/heads/target &&
 	test_path_is_missing .git/refs/heads/symref &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'deleting a dangling symref' '
@@ -357,7 +357,7 @@ test_expect_success 'deleting a dangling symref' '
 	echo "Deleted branch dangling-symref (was nowhere)." >expect &&
 	git branch -d dangling-symref >actual &&
 	test_path_is_missing .git/refs/heads/dangling-symref &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'deleting a self-referential symref' '
@@ -366,7 +366,7 @@ test_expect_success 'deleting a self-referential symref' '
 	echo "Deleted branch self-reference (was refs/heads/self-reference)." >expect &&
 	git branch -d self-reference >actual &&
 	test_path_is_missing .git/refs/heads/self-reference &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'renaming a symref is not allowed' '
@@ -461,7 +461,7 @@ test_expect_success 'test deleting branch without config' '
 	sha1=$(git rev-parse my7 | cut -c 1-7) &&
 	echo "Deleted branch my7 (was $sha1)." >expect &&
 	git branch -d my7 >actual 2>&1 &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'deleting currently checked out branch fails' '
@@ -590,7 +590,7 @@ If you wanted to make '"'master'"' track '"'origin/master'"', do this:
     git branch -d origin/master
     git branch --set-upstream-to origin/master
 EOF
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success '--set-upstream with two args only shows the deprecation message' '
@@ -599,7 +599,7 @@ test_expect_success '--set-upstream with two args only shows the deprecation mes
 	cat >expected <<EOF &&
 The --set-upstream flag is deprecated and will be removed. Consider using --track or --set-upstream-to
 EOF
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success '--set-upstream with one arg only shows the deprecation message if the branch existed' '
@@ -608,7 +608,7 @@ test_expect_success '--set-upstream with one arg only shows the deprecation mess
 	cat >expected <<EOF &&
 The --set-upstream flag is deprecated and will be removed. Consider using --track or --set-upstream-to
 EOF
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success '--set-upstream-to notices an error to set branch as own upstream' '
@@ -618,7 +618,7 @@ test_expect_success '--set-upstream-to notices an error to set branch as own ups
 	EOF
 	test_expect_code 1 git config branch.my13.remote &&
 	test_expect_code 1 git config branch.my13.merge &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 # Keep this test last, as it changes the current branch

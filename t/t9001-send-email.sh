@@ -336,7 +336,7 @@ test_expect_success $PREREQ,!AUTOIDENT 'broken implicit ident aborts send-email'
 		--smtp-server="$(pwd)/fake.sendmail" \
 		--to=to@example.com \
 		$patches </dev/null 2>errors &&
-	test_i18ngrep "tell me who you are" errors
+	grep "tell me who you are" errors
 	)
 '
 

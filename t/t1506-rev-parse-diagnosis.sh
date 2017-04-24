@@ -106,7 +106,7 @@ test_expect_success 'incorrect revision id' '
 	test_must_fail git rev-parse foobar:file.txt 2>error &&
 	grep "Invalid object name '"'"'foobar'"'"'." error &&
 	test_must_fail git rev-parse foobar 2> error &&
-	test_i18ngrep "unknown revision or path not in the working tree." error
+	grep "unknown revision or path not in the working tree." error
 '
 
 test_expect_success 'incorrect file in sha1:path' '
@@ -168,8 +168,8 @@ test_expect_success 'relative path when cwd is outside worktree' '
 
 test_expect_success '<commit>:file correctly diagnosed after a pathname' '
 	test_must_fail git rev-parse file.txt HEAD:file.txt 1>actual 2>error &&
-	test_i18ngrep ! "exists on disk" error &&
-	test_i18ngrep "no such path in the working tree" error &&
+	! grep "exists on disk" error &&
+	grep "no such path in the working tree" error &&
 	cat >expect <<-\EOF &&
 	file.txt
 	HEAD:file.txt
@@ -193,13 +193,13 @@ test_expect_success 'dotdot is not an empty set' '
 
 test_expect_success 'arg before dashdash must be a revision (missing)' '
 	test_must_fail git rev-parse foobar -- 2>stderr &&
-	test_i18ngrep "bad revision" stderr
+	grep "bad revision" stderr
 '
 
 test_expect_success 'arg before dashdash must be a revision (file)' '
 	>foobar &&
 	test_must_fail git rev-parse foobar -- 2>stderr &&
-	test_i18ngrep "bad revision" stderr
+	grep "bad revision" stderr
 '
 
 test_expect_success 'arg before dashdash must be a revision (ambiguous)' '

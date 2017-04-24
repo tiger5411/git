@@ -49,7 +49,7 @@ cat >expected <<EOF
 EOF
 test_expect_success "--stat $*" "
 	git diff --stat $* HEAD^ >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 "
 }
 

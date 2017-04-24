@@ -414,7 +414,7 @@ test_expect_success 'rm issues a warning when section is not found in .gitmodule
 	git add .gitmodules &&
 	echo "warning: Could not find section in .gitmodules where path=submod" >expect.err &&
 	git rm submod >actual 2>actual.err &&
-	test_i18ncmp expect.err actual.err &&
+	test_cmp expect.err actual.err &&
 	! test -d submod &&
 	! test -f submod/.git &&
 	git status -s -uno >actual &&
@@ -592,7 +592,7 @@ test_expect_success 'rm of a populated submodule with a .git directory migrates 
 	! test -d submod/.git &&
 	git status -s -uno --ignore-submodules=none >actual &&
 	test -s actual &&
-	test_i18ngrep Migrating output.err
+	grep Migrating output.err
 '
 
 cat >expect.deepmodified <<EOF
@@ -679,7 +679,7 @@ test_expect_success "rm absorbs submodule's nested .git directory" '
 	! test -d submod/subsubmod/.git &&
 	git status -s -uno --ignore-submodules=none >actual &&
 	test -s actual &&
-	test_i18ngrep Migrating output.err
+	grep Migrating output.err
 '
 
 test_expect_success 'checking out a commit after submodule removal needs manual updates' '
@@ -688,7 +688,7 @@ test_expect_success 'checking out a commit after submodule removal needs manual 
 	git submodule update &&
 	git checkout -q HEAD^ &&
 	git checkout -q master 2>actual &&
-	test_i18ngrep "^warning: unable to rmdir submod:" actual &&
+	grep "^warning: unable to rmdir submod:" actual &&
 	git status -s submod >actual &&
 	echo "?? submod/" >expected &&
 	test_cmp expected actual &&
@@ -779,7 +779,7 @@ test_expect_success 'rm files with different staged content' '
 	echo content1 >foo.txt &&
 	echo content1 >bar.txt &&
 	test_must_fail git rm foo.txt bar.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm files with different staged content without hints' '
@@ -792,7 +792,7 @@ test_expect_success 'rm files with different staged content without hints' '
 	echo content2 >foo.txt &&
 	echo content2 >bar.txt &&
 	test_must_fail git -c advice.rmhints=false rm foo.txt bar.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm file with local modification' '
@@ -804,7 +804,7 @@ test_expect_success 'rm file with local modification' '
 	git commit -m "testing rm 3" &&
 	echo content3 >foo.txt &&
 	test_must_fail git rm foo.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm file with local modification without hints' '
@@ -814,7 +814,7 @@ test_expect_success 'rm file with local modification without hints' '
 	EOF
 	echo content4 >bar.txt &&
 	test_must_fail git -c advice.rmhints=false rm bar.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm file with changes in the index' '
@@ -827,7 +827,7 @@ test_expect_success 'rm file with changes in the index' '
 	echo content5 >foo.txt &&
 	git add foo.txt &&
 	test_must_fail git rm foo.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm file with changes in the index without hints' '
@@ -836,7 +836,7 @@ test_expect_success 'rm file with changes in the index without hints' '
 	    foo.txt
 	EOF
 	test_must_fail git -c advice.rmhints=false rm foo.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm files with two different errors' '
@@ -855,12 +855,12 @@ test_expect_success 'rm files with two different errors' '
 	echo content6 >bar1.txt &&
 	git add bar1.txt &&
 	test_must_fail git rm bar1.txt foo1.txt 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'rm empty string should invoke warning' '
 	git rm -rf "" 2>output &&
-	test_i18ngrep "warning: empty strings" output
+	grep "warning: empty strings" output
 '
 
 test_done

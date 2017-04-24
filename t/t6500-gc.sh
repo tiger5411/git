@@ -16,7 +16,7 @@ test_expect_success 'gc does not leave behind pid file' '
 
 test_expect_success 'gc --gobbledegook' '
 	test_expect_code 129 git gc --nonsense 2>err &&
-	test_i18ngrep "[Uu]sage: git gc" err
+	grep "[Uu]sage: git gc" err
 '
 
 test_expect_success 'gc -h with invalid configuration' '
@@ -27,7 +27,7 @@ test_expect_success 'gc -h with invalid configuration' '
 		echo "[gc] pruneexpire = CORRUPT" >>.git/config &&
 		test_expect_code 129 git gc -h >usage 2>&1
 	) &&
-	test_i18ngrep "[Uu]sage" broken/usage
+	grep "[Uu]sage" broken/usage
 '
 
 test_expect_success 'gc is not aborted due to a stale symref' '
@@ -59,7 +59,7 @@ test_expect_success 'auto gc with too many loose objects does not attempt to cre
 	test_commit 790 &&
 
 	git gc --auto 2>err &&
-	test_i18ngrep ! "^warning:" err &&
+	! grep "^warning:" err &&
 	ls .git/objects/pack/ | sort >post_packs &&
 	comm -1 -3 existing_packs post_packs >new &&
 	comm -2 -3 existing_packs post_packs >del &&
@@ -85,7 +85,7 @@ test_expect_success 'background auto gc does not run if gc.log is present and re
 	test_config gc.autodetach true &&
 	echo fleem >.git/gc.log &&
 	test_must_fail git gc --auto 2>err &&
-	test_i18ngrep "^error:" err &&
+	grep "^error:" err &&
 	test_config gc.logexpiry 5.days &&
 	test-chmtime =-345600 .git/gc.log &&
 	test_must_fail git gc --auto &&

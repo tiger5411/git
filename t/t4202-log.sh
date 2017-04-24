@@ -940,7 +940,7 @@ sanitize_output () {
 test_expect_success 'log --graph with diff and stats' '
 	git log --no-renames --graph --pretty=short --stat -p >actual &&
 	sanitize_output >actual.sanitized <actual &&
-	test_i18ncmp expect actual.sanitized
+	test_cmp expect actual.sanitized
 '
 
 cat >expect <<\EOF
@@ -1217,7 +1217,7 @@ EOF
 test_expect_success 'log --line-prefix="*** " --graph with diff and stats' '
 	git log --line-prefix="*** " --no-renames --graph --pretty=short --stat -p >actual &&
 	sanitize_output >actual.sanitized <actual &&
-	test_i18ncmp expect actual.sanitized
+	test_cmp expect actual.sanitized
 '
 
 cat >expect <<-\EOF
@@ -1340,15 +1340,15 @@ test_expect_success 'log --graph --no-walk is forbidden' '
 test_expect_success 'log diagnoses bogus HEAD' '
 	git init empty &&
 	test_must_fail git -C empty log 2>stderr &&
-	test_i18ngrep does.not.have.any.commits stderr &&
+	grep does.not.have.any.commits stderr &&
 	echo 1234abcd >empty/.git/refs/heads/master &&
 	test_must_fail git -C empty log 2>stderr &&
-	test_i18ngrep broken stderr &&
+	grep broken stderr &&
 	echo "ref: refs/heads/invalid.lock" >empty/.git/HEAD &&
 	test_must_fail git -C empty log 2>stderr &&
-	test_i18ngrep broken stderr &&
+	grep broken stderr &&
 	test_must_fail git -C empty log --default totally-bogus 2>stderr &&
-	test_i18ngrep broken stderr
+	grep broken stderr
 '
 
 test_expect_success 'set up --source tests' '

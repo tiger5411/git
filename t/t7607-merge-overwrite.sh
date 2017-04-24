@@ -125,7 +125,7 @@ test_expect_success 'will not overwrite untracked file in leading path' '
 	cp important sub &&
 	cp important sub2 &&
 	test_must_fail git merge sub 2>out &&
-	test_i18ncmp out expect &&
+	test_cmp out expect &&
 	test_path_is_missing .git/MERGE_HEAD &&
 	test_cmp important sub &&
 	test_cmp important sub2 &&
@@ -160,7 +160,7 @@ test_expect_success 'will not overwrite untracked file on unborn branch' '
 	git checkout --orphan new &&
 	cp important c0.c &&
 	test_must_fail git merge c0 2>out &&
-	test_i18ncmp out expect
+	test_cmp out expect
 '
 
 test_expect_success 'will not overwrite untracked file on unborn branch .git/MERGE_HEAD sanity etc.' '

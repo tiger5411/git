@@ -52,7 +52,7 @@ EOF
 test_expect_success 'test help' '
 	test_must_fail test-parse-options -h >output 2>output.err &&
 	test_must_be_empty output.err &&
-	test_i18ncmp expect output
+	test_cmp expect output
 '
 
 mv expect expect.err
@@ -75,7 +75,7 @@ check_unknown_i18n() {
 	cat expect.err >>expect &&
 	test_must_fail test-parse-options $* >output 2>output.err &&
 	test_must_be_empty output &&
-	test_i18ncmp expect output.err
+	test_cmp expect output.err
 }
 
 test_expect_success 'OPT_BOOL() #1' 'check boolean: 1 --yes'
@@ -288,8 +288,8 @@ test_expect_success 'OPT_CALLBACK() and OPT_BIT() work' '
 
 test_expect_success 'OPT_CALLBACK() and callback errors work' '
 	test_must_fail test-parse-options --no-length >output 2>output.err &&
-	test_i18ncmp expect output &&
-	test_i18ncmp expect.err output.err
+	test_cmp expect output &&
+	test_cmp expect.err output.err
 '
 
 cat >expect <<\EOF

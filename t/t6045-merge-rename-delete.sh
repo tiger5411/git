@@ -17,7 +17,7 @@ test_expect_success 'rename/delete' '
 	git commit -m "delete" &&
 
 	test_must_fail git merge --strategy=recursive rename >output &&
-	test_i18ngrep "CONFLICT (rename/delete): A deleted in HEAD and renamed to B in rename. Version rename of B left in tree." output
+	grep "CONFLICT (rename/delete): A deleted in HEAD and renamed to B in rename. Version rename of B left in tree." output
 '
 
 test_done

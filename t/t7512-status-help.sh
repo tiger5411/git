@@ -39,7 +39,7 @@ Unmerged paths:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -60,7 +60,7 @@ Changes to be committed:
 Untracked files not listed (use -u option to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -93,7 +93,7 @@ Unmerged paths:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -117,7 +117,7 @@ Changes to be committed:
 Untracked files not listed (use -u option to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -156,7 +156,7 @@ Unmerged paths:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -183,7 +183,7 @@ Changes to be committed:
 Untracked files not listed (use -u option to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -213,7 +213,7 @@ You are currently editing a commit while rebasing branch '\''rebase_i_edit'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -253,7 +253,7 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -286,7 +286,7 @@ You are currently editing a commit while rebasing branch '\''amend_last'\'' on '
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -325,7 +325,7 @@ You are currently editing a commit while rebasing branch '\''several_edits'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -361,7 +361,7 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -392,7 +392,7 @@ You are currently editing a commit while rebasing branch '\''several_edits'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -423,7 +423,7 @@ You are currently editing a commit while rebasing branch '\''several_edits'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -460,7 +460,7 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -492,7 +492,7 @@ You are currently editing a commit while rebasing branch '\''several_edits'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -525,7 +525,7 @@ You are currently editing a commit while rebasing branch '\''several_edits'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -564,7 +564,7 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -598,7 +598,7 @@ You are currently editing a commit while rebasing branch '\''several_edits'\'' o
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -626,7 +626,7 @@ You are in the middle of an am session.
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -648,7 +648,7 @@ You are in the middle of an am session.
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -671,7 +671,7 @@ The current patch is empty.
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -694,7 +694,7 @@ You are currently bisecting, started from branch '\''bisect'\''.
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -719,7 +719,7 @@ Unmerged paths:
 no changes added to commit
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -753,7 +753,7 @@ Unmerged paths:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 
@@ -777,7 +777,7 @@ Changes to be committed:
 Untracked files not listed (use -u option to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status showing detached at and from a tag' '
@@ -788,7 +788,7 @@ HEAD detached at atag
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual &&
+	test_cmp expected actual &&
 
 	git reset --hard HEAD^ &&
 	cat >expected <<\EOF &&
@@ -796,7 +796,7 @@ HEAD detached from atag
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status while reverting commit (conflicts)' '
@@ -824,7 +824,7 @@ Unmerged paths:
 no changes added to commit (use "git add" and/or "git commit -a")
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status while reverting commit (conflicts resolved)' '
@@ -844,7 +844,7 @@ Changes to be committed:
 Untracked files not listed (use -u option to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status after reverting commit' '
@@ -854,7 +854,7 @@ On branch master
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'prepare for different number of commits rebased' '
@@ -884,7 +884,7 @@ You are currently editing a commit while rebasing branch '\''several_commits'\''
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status: two commands done with some white lines in done file' '
@@ -912,7 +912,7 @@ You are currently editing a commit while rebasing branch '\''several_commits'\''
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status: two remaining commands with some white lines in todo file' '
@@ -941,7 +941,7 @@ You are currently editing a commit while rebasing branch '\''several_commits'\''
 nothing to commit (use -u to show untracked files)
 EOF
 	git status --untracked-files=no >actual &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'status: handle not-yet-started rebase -i gracefully' '
@@ -960,7 +960,7 @@ You are currently editing a commit while rebasing branch '\''several_commits'\''
 
 nothing to commit (use -u to show untracked files)
 EOF
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_done

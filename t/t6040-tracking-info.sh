@@ -54,7 +54,7 @@ test_expect_success 'branch -v' '
 		git branch -v
 	) |
 	sed -n -e "$script" >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 cat >expect <<\EOF
@@ -72,20 +72,20 @@ test_expect_success 'branch -vv' '
 		git branch -vv
 	) |
 	sed -n -e "$script" >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'checkout (diverged from upstream)' '
 	(
 		cd test && git checkout b1
 	) >actual &&
-	test_i18ngrep "have 1 and 1 different" actual
+	grep "have 1 and 1 different" actual
 '
 
 test_expect_success 'checkout with local tracked branch' '
 	git checkout master &&
 	git checkout follower >actual &&
-	test_i18ngrep "is ahead of" actual
+	grep "is ahead of" actual
 '
 
 test_expect_success 'checkout (upstream is gone)' '
@@ -93,14 +93,14 @@ test_expect_success 'checkout (upstream is gone)' '
 		cd test &&
 		git checkout b5
 	) >actual &&
-	test_i18ngrep "is based on .*, but the upstream is gone." actual
+	grep "is based on .*, but the upstream is gone." actual
 '
 
 test_expect_success 'checkout (up-to-date with upstream)' '
 	(
 		cd test && git checkout b6
 	) >actual &&
-	test_i18ngrep "Your branch is up-to-date with .origin/master" actual
+	grep "Your branch is up-to-date with .origin/master" actual
 '
 
 test_expect_success 'status (diverged from upstream)' '
@@ -110,7 +110,7 @@ test_expect_success 'status (diverged from upstream)' '
 		# reports nothing to commit
 		test_must_fail git commit --dry-run
 	) >actual &&
-	test_i18ngrep "have 1 and 1 different" actual
+	grep "have 1 and 1 different" actual
 '
 
 test_expect_success 'status (upstream is gone)' '
@@ -120,7 +120,7 @@ test_expect_success 'status (upstream is gone)' '
 		# reports nothing to commit
 		test_must_fail git commit --dry-run
 	) >actual &&
-	test_i18ngrep "is based on .*, but the upstream is gone." actual
+	grep "is based on .*, but the upstream is gone." actual
 '
 
 test_expect_success 'status (up-to-date with upstream)' '
@@ -130,7 +130,7 @@ test_expect_success 'status (up-to-date with upstream)' '
 		# reports nothing to commit
 		test_must_fail git commit --dry-run
 	) >actual &&
-	test_i18ngrep "Your branch is up-to-date with .origin/master" actual
+	grep "Your branch is up-to-date with .origin/master" actual
 '
 
 cat >expect <<\EOF
@@ -143,7 +143,7 @@ test_expect_success 'status -s -b (diverged from upstream)' '
 		git checkout b1 >/dev/null &&
 		git status -s -b | head -1
 	) >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 cat >expect <<\EOF
@@ -156,7 +156,7 @@ test_expect_success 'status -s -b (upstream is gone)' '
 		git checkout b5 >/dev/null &&
 		git status -s -b | head -1
 	) >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 cat >expect <<\EOF
@@ -169,14 +169,14 @@ test_expect_success 'status -s -b (up-to-date with upstream)' '
 		git checkout b6 >/dev/null &&
 		git status -s -b | head -1
 	) >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'fail to track lightweight tags' '
 	git checkout master &&
 	git tag light &&
 	test_must_fail git branch --track lighttrack light >actual &&
-	test_i18ngrep ! "set up to track" actual &&
+	! grep "set up to track" actual &&
 	test_must_fail git checkout lighttrack
 '
 
@@ -184,7 +184,7 @@ test_expect_success 'fail to track annotated tags' '
 	git checkout master &&
 	git tag -m heavy heavy &&
 	test_must_fail git branch --track heavytrack heavy >actual &&
-	test_i18ngrep ! "set up to track" actual &&
+	! grep "set up to track" actual &&
 	test_must_fail git checkout heavytrack
 '
 

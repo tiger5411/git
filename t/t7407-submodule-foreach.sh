@@ -77,7 +77,7 @@ test_expect_success 'test basic "submodule foreach" usage' '
 		git config foo.bar zar &&
 		git submodule foreach "git config --file \"\$toplevel/.git/config\" foo.bar"
 	) &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 cat >expect <<EOF
@@ -93,7 +93,7 @@ test_expect_success 'test "submodule foreach" from subdirectory' '
 		cd clone/sub &&
 		git submodule foreach "echo \$toplevel-\$name-\$sm_path-\$sha1" >../../actual
 	) &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'setup nested submodules' '
@@ -174,7 +174,7 @@ test_expect_success 'test messages from "foreach --recursive"' '
 		cd clone2 &&
 		git submodule foreach --recursive "true" > ../actual
 	) &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 cat > expect <<EOF
@@ -194,7 +194,7 @@ test_expect_success 'test messages from "foreach --recursive" from subdirectory'
 		cd untracked &&
 		git submodule foreach --recursive >../../actual
 	) &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 cat > expect <<EOF

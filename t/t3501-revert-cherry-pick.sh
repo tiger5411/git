@@ -47,7 +47,7 @@ test_expect_success 'cherry-pick --nonsense' '
 	git diff --exit-code HEAD &&
 	test_must_fail git cherry-pick --nonsense 2>msg &&
 	git diff --exit-code HEAD "$pos" &&
-	test_i18ngrep '[Uu]sage:' msg
+	grep '[Uu]sage:' msg
 '
 
 test_expect_success 'revert --nonsense' '
@@ -56,7 +56,7 @@ test_expect_success 'revert --nonsense' '
 	git diff --exit-code HEAD &&
 	test_must_fail git revert --nonsense 2>msg &&
 	git diff --exit-code HEAD "$pos" &&
-	test_i18ngrep '[Uu]sage:' msg
+	grep '[Uu]sage:' msg
 '
 
 test_expect_success 'cherry-pick after renaming branch' '
@@ -96,7 +96,7 @@ test_expect_success 'revert forbidden on dirty working tree' '
 	echo content >extra_file &&
 	git add extra_file &&
 	test_must_fail git revert HEAD 2>errors &&
-	test_i18ngrep "your local changes would be overwritten by " errors
+	grep "your local changes would be overwritten by " errors
 
 '
 

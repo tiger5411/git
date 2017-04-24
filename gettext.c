@@ -45,16 +45,6 @@ const char *get_preferred_languages(void)
 	return NULL;
 }
 
-#ifdef GETTEXT_POISON
-int use_gettext_poison(void)
-{
-	static int poison_requested = -1;
-	if (poison_requested == -1)
-		poison_requested = getenv("GIT_GETTEXT_POISON") ? 1 : 0;
-	return poison_requested;
-}
-#endif
-
 #ifndef NO_GETTEXT
 static int test_vsnprintf(const char *fmt, ...)
 {

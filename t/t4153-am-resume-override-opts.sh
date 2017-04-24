@@ -53,7 +53,7 @@ test_expect_success '--no-quiet overrides --quiet' '
 	# Applying side1 will be quiet.
 	test_must_fail git am --quiet side[123].eml >out &&
 	test_path_is_dir .git/rebase-apply &&
-	test_i18ngrep ! "^Applying: " out &&
+	! grep "^Applying: " out &&
 	echo side1 >file &&
 	git add file &&
 
@@ -61,7 +61,7 @@ test_expect_success '--no-quiet overrides --quiet' '
 	# Applying side2 will be quiet.
 	git am --no-quiet --continue >out &&
 	echo "Applying: side1" >expected &&
-	test_i18ncmp expected out
+	test_cmp expected out
 '
 
 test_expect_success '--signoff overrides --no-signoff' '

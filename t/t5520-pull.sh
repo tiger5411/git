@@ -24,7 +24,7 @@ test_pull_autostash_fail () {
 	echo dirty >new_file &&
 	git add new_file &&
 	test_must_fail git pull "$@" . copy 2>err &&
-	test_i18ngrep "uncommitted changes." err
+	grep "uncommitted changes." err
 }
 
 test_expect_success setup '
@@ -139,7 +139,7 @@ test_expect_success 'fail if wildcard spec does not match any refs' '
 	test_when_finished "git checkout -f copy && git branch -D test" &&
 	test "$(cat file)" = file &&
 	test_must_fail git pull . "refs/nonexisting1/*:refs/nonexisting2/*" 2>err &&
-	test_i18ngrep "no candidates for merging" err &&
+	grep "no candidates for merging" err &&
 	test "$(cat file)" = file
 '
 
@@ -151,7 +151,7 @@ test_expect_success 'fail if no branches specified with non-default remote' '
 	test "$(cat file)" = file &&
 	test_config branch.test.remote origin &&
 	test_must_fail git pull test_remote 2>err &&
-	test_i18ngrep "specify a branch on the command line" err &&
+	grep "specify a branch on the command line" err &&
 	test "$(cat file)" = file
 '
 
@@ -162,7 +162,7 @@ test_expect_success 'fail if not on a branch' '
 	test_when_finished "git checkout -f copy" &&
 	test "$(cat file)" = file &&
 	test_must_fail git pull 2>err &&
-	test_i18ngrep "not currently on a branch" err &&
+	grep "not currently on a branch" err &&
 	test "$(cat file)" = file
 '
 
@@ -174,7 +174,7 @@ test_expect_success 'fail if no configuration for current branch' '
 	test_config branch.test.remote test_remote &&
 	test "$(cat file)" = file &&
 	test_must_fail git pull 2>err &&
-	test_i18ngrep "no tracking information" err &&
+	grep "no tracking information" err &&
 	test "$(cat file)" = file
 '
 
@@ -186,7 +186,7 @@ test_expect_success 'pull --all: fail if no configuration for current branch' '
 	test_config branch.test.remote test_remote &&
 	test "$(cat file)" = file &&
 	test_must_fail git pull --all 2>err &&
-	test_i18ngrep "There is no tracking information" err &&
+	grep "There is no tracking information" err &&
 	test "$(cat file)" = file
 '
 
@@ -197,7 +197,7 @@ test_expect_success 'fail if upstream branch does not exist' '
 	test_config branch.test.merge refs/heads/nonexisting &&
 	test "$(cat file)" = file &&
 	test_must_fail git pull 2>err &&
-	test_i18ngrep "no such ref was fetched" err &&
+	grep "no such ref was fetched" err &&
 	test "$(cat file)" = file
 '
 
@@ -211,12 +211,12 @@ test_expect_success 'fail if the index has unresolved entries' '
 	test -n "$(git ls-files -u)" &&
 	cp file expected &&
 	test_must_fail git pull . second 2>err &&
-	test_i18ngrep "Pulling is not possible because you have unmerged files." err &&
+	grep "Pulling is not possible because you have unmerged files." err &&
 	test_cmp expected file &&
 	git add file &&
 	test -z "$(git ls-files -u)" &&
 	test_must_fail git pull . second 2>err &&
-	test_i18ngrep "You have not concluded your merge" err &&
+	grep "You have not concluded your merge" err &&
 	test_cmp expected file
 '
 
@@ -225,7 +225,7 @@ test_expect_success 'fast-forwards working tree if branch head is updated' '
 	test_when_finished "git checkout -f copy && git branch -D third" &&
 	test "$(cat file)" = file &&
 	git pull . second:third 2>err &&
-	test_i18ngrep "fetch updated the current branch head" err &&
+	grep "fetch updated the current branch head" err &&
 	test "$(cat file)" = modified &&
 	test "$(git rev-parse third)" = "$(git rev-parse second)"
 '
@@ -236,7 +236,7 @@ test_expect_success 'fast-forward fails with conflicting work tree' '
 	test "$(cat file)" = file &&
 	echo conflict >file &&
 	test_must_fail git pull . second:third 2>err &&
-	test_i18ngrep "Cannot fast-forward your working tree" err &&
+	grep "Cannot fast-forward your working tree" err &&
 	test "$(cat file)" = conflict &&
 	test "$(git rev-parse third)" = "$(git rev-parse second)"
 '
@@ -287,7 +287,7 @@ test_expect_success '--rebase with conflicts shows advice' '
 	test_tick &&
 	git commit -m "Create conflict" seq.txt &&
 	test_must_fail git pull --rebase . seq 2>err >out &&
-	test_i18ngrep "When you have resolved this problem" out
+	grep "When you have resolved this problem" out
 '
 
 test_expect_success 'failed --rebase shows advice' '
@@ -301,14 +301,14 @@ test_expect_success 'failed --rebase shows advice' '
 	git checkout -f -b fails-to-rebase HEAD^ &&
 	test_commit v2-without-cr file "2" file2-lf &&
 	test_must_fail git pull --rebase . diverging 2>err >out &&
-	test_i18ngrep "When you have resolved this problem" out
+	grep "When you have resolved this problem" out
 '
 
 test_expect_success '--rebase fails with multiple branches' '
 	git reset --hard before-rebase &&
 	test_must_fail git pull --rebase . copy master 2>err &&
 	test "$(git rev-parse HEAD)" = "$(git rev-parse before-rebase)" &&
-	test_i18ngrep "Cannot rebase onto multiple branches" err &&
+	grep "Cannot rebase onto multiple branches" err &&
 	test modified = "$(git show HEAD:file)"
 '
 
@@ -351,7 +351,7 @@ for i in --autostash --no-autostash
 do
 	test_expect_success "pull $i (without --rebase) is illegal" '
 		test_must_fail git pull $i . copy 2>err &&
-		test_i18ngrep "only valid with --rebase" err
+		grep "only valid with --rebase" err
 	'
 done
 
@@ -395,7 +395,7 @@ test_expect_success "pull --rebase warns on --verify-signatures" '
 	git pull --rebase --verify-signatures . copy 2>err &&
 	test "$(git rev-parse HEAD^)" = "$(git rev-parse copy)" &&
 	test new = "$(git show HEAD:file2)" &&
-	test_i18ngrep "ignoring --verify-signatures for rebase" err
+	grep "ignoring --verify-signatures for rebase" err
 '
 
 test_expect_success "pull --rebase does not warn on --no-verify-signatures" '
@@ -403,7 +403,7 @@ test_expect_success "pull --rebase does not warn on --no-verify-signatures" '
 	git pull --rebase --no-verify-signatures . copy 2>err &&
 	test "$(git rev-parse HEAD^)" = "$(git rev-parse copy)" &&
 	test new = "$(git show HEAD:file2)" &&
-	test_i18ngrep ! "verify-signatures" err
+	! grep "verify-signatures" err
 '
 
 # add a feature branch, keep-merge, that is merged into master, so the
@@ -596,7 +596,7 @@ test_expect_success 'pull --rebase fails on unborn branch with staged changes' '
 		test_must_fail git pull --rebase .. master 2>err &&
 		test "$(git ls-files)" = staged-file &&
 		test "$(git show :staged-file)" = staged-file &&
-		test_i18ngrep "unborn branch with changes added to the index" err
+		grep "unborn branch with changes added to the index" err
 	)
 '
 

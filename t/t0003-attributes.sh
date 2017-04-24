@@ -224,7 +224,7 @@ test_expect_success 'root subdir attribute test' '
 test_expect_success 'negative patterns' '
 	echo "!f test=bar" >.gitattributes &&
 	git check-attr test -- '"'"'!f'"'"' 2>errors &&
-	test_i18ngrep "Negative patterns are ignored" errors
+	grep "Negative patterns are ignored" errors
 '
 
 test_expect_success 'patterns starting with exclamation' '

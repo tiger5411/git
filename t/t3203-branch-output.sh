@@ -108,7 +108,7 @@ test_expect_success 'git branch shows detached HEAD properly' '
 EOF
 	git checkout HEAD^0 &&
 	git branch >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'git branch shows detached HEAD properly after checkout --detach' '
@@ -121,7 +121,7 @@ test_expect_success 'git branch shows detached HEAD properly after checkout --de
 EOF
 	git checkout --detach &&
 	git branch >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'git branch shows detached HEAD properly after moving' '
@@ -133,7 +133,7 @@ test_expect_success 'git branch shows detached HEAD properly after moving' '
 EOF
 	git reset --hard HEAD^1 &&
 	git branch >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'git branch shows detached HEAD properly from tag' '
@@ -146,7 +146,7 @@ EOF
 	git tag fromtag master &&
 	git checkout fromtag &&
 	git branch >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'git branch shows detached HEAD properly after moving from tag' '
@@ -158,7 +158,7 @@ test_expect_success 'git branch shows detached HEAD properly after moving from t
 EOF
 	git reset --hard HEAD^1 &&
 	git branch >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'git branch `--sort` option' '
@@ -169,7 +169,7 @@ test_expect_success 'git branch `--sort` option' '
 	  master
 	EOF
 	git branch --sort=objectsize >actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'git branch --points-at option' '

@@ -683,7 +683,7 @@ test_expect_success 'am --resolved fails if index has unmerged entries' '
 	test_must_fail git am --resolved >err &&
 	test_path_is_dir .git/rebase-apply &&
 	test_cmp_rev second HEAD &&
-	test_i18ngrep "still have unmerged paths" err
+	grep "still have unmerged paths" err
 '
 
 test_expect_success 'am takes patches from a Pine mailbox' '
@@ -817,7 +817,7 @@ test_expect_success 'am newline in subject' '
 	test_tick &&
 	sed -e "s/second/second \\\n foo/" patch1 >patchnl &&
 	git am <patchnl >output.out 2>&1 &&
-	test_i18ngrep "^Applying: second \\\n foo$" output.out
+	grep "^Applying: second \\\n foo$" output.out
 '
 
 test_expect_success 'am -q is quiet' '
@@ -836,7 +836,7 @@ test_expect_success 'am empty-file does not infloop' '
 	test_tick &&
 	test_must_fail git am empty-file 2>actual &&
 	echo Patch format detection failed. >expected &&
-	test_i18ncmp expected actual
+	test_cmp expected actual
 '
 
 test_expect_success 'am --message-id really adds the message id' '

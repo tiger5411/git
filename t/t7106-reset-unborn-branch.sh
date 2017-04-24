@@ -42,7 +42,7 @@ test_expect_success PERL 'reset -p' '
 	>expect &&
 	git ls-files >actual &&
 	test_cmp expect actual &&
-	test_i18ngrep "Unstage" output
+	grep "Unstage" output
 '
 
 test_expect_success 'reset --soft is a no-op' '

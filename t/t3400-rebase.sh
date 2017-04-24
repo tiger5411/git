@@ -102,7 +102,7 @@ test_expect_success 'rebase off of the previous branch using "-"' '
 	test_cmp expect.forkpoint actual.forkpoint &&
 	# the next one is dubious---we may want to say "-",
 	# instead of @{-1}, in the message
-	test_i18ncmp expect.messages actual.messages
+	test_cmp expect.messages actual.messages
 '
 
 test_expect_success 'rebase a single mode change' '
@@ -136,8 +136,8 @@ test_expect_success 'setup: recover' '
 test_expect_success 'Show verbose error when HEAD could not be detached' '
 	>B &&
 	test_must_fail git rebase topic 2>output.err >output.out &&
-	test_i18ngrep "The following untracked working tree files would be overwritten by checkout:" output.err &&
-	test_i18ngrep B output.err
+	grep "The following untracked working tree files would be overwritten by checkout:" output.err &&
+	grep B output.err
 '
 rm -f B
 

@@ -126,7 +126,7 @@ test_expect_success 'find string value for a key' '
 
 test_expect_success 'check line error when NULL string is queried' '
 	test_expect_code 128 test-config get_string case.foo 2>result &&
-	test_i18ngrep "fatal: .*case\.foo.*\.git/config.*line 7" result
+	grep "fatal: .*case\.foo.*\.git/config.*line 7" result
 '
 
 test_expect_success 'find integer if value is non parse-able' '
@@ -197,14 +197,14 @@ test_expect_success 'proper error on error in default config files' '
 	echo "[" >>.git/config &&
 	echo "fatal: bad config line 34 in file .git/config" >expect &&
 	test_expect_code 128 test-config get_value foo.bar 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'proper error on error in custom config files' '
 	echo "[" >>syntax-error &&
 	echo "fatal: bad config line 1 in file syntax-error" >expect &&
 	test_expect_code 128 test-config configset_get_value foo.bar syntax-error 2>actual &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'check line errors for malformed values' '
@@ -215,7 +215,7 @@ test_expect_success 'check line errors for malformed values' '
 		br
 	EOF
 	test_expect_code 128 git br 2>result &&
-	test_i18ngrep "fatal: .*alias\.br.*\.git/config.*line 2" result
+	grep "fatal: .*alias\.br.*\.git/config.*line 2" result
 '
 
 test_expect_success 'error on modifying repo config without repo' '

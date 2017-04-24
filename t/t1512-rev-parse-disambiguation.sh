@@ -42,7 +42,7 @@ test_expect_success 'blob and tree' '
 
 test_expect_success 'warn ambiguity when no candidate matches type hint' '
 	test_must_fail git rev-parse --verify 000000000^{commit} 2>actual &&
-	test_i18ngrep "short SHA1 000000000 is ambiguous" actual
+	grep "short SHA1 000000000 is ambiguous" actual
 '
 
 test_expect_success 'disambiguate tree-ish' '
@@ -305,39 +305,39 @@ test_expect_success 'ambiguous short sha1 ref' '
 	grep "refname.*${REF}.*ambiguous" err
 '
 
-test_expect_success C_LOCALE_OUTPUT 'ambiguity errors are not repeated (raw)' '
+test_expect_success 'ambiguity errors are not repeated (raw)' '
 	test_must_fail git rev-parse 00000 2>stderr &&
 	grep "is ambiguous" stderr >errors &&
 	test_line_count = 1 errors
 '
 
-test_expect_success C_LOCALE_OUTPUT 'ambiguity errors are not repeated (treeish)' '
+test_expect_success 'ambiguity errors are not repeated (treeish)' '
 	test_must_fail git rev-parse 00000:foo 2>stderr &&
 	grep "is ambiguous" stderr >errors &&
 	test_line_count = 1 errors
 '
 
-test_expect_success C_LOCALE_OUTPUT 'ambiguity errors are not repeated (peel)' '
+test_expect_success 'ambiguity errors are not repeated (peel)' '
 	test_must_fail git rev-parse 00000^{commit} 2>stderr &&
 	grep "is ambiguous" stderr >errors &&
 	test_line_count = 1 errors
 '
 
-test_expect_success C_LOCALE_OUTPUT 'ambiguity hints' '
+test_expect_success 'ambiguity hints' '
 	test_must_fail git rev-parse 000000000 2>stderr &&
 	grep ^hint: stderr >hints &&
 	# 16 candidates, plus one intro line
 	test_line_count = 17 hints
 '
 
-test_expect_success C_LOCALE_OUTPUT 'ambiguity hints respect type' '
+test_expect_success 'ambiguity hints respect type' '
 	test_must_fail git rev-parse 000000000^{commit} 2>stderr &&
 	grep ^hint: stderr >hints &&
 	# 5 commits, 1 tag (which is a commitish), plus intro line
 	test_line_count = 7 hints
 '
 
-test_expect_success C_LOCALE_OUTPUT 'failed type-selector still shows hint' '
+test_expect_success 'failed type-selector still shows hint' '
 	# these two blobs share the same prefix "ee3d", but neither
 	# will pass for a commit
 	echo 851 | git hash-object --stdin -w &&

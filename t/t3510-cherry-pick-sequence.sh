@@ -153,7 +153,7 @@ test_expect_success '--abort does not unsafely change HEAD' '
 	git reset --hard base &&
 	test_must_fail git cherry-pick picked anotherpick &&
 	git cherry-pick --abort 2>actual &&
-	test_i18ngrep "You seem to have moved HEAD" actual &&
+	grep "You seem to have moved HEAD" actual &&
 	test_cmp_rev base HEAD
 '
 
@@ -357,7 +357,7 @@ test_expect_success '--continue asks for help after resolving patch to nil' '
 	test_cmp_rev unrelatedpick CHERRY_PICK_HEAD &&
 	git checkout HEAD -- unrelated &&
 	test_must_fail git cherry-pick --continue 2>msg &&
-	test_i18ngrep "The previous cherry-pick is now empty" msg
+	grep "The previous cherry-pick is now empty" msg
 '
 
 test_expect_success 'follow advice and skip nil patch' '

@@ -70,7 +70,7 @@ test_expect_success 'test --parseopt help output' '
 |EOF
 END_EXPECT
 	test_expect_code 129 git rev-parse --parseopt -- -h > output < optionspec &&
-	test_i18ncmp expect output
+	test_cmp expect output
 '
 
 test_expect_success 'setup expect.1' "

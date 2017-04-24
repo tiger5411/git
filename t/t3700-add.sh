@@ -310,7 +310,7 @@ test_expect_success 'git add --dry-run of non-existing file' "
 
 test_expect_success 'git add --dry-run of an existing file output' "
 	echo \"fatal: pathspec 'ignored-file' did not match any files\" >expect &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 "
 
 cat >expect.err <<\EOF
@@ -327,13 +327,13 @@ test_expect_success 'git add --dry-run --ignore-missing of non-existing file' '
 '
 
 test_expect_success 'git add --dry-run --ignore-missing of non-existing file output' '
-	test_i18ncmp expect.out actual.out &&
-	test_i18ncmp expect.err actual.err
+	test_cmp expect.out actual.out &&
+	test_cmp expect.err actual.err
 '
 
 test_expect_success 'git add empty string should invoke warning' '
 	git add "" 2>output &&
-	test_i18ngrep "warning: empty strings" output
+	grep "warning: empty strings" output
 '
 
 test_expect_success 'git add --chmod=[+-]x stages correctly' '

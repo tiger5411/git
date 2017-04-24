@@ -112,7 +112,7 @@ test_expect_success 'push option denied properly by http server' '
 	git clone "$HTTPD_URL"/smart/upstream test_http_clone &&
 	test_commit -C test_http_clone one &&
 	test_must_fail git -C test_http_clone push --push-option=asdf origin master 2>actual &&
-	test_i18ngrep "the receiving end does not support push options" actual &&
+	grep "the receiving end does not support push options" actual &&
 	git -C test_http_clone push origin master
 '
 

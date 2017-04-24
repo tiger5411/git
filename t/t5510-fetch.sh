@@ -223,11 +223,11 @@ test_expect_success 'fetch uses remote ref names to describe new refs' '
 		cd descriptive &&
 		git fetch o 2>actual &&
 		grep " -> refs/crazyheads/descriptive-branch$" actual |
-		test_i18ngrep "new branch" &&
+		grep "new branch" &&
 		grep " -> descriptive-tag$" actual |
-		test_i18ngrep "new tag" &&
+		grep "new tag" &&
 		grep " -> crazy$" actual |
-		test_i18ngrep "new ref"
+		grep "new ref"
 	) &&
 	git checkout master
 '
@@ -644,7 +644,7 @@ test_expect_success 'fetch --prune prints the remotes url' '
 		git fetch --prune origin 2>&1 | head -n1 >../actual
 	) &&
 	echo "From ${D}/." >expect &&
-	test_i18ncmp expect actual
+	test_cmp expect actual
 '
 
 test_expect_success 'branchname D/F conflict resolved by --prune' '
@@ -688,7 +688,7 @@ test_expect_success 'fetching with auto-gc does not lock up' '
 	)
 '
 
-test_expect_success C_LOCALE_OUTPUT 'fetch aligned output' '
+test_expect_success 'fetch aligned output' '
 	git clone . full-output &&
 	test_commit looooooooooooong-tag &&
 	(
@@ -703,7 +703,7 @@ test_expect_success C_LOCALE_OUTPUT 'fetch aligned output' '
 	test_cmp expect actual
 '
 
-test_expect_success C_LOCALE_OUTPUT 'fetch compact output' '
+test_expect_success 'fetch compact output' '
 	git clone . compact &&
 	test_commit extraaa &&
 	(

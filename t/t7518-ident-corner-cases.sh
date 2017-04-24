@@ -13,7 +13,7 @@ test_expect_success 'empty name and missing email' '
 		sane_unset GIT_AUTHOR_EMAIL &&
 		GIT_AUTHOR_NAME= &&
 		test_must_fail git commit --allow-empty -m foo 2>err &&
-		test_i18ngrep ! null err
+		! grep null err
 	)
 '
 
@@ -29,7 +29,7 @@ test_expect_success 'empty configured name does not auto-detect' '
 		sane_unset GIT_AUTHOR_NAME &&
 		test_must_fail \
 			git -c user.name= commit --allow-empty -m foo 2>err &&
-		test_i18ngrep "empty ident name" err
+		grep "empty ident name" err
 	)
 '
 

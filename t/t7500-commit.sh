@@ -15,7 +15,7 @@ commit_msg_is () {
 
 	printf "%s" "$(git log --pretty=format:%s%b -1)" >"$actual" &&
 	printf "%s" "$1" >"$expect" &&
-	test_i18ncmp "$expect" "$actual"
+	test_cmp "$expect" "$actual"
 }
 
 # A sanity check to see if commit is working at all.

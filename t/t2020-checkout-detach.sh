@@ -13,12 +13,12 @@ check_not_detached () {
 
 PREV_HEAD_DESC='Previous HEAD position was'
 check_orphan_warning() {
-	test_i18ngrep "you are leaving $2 behind" "$1" &&
-	test_i18ngrep ! "$PREV_HEAD_DESC" "$1"
+	grep "you are leaving $2 behind" "$1" &&
+	! grep "$PREV_HEAD_DESC" "$1"
 }
 check_no_orphan_warning() {
-	test_i18ngrep ! "you are leaving .* commit.*behind" "$1" &&
-	test_i18ngrep "$PREV_HEAD_DESC" "$1"
+	! grep "you are leaving .* commit.*behind" "$1" &&
+	grep "$PREV_HEAD_DESC" "$1"
 }
 
 reset () {
@@ -160,7 +160,7 @@ test_expect_success 'tracking count is accurate after orphan check' '
 	git config branch.child.merge refs/heads/master &&
 	git checkout child^ &&
 	git checkout child >stdout &&
-	test_i18ncmp expect stdout
+	test_cmp expect stdout
 '
 
 test_expect_success 'no advice given for explicit detached head state' '

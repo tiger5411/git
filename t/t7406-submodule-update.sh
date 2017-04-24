@@ -136,8 +136,8 @@ test_expect_success 'submodule update --init --recursive from subdirectory' '
 	 cd tmp &&
 	 git submodule update --init --recursive ../super >../../actual 2>../../actual2
 	) &&
-	test_i18ncmp expect actual &&
-	test_i18ncmp expect2 actual2
+	test_cmp expect actual &&
+	test_cmp expect2 actual2
 '
 
 cat <<EOF >expect2
@@ -154,7 +154,7 @@ test_expect_success 'submodule update --init from and of subdirectory' '
 	  git submodule update --init sub 2>../../actual2
 	 )
 	) &&
-	test_i18ncmp expect2 actual2
+	test_cmp expect2 actual2
 '
 
 apos="'";
@@ -173,7 +173,7 @@ test_expect_success 'submodule update does not fetch already present commits' '
 	(cd super &&
 	  git submodule update > ../actual 2> ../actual.err
 	) &&
-	test_i18ncmp expected actual &&
+	test_cmp expected actual &&
 	! test -s actual.err
 '
 
@@ -420,7 +420,7 @@ test_expect_success 'submodule update - command in .git/config catches failure' 
 	(cd super &&
 	 test_must_fail git submodule update submodule 2>../actual
 	) &&
-	test_i18ncmp actual expect
+	test_cmp actual expect
 '
 
 cat << EOF >expect
@@ -438,7 +438,7 @@ test_expect_success 'submodule update - command in .git/config catches failure -
 	 mkdir tmp && cd tmp &&
 	 test_must_fail git submodule update ../submodule 2>../../actual
 	) &&
-	test_i18ncmp actual expect
+	test_cmp actual expect
 '
 
 test_expect_success 'submodule update - command run for initial population of submodule' '
@@ -468,7 +468,7 @@ test_expect_success 'recursive submodule update - command in .git/config catches
 	 mkdir -p tmp && cd tmp &&
 	 test_must_fail git submodule update --recursive ../super 2>../../actual
 	) &&
-	test_i18ncmp actual expect
+	test_cmp actual expect
 '
 
 test_expect_success 'submodule init does not copy command into .git/config' '
@@ -853,7 +853,7 @@ test_expect_success 'submodule update places git-dir in superprojects git-dir re
 	git clone super_update_r super_update_r2 &&
 	(cd super_update_r2 &&
 	 git submodule update --init --recursive >actual &&
-	 test_i18ngrep "Submodule path .submodule/subsubmodule.: checked out" actual &&
+	 grep "Submodule path .submodule/subsubmodule.: checked out" actual &&
 	 (cd submodule/subsubmodule &&
 	  git log > ../../expected
 	 ) &&
@@ -927,7 +927,7 @@ test_expect_success 'submodule update clone shallow submodule outside of depth' 
 		sed -e "s#url = ../#url = file://$pwd/#" <.gitmodules >.gitmodules.tmp &&
 		mv -f .gitmodules.tmp .gitmodules &&
 		test_must_fail git submodule update --init --depth=1 2>actual &&
-		test_i18ngrep "Direct fetching of that commit failed." actual &&
+		grep "Direct fetching of that commit failed." actual &&
 		git -C ../submodule config uploadpack.allowReachableSHA1InWant true &&
 		git submodule update --init --depth=1 >actual &&
 		test 1 = $(git -C submodule log --oneline | wc -l)
@@ -940,7 +940,7 @@ test_expect_success 'submodule update --recursive drops module name before recur
 	  git checkout HEAD^
 	 ) &&
 	 git submodule update --recursive deeper/submodule >actual &&
-	 test_i18ngrep "Submodule path .deeper/submodule/subsubmodule.: checked out" actual
+	 grep "Submodule path .deeper/submodule/subsubmodule.: checked out" actual
 	)
 '
 

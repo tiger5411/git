@@ -222,10 +222,10 @@ test_expect_success 'switch to another branch while carrying a deletion' '
 	git rm two &&
 
 	test_must_fail git checkout simple 2>errs &&
-	test_i18ngrep overwritten errs &&
+	grep overwritten errs &&
 
 	git checkout --merge simple 2>errs &&
-	test_i18ngrep ! overwritten errs &&
+	! grep overwritten errs &&
 	git ls-files -u &&
 	test_must_fail git cat-file -t :0:two &&
 	test "$(git cat-file -t :1:two)" = blob &&
@@ -238,7 +238,7 @@ test_expect_success 'checkout to detach HEAD (with advice declined)' '
 	git config advice.detachedHead false &&
 	git checkout -f renamer && git clean -f &&
 	git checkout renamer^ 2>messages &&
-	test_i18ngrep "HEAD is now at 7329388" messages &&
+	grep "HEAD is now at 7329388" messages &&
 	test_line_count = 1 messages &&
 	H=$(git rev-parse --verify HEAD) &&
 	M=$(git show-ref -s --verify refs/heads/master) &&
@@ -256,8 +256,8 @@ test_expect_success 'checkout to detach HEAD' '
 	git config advice.detachedHead true &&
 	git checkout -f renamer && git clean -f &&
 	git checkout renamer^ 2>messages &&
-	test_i18ngrep "HEAD is now at 7329388" messages &&
-	(test_line_count -gt 1 messages || test -n "$GETTEXT_POISON") &&
+	grep "HEAD is now at 7329388" messages &&
+	test_line_count -gt 1 messages &&
 	H=$(git rev-parse --verify HEAD) &&
 	M=$(git show-ref -s --verify refs/heads/master) &&
 	test "z$H" = "z$M" &&
