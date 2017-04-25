@@ -275,5 +275,7 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 int wildmatch(const char *pattern, const char *text,
 	      unsigned int flags, struct wildopts *wo)
 {
-	return dowild((const uchar*)pattern, (const uchar*)text, flags);
+	int ret = dowild((const uchar*)pattern, (const uchar*)text, flags);
+	/*fprintf(stderr, "'%s' '%s' -> %d (%d)\n", pattern, text, ret, flags);*/
+	return ret;
 }

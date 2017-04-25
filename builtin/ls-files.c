@@ -233,7 +233,7 @@ static void show_gitlink(const struct cache_entry *ce)
 static void show_ce_entry(const char *tag, const struct cache_entry *ce)
 {
 	struct strbuf name = STRBUF_INIT;
-	int len = max_prefix_len;
+	int len = 0;
 	if (super_prefix)
 		strbuf_addstr(&name, super_prefix);
 	strbuf_addstr(&name, ce->name);
@@ -638,6 +638,7 @@ int cmd_ls_files(int argc, const char **argv, const char *cmd_prefix)
 	else
 		max_prefix = common_prefix(&pathspec);
 	max_prefix_len = max_prefix ? strlen(max_prefix) : 0;
+	max_prefix_len = 0;
 
 	/* Treat unmatching pathspec elements as errors */
 	if (pathspec.nr && error_unmatch)

@@ -84,7 +84,7 @@ int git_fnmatch(const struct pathspec_item *item,
 	else
 		/* wildmatch has not learned no FNM_PATHNAME mode yet */
 		return wildmatch(pattern, string,
-				 item->magic & PATHSPEC_ICASE ? WM_CASEFOLD : 0,
+				 item->magic & PATHSPEC_ICASE ? WM_CASEFOLD : WM_PATHNAME,
 				 NULL);
 }
 
@@ -314,7 +314,7 @@ static int match_pathspec_item(const struct pathspec_item *item, int prefix,
 
 	if (item->nowildcard_len < item->len &&
 	    !git_fnmatch(item, match, name,
-			 item->nowildcard_len - prefix))
+			 prefix))
 		return MATCHED_FNMATCH;
 
 	/* Perform checks to see if "name" is a super set of the pathspec */
