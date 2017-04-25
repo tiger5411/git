@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More qw(no_plan);
+use Text::Glob qw(glob_to_regex_string);
 
 if (@ARGV) {
     print glob_to_rx(@ARGV), "\n";
@@ -16,7 +17,7 @@ for my $test (@$test_data) {
 
     s/^['"]//, s/['"]$// for $str, $pat;
 
-    my $pat_rx = glob_to_rx($pat);
+    my $pat_rx = glob_to_regex_string($pat);
     eval {
 	cmp_ok(
 	    ($str =~ $pat_rx ? 1 : 0),
@@ -52,14 +53,14 @@ sub glob_to_rx {
 	}
 	elsif ($c eq '*') {
 	    if ($n eq '*') {
-		$rx .= '((?:[^/]*(?:\/|$))*)';
+		$rx .= '(?:(?:[^/]*(?:\/|$))*)';
 		$i++;
 	    } else {
 		$rx .= '[^/]*';
 	    }
 	}
 	elsif ($c eq '?') {
-	    $rx .= '.';
+	    $rx .= '[^/]';
 	}
 	elsif ($c eq '!' and $p eq '[') {
 	    $rx .= '^';
