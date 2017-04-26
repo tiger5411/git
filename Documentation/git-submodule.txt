@@ -159,7 +159,7 @@ instead of deinit-ing everything, to prevent mistakes.
 If `--force` is specified, the submodule's working tree will
 be removed even if it contains local modifications.
 
-update [--init] [--remote] [-N|--no-fetch] [--[no-]recommend-shallow] [-f|--force] [--checkout|--rebase|--merge] [--reference <repository>] [--depth <depth>] [--recursive] [--jobs <n>] [--] [<path>...]::
+update [--init] [--remote] [-N|--no-fetch] [--[no-]recommend-shallow] [--[no-]recommend-tags] [-f|--force] [--checkout|--rebase|--merge] [--reference <repository>] [--depth <depth>] [--recursive] [--jobs <n>] [--] [<path>...]::
 +
 --
 Update the registered submodules to match what the superproject
@@ -415,6 +415,12 @@ for linkgit:git-clone[1]'s `--reference` and `--shared` options carefully.
 	The initial clone of a submodule will use the recommended
 	`submodule.<name>.shallow` as provided by the .gitmodules file
 	by default. To ignore the suggestions use `--no-recommend-shallow`.
+
+--[no-]recommend-tags::
+	This option is only valid for the update command.
+	The initial clone of a submodule will use the recommended
+	`submodule.<name>.tags` as provided by the .gitmodules file
+	by default. To ignore the suggestions use `--no-recommend-tags`.
 
 -j <n>::
 --jobs <n>::

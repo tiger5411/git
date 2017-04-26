@@ -202,6 +202,7 @@ static struct submodule *lookup_or_create_by_name(struct submodule_cache *cache,
 	submodule->ignore = NULL;
 	submodule->branch = NULL;
 	submodule->recommend_shallow = -1;
+	submodule->recommend_tags = -1;
 
 	hashcpy(submodule->gitmodules_sha1, gitmodules_sha1);
 
@@ -384,6 +385,13 @@ static int parse_config(const char *var, const char *value, void *data)
 					     "shallow");
 		else
 			submodule->recommend_shallow =
+				git_config_bool(var, value);
+	} else if (!strcmp(item.buf, "tags")) {
+		if (!me->overwrite && submodule->recommend_tags != -1)
+			warn_multiple_config(me->treeish_name, submodule->name,
+					     "tags");
+		else
+			submodule->recommend_tags =
 				git_config_bool(var, value);
 	} else if (!strcmp(item.buf, "branch")) {
 		if (!me->overwrite && submodule->branch)

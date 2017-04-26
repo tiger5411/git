@@ -736,6 +736,7 @@ struct submodule_update_clone {
 	int progress;
 	int quiet;
 	int recommend_shallow;
+	int recommend_tags;
 	struct string_list references;
 	const char *depth;
 	const char *recursive_prefix;
@@ -753,7 +754,7 @@ struct submodule_update_clone {
 	int no_tags;
 };
 #define SUBMODULE_UPDATE_CLONE_INIT {0, MODULE_LIST_INIT, 0, \
-	SUBMODULE_UPDATE_STRATEGY_INIT, 0, 0, -1, STRING_LIST_INIT_DUP, \
+	SUBMODULE_UPDATE_STRATEGY_INIT, 0, 0, -1, -1, STRING_LIST_INIT_DUP, \
 	NULL, NULL, NULL, \
 	STRING_LIST_INIT_DUP, 0, NULL, 0, 0, 0}
 
@@ -855,7 +856,7 @@ static int prepare_to_clone_next_submodule(const struct cache_entry *ce,
 		argv_array_pushl(&child->args, "--prefix", suc->prefix, NULL);
 	if (suc->recommend_shallow && sub->recommend_shallow == 1)
 		argv_array_push(&child->args, "--depth=1");
-	if (suc->no_tags)
+	if (suc->no_tags || suc->recommend_tags == 0)
 		argv_array_push(&child->args, "--no-tags");
 	argv_array_pushl(&child->args, "--path", sub->path, NULL);
 	argv_array_pushl(&child->args, "--name", sub->name, NULL);
@@ -996,6 +997,8 @@ static int update_clone(int argc, const char **argv, const char *prefix)
 			    N_("parallel jobs")),
 		OPT_BOOL(0, "recommend-shallow", &suc.recommend_shallow,
 			    N_("whether the initial clone should follow the shallow recommendation")),
+		OPT_BOOL(0, "recommend-tags", &suc.recommend_tags,
+			    N_("whether the initial clone should follow the tags recommendation")),
 		OPT_BOOL(0, "no-tags", &suc.no_tags,
 			 N_("don't clone any tags, and make later fetches not to follow them")),
 		OPT__QUIET(&suc.quiet, N_("don't print cloning progress")),
