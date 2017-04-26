@@ -69,4 +69,38 @@ test_expect_success 'tags clone with no-tags submodule' '
 	test_line_count = 0 tags
 '
 
+test_expect_success 'clone follows tags=false recommendation' '
+	test_when_finished "rm -rf super_clone" &&
+	git config -f .gitmodules submodule.sub.tags false &&
+	git add .gitmodules &&
+	git commit -m "recommed no-nags for sub" &&
+	git clone --recurse-submodules --no-local "file://$pwd/." super_clone &&
+	git -C super_clone for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
+	test_line_count = 3 tags &&
+	git -C super_clone/sub for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
+	test_line_count = 0 tags
+'
+
+test_expect_success 'get unshallow recommended shallow submodule' '
+	test_when_finished "rm -rf super_clone" &&
+	git clone --no-local "file://$pwd/." super_clone &&
+	git -C super_clone submodule update --init --no-recommend-tags &&
+	git -C super_clone for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
+	test_line_count = 3 tags &&
+	git -C super_clone/sub for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
+	test_line_count = 3 tags
+'
+
+test_expect_success 'clone follows tags recommendation' '
+	test_when_finished "rm -rf super_clone" &&
+	git config -f .gitmodules submodule.sub.shallow true &&
+	git add .gitmodules &&
+	git commit -m "recommed tags for sub" &&
+	git clone --recurse-submodules --no-local "file://$pwd/." super_clone &&
+	git -C super_clone for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
+	test_line_count = 3 tags &&
+	git -C super_clone/sub for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
+	test_line_count = 3 tags
+'
+
 test_done
