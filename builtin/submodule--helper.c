@@ -861,8 +861,22 @@ static int prepare_to_clone_next_submodule(const struct cache_entry *ce,
 		argv_array_pushl(&child->args, "--prefix", suc->prefix, NULL);
 	if (suc->recommend_shallow && sub->recommend_shallow == 1)
 		argv_array_push(&child->args, "--depth=1");
-	fprintf(stderr, "no tags = %d, rec tags = %d\n", suc->no_tags, suc->recommend_tags);
-	if (suc->no_tags || (suc->recommend_tags != 1 && suc->recommend_tags == 1)) {
+
+	const char *value;
+	char ckey[100];
+	char cwd[PATH_MAX];
+	getcwd(cwd, PATH_MAX);
+	sprintf(ckey, "submodule.%s.tags", ce->name);
+	if (!git_config_get_value(ckey, &value)) {
+		int val = git_config_bool(ckey, value);
+		fprintf(stderr, "%s: rec tags via config = %d\n", cwd, val);
+	} else {
+		fprintf(stderr, "%s: no such key %s in config\n", cwd, ckey);
+	}
+		
+
+	fprintf(stderr, "<%s> no tags = %d, rec tags = %d\n", ce->name, suc->no_tags, suc->recommend_tags);
+	if (suc->no_tags || (suc->recommend_tags != 1 && suc->recommend_tags == 0)) {
 		fprintf(stderr, "Setting --no-tags\n");
 		argv_array_push(&child->args, "--no-tags");
 	}
@@ -1039,6 +1053,7 @@ static int update_clone(int argc, const char **argv, const char *prefix)
 	/* Overlay the parsed .gitmodules file with .git/config */
 	gitmodules_config();
 	git_config(submodule_config, NULL);
+	fprintf(stderr, "init update clone, rec tags, post-config = %d\n", suc.recommend_tags);
 
 	if (max_jobs < 0)
 		max_jobs = parallel_submodules();

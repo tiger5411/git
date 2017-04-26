@@ -78,8 +78,7 @@ test_expect_success 'clone follows tags=false recommendation' '
 	git -C super_clone for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
 	test_line_count = 3 tags &&
 	git -C super_clone/sub for-each-ref --format="%(refname:strip=2)" refs/tags/ >tags &&
-	true
-	#test_line_count = 0 tags
+	test_line_count = 0 tags
 '
 
 test_expect_success 'get tags recommended no-tags submodule' '
