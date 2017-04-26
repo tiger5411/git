@@ -499,8 +499,10 @@ static int clone_submodule(const char *path, const char *gitdir, const char *url
 		argv_array_push(&cp.args, "--quiet");
 	if (progress)
 		argv_array_push(&cp.args, "--progress");
-	if (no_tags)
+	if (no_tags) {
+		fprintf(stderr, "clone submodule with --no-tags\n");
 		argv_array_push(&cp.args, "--no-tags");
+	}
 	if (depth && *depth)
 		argv_array_pushl(&cp.args, "--depth", depth, NULL);
 	if (reference->nr) {
@@ -627,6 +629,8 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 	char *sm_alternate = NULL, *error_strategy = NULL;
 	int no_tags = 0;
 
+	fprintf(stderr, "clone submodule no tags pre-getopt = %d\n", no_tags);
+
 	struct option module_clone_options[] = {
 		OPT_STRING(0, "prefix", &prefix,
 			   N_("path"),
@@ -663,6 +667,7 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 
 	argc = parse_options(argc, argv, prefix, module_clone_options,
 			     git_submodule_helper_usage, 0);
+	fprintf(stderr, "clone submodule no tags post-getopt = %d\n", no_tags);
 
 	if (argc || !url || !path || !*path)
 		usage_with_options(git_submodule_helper_usage,
@@ -856,9 +861,11 @@ static int prepare_to_clone_next_submodule(const struct cache_entry *ce,
 		argv_array_pushl(&child->args, "--prefix", suc->prefix, NULL);
 	if (suc->recommend_shallow && sub->recommend_shallow == 1)
 		argv_array_push(&child->args, "--depth=1");
-	fprintf(stderr, "rec tags = %d\n", suc->recommend_tags);
-	if (suc->no_tags || suc->recommend_tags == 1)
+	fprintf(stderr, "no tags = %d, rec tags = %d\n", suc->no_tags, suc->recommend_tags);
+	if (suc->no_tags || (suc->recommend_tags != 1 && suc->recommend_tags == 1)) {
+		fprintf(stderr, "Setting --no-tags\n");
 		argv_array_push(&child->args, "--no-tags");
+	}
 	argv_array_pushl(&child->args, "--path", sub->path, NULL);
 	argv_array_pushl(&child->args, "--name", sub->name, NULL);
 	argv_array_pushl(&child->args, "--url", sub->url, NULL);
@@ -977,6 +984,7 @@ static int update_clone(int argc, const char **argv, const char *prefix)
 	struct string_list_item *item;
 	struct pathspec pathspec;
 	struct submodule_update_clone suc = SUBMODULE_UPDATE_CLONE_INIT;
+	fprintf(stderr, "init update clone, rec tags, pre-getopt = %d\n", suc.recommend_tags);
 
 	struct option module_update_clone_options[] = {
 		OPT_STRING(0, "prefix", &prefix,
@@ -1016,6 +1024,7 @@ static int update_clone(int argc, const char **argv, const char *prefix)
 
 	argc = parse_options(argc, argv, prefix, module_update_clone_options,
 			     git_submodule_helper_usage, 0);
+	fprintf(stderr, "init update clone, rec tags, post-getopt = %d\n", suc.recommend_tags);
 
 	if (update)
 		if (parse_submodule_update_strategy(update, &suc.update) < 0)

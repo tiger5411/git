@@ -2876,6 +2876,7 @@ _git_submodule ()
 		__gitcomp "
 			--init --remote --no-fetch
 			--recommend-shallow --no-recommend-shallow
+			--recommend-tags --no-recommend-tags
 			--force --rebase --merge --reference --depth --recursive --jobs
 		"
 		;;
