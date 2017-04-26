@@ -857,7 +857,7 @@ static int prepare_to_clone_next_submodule(const struct cache_entry *ce,
 	if (suc->recommend_shallow && sub->recommend_shallow == 1)
 		argv_array_push(&child->args, "--depth=1");
 	fprintf(stderr, "rec tags = %d\n", suc->recommend_tags);
-	if (suc->no_tags || suc->recommend_tags == 0)
+	if (suc->no_tags || suc->recommend_tags == 1)
 		argv_array_push(&child->args, "--no-tags");
 	argv_array_pushl(&child->args, "--path", sub->path, NULL);
 	argv_array_pushl(&child->args, "--name", sub->name, NULL);

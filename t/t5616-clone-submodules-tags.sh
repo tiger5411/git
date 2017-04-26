@@ -71,7 +71,7 @@ test_expect_success 'tags clone with no-tags submodule' '
 
 test_expect_success 'clone follows tags=false recommendation' '
 	test_when_finished "rm -rf super_clone" &&
-	git config -f .gitmodules submodule.sub.tags false &&
+	git config -f .gitmodules submodule.sub.tags true &&
 	git add .gitmodules &&
 	git commit -m "recommed no-nags for sub" &&
 	git clone --recurse-submodules --no-local "file://$pwd/." super_clone &&
@@ -93,7 +93,7 @@ test_expect_success 'get unshallow recommended shallow submodule' '
 
 test_expect_success 'clone follows tags recommendation' '
 	test_when_finished "rm -rf super_clone" &&
-	git config -f .gitmodules submodule.sub.shallow true &&
+	git config -f .gitmodules submodule.sub.tags false &&
 	git add .gitmodules &&
 	git commit -m "recommed tags for sub" &&
 	git clone --recurse-submodules --no-local "file://$pwd/." super_clone &&
