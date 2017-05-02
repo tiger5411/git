@@ -612,7 +612,18 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		p->pattern = sb.buf;
 		p->patternlen = sb.len;
 
-		fprintf(stderr, "pat now = %s\n", sb.buf);
+		compile_pcre2_pattern(p, opt);
+		return;
+	}
+
+	if (icase && ascii_only && !opt->fixed && !is_fixed(p->pattern, p->patternlen)) {
+		struct strbuf sb = STRBUF_INIT;
+		strbuf_add(&sb, "(?i)", 4);
+		strbuf_add(&sb, p->pattern, p->patternlen);
+		/*strbuf_add(&sb, "\\E", 2);*/
+
+		p->pattern = sb.buf;
+		p->patternlen = sb.len;
 
 		compile_pcre2_pattern(p, opt);
 		return;
