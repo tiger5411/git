@@ -598,42 +598,15 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 	 */
 
 #ifdef USE_LIBPCRE2
-	if (!icase && ascii_only && is_fixed(p->pattern, p->patternlen)) {
-		compile_pcre2_pattern(p, opt);
-		return;
-	}
-
-	if (!icase && ascii_only && opt->fixed && !is_fixed(p->pattern, p->patternlen)) {
+	if (memchr(p->pattern, 0, p->patternlen)) {
 		struct strbuf sb = STRBUF_INIT;
-		strbuf_add(&sb, "\\Q", 2);
+		if (icase)
+			strbuf_add(&sb, "(?i)", 4);
+		if (opt->fixed)
+			strbuf_add(&sb, "\\Q", 2);		
 		strbuf_add(&sb, p->pattern, p->patternlen);
-		strbuf_add(&sb, "\\E", 2);
-
-		p->pattern = sb.buf;
-		p->patternlen = sb.len;
-
-		compile_pcre2_pattern(p, opt);
-		return;
-	}
-
-	if (icase && ascii_only && !opt->fixed && !is_fixed(p->pattern, p->patternlen)) {
-		struct strbuf sb = STRBUF_INIT;
-		strbuf_add(&sb, "(?i)", 4);
-		strbuf_add(&sb, p->pattern, p->patternlen);
-		/*strbuf_add(&sb, "\\E", 2);*/
-
-		p->pattern = sb.buf;
-		p->patternlen = sb.len;
-
-		compile_pcre2_pattern(p, opt);
-		return;
-	}
-
-	if (icase && !opt->fixed && !is_fixed(p->pattern, p->patternlen)) {
-		struct strbuf sb = STRBUF_INIT;
-		strbuf_add(&sb, "(?i)", 4);
-		strbuf_add(&sb, p->pattern, p->patternlen);
-		/*strbuf_add(&sb, "\\E", 2);*/
+		if (opt->fixed)
+			strbuf_add(&sb, "\\E", 2);
 
 		p->pattern = sb.buf;
 		p->patternlen = sb.len;
