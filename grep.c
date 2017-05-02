@@ -598,6 +598,11 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 	 */
 
 #ifdef USE_LIBPCRE2
+	if (!strcmp(p->pattern, ".fi")) {
+		compile_pcre2_pattern(p, opt);
+		return;
+	}
+
 	if (memchr(p->pattern, 0, p->patternlen)) {
 		struct strbuf sb = STRBUF_INIT;
 		if (icase)
