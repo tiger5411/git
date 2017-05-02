@@ -140,7 +140,7 @@ nul_match T1 '-i' 'ÆQ[Ð]'
 
 # This passes, but shouldn't, falls back to regcomp(), something very
 # weird going on, investigate.
-nul_match 1 '-i' '[Æ]Qð'
+nul_match 0 '-i' '[Æ]Qð'
 
 # ... because of \0 implicitly disabling regexes regexes that
 # should/shouldn't match don't do the right thing.
