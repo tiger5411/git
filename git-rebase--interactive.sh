@@ -754,7 +754,7 @@ transform_todo_ids () {
 	while read -r command rest
 	do
 		case "$command" in
-		"$comment_char"* | exec)
+		"$comment_char"* |x|exec)
 			# Be careful for oddball commands like 'exec'
 			# that do not have a SHA-1 at the beginning of $rest.
 			;;
@@ -790,7 +790,7 @@ rearrange_squash () {
 	do
 		test -z "${format}" || message=$(git log -n 1 --format="%s" ${sha1})
 		case "$message" in
-		"squash! "*|"fixup! "*)
+		"squash! "*|"s! "*|"fixup! "*|"f! "*)
 			action="${message%%!*}"
 			rest=$message
 			prefix=
@@ -798,7 +798,7 @@ rearrange_squash () {
 			while :
 			do
 				case "$rest" in
-				"squash! "*|"fixup! "*)
+				"squash! "*|"s! "*|"fixup! "*|"f! "*)
 					prefix="$prefix${rest%%!*},"
 					rest="${rest#*! }"
 					;;
@@ -871,7 +871,7 @@ add_exec_commands () {
 		while read -r insn rest
 		do
 			case $insn in
-			pick)
+			p|pick)
 				test -n "$first" ||
 				printf "%s" "$cmd"
 				;;
@@ -882,6 +882,20 @@ add_exec_commands () {
 		printf "%s" "$cmd"
 	} <"$1" >"$1.new" &&
 	mv "$1.new" "$1"
+}
+
+abbreviate_commands () {
+	test "$(git config --bool rebase.abbreviateCommands)" = true || return
+
+	while read -r command rest
+	do
+		case $command in
+		x|exec) command=x ;;
+		*)      command=${command%${command#?}} ;;
+		esac
+		printf "%s\n" "$command $rest"
+	done <"$1" >"$1.new" &&
+	mv -f "$1.new" "$1"
 }
 
 # Check if the SHA-1 passed as an argument is a
@@ -1143,6 +1157,7 @@ edit-todo)
 	git stripspace --strip-comments <"$todo" >"$todo".new
 	mv -f "$todo".new "$todo"
 	collapse_todo_ids
+	abbreviate_commands "$todo"
 	append_todo_help
 	gettext "
 You are editing the todo file of an ongoing interactive rebase.
@@ -1281,6 +1296,7 @@ fi
 test -s "$todo" || echo noop >> "$todo"
 test -n "$autosquash" && rearrange_squash "$todo"
 test -n "$cmd" && add_exec_commands "$todo"
+abbreviate_commands "$todo"
 
 todocount=$(git stripspace --strip-comments <"$todo" | wc -l)
 todocount=${todocount##* }
