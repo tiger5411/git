@@ -226,6 +226,7 @@ static void print_modified(void)
 		printf(modified_fmt, index_changes, worktree_changes, f.path);
 		printf("\n");
 	}
+	printf("\n");
 }
 
 static void status_cmd(void)
@@ -233,26 +234,31 @@ static void status_cmd(void)
 	print_modified();
 }
 
-static const char add_interactive_helper_usage[] =
-"git add-interactive--helper <command>";
+static const char * const builtin_add_interactive_helper_usage[] = {
+	N_("git add-interactive--helper <command>"),
+	NULL
+};
 
 int cmd_add_interactive__helper(int argc, const char **argv, const char *prefix)
 {
-	int i, found_opt = 0;
+	int opt_status = 0;
+
+	struct option options[] = {
+		OPT_BOOL(0, "status", &opt_status,
+			 N_("print status information with diffstat")),
+		OPT_END()
+	};
 
 	git_config(git_add_interactive_config, NULL);
+	argc = parse_options(argc, argv, NULL, options,
+			     builtin_add_interactive_helper_usage,
+			     PARSE_OPT_KEEP_ARGV0);
 
-	for (i = 1; i < argc; i++) {
-		const char *arg = argv[i];
-
-		if (!strcmp(arg, "--status")) {
-			status_cmd();
-			found_opt = 1;
-		}
-	}
-
-	if (!found_opt)
-		usage(add_interactive_helper_usage);
+	if (opt_status)
+		status_cmd();
+	else
+		usage_with_options(builtin_add_interactive_helper_usage,
+				   options);
 
 	return 0;
 }
