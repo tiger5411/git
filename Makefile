@@ -1517,6 +1517,7 @@ ifdef NO_PCRE
 		-DHEAP_LIMIT=20000000 \
 		-DMATCH_LIMIT=10000000 \
 		-DMATCH_LIMIT_DEPTH=10000000 \
+		-DMATCH_LIMIT_RECURSION=10000000 \
 		-DMAX_NAME_COUNT=10000 \
 		-DMAX_NAME_SIZE=32 \
 		-DPARENS_NEST_LIMIT=250 \
@@ -1524,27 +1525,25 @@ ifdef NO_PCRE
 		-DSUPPORT_JIT \
 		-DSUPPORT_UNICODE
 	COMPAT_OBJS += \
-		compat/pcre/pcre2_auto_possess.o \
-		compat/pcre/pcre2_chartables.o \
-		compat/pcre/pcre2_compile.o \
-		compat/pcre/pcre2_config.o \
-		compat/pcre/pcre2_context.o \
-		compat/pcre/pcre2_error.o \
-		compat/pcre/pcre2_find_bracket.o \
-		compat/pcre/pcre2_jit_compile.o \
-		compat/pcre/pcre2_maketables.o \
-		compat/pcre/pcre2_match.o \
-		compat/pcre/pcre2_match_data.o \
-		compat/pcre/pcre2_newline.o \
-		compat/pcre/pcre2_ord2utf.o \
-		compat/pcre/pcre2_pattern_info.o \
-		compat/pcre/pcre2_string_utils.o \
-		compat/pcre/pcre2_study.o \
-		compat/pcre/pcre2_substring.o \
-		compat/pcre/pcre2_tables.o \
-		compat/pcre/pcre2_ucd.o \
-		compat/pcre/pcre2_valid_utf.o \
-		compat/pcre/pcre2_xclass.o
+		compat/pcre2/src/pcre2_auto_possess.o \
+		compat/pcre2/src/pcre2_chartables.o \
+		compat/pcre2/src/pcre2_compile.o \
+		compat/pcre2/src/pcre2_config.o \
+		compat/pcre2/src/pcre2_context.o \
+		compat/pcre2/src/pcre2_error.o \
+		compat/pcre2/src/pcre2_find_bracket.o \
+		compat/pcre2/src/pcre2_jit_compile.o \
+		compat/pcre2/src/pcre2_maketables.o \
+		compat/pcre2/src/pcre2_match.o \
+		compat/pcre2/src/pcre2_match_data.o \
+		compat/pcre2/src/pcre2_newline.o \
+		compat/pcre2/src/pcre2_ord2utf.o \
+		compat/pcre2/src/pcre2_string_utils.o \
+		compat/pcre2/src/pcre2_study.o \
+		compat/pcre2/src/pcre2_tables.o \
+		compat/pcre2/src/pcre2_ucd.o \
+		compat/pcre2/src/pcre2_valid_utf.o \
+		compat/pcre2/src/pcre2_xclass.o
 endif
 ifdef NATIVE_CRLF
 	BASIC_CFLAGS += -DNATIVE_CRLF
