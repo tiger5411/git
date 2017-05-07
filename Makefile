@@ -1507,7 +1507,8 @@ ifdef NO_REGEX
 	COMPAT_OBJS += compat/regex/regex.o
 endif
 ifdef NO_PCRE
-	COMPAT_CFLAGS += -Icompat/pcre \
+	COMPAT_CFLAGS += \
+		-Icompat/pcre2/src \
 		-DHAVE_BCOPY=1 \
 		-DHAVE_INTTYPES_H=1 \
 		-DHAVE_MEMMOVE=1 \
