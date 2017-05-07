@@ -1521,7 +1521,8 @@ ifdef NO_PCRE
 		-DMAX_NAME_SIZE=32 \
 		-DPARENS_NEST_LIMIT=250 \
 		-DNEWLINE_DEFAULT=2 \
-		-DSUPPORT_JIT
+		-DSUPPORT_JIT \
+		-DSUPPORT_UNICODE
 	COMPAT_OBJS += \
 		compat/pcre/dftables.o \
 		compat/pcre/pcre2_auto_possess.o \
