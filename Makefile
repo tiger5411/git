@@ -1524,16 +1524,13 @@ ifdef NO_PCRE
 		-DSUPPORT_JIT \
 		-DSUPPORT_UNICODE
 	COMPAT_OBJS += \
-		compat/pcre/dftables.o \
 		compat/pcre/pcre2_auto_possess.o \
 		compat/pcre/pcre2_chartables.o \
 		compat/pcre/pcre2_compile.o \
 		compat/pcre/pcre2_config.o \
 		compat/pcre/pcre2_context.o \
-		compat/pcre/pcre2_dfa_match.o \
 		compat/pcre/pcre2_error.o \
 		compat/pcre/pcre2_find_bracket.o \
-		compat/pcre/pcre2_fuzzsupport.o \
 		compat/pcre/pcre2_jit_compile.o \
 		compat/pcre/pcre2_maketables.o \
 		compat/pcre/pcre2_match.o \
@@ -1541,10 +1538,8 @@ ifdef NO_PCRE
 		compat/pcre/pcre2_newline.o \
 		compat/pcre/pcre2_ord2utf.o \
 		compat/pcre/pcre2_pattern_info.o \
-		compat/pcre/pcre2_serialize.o \
 		compat/pcre/pcre2_string_utils.o \
 		compat/pcre/pcre2_study.o \
-		compat/pcre/pcre2_substitute.o \
 		compat/pcre/pcre2_substring.o \
 		compat/pcre/pcre2_tables.o \
 		compat/pcre/pcre2_ucd.o \
