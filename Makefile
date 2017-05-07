@@ -1104,7 +1104,9 @@ ifneq (,$(USE_LIBPCRE2))
 $(error Only set USE_LIBPCRE2 (or its alias USE_LIBPCRE) or USE_LIBPCRE1, not both!)
 	endif
 	BASIC_CFLAGS += -DUSE_LIBPCRE2
+ifndef NO_PCRE
 	EXTLIBS += -lpcre2-8
+endif
 endif
 
 ifdef LIBPCREDIR
@@ -1503,6 +1505,49 @@ endif
 ifdef NO_REGEX
 	COMPAT_CFLAGS += -Icompat/regex
 	COMPAT_OBJS += compat/regex/regex.o
+endif
+ifdef NO_PCRE
+	COMPAT_CFLAGS += -Icompat/pcre \
+		-DHAVE_BCOPY=1 \
+		-DHAVE_INTTYPES_H=1 \
+		-DHAVE_MEMMOVE=1 \
+		-DHAVE_STDINT_H=1 \
+		-DPCRE2_CODE_UNIT_WIDTH=8 \
+		-DLINK_SIZE=2 \
+		-DHEAP_LIMIT=20000000 \
+		-DMATCH_LIMIT=10000000 \
+		-DMATCH_LIMIT_DEPTH=10000000 \
+		-DMAX_NAME_COUNT=10000 \
+		-DMAX_NAME_SIZE=32 \
+		-DPARENS_NEST_LIMIT=250 \
+		-DNEWLINE_DEFAULT=2
+	COMPAT_OBJS += \
+		compat/pcre/dftables.o \
+		compat/pcre/pcre2_auto_possess.o \
+		compat/pcre/pcre2_chartables.o \
+		compat/pcre/pcre2_compile.o \
+		compat/pcre/pcre2_config.o \
+		compat/pcre/pcre2_context.o \
+		compat/pcre/pcre2_dfa_match.o \
+		compat/pcre/pcre2_error.o \
+		compat/pcre/pcre2_find_bracket.o \
+		compat/pcre/pcre2_fuzzsupport.o \
+		compat/pcre/pcre2_jit_compile.o \
+		compat/pcre/pcre2_maketables.o \
+		compat/pcre/pcre2_match.o \
+		compat/pcre/pcre2_match_data.o \
+		compat/pcre/pcre2_newline.o \
+		compat/pcre/pcre2_ord2utf.o \
+		compat/pcre/pcre2_pattern_info.o \
+		compat/pcre/pcre2_serialize.o \
+		compat/pcre/pcre2_string_utils.o \
+		compat/pcre/pcre2_study.o \
+		compat/pcre/pcre2_substitute.o \
+		compat/pcre/pcre2_substring.o \
+		compat/pcre/pcre2_tables.o \
+		compat/pcre/pcre2_ucd.o \
+		compat/pcre/pcre2_valid_utf.o \
+		compat/pcre/pcre2_xclass.o
 endif
 ifdef NATIVE_CRLF
 	BASIC_CFLAGS += -DNATIVE_CRLF
