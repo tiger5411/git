@@ -29,6 +29,8 @@ for srcfile in \
 	pcre2_error.c \
 	pcre2_find_bracket.c \
 	pcre2_jit_compile.c \
+	pcre2_jit_match.c \
+	pcre2_jit_misc.c \
 	pcre2_maketables.c \
 	pcre2_match.c \
 	pcre2_match_data.c \
