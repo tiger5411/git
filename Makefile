@@ -1520,7 +1520,8 @@ ifdef NO_PCRE
 		-DMAX_NAME_COUNT=10000 \
 		-DMAX_NAME_SIZE=32 \
 		-DPARENS_NEST_LIMIT=250 \
-		-DNEWLINE_DEFAULT=2
+		-DNEWLINE_DEFAULT=2 \
+		-DSUPPORT_JIT
 	COMPAT_OBJS += \
 		compat/pcre/dftables.o \
 		compat/pcre/pcre2_auto_possess.o \
