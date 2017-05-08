@@ -100,9 +100,16 @@ test_expect_success 'git grep ile a' '
 	git grep ile a
 '
 
-test_expect_failure 'git grep .fi a' '
-	git grep .fi a
-'
+if test_have_prereq LIBPCRE2_BUNDLED
+then
+	test_expect_success 'git grep .fi a' '
+		git grep .fi a
+	'
+else
+	test_expect_failure 'git grep .fi a' '
+		git grep .fi a
+	'
+fi
 
 nul_match 1 '-F' 'yQf'
 nul_match 0 '-F' 'yQx'
