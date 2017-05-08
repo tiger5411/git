@@ -26,6 +26,7 @@ for srcfile in \
 	pcre2_compile.c \
 	pcre2_config.c \
 	pcre2_context.c \
+	pcre2_convert.c \
 	pcre2_error.c \
 	pcre2_find_bracket.c \
 	pcre2_jit_compile.c \
