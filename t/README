@@ -820,6 +820,12 @@ use these, and "test_set_prereq" for how to define your own.
    USE_LIBPCRE2=YesPlease. Wrap any PCRE using tests that for some
    reason need v2 of the PCRE library instead of v1 in these.
 
+ - LIBPCRE2_BUNDLED
+
+   Git was compiled with the bundled PCRE v2 support via
+   USE_LIBPCRE2=YesPlease &
+   USE_LIBPCRE2_BUNDLED=IWantPatternConvertAwesomeSauce.
+
  - CASE_INSENSITIVE_FS
 
    Test is run on a case insensitive file system.

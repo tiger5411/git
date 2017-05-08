@@ -31,6 +31,9 @@ typedef int pcre2_compile_context;
 typedef int pcre2_match_context;
 typedef int pcre2_jit_stack;
 #endif
+#ifndef PCRE2_CONVERT_POSIX_EXTENDED
+typedef int pcre2_convert_context;
+#endif
 #include "kwset.h"
 #include "thread-utils.h"
 #include "userdiff.h"
@@ -75,6 +78,7 @@ struct grep_pat {
 	pcre_jit_stack *pcre1_jit_stack;
 	const unsigned char *pcre1_tables;
 	int pcre1_jit_on;
+	pcre2_convert_context *pcre2_convert_context;
 	pcre2_code *pcre2_pattern;
 	pcre2_match_data *pcre2_match_data;
 	pcre2_compile_context *pcre2_compile_context;
@@ -145,6 +149,7 @@ struct grep_opt {
 	int use_reflog_filter;
 	int pcre1;
 	int pcre2;
+	int pcre2_posix_emulation;
 	int relative;
 	int pathname;
 	int null_following_name;
