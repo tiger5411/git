@@ -124,29 +124,21 @@ nul_match 0 '-F' '[æ]Qð'
 nul_match 0 '-Fi' 'ÆQ[Ð]'
 nul_match 0 '-Fi' '[Æ]QÐ'
 
-# kwset is disabled on -i & non-ASCII. No way to match non-ASCII \0
-# patterns case-insensitively.
+# Regex patterns that should match without -F
+nul_match 1 '' 'yQ[f]'
+nul_match 1 '' '[y]Qf'
+nul_match 1 '-i' 'YQ[F]'
+nul_match 1 '-i' '[Y]Qf'
+nul_match 1 '' 'æQ[ð]'
+nul_match 1 '' '[æ]Qð'
+nul_match 0 '-i' '[Æ]Qð'
+nul_match 1 '' 'eQm.*cQ'
+nul_match 1 '-i' 'EQM.*cQ'
+nul_match 0 '' 'eQm[*]c'
+nul_match 0 '-i' 'EQM[*]C'
+# These should also match, but don't due to some bug.
 nul_match T1 '-i' 'ÆQÐ'
-
-# \0 implicitly disables regexes. This is an undocumented internal
-# limitation.
-nul_match T1 '' 'yQ[f]'
-nul_match T1 '' '[y]Qf'
-nul_match T1 '-i' 'YQ[F]'
-nul_match T1 '-i' '[Y]Qf'
-nul_match T1 '' 'æQ[ð]'
-nul_match T1 '' '[æ]Qð'
 nul_match T1 '-i' 'ÆQ[Ð]'
-# This passes, but shouldn't, falls back to regcomp(), something very
-# weird going on, investigate.
-nul_match 1 '-i' '[Æ]Qð'
-
-# ... because of \0 implicitly disabling regexes regexes that
-# should/shouldn't match don't do the right thing.
-nul_match T1 '' 'eQm.*cQ'
-nul_match T1 '-i' 'EQM.*cQ'
-nul_match T0 '' 'eQm[*]c'
-nul_match T0 '-i' 'EQM[*]C'
 
 # Ensure that the matcher doesn't regress to something that stops at
 # \0
