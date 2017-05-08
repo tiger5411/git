@@ -107,7 +107,7 @@ test_expect_success 'git grep -O jumps to line in less' '
 	test_cmp empty out2
 '
 
-test_expect_success 'modified file' '
+test_expect_failure 'modified file' '
 	rm -f actual &&
 	cat >expect <<-\EOF &&
 	+/*enum grep_pat_token
