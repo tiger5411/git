@@ -615,6 +615,30 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 	icase	       = opt->regflags & REG_ICASE || p->ignore_case;
 	ascii_only     = !has_non_ascii(p->pattern);
 
+#ifdef USE_LIBPCRE2
+	if (has_null(p->pattern, p->patternlen)) {
+		struct strbuf sb = STRBUF_INIT;
+		if (icase)
+			strbuf_add(&sb, "(?i)", 4);
+		if (opt->fixed)
+			strbuf_add(&sb, "\\Q", 2);		
+		strbuf_add(&sb, p->pattern, p->patternlen);
+		if (opt->fixed)
+			strbuf_add(&sb, "\\E", 2);
+
+		p->pattern = sb.buf;
+		p->patternlen = sb.len;
+
+		/* FIXME: Check in compile_pcre2_pattern() that we're
+		 * using basic rx using !opt->pcre2 && <something>
+		 */
+		opt->pcre2 = 1;
+
+		compile_pcre2_pattern(p, opt);
+		return;
+	}
+#endif
+
 	/*
 	 * Even when -F (fixed) asks us to do a non-regexp search, we
 	 * may not be able to correctly case-fold when -i
