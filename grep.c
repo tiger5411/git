@@ -565,8 +565,11 @@ static int has_null(const char *s, size_t len)
 
 static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
-	int icase, ascii_only;
-	int err;
+	int icase;
+	int patret;
+	PCRE2_UCHAR errbuf[256];
+	PCRE2_SIZE patlen = 4096;
+	PCRE2_UCHAR *patbuf = malloc(patlen);
 
 	p->word_regexp = opt->word_regexp;
 	p->ignore_case = opt->ignore_case;
@@ -594,13 +597,22 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		return;
 	}
 
-	err = regcomp(&p->regexp, p->pattern, opt->regflags);
-	if (err) {
-		char errbuf[1024];
-		regerror(err, &p->regexp, errbuf, 1024);
-		regfree(&p->regexp);
-		compile_regexp_failed(p, errbuf);
+	patret = pcre2_pattern_convert((PCRE2_SPTR)p->pattern, p->patternlen,
+				       (opt->regflags & REG_EXTENDED
+					? PCRE2_CONVERT_POSIX_EXTENDED
+					: PCRE2_CONVERT_POSIX_BASIC),
+				       &patbuf, &patlen, NULL);
+	if (patret != 0) {
+		pcre2_get_error_message(patret, errbuf, sizeof(errbuf));
+		compile_regexp_failed(p, (const char *)&errbuf);
 	}
+	/*fprintf(stderr, "MAKING PAT = <%s> converted = <%d> <%s> <%d>\n", p->pattern, patret, patbuf, patlen);*/
+
+	p->pattern = patbuf;
+	p->patternlen = patlen;
+
+	compile_pcre2_pattern(p, opt);
+	return;
 }
 
 static struct grep_expr *compile_pattern_or(struct grep_pat **);
