@@ -470,8 +470,47 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 	int options = PCRE2_MULTILINE;
 	const uint8_t *character_tables = NULL;
 	int jitret;
+	int icase = opt->regflags & REG_ICASE || p->ignore_case;
+	PCRE2_SPTR pattern = (PCRE2_SPTR)p->pattern;
+	PCRE2_SIZE length = p->patternlen;
+	int copied_pattern = 0;
+	struct strbuf pattern_sb = STRBUF_INIT;
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+	int convret;
+	PCRE2_UCHAR *convpatbuf = NULL;
+	PCRE2_SIZE convpatlen;
+	int converted_pattern = 0;
+#endif
 
-	assert(opt->pcre2);
+	if (opt->fixed || has_null(p->pattern, p->patternlen) || is_fixed(p->pattern, p->patternlen)) {
+		if (icase)
+			strbuf_add(&pattern_sb, "(?i)", 4);
+		if (opt->fixed)
+			strbuf_add(&pattern_sb, "\\Q", 2);
+		strbuf_add(&pattern_sb, p->pattern, p->patternlen);
+		if (opt->fixed)
+			strbuf_add(&pattern_sb, "\\E", 2);
+
+		pattern = (PCRE2_SPTR)pattern_sb.buf;
+		length = pattern_sb.len;
+		copied_pattern = 1;
+	} else if (opt->pcre2_posix_emulation) {
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+		convret = pcre2_pattern_convert(pattern, length,
+					       (opt->regflags & REG_EXTENDED
+						? PCRE2_CONVERT_POSIX_EXTENDED
+						: PCRE2_CONVERT_POSIX_BASIC),
+					       &convpatbuf, &convpatlen, NULL);
+		if (convret != 0) {
+			pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
+			compile_regexp_failed(p, (const char *)&errbuf);
+		}
+		pattern = convpatbuf;
+		length = convpatlen;
+		converted_pattern = 1;
+#endif
+	} else
+		assert(opt->pcre2);
 
 	p->pcre2_compile_context = NULL;
 
@@ -486,11 +525,16 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 	if (is_utf8_locale() && has_non_ascii(p->pattern))
 		options |= PCRE2_UTF;
 
-	p->pcre2_pattern = pcre2_compile((PCRE2_SPTR)p->pattern,
-					 p->patternlen, options, &error, &erroffset,
-					 p->pcre2_compile_context);
+	p->pcre2_pattern = pcre2_compile(pattern, length, options, &error,
+					 &erroffset, p->pcre2_compile_context);
 
 	if (p->pcre2_pattern) {
+		if (copied_pattern)
+			strbuf_release(&pattern_sb);
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+		if (converted_pattern)
+			pcre2_converted_pattern_free(convpatbuf);
+#endif
 		p->pcre2_match_data = pcre2_match_data_create_from_pattern(p->pcre2_pattern, NULL);
 		if (!p->pcre2_match_data)
 			die("Couldn't allocate PCRE2 match data");
@@ -582,7 +626,6 @@ static int pcre2match(struct grep_pat *p, const char *line, const char *eol,
 static void free_pcre2_pattern(struct grep_pat *p)
 {
 }
-#endif /* !USE_LIBPCRE2 */
 
 static void compile_fixed_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
@@ -604,40 +647,20 @@ static void compile_fixed_regexp(struct grep_pat *p, struct grep_opt *opt)
 		compile_regexp_failed(p, errbuf);
 	}
 }
+#endif /* !USE_LIBPCRE2 */
 
 static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
+#ifndef USE_LIBPCRE2
 	int icase, ascii_only;
+#endif
 	int err;
 
 	p->word_regexp = opt->word_regexp;
 	p->ignore_case = opt->ignore_case;
+#ifndef USE_LIBPCRE2
 	icase	       = opt->regflags & REG_ICASE || p->ignore_case;
 	ascii_only     = !has_non_ascii(p->pattern);
-
-#ifdef USE_LIBPCRE2
-	if (has_null(p->pattern, p->patternlen)) {
-		struct strbuf sb = STRBUF_INIT;
-		if (icase)
-			strbuf_add(&sb, "(?i)", 4);
-		if (opt->fixed)
-			strbuf_add(&sb, "\\Q", 2);		
-		strbuf_add(&sb, p->pattern, p->patternlen);
-		if (opt->fixed)
-			strbuf_add(&sb, "\\E", 2);
-
-		p->pattern = sb.buf;
-		p->patternlen = sb.len;
-
-		/* FIXME: Check in compile_pcre2_pattern() that we're
-		 * using basic rx using !opt->pcre2 && <something>
-		 */
-		opt->pcre2 = 1;
-
-		compile_pcre2_pattern(p, opt);
-		return;
-	}
-#endif
 
 	/*
 	 * Even when -F (fixed) asks us to do a non-regexp search, we
@@ -672,11 +695,25 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		compile_fixed_regexp(p, opt);
 		return;
 	}
+#endif
 
 	if (opt->pcre2) {
 		compile_pcre2_pattern(p, opt);
 		return;
 	}
+
+#ifdef USE_LIBPCRE2
+	if (opt->fixed || has_null(p->pattern, p->patternlen) || is_fixed(p->pattern, p->patternlen)) {
+		compile_pcre2_pattern(p, opt);
+		return;
+	}
+
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+	opt->pcre2_posix_emulation = 1;
+	compile_pcre2_pattern(p, opt);
+	return;
+#endif
+#endif
 
 	if (opt->pcre1) {
 		compile_pcre1_regexp(p, opt);
@@ -690,6 +727,7 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		regfree(&p->regexp);
 		compile_regexp_failed(p, errbuf);
 	}
+	return;
 }
 
 static struct grep_expr *compile_pattern_or(struct grep_pat **);
