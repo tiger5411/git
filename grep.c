@@ -606,7 +606,10 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		pcre2_get_error_message(patret, errbuf, sizeof(errbuf));
 		compile_regexp_failed(p, (const char *)&errbuf);
 	}
-	/*fprintf(stderr, "MAKING PAT = <%s> converted = <%d> <%s> <%d>\n", p->pattern, patret, patbuf, patlen);*/
+	/*fprintf(stderr, "MAKING PAT type <%s> = <%s> converted = <%d> <%s> <%d>\n",
+		(opt->regflags & REG_EXTENDED
+		 ? "extended"
+		 : "basic"), p->pattern, patret, patbuf, patlen);*/
 
 	p->pattern = patbuf;
 	p->patternlen = patlen;
