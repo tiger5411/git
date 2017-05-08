@@ -47,6 +47,11 @@ all::
 # PCRE this points to determined by the USE_LIBPCRE1 and USE_LIBPCRE2
 # variables.
 #
+# Define USE_LIBPCRE2_BUNDLED=YesIHaveNoPackagedVersion in addition to
+# USE_LIBPCRE2=YesPlease if you'd like to use a copy of PCRE version 2
+# bunded with Git. This is for setups where getting a hold of a
+# packaged PCRE is inconvenient.
+#
 # Define HAVE_ALLOCA_H if you have working alloca(3) defined in that header.
 #
 # Define NO_CURL if you do not have libcurl installed.  git-http-fetch and
@@ -1121,7 +1126,9 @@ endif
 
 ifdef USE_LIBPCRE2
 	BASIC_CFLAGS += -DUSE_LIBPCRE2
+ifndef USE_LIBPCRE2_BUNDLED
 	EXTLIBS += -lpcre2-8
+endif
 endif
 
 ifdef LIBPCREDIR
@@ -1527,6 +1534,50 @@ endif
 ifdef NO_REGEX
 	COMPAT_CFLAGS += -Icompat/regex
 	COMPAT_OBJS += compat/regex/regex.o
+endif
+ifdef USE_LIBPCRE2_BUNDLED
+ifndef USE_LIBPCRE2
+$(error please set USE_LIBPCRE2=YesPlease when setting \
+USE_LIBPCRE2_BUNDLED=$(USE_LIBPCRE2_BUNDLED))
+endif
+	COMPAT_CFLAGS += \
+		-Icompat/pcre2/src \
+		-DHAVE_BCOPY=1 \
+		-DHAVE_INTTYPES_H=1 \
+		-DHAVE_MEMMOVE=1 \
+		-DHAVE_STDINT_H=1 \
+		-DPCRE2_CODE_UNIT_WIDTH=8 \
+		-DLINK_SIZE=2 \
+		-DHEAP_LIMIT=20000000 \
+		-DMATCH_LIMIT=10000000 \
+		-DMATCH_LIMIT_DEPTH=10000000 \
+		-DMATCH_LIMIT_RECURSION=10000000 \
+		-DMAX_NAME_COUNT=10000 \
+		-DMAX_NAME_SIZE=32 \
+		-DPARENS_NEST_LIMIT=250 \
+		-DNEWLINE_DEFAULT=2 \
+		-DSUPPORT_JIT \
+		-DSUPPORT_UNICODE
+	COMPAT_OBJS += \
+		compat/pcre2/src/pcre2_auto_possess.o \
+		compat/pcre2/src/pcre2_chartables.o \
+		compat/pcre2/src/pcre2_compile.o \
+		compat/pcre2/src/pcre2_config.o \
+		compat/pcre2/src/pcre2_context.o \
+		compat/pcre2/src/pcre2_error.o \
+		compat/pcre2/src/pcre2_find_bracket.o \
+		compat/pcre2/src/pcre2_jit_compile.o \
+		compat/pcre2/src/pcre2_maketables.o \
+		compat/pcre2/src/pcre2_match.o \
+		compat/pcre2/src/pcre2_match_data.o \
+		compat/pcre2/src/pcre2_newline.o \
+		compat/pcre2/src/pcre2_ord2utf.o \
+		compat/pcre2/src/pcre2_string_utils.o \
+		compat/pcre2/src/pcre2_study.o \
+		compat/pcre2/src/pcre2_tables.o \
+		compat/pcre2/src/pcre2_ucd.o \
+		compat/pcre2/src/pcre2_valid_utf.o \
+		compat/pcre2/src/pcre2_xclass.o
 endif
 ifdef NATIVE_CRLF
 	BASIC_CFLAGS += -DNATIVE_CRLF
@@ -2282,6 +2333,7 @@ GIT-BUILD-OPTIONS: FORCE
 	@echo NO_EXPAT=\''$(subst ','\'',$(subst ','\'',$(NO_EXPAT)))'\' >>$@+
 	@echo USE_LIBPCRE1=\''$(subst ','\'',$(subst ','\'',$(USE_LIBPCRE1)))'\' >>$@+
 	@echo USE_LIBPCRE2=\''$(subst ','\'',$(subst ','\'',$(USE_LIBPCRE2)))'\' >>$@+
+	@echo USE_LIBPCRE2_BUNDLED=\''$(subst ','\'',$(subst ','\'',$(USE_LIBPCRE2_BUNDLED)))'\' >>$@+
 	@echo NO_LIBPCRE1_JIT=\''$(subst ','\'',$(subst ','\'',$(NO_LIBPCRE1_JIT)))'\' >>$@+
 	@echo NO_PERL=\''$(subst ','\'',$(subst ','\'',$(NO_PERL)))'\' >>$@+
 	@echo NO_PTHREADS=\''$(subst ','\'',$(subst ','\'',$(NO_PTHREADS)))'\' >>$@+
