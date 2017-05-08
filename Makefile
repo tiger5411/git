@@ -1543,6 +1543,7 @@ endif
 		compat/pcre2/src/pcre2_compile.o \
 		compat/pcre2/src/pcre2_config.o \
 		compat/pcre2/src/pcre2_context.o \
+		compat/pcre2/src/pcre2_convert.o \
 		compat/pcre2/src/pcre2_error.o \
 		compat/pcre2/src/pcre2_find_bracket.o \
 		compat/pcre2/src/pcre2_jit_compile.o \
