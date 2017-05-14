@@ -2243,4 +2243,6 @@ void sleep_millisec(int millisec);
  */
 void safe_create_dir(const char *dir, int share);
 
+int pickaxe_hit;
+
 #endif /* CACHE_H */

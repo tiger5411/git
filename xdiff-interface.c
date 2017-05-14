@@ -65,6 +65,8 @@ static void consume_one(void *priv_, char *s, unsigned long size)
 		ep = memchr(s, '\n', size);
 		this_size = (ep == NULL) ? size : (ep - s + 1);
 		priv->consume(priv->consume_callback_data, s, this_size);
+		if (pickaxe_hit)
+			return;
 		size -= this_size;
 		s += this_size;
 	}
@@ -90,10 +92,14 @@ static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
 		strbuf_add(&priv->remainder, mb[i].ptr, mb[i].size);
 		consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
+		if (pickaxe_hit)
+			return 0;
 	}
 	if (priv->remainder.len) {
 		consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
+		if (pickaxe_hit)
+			return 0;
 	}
 	return 0;
 }

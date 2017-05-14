@@ -26,12 +26,10 @@ static void diffgrep_consume(void *priv, char *line, unsigned long len)
 
 	if (line[0] != '+' && line[0] != '-')
 		return;
-	if (data->hit)
-		/*
-		 * NEEDSWORK: we should have a way to terminate the
-		 * caller early.
-		 */
+	if (data->hit) {
+		pickaxe_hit++;
 		return;
+	}
 	data->hit = !regexec_buf(data->regexp, line + 1, len - 1, 1,
 				 &regmatch, 0);
 }
@@ -44,6 +42,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	struct diffgrep_cb ecbdata;
 	xpparam_t xpp;
 	xdemitconf_t xecfg;
+	pickaxe_hit++;
 
 	if (!one)
 		return !regexec_buf(regexp, two->ptr, two->size,
