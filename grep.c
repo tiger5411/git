@@ -482,6 +482,9 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 	int converted_pattern = 0;
 #endif
 
+	if (opt->debug)
+		fprintf(stderr, "pattern is = <%s>\n", p->pattern);
+
 	if (opt->fixed || has_null(p->pattern, p->patternlen) || is_fixed(p->pattern, p->patternlen)) {
 		if (icase)
 			strbuf_add(&pattern_sb, "(?i)", 4);
@@ -494,6 +497,9 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 		pattern = (PCRE2_SPTR)pattern_sb.buf;
 		length = pattern_sb.len;
 		copied_pattern = 1;
+
+		if (opt->debug)
+			fprintf(stderr, "converted fixed/null is = <%s>\n", pattern);
 	} else if (opt->pcre2_posix_emulation) {
 #ifdef PCRE2_CONVERT_POSIX_BASIC
 		convret = pcre2_pattern_convert(pattern, length,
