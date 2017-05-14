@@ -488,11 +488,19 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 	if (opt->fixed || has_null(p->pattern, p->patternlen) || is_fixed(p->pattern, p->patternlen)) {
 		if (icase)
 			strbuf_add(&pattern_sb, "(?i)", 4);
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+		if (opt->word_regexp)
+			strbuf_add(&pattern_sb, "\\b", 2);
+#endif
 		if (opt->fixed)
 			strbuf_add(&pattern_sb, "\\Q", 2);
 		strbuf_add(&pattern_sb, p->pattern, p->patternlen);
 		if (opt->fixed)
 			strbuf_add(&pattern_sb, "\\E", 2);
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+		if (opt->word_regexp)
+			strbuf_add(&pattern_sb, "\\b", 2);
+#endif
 
 		pattern = (PCRE2_SPTR)pattern_sb.buf;
 		length = pattern_sb.len;
@@ -511,12 +519,43 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 			pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
 			compile_regexp_failed(p, (const char *)&errbuf);
 		}
-		pattern = convpatbuf;
-		length = convpatlen;
+
 		converted_pattern = 1;
+
+		if (opt->word_regexp) {
+			strbuf_add(&pattern_sb, "\\b", 2);
+			strbuf_add(&pattern_sb, convpatbuf, convpatlen);
+			strbuf_add(&pattern_sb, "\\b", 2);
+
+			pattern = (PCRE2_SPTR)pattern_sb.buf;
+			length = pattern_sb.len;
+			copied_pattern = 1;
+
+			if (opt->debug)
+				fprintf(stderr, "converted is = <%s>\n", pattern);
+		} else {
+			pattern = convpatbuf;
+			length = convpatlen;
+		}
 #endif
-	} else
+	} else {
 		assert(opt->pcre2);
+
+#ifdef PCRE2_CONVERT_POSIX_BASIC
+		if (opt->word_regexp) {
+			strbuf_add(&pattern_sb, "\\b", 2);
+			strbuf_add(&pattern_sb, p->pattern, p->patternlen);
+			strbuf_add(&pattern_sb, "\\b", 2);
+
+			pattern = (PCRE2_SPTR)pattern_sb.buf;
+			length = pattern_sb.len;
+			copied_pattern = 1;
+
+			if (opt->debug)
+				fprintf(stderr, "munged PCRE is = <%s>\n", pattern);
+		}
+#endif
+	}
 
 	p->pcre2_compile_context = NULL;
 
@@ -1107,10 +1146,12 @@ static char *end_of_line(char *cp, unsigned long *left)
 	return cp;
 }
 
+#ifndef PCRE2_CONVERT_POSIX_BASIC
 static int word_char(char ch)
 {
 	return isalnum(ch) || ch == '_';
 }
+#endif
 
 static void output_color(struct grep_opt *opt, const void *data, size_t size,
 			 const char *color)
@@ -1226,9 +1267,12 @@ static int match_one_pattern(struct grep_pat *p, char *bol, char *eol,
 		}
 	}
 
+#ifndef PCRE2_CONVERT_POSIX_BASIC
  again:
+#endif
 	hit = patmatch(p, bol, eol, pmatch, eflags);
 
+#ifndef PCRE2_CONVERT_POSIX_BASIC
 	if (hit && p->word_regexp) {
 		if ((pmatch[0].rm_so < 0) ||
 		    (eol - bol) < pmatch[0].rm_so ||
@@ -1269,6 +1313,7 @@ static int match_one_pattern(struct grep_pat *p, char *bol, char *eol,
 				goto again;
 		}
 	}
+#endif
 	if (p->token == GREP_PATTERN_HEAD && saved_ch)
 		*eol = saved_ch;
 	if (hit) {
