@@ -21,6 +21,7 @@
  */
 
 #include "xinclude.h"
+#include "cache.h"
 
 static long xdl_get_rec(xdfile_t *xdf, long ri, char const **rec) {
 
@@ -303,6 +304,10 @@ int xdl_emit_diff(xdfenv_t *xe, xdchange_t *xscr, xdemitcb_t *ecb,
 		for (s2 = xche->i2 + xche->chg2; s2 < e2; s2++)
 			if (xdl_emit_record(&xe->xdf2, s2, " ", ecb) < 0)
 				return -1;
+
+		if (pickaxe_hit)
+			return -1;
+
 	}
 
 	return 0;
