@@ -256,6 +256,10 @@ int xdl_emit_diff(xdfenv_t *xe, xdchange_t *xscr, xdemitcb_t *ecb,
 		}
 		if (xdl_emit_hunk_hdr(s1 + 1, e1 - s1, s2 + 1, e2 - s2,
 				      func_line.buf, func_line.len, ecb) < 0)
+			/*
+			 * This is the tight loop that gets aborted by
+			 * xdl_emit_hunk_hdr returning -1
+			 */
 			return -1;
 
 		/*

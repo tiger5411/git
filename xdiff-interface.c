@@ -87,19 +87,21 @@ static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
 		/* we have a complete line */
 		if (!priv->remainder.len) {
 			consume_one(priv, mb[i].ptr, mb[i].size);
+			if (pickaxe_hit)
+				return -1;
 			continue;
 		}
 		strbuf_add(&priv->remainder, mb[i].ptr, mb[i].size);
 		consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
 		if (pickaxe_hit)
-			return 0;
+			return -1;
 	}
 	if (priv->remainder.len) {
 		consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
 		if (pickaxe_hit)
-			return 0;
+			return -1;
 	}
 	return 0;
 }
