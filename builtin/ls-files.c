@@ -340,7 +340,9 @@ static void show_files(struct dir_struct *dir)
 			show_killed_files(dir);
 	}
 	if (show_cached || show_stage) {
+		/* Need to compile any pcre or whatever pattern here */
 		for (i = 0; i < active_nr; i++) {
+			//fprintf(stderr, "%d/%d\n", i, active_nr);
 			const struct cache_entry *ce = active_cache[i];
 			if ((dir->flags & DIR_SHOW_IGNORED) &&
 			    !ce_excluded(dir, ce))
@@ -354,6 +356,7 @@ static void show_files(struct dir_struct *dir)
 		}
 	}
 	if (show_deleted || show_modified) {
+		/* Need to compile any pcre or whatever pattern here */
 		for (i = 0; i < active_nr; i++) {
 			const struct cache_entry *ce = active_cache[i];
 			struct stat st;
