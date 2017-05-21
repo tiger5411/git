@@ -303,10 +303,15 @@ int wildmatch(const char *pattern, const char *text,
 	if (convret != 0) {
 		/* FIXME some fail! */
 		pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
-
-		fprintf(fh, "PCONVFAIL\t%s\t%s\n", pattern, errbuf);
-
 		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
+
+		if (ret_dowild == WM_MATCH)
+			fprintf(fh, "PCONVFAILWMATCH\t%s\t%s\n", pattern, errbuf);
+		else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL)
+			fprintf(fh, "PCONVFAILWFAIL\t%s\t%s\n", pattern, errbuf);
+		else
+			die("PANIC: %d", ret_dowild);
+	
 		return ret_dowild;
 
 		die("Convert failed: %s", (const char *)errbuf);
@@ -318,9 +323,15 @@ int wildmatch(const char *pattern, const char *text,
 					 &erroffset, pcre2_compile_context);
 	if (!pcre2_pattern) {
 		pcre2_get_error_message(error, errbuf, sizeof(errbuf));
-		fprintf(fh, "PCOMPFAIL\t%s\t%s\n", pattern, errbuf);
-
 		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
+
+		if (ret_dowild == WM_MATCH)
+			fprintf(fh, "PCOMPFAILWMATCH\t%s\t%s\n", pattern, errbuf);
+		else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL)
+			fprintf(fh, "PCOMPFAILWFAIL\t%s\t%s\n", pattern, errbuf);
+		else
+			die("PANIC: %d", ret_dowild);
+
 		return ret_dowild;
 	}
 	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
