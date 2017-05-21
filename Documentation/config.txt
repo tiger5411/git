@@ -2914,6 +2914,14 @@ sendemail.xmailer::
 sendemail.signedoffcc (deprecated)::
 	Deprecated alias for `sendemail.signedoffbycc`.
 
+sendemail.smtpbatchsize::
+	Number of messages to be sent per connection, after that a relogin
+	will happen. if the value is 0 or undefined, send all messages in
+	one connection.
+
+sendemail.smtprelogindelay::
+	Seconds wait before reconnecting to smtp server.
+
 showbranch.default::
 	The default set of branches for linkgit:git-show-branch[1].
 	See linkgit:git-show-branch[1].
