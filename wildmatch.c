@@ -297,6 +297,10 @@ int wildmatch(const char *pattern, const char *text,
 					PCRE2_CONVERT_GLOB,
 					&convpatbuf, &convpatlen, NULL);
 	if (convret != 0) {
+		/* FIXME some fail! */
+		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
+		return ret_dowild;
+
 		pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
 		die("Convert failed: %s", (const char *)errbuf);
 	}
@@ -309,8 +313,12 @@ int wildmatch(const char *pattern, const char *text,
 	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
 	assert(pcre2_match_data);
 
-	ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
-
+	if (0) {
+		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
+	} else {
+		ret_dowild = WM_NOMATCH;
+	}
+		
 	ret_match = pcre2_match(pcre2_pattern, (unsigned char *)text,
 				strlen(text), 0, mflags, pcre2_match_data,
 				NULL);
@@ -326,10 +334,9 @@ int wildmatch(const char *pattern, const char *text,
 		ret_match_conv = WM_NOMATCH;
 	}
 
-	fprintf(stderr, "dw:%d cpm:%d pm:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
-		ret_dowild, ret_match_conv, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);
+	/*fprintf(stderr, "dw:%d cpm:%d pm:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
+		ret_dowild, ret_match_conv, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);*/
 
-
-
+	return ret_match_conv;
 	return ret_dowild;
 }
