@@ -289,6 +289,7 @@ int wildmatch(const char *pattern, const char *text,
 	PCRE2_SIZE erroffset;
 	int ret_dowild;
 	int ret_match;
+	int ret_match_conv;
 	int mflags = 0;
 
 
@@ -320,10 +321,13 @@ int wildmatch(const char *pattern, const char *text,
 	}
 	if (ret_match > 0) {
 		/* MATCH */
+		ret_match_conv = WM_MATCH;
+	} else {
+		ret_match_conv = WM_NOMATCH;
 	}
 
-	fprintf(stderr, "dw:%d pc:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
-		ret_dowild, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);
+	fprintf(stderr, "dw:%d cpm:%d pm:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
+		ret_dowild, ret_match_conv, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);
 
 
 
