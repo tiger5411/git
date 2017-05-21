@@ -11,6 +11,8 @@
 
 #include "cache.h"
 #include "wildmatch.h"
+#define PCRE2_CODE_UNIT_WIDTH 8
+#include <pcre2.h>
 
 typedef unsigned char uchar;
 
@@ -275,5 +277,55 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 int wildmatch(const char *pattern, const char *text,
 	      unsigned int flags, struct wildopts *wo)
 {
-	return dowild((const uchar*)pattern, (const uchar*)text, flags);
+	int convret;
+	PCRE2_UCHAR *convpatbuf = NULL;
+	PCRE2_SIZE convpatlen;
+	PCRE2_UCHAR errbuf[256];
+	pcre2_compile_context *pcre2_compile_context;
+	pcre2_code *pcre2_pattern;
+	pcre2_match_data *pcre2_match_data;
+	int options = 0;
+	int error;
+	PCRE2_SIZE erroffset;
+	int ret_dowild;
+	int ret_match;
+	int mflags = 0;
+
+
+	convret = pcre2_pattern_convert((PCRE2_SPTR)pattern, strlen(pattern),
+					PCRE2_CONVERT_GLOB,
+					&convpatbuf, &convpatlen, NULL);
+	if (convret != 0) {
+		pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
+		die("Convert failed: %s", (const char *)errbuf);
+	}
+
+	pcre2_compile_context = pcre2_compile_context_create(NULL);
+	assert(pcre2_compile_context);
+	pcre2_pattern = pcre2_compile((PCRE2_SPTR)convpatbuf, strlen((const char *)convpatbuf), options, &error,
+					 &erroffset, pcre2_compile_context);
+	assert(pcre2_pattern);
+	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
+	assert(pcre2_match_data);
+
+	ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
+
+	ret_match = pcre2_match(pcre2_pattern, (unsigned char *)text,
+				strlen(text), 0, mflags, pcre2_match_data,
+				NULL);
+
+	if (ret_match < 0 && ret_match != PCRE2_ERROR_NOMATCH) {
+		pcre2_get_error_message(ret_match, errbuf, sizeof(errbuf));
+		die("pcre2_match failed with error code %d: %s", ret_match, errbuf);
+	}
+	if (ret_match > 0) {
+		/* MATCH */
+	}
+
+	fprintf(stderr, "dw:%d pc:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
+		ret_dowild, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);
+
+
+
+	return ret_dowild;
 }
