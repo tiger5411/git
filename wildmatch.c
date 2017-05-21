@@ -317,6 +317,9 @@ int wildmatch(const char *pattern, const char *text,
 		die("Convert failed: %s", (const char *)errbuf);
 	}
 
+	if (flags & WM_CASEFOLD)
+		options |= PCRE2_CASELESS;
+
 	pcre2_compile_context = pcre2_compile_context_create(NULL);
 	assert(pcre2_compile_context);
 	pcre2_pattern = pcre2_compile((PCRE2_SPTR)convpatbuf, strlen((const char *)convpatbuf), options, &error,
