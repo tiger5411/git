@@ -356,6 +356,7 @@ int wildmatch(const char *pattern, const char *text,
 	else if (ret_dowild == WM_NOMATCH && ret_match_conv == WM_NOMATCH)
 		fprintf(fh, "BFAIL\t%s\t%s\n", pattern, text);
 	else if (ret_dowild == WM_ABORT_ALL && ret_match_conv == WM_NOMATCH)
+		/* Not 100% sure, but abort just seems to be another sort of fail */
 		fprintf(fh, "BFAIL\t%s\t%s\n", pattern, text);
 	else
 		die("PANIC: %d/%d", ret_dowild, ret_match_conv);
