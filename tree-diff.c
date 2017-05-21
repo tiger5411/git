@@ -299,6 +299,7 @@ static void skip_uninteresting(struct tree_desc *t, struct strbuf *base,
 {
 	enum interesting match;
 
+	/* Needs pcre compilation here */
 	while (t->size) {
 		match = tree_entry_interesting(&t->entry, base, 0, &opt->pathspec);
 		if (match) {
