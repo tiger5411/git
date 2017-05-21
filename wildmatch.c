@@ -312,6 +312,7 @@ int wildmatch(const char *pattern, const char *text,
 		else
 			die("PANIC: %d", ret_dowild);
 	
+		fclose(fh);
 		return ret_dowild;
 
 		die("Convert failed: %s", (const char *)errbuf);
@@ -335,6 +336,7 @@ int wildmatch(const char *pattern, const char *text,
 		else
 			die("PANIC: %d", ret_dowild);
 
+		fclose(fh);
 		return ret_dowild;
 	}
 	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
@@ -378,5 +380,6 @@ int wildmatch(const char *pattern, const char *text,
 	/*fprintf(stderr, "dw:%d cpm:%d pm:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
 		ret_dowild, ret_match_conv, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);*/
 
+	fclose(fh);
 	return ret_dowild;
 }
