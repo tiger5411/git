@@ -318,6 +318,9 @@ int wildmatch(const char *pattern, const char *text,
 		die("Convert failed: %s", (const char *)errbuf);
 	}
 
+	if (getenv("PDUMP"))
+		fprintf(stderr, "%s -> %s\n", pattern, convpatbuf);
+
 	if (flags & WM_CASEFOLD)
 		options |= PCRE2_CASELESS;
 
