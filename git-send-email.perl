@@ -1363,72 +1363,92 @@ EOF
 			die __("The required SMTP server is not properly defined.")
 		}
 
-		if ($smtp_encryption eq 'ssl') {
-			$smtp_server_port ||= 465; # ssmtp
-			require Net::SMTP::SSL;
-			$smtp_domain ||= maildomain();
-			require IO::Socket::SSL;
-
-			# Suppress "variable accessed once" warning.
-			{
-				no warnings 'once';
-				$IO::Socket::SSL::DEBUG = 1;
-			}
-
-			# Net::SMTP::SSL->new() does not forward any SSL options
-			IO::Socket::SSL::set_client_defaults(
-				ssl_verify_params());
-			$smtp ||= Net::SMTP::SSL->new($smtp_server,
-						      Hello => $smtp_domain,
-						      Port => $smtp_server_port,
-						      Debug => $debug_net_smtp);
-		}
-		else {
-			require Net::SMTP;
-			$smtp_domain ||= maildomain();
-			$smtp_server_port ||= 25;
-			$smtp ||= Net::SMTP->new($smtp_server,
-						 Hello => $smtp_domain,
-						 Debug => $debug_net_smtp,
-						 Port => $smtp_server_port);
-			if ($smtp_encryption eq 'tls' && $smtp) {
+		my $num_tries = 0;
+		my $max_tries = 5;
+	smtp_again:
+		eval {
+			if ($smtp_encryption eq 'ssl') {
+				$smtp_server_port ||= 465; # ssmtp
 				require Net::SMTP::SSL;
-				$smtp->command('STARTTLS');
-				$smtp->response();
-				if ($smtp->code == 220) {
-					$smtp = Net::SMTP::SSL->start_SSL($smtp,
-									  ssl_verify_params())
-						or die "STARTTLS failed! ".IO::Socket::SSL::errstr();
-					$smtp_encryption = '';
-					# Send EHLO again to receive fresh
-					# supported commands
-					$smtp->hello($smtp_domain);
-				} else {
-					die sprintf(__("Server does not support STARTTLS! %s"), $smtp->message);
+				$smtp_domain ||= maildomain();
+				require IO::Socket::SSL;
+
+				# Suppress "variable accessed once" warning.
+				{
+					no warnings 'once';
+					$IO::Socket::SSL::DEBUG = 1;
+				}
+
+				# Net::SMTP::SSL->new() does not forward any SSL options
+				IO::Socket::SSL::set_client_defaults(
+					ssl_verify_params());
+				$smtp ||= Net::SMTP::SSL->new($smtp_server,
+							      Hello => $smtp_domain,
+							      Port => $smtp_server_port,
+							      Debug => $debug_net_smtp);
+			}
+			else {
+				require Net::SMTP;
+				$smtp_domain ||= maildomain();
+				$smtp_server_port ||= 25;
+				$smtp ||= Net::SMTP->new($smtp_server,
+							 Hello => $smtp_domain,
+							 Debug => $debug_net_smtp,
+							 Port => $smtp_server_port);
+				if ($smtp_encryption eq 'tls' && $smtp) {
+					require Net::SMTP::SSL;
+					$smtp->command('STARTTLS');
+					$smtp->response();
+					if ($smtp->code == 220) {
+						$smtp = Net::SMTP::SSL->start_SSL($smtp,
+										  ssl_verify_params())
+							or die "STARTTLS failed! ".IO::Socket::SSL::errstr();
+						$smtp_encryption = '';
+						# Send EHLO again to receive fresh
+						# supported commands
+						$smtp->hello($smtp_domain);
+					} else {
+						die sprintf(__("Server does not support STARTTLS! %s"), $smtp->message);
+					}
 				}
 			}
-		}
 
-		if (!$smtp) {
-			die __("Unable to initialize SMTP properly. Check config and use --smtp-debug."),
-			    " VALUES: server=$smtp_server ",
-			    "encryption=$smtp_encryption ",
-			    "hello=$smtp_domain",
-			    defined $smtp_server_port ? " port=$smtp_server_port" : "";
-		}
+			if (!$smtp) {
+				die __("Unable to initialize SMTP properly. Check config and use --smtp-debug."),
+				    " VALUES: server=$smtp_server ",
+				    "encryption=$smtp_encryption ",
+				    "hello=$smtp_domain",
+				    defined $smtp_server_port ? " port=$smtp_server_port" : "";
+			}
 
-		smtp_auth_maybe or die $smtp->message;
+			smtp_auth_maybe or die $smtp->message;
 
-		$smtp->mail( $raw_from ) or die $smtp->message;
-		$smtp->to( @recipients ) or die $smtp->message;
-		$smtp->data or die $smtp->message;
-		$smtp->datasend("$header\n") or die $smtp->message;
-		my @lines = split /^/, $message;
-		foreach my $line (@lines) {
-			$smtp->datasend("$line") or die $smtp->message;
-		}
-		$smtp->dataend() or die $smtp->message;
-		$smtp->code =~ /250|200/ or die sprintf(__("Failed to send %s\n"), $subject).$smtp->message;
+			$smtp->mail( $raw_from ) or die $smtp->message;
+			$smtp->to( @recipients ) or die $smtp->message;
+			$smtp->data or die $smtp->message;
+			$smtp->datasend("$header\n") or die $smtp->message;
+			my @lines = split /^/, $message;
+			foreach my $line (@lines) {
+				$smtp->datasend("$line") or die $smtp->message;
+			}
+			$smtp->dataend() or die $smtp->message;
+			$smtp->code =~ /250|200/ or die sprintf(__("Failed to send %s\n"), $subject).$smtp->message;
+			1;
+		} or do {
+			my $error = $@ || "Zombie Error";
+
+			warn sprintf(__("Failed to send %s due to error: %s"), $subject, $error);
+			if ($num_tries++ < $max_tries) {
+				$smtp->quit if defined $smtp;
+				$smtp = undef;
+				$auth = undef;
+				my $sleep = $num_tries * 3; # 3, 6, 9, ...
+				warn sprintf(__("This is retry %d/%d. Sleeping %d before trying again"),
+					     $num_tries, $max_tries, $sleep);
+				sleep($sleep);
+				goto smtp_again;
+			}
+		};
 	}
 	if ($quiet) {
 		printf($dry_run ? __("Dry-Sent %s\n") : __("Sent %s\n"), $subject);
