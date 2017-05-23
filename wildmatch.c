@@ -313,11 +313,15 @@ int wildmatch(const char *pattern, const char *text,
 		pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
 		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
 
-		if (ret_dowild == WM_MATCH)
+		if (ret_dowild == WM_MATCH) {
+			if (getenv("PDUMP"))
+				fprintf(stderr, "%s -> conv/ERROR:%s\n", pattern, errbuf);
 			fprintf(fh, "PCONVFAILWMATCH\t%s\t%s\n", pattern, errbuf);
-		else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL)
+		} else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL) {
+			if (getenv("PDUMP"))
+				fprintf(stderr, "%s -> conv/ERROR:%s\n", pattern, errbuf);
 			fprintf(fh, "PCONVFAILWFAIL\t%s\t%s\n", pattern, errbuf);
-		else
+		} else
 			die("PANIC: %d", ret_dowild);
 	
 		fclose(fh);
@@ -344,11 +348,15 @@ int wildmatch(const char *pattern, const char *text,
 		pcre2_get_error_message(error, errbuf, sizeof(errbuf));
 		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
 
-		if (ret_dowild == WM_MATCH)
+		if (ret_dowild == WM_MATCH) {
+			if (getenv("PDUMP"))
+				fprintf(stderr, "%s -> comp/ERROR:%s\n", pattern, errbuf);
 			fprintf(fh, "PCOMPFAILWMATCH\t%s\t%s\n", pattern, errbuf);
-		else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL)
+		} else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL) {
+			if (getenv("PDUMP"))
+				fprintf(stderr, "%s -> comp/ERROR:%s\n", pattern, errbuf);
 			fprintf(fh, "PCOMPFAILWFAIL\t%s\t%s\n", pattern, errbuf);
-		else
+		} else
 			die("PANIC: %d", ret_dowild);
 
 		fclose(fh);
