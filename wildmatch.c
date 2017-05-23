@@ -298,7 +298,7 @@ int wildmatch(const char *pattern, const char *text,
 	assert(fh);
 
 	convret = pcre2_pattern_convert((PCRE2_SPTR)pattern, strlen(pattern),
-					PCRE2_CONVERT_GLOB,
+					(PCRE2_CONVERT_GLOB|PCRE2_CONVERT_GLOB_NO_WILD_SEPARATOR),
 					&convpatbuf, &convpatlen, NULL);
 	if (convret != 0) {
 		/* FIXME some fail! */
