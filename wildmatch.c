@@ -316,11 +316,11 @@ int wildmatch(const char *pattern, const char *text,
 		if (ret_dowild == WM_MATCH) {
 			if (getenv("PDUMP"))
 				fprintf(stderr, "%s -> conv/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCONVFAILWMATCH\t%s\t%s\n", pattern, errbuf);
+			fprintf(fh, "PCONVFAILWMATCH\t%s\t%s\t%s\n", pattern, text, errbuf);
 		} else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL) {
 			if (getenv("PDUMP"))
 				fprintf(stderr, "%s -> conv/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCONVFAILWFAIL\t%s\t%s\n", pattern, errbuf);
+			fprintf(fh, "PCONVFAILWFAIL\t%s\t%s\t%s\n", pattern, text, errbuf);
 		} else
 			die("PANIC: %d", ret_dowild);
 	
@@ -351,11 +351,11 @@ int wildmatch(const char *pattern, const char *text,
 		if (ret_dowild == WM_MATCH) {
 			if (getenv("PDUMP"))
 				fprintf(stderr, "%s -> comp/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCOMPFAILWMATCH\t%s\t%s\n", pattern, errbuf);
+			fprintf(fh, "PCOMPFAILWMATCH\t%s\t%s\t%s\n", pattern, text, errbuf);
 		} else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL) {
 			if (getenv("PDUMP"))
 				fprintf(stderr, "%s -> comp/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCOMPFAILWFAIL\t%s\t%s\n", pattern, errbuf);
+			fprintf(fh, "PCOMPFAILWFAIL\t%s\t%s\t%s\n", pattern, text, errbuf);
 		} else
 			die("PANIC: %d", ret_dowild);
 
