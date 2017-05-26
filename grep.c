@@ -530,13 +530,14 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 			pattern = (PCRE2_SPTR)pattern_sb.buf;
 			length = pattern_sb.len;
 			copied_pattern = 1;
-
-			if (opt->debug)
-				fprintf(stderr, "converted is = <%s>\n", pattern);
 		} else {
 			pattern = convpatbuf;
 			length = convpatlen;
 		}
+
+		if (opt->debug)
+			fprintf(stderr, "converted is = <%s>\n", pattern);
+
 #endif
 	} else {
 		assert(opt->pcre2);
