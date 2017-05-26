@@ -1,0 +1,35 @@
+DIFF: 9+123 ({)
+ONLY P: +pcre_jit_test.c:150:	{ MUA, 0, "AbC", "AbAbC" },
+ONLY P: +pcre_jit_test.c:151:	{ MUA, 0, "ACCEPT", "AACACCACCEACCEPACCEPTACCEPTT" },
+ONLY P: +pcre_jit_test.c:152:	{ CMUA, 0, "aA#\xc3\xa9\xc3\x81", "aA#Aa#\xc3\x89\xc3\xa1" },
+DIFF: 10+123 ({)
+ONLY P: +132html:8:sub do_line {
+ONLY P: +132html:22:sub end_para {
+ONLY P: +132html:24:  {
+DIFF: 32+123 ({)
+ONLY P: +132html:8:sub do_line {
+ONLY P: +132html:22:sub end_para {
+ONLY P: +132html:24:  {
+DIFF: 34+123 ("{)
+ONLY P: +ChangeLog:5835:2. Made debugging output print "{0,xxx}" instead of just "{,xxx}" to agree with
+ONLY P: +ChangeLog:5973:2. Fixed an incompatibility with Perl: "{" is now treated as a normal character
+ONLY P: +ChangeLog:5974:unless it appears in one of the precise forms "{ddd}", "{ddd,}", or "{ddd,ddd}"
+DIFF: 36+94 ($^)
+ONLY C: -.gitignore:58:
+ONLY C: -132html:314:
+ONLY C: -AUTHORS:46:
+DIFF: 39+123 ('{)
+ONLY P: +pcre_compile.c:206:/*  88 */-ESC_h,     0,      0,     '{',      0,     0,      0,      0,
+ONLY P: +pcre_compile.c:213:/*  C0 */   '{',-ESC_A, -ESC_B,  -ESC_C, -ESC_D,-ESC_E,      0, -ESC_G,
+ONLY P: +pcre_compile.c:949:/* This function is called when a '{' is encountered in a place where it might
+DIFF: 41+123 (){)
+ONLY P: +ChangeLog:268:    /(?:|a|){100}x/ are analysed.
+ONLY P: +ChangeLog:437:14. A pattern such as "((?2){0,1999}())?", which has a group containing a
+ONLY P: +ChangeLog:473:29. For some types of pattern, for example /Z*(|d*){216}/, the auto-
+DIFF: 45+46 (-.)
+DIFF: 45+123 (-{)
+ONLY P: +pcregrep.c:220:/* Structure for list of file names (for -f and --{in,ex}clude-from) */
+DIFF: 46+36 (.$)
+DIFF: 46+45 (.-)
+DIFF: 46+47 (./)
+Binary file (standard input) matches
