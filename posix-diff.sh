@@ -14,7 +14,8 @@ parallel -k '
 	if ! diff -ru /tmp/o-{1}-{2}.regcomp /tmp/o-{1}-{2}.pcre >/tmp/d-{1}-{2}
 	then
 		printf "DIFF: %s+%s (%s)\n" {1} {2} $(cat /tmp/f-{1}-{2})
-		head -n 10 /tmp/d-{1}-{2}
+		grep -a "^+[^+]" /tmp/d-{1}-{2} | sed "s/^/ONLY P: /" | head -n 3
+		grep -a "^-[^-]" /tmp/d-{1}-{2} | sed "s/^/ONLY C: /"    | head -n 3
 	else
 		printf "SAME: %s+%s\n" {1} {2}
 	fi
