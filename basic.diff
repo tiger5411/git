@@ -1,0 +1,280 @@
+DIFF: 36+32 ($)
+ONLY C: -132html:77:open(TEMP, ">/tmp/$$") || die "Can't open /tmp/$$ for output\n";
+ONLY C: -132html:300:open(TEMP, "/tmp/$$") || die "Can't open /tmp/$$ for input\n";
+ONLY C: -ChangeLog:88:    (a) A pattern such as (?=.*X)X$ was incorrectly optimized as if it needed
+DIFF: 36+33 ($!)
+ONLY C: -NON-AUTOTOOLS-BUILD:670:$! This DCL procedure builds PCRE on OpenVMS
+ONLY C: -NON-AUTOTOOLS-BUILD:671:$!
+ONLY C: -NON-AUTOTOOLS-BUILD:672:$! I followed the instructions in the non-unix-use file in the distribution.
+DIFF: 36+34 ($")
+ONLY C: -132html:77:open(TEMP, ">/tmp/$$") || die "Can't open /tmp/$$ for output\n";
+ONLY C: -132html:300:open(TEMP, "/tmp/$$") || die "Can't open /tmp/$$ for input\n";
+ONLY C: -132html:311:unlink("/tmp/$$");
+DIFF: 36+35 ($#)
+ONLY C: -132html:50:while ($#ARGV >= 0 && $ARGV[0] =~ /^-/)
+ONLY C: -RunGrepTest:24:while [ $# -gt 0 ] ; do
+ONLY C: -RunTest:92:if [ $# -eq 1 -a "$1" = "list" ]; then
+DIFF: 36+36 ($$)
+ONLY P: +.gitignore:1:/aclocal.m4
+ONLY P: +.gitignore:2:/ar-lib
+ONLY P: +.gitignore:3:/autom4te.cache/
+DIFF: 36+37 ($%)
+ONLY C: -testdata/testoutput1:2376: 0: \x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff
+ONLY C: -testdata/testoutput8:3062: 0: \x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~\x7f\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff
+DIFF: 36+38 ($&)
+ONLY C: -perltest.pl:170:    $pushes = "push \@subs,\$&;" .
+DIFF: 36+39 ($')
+ONLY C: -RunGrepTest:223:(cd $srcdir; $valgrind $pcregrep -L -r --include=grepinput --exclude 'grepinput$' --exclude=grepinput8 --exclude-dir='^\.' 'fox' ./testdata | sort) >>testtrygrep
+ONLY C: -RunTest:252:     if expr "$1" : '~[0-9][0-9]*$' >/dev/null; then
+ONLY C: -RunTest:253:       skip="$skip `expr "$1" : '~\([0-9]*\)*$'`"
+DIFF: 36+40 ($()
+ONLY C: -ChangeLog:236:    string itself. For example: /^(?:(?(1)x|)+)+$()/.
+ONLY C: -ChangeLog:4266: 3. $(LINK_FOR_BUILD) now includes $(CFLAGS_FOR_BUILD) and $(LINK)
+ONLY C: -ChangeLog:4267:    (non-Windows) now includes $(CFLAGS) because these flags are sometimes
+DIFF: 36+41 ($))
+ONLY C: -doc/html/pcreapi.html:785:($) matches only at the end of the string, or before a terminating newline
+ONLY C: -doc/pcre.txt:2268:       of line" metacharacter ($) matches only at the end of  the  string,  or
+ONLY C: -doc/pcreapi.3:753:($) matches only at the end of the string, or before a terminating newline
+DIFF: 36+42 ($*)
+ONLY C: -.gitignore:1:/aclocal.m4
+ONLY C: -.gitignore:2:/ar-lib
+ONLY C: -.gitignore:3:/autom4te.cache/
+DIFF: 36+43 ($+)
+ONLY C: -pcre_xclass.c:245:      compatibility (these are $+<=>^`|~). */
+ONLY C: -testdata/testinput6:1422:    \$+<=>^`|~
+ONLY C: -testdata/testinput6:1482:    \$+<=>^`|~
+DIFF: 36+44 ($,)
+ONLY C: -ChangeLog:2044:    of $, \z, \Z, \b, and \B. If the match point is at the end of the string,
+ONLY C: -Detrail:32:$, = "";   # Output field separator
+ONLY C: -NEWS:258:. Changed the way PCRE_PARTIAL_HARD affects the matching of $, \z, \Z, \b, and
+DIFF: 36+46 ($.)
+ONLY C: -132html:9:my($s) = $_[0];
+ONLY C: -132html:11:$s =~ s/</&#60;/g;                   # Deal with < and >
+ONLY C: -132html:12:$s =~ s/>/&#62;/g;
+DIFF: 36+47 ($/)
+ONLY C: -132html:192:      $_ =~ s/\s+$//;
+ONLY C: -132html:193:      $_ =~ /^(?:<.>)?([^<(]+)(?:\(\))?(?:<\/.>)?(?:\(\d+\))?[.,;:]?$/;
+ONLY C: -132html:213:      $_ =~ s/\s+$//;
+DIFF: 36+48 ($0)
+ONLY C: -pcregexp.pas:106: PCRE_CASELESS         = $0001;
+ONLY C: -pcregexp.pas:107: PCRE_MULTILINE        = $0002;
+ONLY C: -pcregexp.pas:108: PCRE_DOTALL           = $0004;
+DIFF: 36+49 ($1)
+ONLY C: -132html:13:$s =~ s"\\fI(.*?)\\f[RP]"<i>$1</i>"g;
+ONLY C: -132html:14:$s =~ s"\\fB(.*?)\\f[RP]"<b>$1</b>"g;
+ONLY C: -132html:168:      $_ = &do_line($1);
+DIFF: 36+50 ($2)
+ONLY C: -132html:138:      if ($2 =~ /^NAME\b/)
+ONLY C: -132html:145:      my($title) = &do_line($2);
+ONLY C: -132html:162:      my($title) = &do_line($2);
+DIFF: 36+51 ($3)
+ONLY C: -perltest.pl:173:         "push \@subs,\$3;" .
+DIFF: 36+52 ($4)
+ONLY C: -pcregexp.pas:121: PCRE_AUTO_CALLOUT     = $4000;
+ONLY C: -perltest.pl:174:         "push \@subs,\$4;" .
+DIFF: 36+53 ($5)
+ONLY C: -pcregexp.pas:310: MAGIC_NUMBER = $50435245; { 'PCRE' }
+ONLY C: -perltest.pl:175:         "push \@subs,\$5;" .
+DIFF: 36+54 ($6)
+ONLY C: -perltest.pl:176:         "push \@subs,\$6;" .
+DIFF: 36+55 ($7)
+ONLY C: -perltest.pl:177:         "push \@subs,\$7;" .
+DIFF: 36+56 ($8)
+ONLY C: -pcregexp.pas:122: PCRE_PARTIAL          = $8000;
+ONLY C: -perltest.pl:178:         "push \@subs,\$8;" .
+ONLY C: -testdata/testinput11:29:|8J\$WE\<\.rX\+ix\[d1b\!H\#\?vV0vrK\:ZH1\=2M\>iV\;\?aPhFB\<\*vW\@QW\@sO9\}cfZA\-i\'w\%hKd6gt1UJP\,15_\#QY\$M\^Mss_U\/\]\&LK9\[5vQub\^w\[KDD\<EjmhUZ\?\.akp2dF\>qmj\;2\}YWFdYx\.Ap\]hjCPTP\(n28k\+3\;o\&WXqs\/gOXdr\$\:r\'do0\;b4c\(f_Gr\=\"\\4\)\[01T7ajQJvL\$W\~mL_sS\/4h\:x\*\[ZN\=KLs\&L5zX\/\/\>it\,o\:aU\(\;Z\>pW\&T7oP\'2K\^E\:x9\'c\[\%z\-\,64JQ5AeH_G\#KijUKghQw\^\\vea3a\?kka_G\$8\#\`\*kynsxzBLru\'\]k_\[7FrVx\}\^\=\$blx\>s\-N\%j\;D\*aZDnsw\:YKZ\%Q\.Kne9\#hP\?\+b3\(SOvL\,\^\;\&u5\@\?5C5Bhb\=m\-vEh_L15Jl\]U\)0RP6\{q\%L\^_z5E\'Dw6X\b|BM
+DIFF: 36+57 ($9)
+ONLY C: -perltest.pl:179:         "push \@subs,\$9;" .
+DIFF: 36+58 ($:)
+ONLY C: -testdata/testoutput11-16:151:  2     8J$WE<.rX+ix[d1b!H#?vV0vrK:ZH1=2M>iV;?aPhFB<*vW@QW@sO9}cfZA-i'w%hKd6gt1UJP,15_#QY$M^Mss_U/]&LK9[5vQub^w[KDD<EjmhUZ?.akp2dF>qmj;2}YWFdYx.Ap]hjCPTP(n28k+3;o&WXqs/gOXdr$:r'do0;b4c(f_Gr="\4)[01T7ajQJvL$W~mL_sS/4h:x*[ZN=KLs&L5zX//>it,o:aU(;Z>pW&T7oP'2K^E:x9'c[%z-,64JQ5AeH_G#KijUKghQw^\vea3a?kka_G$8#`*kynsxzBLru']k_[7FrVx}^=$blx>s-N%j;D*aZDnsw:YKZ%Q.Kne9#hP?+b3(SOvL,^;&u5@?5C5Bhb=m-vEh_L15Jl]U)0RP6{q%L^_z5E'Dw6X
+ONLY C: -testdata/testoutput11-16:161:  2     $<.X+ix[d1b!H#?vV0vrK:ZH1=2M>iV;?aPhFB<*vW@QW@sO9}cfZA-i'w%hKd6gt1UJP,15_#QY$M^Mss_U/]&LK9[5vQub^w[KDD<EjmhUZ?.akp2dF>qmj;2}YWFdYx.Ap]hjCPTP(n28k+3;o&WXqs/gOXdr$:r'do0;b4c(f_Gr="\4)[01T7ajQJvL$W~mL_sS/4h:x*[ZN=KLs&L5zX//>it,o:aU(;Z>pW&T7oP'2K^E:x9'c[%z-,64JQ5AeH_G#KijUKghQw^\vea3a?kka_G$8#`*kynsxzBLru']k_[7FrVx}^=$blx>s-N%j;D*aZDnsw:YKZ%Q.Kne9#hP?+b3(SOvL,^;&u5@?5C5Bhb=m-vEh_L15Jl]U)0RP6{q%L^_z5E'Dw6X
+ONLY C: -testdata/testoutput11-32:151:  2     8J$WE<.rX+ix[d1b!H#?vV0vrK:ZH1=2M>iV;?aPhFB<*vW@QW@sO9}cfZA-i'w%hKd6gt1UJP,15_#QY$M^Mss_U/]&LK9[5vQub^w[KDD<EjmhUZ?.akp2dF>qmj;2}YWFdYx.Ap]hjCPTP(n28k+3;o&WXqs/gOXdr$:r'do0;b4c(f_Gr="\4)[01T7ajQJvL$W~mL_sS/4h:x*[ZN=KLs&L5zX//>it,o:aU(;Z>pW&T7oP'2K^E:x9'c[%z-,64JQ5AeH_G#KijUKghQw^\vea3a?kka_G$8#`*kynsxzBLru']k_[7FrVx}^=$blx>s-N%j;D*aZDnsw:YKZ%Q.Kne9#hP?+b3(SOvL,^;&u5@?5C5Bhb=m-vEh_L15Jl]U)0RP6{q%L^_z5E'Dw6X
+DIFF: 36+60 ($<)
+ONLY C: -testdata/testoutput11-16:161:  2     $<.X+ix[d1b!H#?vV0vrK:ZH1=2M>iV;?aPhFB<*vW@QW@sO9}cfZA-i'w%hKd6gt1UJP,15_#QY$M^Mss_U/]&LK9[5vQub^w[KDD<EjmhUZ?.akp2dF>qmj;2}YWFdYx.Ap]hjCPTP(n28k+3;o&WXqs/gOXdr$:r'do0;b4c(f_Gr="\4)[01T7ajQJvL$W~mL_sS/4h:x*[ZN=KLs&L5zX//>it,o:aU(;Z>pW&T7oP'2K^E:x9'c[%z-,64JQ5AeH_G#KijUKghQw^\vea3a?kka_G$8#`*kynsxzBLru']k_[7FrVx}^=$blx>s-N%j;D*aZDnsw:YKZ%Q.Kne9#hP?+b3(SOvL,^;&u5@?5C5Bhb=m-vEh_L15Jl]U)0RP6{q%L^_z5E'Dw6X
+ONLY C: -testdata/testoutput11-32:161:  2     $<.X+ix[d1b!H#?vV0vrK:ZH1=2M>iV;?aPhFB<*vW@QW@sO9}cfZA-i'w%hKd6gt1UJP,15_#QY$M^Mss_U/]&LK9[5vQub^w[KDD<EjmhUZ?.akp2dF>qmj;2}YWFdYx.Ap]hjCPTP(n28k+3;o&WXqs/gOXdr$:r'do0;b4c(f_Gr="\4)[01T7ajQJvL$W~mL_sS/4h:x*[ZN=KLs&L5zX//>it,o:aU(;Z>pW&T7oP'2K^E:x9'c[%z-,64JQ5AeH_G#KijUKghQw^\vea3a?kka_G$8#`*kynsxzBLru']k_[7FrVx}^=$blx>s-N%j;D*aZDnsw:YKZ%Q.Kne9#hP?+b3(SOvL,^;&u5@?5C5Bhb=m-vEh_L15Jl]U)0RP6{q%L^_z5E'Dw6X
+ONLY C: -testdata/testoutput11-8:161:  3     $<.X+ix[d1b!H#?vV0vrK:ZH1=2M>iV;?aPhFB<*vW@QW@sO9}cfZA-i'w%hKd6gt1UJP,15_#QY$M^Mss_U/]&LK9[5vQub^w[KDD<EjmhUZ?.akp2dF>qmj;2}YWFdYx.Ap]hjCPTP(n28k+3;o&WXqs/gOXdr$:r'do0;b4c(f_Gr="\4)[01T7ajQJvL$W~mL_sS/4h:x*[ZN=KLs&L5zX//>it,o:aU(;Z>pW&T7oP'2K^E:x9'c[%z-,64JQ5AeH_G#KijUKghQw^\vea3a?kka_G$8#`*kynsxzBLru']k_[7FrVx}^=$blx>s-N%j;D*aZDnsw:YKZ%Q.Kne9#hP?+b3(SOvL,^;&u5@?5C5Bhb=m-vEh_L15Jl]U)0RP6{q%L^_z5E'Dw6X
+DIFF: 36+62 ($>)
+ONLY C: -ChangeLog:3710:    them into atomic groups such as ($>a+). Now they have their own opcodes,
+DIFF: 36+63 ($?)
+ONLY C: -CMakeLists.txt:812:if test \"$?\" != \"0\"; then exit 1; fi
+ONLY C: -CMakeLists.txt:828:if test \"$?\" != \"0\"; then exit 1; fi
+ONLY C: -PrepareRelease:47:if [ $? != 0 ] ; then exit 1; fi
+DIFF: 36+64 ($@)
+ONLY C: -Makefile.am:141:	rm -f $@
+ONLY C: -Makefile.am:142:	cp -p pcre.h $@
+ONLY C: -Makefile.am:156:	rm -rf $@ _generic
+DIFF: 36+65 ($A)
+ONLY C: -132html:50:while ($#ARGV >= 0 && $ARGV[0] =~ /^-/)
+ONLY C: -132html:52:  $toc = 1 if $ARGV[0] eq "-toc";
+ONLY C: -132html:61:<title>$ARGV[0] specification</title>
+DIFF: 36+67 ($C)
+ONLY C: -configure.ac:49:remember_set_CFLAGS="$CFLAGS"
+ONLY C: -configure.ac:50:remember_set_CXXFLAGS="$CXXFLAGS"
+ONLY C: -configure.ac:58:  if test "$CFLAGS" = "-g -O2"
+DIFF: 36+68 ($D)
+ONLY C: -pcregexp.pas:55:{$H+} {$DEFINE PCRE_3_7} {$DEFINE PCRE_5_0} {$DEFINE PCRE_7_0} {$DEFINE PCRE_7_7}
+DIFF: 36+69 ($E)
+ONLY C: -CMakeLists.txt:860:    IF("$ENV{OSTYPE}" STREQUAL "msys")
+ONLY C: -CMakeLists.txt:867:    ENDIF("$ENV{OSTYPE}" STREQUAL "msys")
+ONLY C: -configure.ac:497:                  EXTRA_LIBPCRECPP_LDFLAGS="$EXTRA_LIBPCRECPP_LDFLAGS -Wl,$flag";
+DIFF: 36+70 ($F)
+ONLY C: -pcregexp.pas:809:function pcGetVersion : pchar; assembler; {$FRAME-}{$USES none}
+DIFF: 36+71 ($G)
+ONLY C: -configure.ac:991:  if test "x$GCC" != "xyes"; then
+ONLY C: -configure.ac:1016:  if test "x$GENHTML" = "xfalse"; then
+ONLY C: -m4/ax_pthread.m4:261:            if test "$GCC" = "yes"; then
+DIFF: 36+72 ($H)
+ONLY C: -configure.ac:693:  if test "$HAVE_WINDOWS_H" != "1"; then
+ONLY C: -configure.ac:922:  if test "$HAVE_ZLIB_H" != "1"; then
+ONLY C: -configure.ac:926:  if test "$HAVE_LIBZ" != "1"; then
+DIFF: 36+73 ($I)
+ONLY C: -maint/ManyConfigTests:205:if [ "$ISGCC" = "yes" ]; then
+ONLY C: -pcregexp.pas:98:{$IFDEF PCRE_5_0}
+ONLY C: -pcregexp.pas:117:{$IFDEF PCRE_5_0}
+DIFF: 36+76 ($L)
+ONLY C: -configure.ac:484:OLD_LDFLAGS="$LDFLAGS"
+ONLY C: -configure.ac:609:OLD_LIBS="$LIBS"
+ONLY C: -configure.ac:610:LIBS="$LIBS -lbz2"
+DIFF: 36+77 ($M)
+ONLY C: -pcre_compile.c:720:/* \D \d \S \s \W \w  . .+ \C \P \p \R \H \h \V \v \X \Z \z  $ $M */
+ONLY C: -pcre_dfa_exec.c:123:  0, 0, 0, 0, 0, 0,              /* \Z, \z, $, $M, ^, ^M                   */
+ONLY C: -pcre_dfa_exec.c:200:  0, 0, 0, 0, 0, 0,              /* \Z, \z, $, $M, ^, ^M                   */
+DIFF: 36+78 ($N)
+ONLY C: -configure.ac:892:                       $NO_UNDEFINED -version-info libpcre_version"
+ONLY C: -configure.ac:895:                       $NO_UNDEFINED -version-info libpcre16_version"
+ONLY C: -configure.ac:898:                       $NO_UNDEFINED -version-info libpcre32_version"
+DIFF: 36+79 ($O)
+ONLY C: -configure.ac:488:  LDFLAGS="$OLD_LDFLAGS -Wl,$flag"
+ONLY C: -configure.ac:501:LDFLAGS="$OLD_LDFLAGS"
+ONLY C: -configure.ac:618:LIBS="$OLD_LIBS"
+DIFF: 36+80 ($P)
+ONLY C: -configure.ac:103:if test "$PCRE_MINOR" = "08" -o "$PCRE_MINOR" = "09"
+ONLY C: -configure.ac:106:  echo "*** Minor version number $PCRE_MINOR must not be used. ***"
+ONLY C: -configure.ac:695:    CC="$PTHREAD_CC"
+DIFF: 36+82 ($R)
+ONLY C: -NON-AUTOTOOLS-BUILD:694:$ PCRETEST :== "$ SYS$ROADSUSERS:[DMOONEY.REGEXP]PCRETEST.EXE"
+ONLY C: -doc/html/NON-AUTOTOOLS-BUILD.txt:694:$ PCRETEST :== "$ SYS$ROADSUSERS:[DMOONEY.REGEXP]PCRETEST.EXE"
+ONLY C: -perltest.pl:165:    # Empty array for holding results, ensure $REGERROR and $REGMARK are
+DIFF: 36+83 ($S)
+ONLY C: -configure.ac:997:  case `$SHTOOL path $CC` in
+ONLY C: -maint/ManyConfigTests:211:  CFLAGS="$SAVECFLAGS"
+DIFF: 36+85 ($U)
+ONLY C: -pcregexp.pas:809:function pcGetVersion : pchar; assembler; {$FRAME-}{$USES none}
+DIFF: 36+86 ($V)
+ONLY C: -configure.ac:1066:$PACKAGE-$VERSION configuration summary:
+DIFF: 36+87 ($W)
+ONLY C: -testdata/testinput11:29:|8J\$WE\<\.rX\+ix\[d1b\!H\#\?vV0vrK\:ZH1\=2M\>iV\;\?aPhFB\<\*vW\@QW\@sO9\}cfZA\-i\'w\%hKd6gt1UJP\,15_\#QY\$M\^Mss_U\/\]\&LK9\[5vQub\^w\[KDD\<EjmhUZ\?\.akp2dF\>qmj\;2\}YWFdYx\.Ap\]hjCPTP\(n28k\+3\;o\&WXqs\/gOXdr\$\:r\'do0\;b4c\(f_Gr\=\"\\4\)\[01T7ajQJvL\$W\~mL_sS\/4h\:x\*\[ZN\=KLs\&L5zX\/\/\>it\,o\:aU\(\;Z\>pW\&T7oP\'2K\^E\:x9\'c\[\%z\-\,64JQ5AeH_G\#KijUKghQw\^\\vea3a\?kka_G\$8\#\`\*kynsxzBLru\'\]k_\[7FrVx\}\^\=\$blx\>s\-N\%j\;D\*aZDnsw\:YKZ\%Q\.Kne9\#hP\?\+b3\(SOvL\,\^\;\&u5\@\?5C5Bhb\=m\-vEh_L15Jl\]U\)0RP6\{q\%L\^_z5E\'Dw6X\b|BM
+ONLY C: -testdata/testinput11:31:|\$\<\.X\+ix\[d1b\!H\#\?vV0vrK\:ZH1\=2M\>iV\;\?aPhFB\<\*vW\@QW\@sO9\}cfZA\-i\'w\%hKd6gt1UJP\,15_\#QY\$M\^Mss_U\/\]\&LK9\[5vQub\^w\[KDD\<EjmhUZ\?\.akp2dF\>qmj\;2\}YWFdYx\.Ap\]hjCPTP\(n28k\+3\;o\&WXqs\/gOXdr\$\:r\'do0\;b4c\(f_Gr\=\"\\4\)\[01T7ajQJvL\$W\~mL_sS\/4h\:x\*\[ZN\=KLs\&L5zX\/\/\>it\,o\:aU\(\;Z\>pW\&T7oP\'2K\^E\:x9\'c\[\%z\-\,64JQ5AeH_G\#KijUKghQw\^\\vea3a\?kka_G\$8\#\`\*kynsxzBLru\'\]k_\[7FrVx\}\^\=\$blx\>s\-N\%j\;D\*aZDnsw\:YKZ\%Q\.Kne9\#hP\?\+b3\(SOvL\,\^\;\&u5\@\?5C5Bhb\=m\-vEh_L15Jl\]U\)0RP6\{q\%L\^_z5E\'Dw6X\b|BM
+ONLY C: -testdata/testinput2:935:|8J\$WE\<\.rX\+ix\[d1b\!H\#\?vV0vrK\:ZH1\=2M\>iV\;\?aPhFB\<\*vW\@QW\@sO9\}cfZA\-i\'w\%hKd6gt1UJP\,15_\#QY\$M\^Mss_U\/\]\&LK9\[5vQub\^w\[KDD\<EjmhUZ\?\.akp2dF\>qmj\;2\}YWFdYx\.Ap\]hjCPTP\(n28k\+3\;o\&WXqs\/gOXdr\$\:r\'do0\;b4c\(f_Gr\=\"\\4\)\[01T7ajQJvL\$W\~mL_sS\/4h\:x\*\[ZN\=KLs\&L5zX\/\/\>it\,o\:aU\(\;Z\>pW\&T7oP\'2K\^E\:x9\'c\[\%z\-\,64JQ5AeH_G\#KijUKghQw\^\\vea3a\?kka_G\$8\#\`\*kynsxzBLru\'\]k_\[7FrVx\}\^\=\$blx\>s\-N\%j\;D\*aZDnsw\:YKZ\%Q\.Kne9\#hP\?\+b3\(SOvL\,\^\;\&u5\@\?5C5Bhb\=m\-vEh_L15Jl\]U\)0RP6\{q\%L\^_z5E\'Dw6X\b|IDZ
+DIFF: 36+93 ($])
+ONLY C: -perltest.pl:61:printf($outfile "Perl $] Regular Expressions\n\n");
+ONLY C: -testdata/testinput2:3950:/[a-z]*\s#[ \t]?\S#[a-c]*\S#[C-G]+?\d#[4-8]*\D#[4-9,]*\D#[!$]{0,5}\w#[M-Xf-l]+\W#[a-c,]?\W/BZ
+ONLY C: -testdata/testoutput2:13778:/[a-z]*\s#[ \t]?\S#[a-c]*\S#[C-G]+?\d#[4-8]*\D#[4-9,]*\D#[!$]{0,5}\w#[M-Xf-l]+\W#[a-c,]?\W/BZ
+DIFF: 36+95 ($_)
+ONLY C: -132html:9:my($s) = $_[0];
+ONLY C: -132html:93:      print STDERR "*** $_\n";
+ONLY C: -132html:119:        $_ = <STDIN>;
+DIFF: 36+96 ($`)
+ONLY C: -ChangeLog:5544:1. Add support for the /+ modifier to perltest (to output $` like it does in
+DIFF: 36+97 ($a)
+ONLY C: -CleanTxt:50:    ($a) = $lastprinted =~ /^(\s*)/;
+ONLY C: -CleanTxt:52:    $blankcount++ if ($a ne $b);
+ONLY C: -RunTest:310:if [ "$arg8$arg16$arg32" = "" ] ; then
+DIFF: 36+98 ($b)
+ONLY C: -CleanTxt:8:$blankcount = 0;
+ONLY C: -CleanTxt:40:    $blankcount++;
+ONLY C: -CleanTxt:48:  if ($lastwascut && $blankcount < 1 && defined($lastprinted))
+DIFF: 36+99 ($c)
+ONLY C: -Detrail:10:my($changed) = 0;
+ONLY C: -Detrail:19:    $changed = 1;
+ONLY C: -Detrail:22:if ($changed)
+DIFF: 36+100 ($d)
+ONLY C: -RunTest:369:if [ $do1  = no -a $do2  = no -a $do3  = no -a $do4  = no -a \
+ONLY C: -RunTest:370:     $do5  = no -a $do6  = no -a $do7  = no -a $do8  = no -a \
+ONLY C: -RunTest:371:     $do9  = no -a $do10 = no -a $do11 = no -a $do12 = no -a \
+DIFF: 36+101 ($e)
+ONLY C: -RunTest:147:  if [ $ebcdic -ne 1 ] ; then
+ONLY C: -configure.ac:316:if test "x$enable_utf8" != "xunset"
+ONLY C: -configure.ac:318:  if test "x$enable_utf" != "xunset"
+DIFF: 36+102 ($f)
+ONLY C: -CheckMan:13:  $file = shift @ARGV;
+ONLY C: -CheckMan:15:  open (IN, $file) || die "Failed to open $file\n";
+ONLY C: -CheckMan:22:      printf "Empty line $line of $file\n";
+DIFF: 36+104 ($h)
+ONLY C: -configure.ac:118:if test "x$htmldir" = 'x${docdir}'
+ONLY C: -configure.ac:542:if test "$have_strto_fn" = 1; then
+ONLY C: -configure.ac:879:case $host_os in
+DIFF: 36+105 ($i)
+ONLY C: -132html:23:if ($inpara)
+ONLY C: -132html:25:  print TEMP "</PRE>\n" if ($inpre);
+ONLY C: -132html:28:$inpara = $inpre = 0;
+DIFF: 36+106 ($j)
+ONLY C: -RunTest:359:if [ $jit -ne 0 -a "$nojit" != "yes" ] ; then
+ONLY C: -RunTest:429:  for opt in "" "-s" $jitopt; do
+ONLY C: -RunTest:447:  for opt in "" "-s" $jitopt; do
+DIFF: 36+108 ($l)
+ONLY C: -CheckMan:12:  $line = 0; 
+ONLY C: -CheckMan:19:    $line++; 
+ONLY C: -CheckMan:22:      printf "Empty line $line of $file\n";
+DIFF: 36+109 ($m)
+ONLY C: -132html:209:      my($markup) = $1;
+ONLY C: -132html:214:      print TEMP "$_$markup\n";
+ONLY C: -RunTest:262:       if [ "$tt" = "" ] ; then tt=$maxtest; fi
+DIFF: 36+110 ($n)
+ONLY C: -CleanTxt:63:      $next[$i] = <STDIN>;
+ONLY C: -CleanTxt:64:      $next[$i] = "" if !defined $next[$i];
+ONLY C: -CleanTxt:65:      $next[$i] =~ s/\x1b\[\d+m//g;   # Remove screen controls "ESC [ number m"
+DIFF: 36+111 ($o)
+ONLY C: -132html:225:      my($one,$two);
+ONLY C: -132html:226:      $one = <STDIN>;
+ONLY C: -132html:228:      $one =~ s/\s*\\e\s*$// if (defined($1));
+DIFF: 36+112 ($p)
+ONLY C: -RunGrepTest:33:pcregrep_version=`$pcregrep -V`
+ONLY C: -RunGrepTest:35:  echo "Testing $pcregrep_version"
+ONLY C: -RunGrepTest:37:  echo "Testing $pcregrep_version using valgrind"
+DIFF: 36+114 ($r)
+ONLY C: -132html:48:$ref = 1;
+ONLY C: -132html:149:          $ref, $ref);
+ONLY C: -132html:151:          $ref);
+DIFF: 36+115 ($s)
+ONLY C: -132html:9:my($s) = $_[0];
+ONLY C: -132html:11:$s =~ s/</&#60;/g;                   # Deal with < and >
+ONLY C: -132html:12:$s =~ s/>/&#62;/g;
+DIFF: 36+116 ($t)
+ONLY C: -132html:47:$toc = 0;
+ONLY C: -132html:52:  $toc = 1 if $ARGV[0] eq "-toc";
+ONLY C: -132html:75:print "<ul>\n" if ($toc);
+DIFF: 36+117 ($u)
+ONLY C: -RunGrepTest:540:if [ $utf8 -ne 0 ] ; then
+ONLY C: -RunTest:543:  if [ $utf -eq 0 ] ; then
+ONLY C: -RunTest:563:  if [ $utf -eq 0 ] ; then
+DIFF: 36+118 ($v)
+ONLY C: -RunGrepTest:34:if [ "$valgrind" = "" ] ; then
+ONLY C: -RunGrepTest:75:if [ $? -eq 1 -a "$valgrind" != "" ] ; then
+ONLY C: -RunGrepTest:76:  valgrind="$valgrind --suppressions=./testdata/valgrind-jit.supp"
+DIFF: 36+119 ($w)
+ONLY C: -132html:29:$wrotetext = 0;
+ONLY C: -132html:46:$wrotetext = 0;
+ONLY C: -132html:117:      if ($wrotetext)
+DIFF: 36+120 ($x)
+ONLY C: -ChangeLog:4965:    \Qabc$xyz\E        abc$xyz           abc followed by the contents of $xyz
+ONLY C: -ChangeLog:4966:    \Qabc\$xyz\E       abc\$xyz          abc\$xyz
+ONLY C: -ChangeLog:4967:    \Qabc\E\$\Qxyz\E   abc$xyz           abc$xyz
+DIFF: 36+121 ($y)
+ONLY C: -CheckMan:8:$yield = 0;
+ONLY C: -CheckMan:23:      $yield = 1;  
+ONLY C: -CheckMan:50:        $yield = 1;
+DIFF: 36+123 (${)
+ONLY C: -CMakeLists.txt:79:SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake) # for FindReadline.cmake
+ONLY C: -CMakeLists.txt:207:  INCLUDE_DIRECTORIES(${BZIP2_INCLUDE_DIR})
+ONLY C: -CMakeLists.txt:215:  INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIR})
+DIFF: 36+124 ($|)
+ONLY C: -CheckMan:27:      if (!/^\.\s*$|
+ONLY C: -CheckMan:32:            ^\.TP(?:\s?\d+)?\s*$|
+ONLY C: -CheckMan:33:            ^\.SM\s*$|
+DIFF: 45+46 (-.)
+DIFF: 46+36 (.$)
+DIFF: 46+43 (.+)
+DIFF: 46+45 (.-)
+DIFF: 46+47 (./)
+Binary file (standard input) matches
