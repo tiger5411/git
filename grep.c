@@ -752,9 +752,11 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 	}
 
 #ifdef PCRE2_CONVERT_POSIX_BASIC
-	opt->pcre2_posix_emulation = 1;
-	compile_pcre2_pattern(p, opt);
-	return;
+	if (!getenv("USE_REGCOMP")) {
+		opt->pcre2_posix_emulation = 1;
+		compile_pcre2_pattern(p, opt);
+		return;
+	}
 #endif
 #endif
 
