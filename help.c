@@ -384,14 +384,11 @@ const char *help_unknown_cmd(const char *cmd)
 
 int cmd_version(int argc, const char **argv, const char *prefix)
 {
-	int build_options = 0;
 	const char * const usage[] = {
 		N_("git version [<options>]"),
 		NULL
 	};
 	struct option options[] = {
-		OPT_BOOL(0, "build-options", &build_options,
-			 "also print build options"),
 		OPT_END()
 	};
 
@@ -405,10 +402,6 @@ int cmd_version(int argc, const char **argv, const char *prefix)
 	 */
 	printf("git version %s\n", git_version_string);
 
-	if (build_options) {
-		printf("sizeof-long: %d\n", (int)sizeof(long));
-		/* NEEDSWORK: also save and output GIT-BUILD_OPTIONS? */
-	}
 	return 0;
 }
 
