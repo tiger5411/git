@@ -2650,6 +2650,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	FILE *config_file = NULL;
 	struct stat st;
 	struct strbuf copied_section;
+	int offset;
 
 	if (new_name && !section_name_is_ok(new_name)) {
 		ret = error("invalid section name: %s", new_name);
@@ -2698,7 +2699,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 				 */
 				copying_section = 0;
 			}
-			int offset = section_name_match(&buf[i], old_name);
+			offset = section_name_match(&buf[i], old_name);
 			if (offset > 0) {
 				ret++;
 				if (new_name == NULL) {
