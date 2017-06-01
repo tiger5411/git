@@ -457,9 +457,12 @@ static void copy_or_rename_branch(const char *oldname, const char *newname, int 
 	int recovery = 0;
 	int clobber_head_ok;
 
-	if (!oldname)
-		die(_("cannot %s the current branch while not on any."),
-			 (copy ? "copy" : "rename"));
+	if (!oldname) {
+		if (copy)
+			die(_("cannot copy the current branch while not on any."));
+		else
+			die(_("cannot rename the current branch while not on any."));
+	}
 
 	if (strbuf_check_branch_ref(&oldref, oldname)) {
 		/*
@@ -482,21 +485,33 @@ static void copy_or_rename_branch(const char *oldname, const char *newname, int 
 
 	reject_rebase_or_bisect_branch(oldref.buf);
 
-	strbuf_addf(&logmsg, "Branch: %s %s to %s",
-		 (copy ? "copied" : "renamed"), oldref.buf, newref.buf);
+	if (copy)
+		strbuf_addf(&logmsg, "Branch: copied %s to %s",
+			    oldref.buf, newref.buf);
+	else
+		strbuf_addf(&logmsg, "Branch: renamed %s to %s",
+			    oldref.buf, newref.buf);
 
 	if (!copy && rename_ref(oldref.buf, newref.buf, logmsg.buf))
 		die(_("Branch rename failed"));
 	if (copy && copy_existing_ref(oldref.buf, newref.buf, logmsg.buf))
 		die(_("Branch rename failed"));
 
-	if (recovery)
-		warning(_("%s a misnamed branch '%s' away"),
-			 (copy ? "copied" : "renamed"), oldref.buf + 11);
+	if (recovery) {
+		if (copy)
+			warning(_("Copied a misnamed branch '%s' away"),
+				oldref.buf + 11);
+		else
+			warning(_("Renamed a misnamed branch '%s' away"),
+				oldref.buf + 11);
+	}
 
-	if (replace_each_worktree_head_symref(oldref.buf, newref.buf, logmsg.buf))
-		die(_("Branch %s to %s, but HEAD is not updated!"),
-			 (copy ? "copied" : "renamed"), newname);
+	if (replace_each_worktree_head_symref(oldref.buf, newref.buf, logmsg.buf)) {
+		if (copy)
+			die(_("Branch copied to %s, but HEAD is not updated!"), newname);
+		else
+			die(_("Branch renamed to %s, but HEAD is not updated!"), newname);
+	}
 
 	strbuf_release(&logmsg);
 
