@@ -2691,7 +2691,8 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 		if (buf[i] == '[') {
 			/* it's a section */
 			if (copying_section) {
-				/* Mark the end of copying the matching
+				/*
+				 * Mark the end of copying the matching
 				 * section, as this is the beginning
 				 * of the new section
 				 */
@@ -2714,7 +2715,8 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 					/* Mark the beginning of copying the matching section */
 					copying_section = 1;
 
-					/* TODO: Make this work for the
+					/*
+					 * TODO: Make this work for the
 					 * case when there are multiple
 					 * matching sections
 					 */

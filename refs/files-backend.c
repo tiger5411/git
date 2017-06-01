@@ -1752,7 +1752,7 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 		goto out;
 	}
 
-	// TODO: merge this block with the rename one above
+	/* TODO: merge this block with the rename one above */
 	if (copy && log && copy_file(tmp_renamed_log.buf, sb_oldref.buf, 0644)) {
 		ret = error("unable to copy logfile logs/%s to logs/"TMP_RENAMED_LOG": %s",
 			    oldrefname, strerror(errno));
