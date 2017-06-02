@@ -284,6 +284,8 @@ int wildmatch(const char *pattern, const char *text,
 	pcre2_compile_context *pcre2_compile_context;
 	pcre2_code *pcre2_pattern;
 	pcre2_match_data *pcre2_match_data;
+	pcre2_match_context *pcre2_match_context;
+	pcre2_jit_stack *pcre2_jit_stack;
 	int options = 0;
 	int error;
 	PCRE2_SIZE erroffset;
@@ -321,9 +323,16 @@ int wildmatch(const char *pattern, const char *text,
 	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
 	assert(pcre2_match_data);
 
-	ret_match = pcre2_match(pcre2_pattern, (unsigned char *)text,
-				strlen(text), 0, mflags, pcre2_match_data,
-				NULL);
+	assert(!pcre2_jit_compile(pcre2_pattern, PCRE2_JIT_COMPLETE));
+	pcre2_jit_stack = pcre2_jit_stack_create(1, 1024 * 1024, NULL);
+	assert(pcre2_jit_stack);
+	pcre2_match_context = pcre2_match_context_create(NULL);
+	assert(pcre2_match_context);
+	pcre2_jit_stack_assign(pcre2_match_context, NULL, pcre2_jit_stack);
+
+	ret_match = pcre2_jit_match(pcre2_pattern, (unsigned char *)text,
+				    strlen(text), 0, mflags, pcre2_match_data,
+				    NULL);
 
 	if (ret_match < 0 && ret_match != PCRE2_ERROR_NOMATCH) {
 		pcre2_get_error_message(ret_match, errbuf, sizeof(errbuf));
