@@ -287,15 +287,8 @@ int wildmatch(const char *pattern, const char *text,
 	int options = 0;
 	int error;
 	PCRE2_SIZE erroffset;
-	int ret_dowild;
 	int ret_match;
-	int ret_match_conv;
 	int mflags = 0;
-
-	FILE *fh;
-
-	fh = fopen("/tmp/git-wildmatch.log", "a");
-	assert(fh);
 
 	convret = pcre2_pattern_convert((PCRE2_SPTR)pattern, strlen(pattern),
 					(
@@ -309,33 +302,9 @@ int wildmatch(const char *pattern, const char *text,
 					),
 					&convpatbuf, &convpatlen, NULL);
 	if (convret != 0) {
-		/* FIXME some fail! */
 		pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
-		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
-
-		if (ret_dowild == WM_MATCH) {
-			if (getenv("PDUMP"))
-				fprintf(stderr, "%s -> conv/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCONVFAILWMATCH\t%s\t%s\t%s\n", pattern, text, errbuf);
-		} else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL) {
-			if (getenv("PDUMP"))
-				fprintf(stderr, "%s -> conv/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCONVFAILWFAIL\t%s\t%s\t%s\n", pattern, text, errbuf);
-		} else
-			die("PANIC: %d", ret_dowild);
-	
-		fclose(fh);
-
-		if (getenv("USECONV"))
-			return WM_NOMATCH;
-		else
-			return ret_dowild;
-
 		die("Convert failed: %s", (const char *)errbuf);
 	}
-
-	if (getenv("PDUMP"))
-		fprintf(stderr, "%s -> %s\n", pattern, convpatbuf);
 
 	if (flags & WM_CASEFOLD)
 		options |= PCRE2_CASELESS;
@@ -346,35 +315,12 @@ int wildmatch(const char *pattern, const char *text,
 					 &erroffset, pcre2_compile_context);
 	if (!pcre2_pattern) {
 		pcre2_get_error_message(error, errbuf, sizeof(errbuf));
-		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
 
-		if (ret_dowild == WM_MATCH) {
-			if (getenv("PDUMP"))
-				fprintf(stderr, "%s -> comp/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCOMPFAILWMATCH\t%s\t%s\t%s\n", pattern, text, errbuf);
-		} else if (ret_dowild == WM_NOMATCH || ret_dowild == WM_ABORT_ALL) {
-			if (getenv("PDUMP"))
-				fprintf(stderr, "%s -> comp/ERROR:%s\n", pattern, errbuf);
-			fprintf(fh, "PCOMPFAILWFAIL\t%s\t%s\t%s\n", pattern, text, errbuf);
-		} else
-			die("PANIC: %d", ret_dowild);
-
-		fclose(fh);
-
-		if (getenv("USECONV"))
-			return WM_NOMATCH;
-		else
-			return ret_dowild;
+		return WM_NOMATCH;
 	}
 	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
 	assert(pcre2_match_data);
 
-	if (0) {
-		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
-	} else {
-		ret_dowild = WM_NOMATCH;
-	}
-		
 	ret_match = pcre2_match(pcre2_pattern, (unsigned char *)text,
 				strlen(text), 0, mflags, pcre2_match_data,
 				NULL);
@@ -383,34 +329,10 @@ int wildmatch(const char *pattern, const char *text,
 		pcre2_get_error_message(ret_match, errbuf, sizeof(errbuf));
 		die("pcre2_match failed with error code %d: %s", ret_match, errbuf);
 	}
+
 	if (ret_match > 0) {
-		/* MATCH */
-		ret_match_conv = WM_MATCH;
+		return WM_MATCH;
 	} else {
-		ret_match_conv = WM_NOMATCH;
+		return WM_NOMATCH;
 	}
-
-	if (ret_match_conv == WM_MATCH && ret_dowild == WM_MATCH)
-		fprintf(fh, "BMATCH\t%s\t%s\n", pattern, text);
-	else if (ret_match_conv == WM_MATCH && ret_dowild == WM_NOMATCH)
-		fprintf(fh, "POMATCH\t%s\t%s\n", pattern, text);
-	else if (ret_dowild == WM_MATCH && ret_match_conv == WM_NOMATCH)
-		fprintf(fh, "WOMATCH\t%s\t%s\n", pattern, text);
-	else if (ret_dowild == WM_NOMATCH && ret_match_conv == WM_NOMATCH)
-		fprintf(fh, "BFAIL\t%s\t%s\n", pattern, text);
-	else if (ret_dowild == WM_ABORT_ALL && ret_match_conv == WM_NOMATCH)
-		/* Not 100% sure, but abort just seems to be another sort of fail */
-		fprintf(fh, "BFAIL\t%s\t%s\n", pattern, text);
-	else
-		die("PANIC: %d/%d", ret_dowild, ret_match_conv);
-
-	/*fprintf(stderr, "dw:%d cpm:%d pm:%d nm:%d pat = <%s> conv = <%s> text = <%s>\n",
-		ret_dowild, ret_match_conv, ret_match, PCRE2_ERROR_NOMATCH, pattern, convpatbuf, text);*/
-
-	fclose(fh);
-
-	if (getenv("USECONV"))
-		return ret_match_conv;
-	else
-		return ret_dowild;
 }
