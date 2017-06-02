@@ -337,6 +337,7 @@ int wildmatch(const char *pattern, const char *text,
 
 	if (ret_match < 0 && ret_match != PCRE2_ERROR_NOMATCH) {
 		pcre2_get_error_message(ret_match, errbuf, sizeof(errbuf));
+		return WM_NOMATCH;
 		die("pcre2_match failed with error code %d: %s", ret_match, errbuf);
 	}
 
