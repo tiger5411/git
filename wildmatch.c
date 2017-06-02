@@ -304,8 +304,9 @@ int wildmatch(const char *pattern, const char *text,
 					),
 					&convpatbuf, &convpatlen, NULL);
 	if (convret != 0) {
-		pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
-		die("Convert failed: %s", (const char *)errbuf);
+		/*pcre2_get_error_message(convret, errbuf, sizeof(errbuf));
+		die("Convert failed: %s", (const char *)errbuf);*/
+		return WM_NOMATCH;
 	}
 
 	if (flags & WM_CASEFOLD)
