@@ -369,7 +369,7 @@ int wildmatch(const char *pattern, const char *text,
 	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
 	assert(pcre2_match_data);
 
-	if (1) {
+	if (0) {
 		ret_dowild = dowild((const uchar*)pattern, (const uchar*)text, flags);
 	} else {
 		ret_dowild = WM_NOMATCH;
