@@ -273,25 +273,29 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 	return *text ? WM_NOMATCH : WM_MATCH;
 }
 
+PCRE2_UCHAR *convpatbuf = NULL;
+PCRE2_SIZE convpatlen;
+pcre2_compile_context *g_pcre2_compile_context;
+pcre2_code *g_pcre2_pattern;
+pcre2_match_data *g_pcre2_match_data;
+pcre2_match_context *g_pcre2_match_context;
+pcre2_jit_stack *g_pcre2_jit_stack;
+int options = 0;
+int convret;
+char *lastpat = "";
+
 /* Match the "pattern" against the "text" string. */
 int wildmatch(const char *pattern, const char *text,
 	      unsigned int flags, struct wildopts *wo)
 {
-	int convret;
-	PCRE2_UCHAR *convpatbuf = NULL;
-	PCRE2_SIZE convpatlen;
 	PCRE2_UCHAR errbuf[256];
-	pcre2_compile_context *pcre2_compile_context;
-	pcre2_code *pcre2_pattern;
-	pcre2_match_data *pcre2_match_data;
-	pcre2_match_context *pcre2_match_context;
-	pcre2_jit_stack *pcre2_jit_stack;
-	int options = 0;
 	int error;
 	PCRE2_SIZE erroffset;
 	int ret_match;
 	int mflags = 0;
 
+	if (!g_pcre2_pattern || strcmp(pattern, lastpat)) {
+		lastpat = xstrdup(pattern);
 	convret = pcre2_pattern_convert((PCRE2_SPTR)pattern, strlen(pattern),
 					(
 						PCRE2_CONVERT_GLOB
@@ -312,27 +316,27 @@ int wildmatch(const char *pattern, const char *text,
 	if (flags & WM_CASEFOLD)
 		options |= PCRE2_CASELESS;
 
-	pcre2_compile_context = pcre2_compile_context_create(NULL);
-	assert(pcre2_compile_context);
-	pcre2_pattern = pcre2_compile((PCRE2_SPTR)convpatbuf, strlen((const char *)convpatbuf), options, &error,
-					 &erroffset, pcre2_compile_context);
-	if (!pcre2_pattern) {
+	g_pcre2_compile_context = pcre2_compile_context_create(NULL);
+	assert(g_pcre2_compile_context);
+	g_pcre2_pattern = pcre2_compile((PCRE2_SPTR)convpatbuf, strlen((const char *)convpatbuf), options, &error,
+					 &erroffset, g_pcre2_compile_context);
+	if (!g_pcre2_pattern) {
 		pcre2_get_error_message(error, errbuf, sizeof(errbuf));
 
 		return WM_NOMATCH;
 	}
-	pcre2_match_data = pcre2_match_data_create_from_pattern(pcre2_pattern, NULL);
-	assert(pcre2_match_data);
+	g_pcre2_match_data = pcre2_match_data_create_from_pattern(g_pcre2_pattern, NULL);
+	assert(g_pcre2_match_data);
 
-	assert(!pcre2_jit_compile(pcre2_pattern, PCRE2_JIT_COMPLETE));
-	pcre2_jit_stack = pcre2_jit_stack_create(1, 1024 * 1024, NULL);
-	assert(pcre2_jit_stack);
-	pcre2_match_context = pcre2_match_context_create(NULL);
-	assert(pcre2_match_context);
-	pcre2_jit_stack_assign(pcre2_match_context, NULL, pcre2_jit_stack);
-
-	ret_match = pcre2_jit_match(pcre2_pattern, (unsigned char *)text,
-				    strlen(text), 0, mflags, pcre2_match_data,
+	assert(!pcre2_jit_compile(g_pcre2_pattern, PCRE2_JIT_COMPLETE));
+	g_pcre2_jit_stack = pcre2_jit_stack_create(1, 1024 * 1024, NULL);
+	assert(g_pcre2_jit_stack);
+	g_pcre2_match_context = pcre2_match_context_create(NULL);
+	assert(g_pcre2_match_context);
+	pcre2_jit_stack_assign(g_pcre2_match_context, NULL, g_pcre2_jit_stack);
+	}
+	ret_match = pcre2_jit_match(g_pcre2_pattern, (unsigned char *)text,
+				    strlen(text), 0, mflags, g_pcre2_match_data,
 				    NULL);
 
 	if (ret_match < 0 && ret_match != PCRE2_ERROR_NOMATCH) {
