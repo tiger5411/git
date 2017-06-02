@@ -67,7 +67,6 @@ for pat in \
 	'[!]-]' \
 	'[!]-]' \
 	'\' \
-	'\' \
 	'*/\' \
 	'*/\\' \
 	'foo' \
@@ -94,8 +93,6 @@ for pat in \
 	'[[:xdigit:]]' \
 	'[[:xdigit:]]' \
 	'[[:xdigit:]]' \
-	'[[:alnum:][:alpha:][:blank:][:cntrl:][:digit:][:graph:][:lower:][:print:][:punct:][:space:][:upper:][:xdigit:]]' \
-	'[^[:alnum:][:alpha:][:blank:][:cntrl:][:digit:][:lower:][:space:][:upper:][:xdigit:]]' \
 	'[a-c[:digit:]x-z]' \
 	'[a-c[:digit:]x-z]' \
 	'[a-c[:digit:]x-z]' \
