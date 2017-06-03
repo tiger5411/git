@@ -15,6 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/ .
 
+# If we have a set max runtime record the startup time before anything
+# else is done.
+if test -n "$GIT_TEST_TIMEOUT"
+then
+	TEST_STARTUP_TIME=$(date +%s)
+fi
+
 # Test the binaries we have just built.  The tests are kept in
 # t/ subdirectory and are run in 'trash directory' subdirectory.
 if test -z "$TEST_DIRECTORY"
@@ -1019,6 +1026,21 @@ test_skip () {
 		fi
 		skipped_reason="missing $missing_prereq${of_prereq}"
 	fi
+	if test -z "$GIT_TEST_TIMEOUT_EXCEEDED" -a -n "$GIT_TEST_TIMEOUT"
+	then
+		local now=$(date +%s)
+		local runtime=$(($now - $TEST_STARTUP_TIME))
+		if test $runtime -ge "$GIT_TEST_TIMEOUT"
+		then
+			GIT_TEST_TIMEOUT_EXCEEDED="exceeded $GIT_TEST_TIMEOUT second runtime limit, skipping all remaining tests"
+			export GIT_TEST_TIMEOUT_EXCEEDED
+		fi
+	fi
+	if test -n "$GIT_TEST_TIMEOUT_EXCEEDED"
+	then
+		to_skip=t
+		skipped_reason="$GIT_TEST_TIMEOUT_EXCEEDED"
+	fi
 
 	case "$to_skip" in
 	t)
@@ -1030,6 +1052,15 @@ test_skip () {
 		fi
 
 		say_color skip "ok $test_count # skip $1 ($skipped_reason)"
+
+		# TODO: Do the early exit or not? The code above
+		# supports non-early
+		if test -n "$GIT_TEST_TIMEOUT_EXCEEDED"
+		then
+			skip_all="$GIT_TEST_TIMEOUT_EXCEEDED"
+			test_done
+		fi
+
 		: true
 		;;
 	*)
