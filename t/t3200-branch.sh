@@ -341,6 +341,27 @@ test_expect_success 'config information was renamed, too' '
 	test_must_fail git config branch.s/s.dummy
 '
 
+test_expect_success 'git branch -m correctly copies multiple config sections' '
+	test_when_finished "git checkout master" &&
+	git checkout -b source master &&
+	cat >expect <<-\EOF &&
+	branch.dest.key1=value1
+	some.gar.b=age
+	branch.dest.key2=value2
+	EOF
+	cat >>.git/config <<-\EOF &&
+	[branch "source"]
+		key1 = value1
+	[some "gar"]
+		b = age
+	[branch "source"]
+		key2 = value2
+	EOF
+	git branch -m source dest &&
+	git config -f .git/config -l | grep -e source -e dest -e some.gar >actual &&
+	test_cmp expect actual
+'
+
 test_expect_success 'git branch -c dumps usage' '
 	test_expect_code 128 git branch -c 2>err &&
 	test_i18ngrep "branch name required" err
@@ -439,6 +460,29 @@ test_expect_success 'git branch -C master5 master5 should work when master is ch
 	git checkout master &&
 	git branch master5 &&
 	git branch -C master5 master5
+'
+
+test_expect_success 'git branch -c correctly copies multiple config sections' '
+	test_when_finished "git checkout master" &&
+	git checkout -b source2 master &&
+	cat >expect <<-\EOF &&
+	branch.source2.key1=value1
+	more.gar.b=age
+	branch.source2.key2=value2
+	branch.dest1.key1=value1
+	branch.dest2.key2=value2
+	EOF
+	cat >>.git/config <<-\EOF &&
+	[branch "source2"]
+		key1 = value1
+	[more "gar"]
+		b = age
+	[branch "source2"]
+		key2 = value2
+	EOF
+	git branch -c source2 dest2 &&
+	git config -f .git/config -l | grep -e source2 -e dest2 -e more.gar >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'deleting a symref' '
