@@ -1582,7 +1582,7 @@ static void wt_longstatus_print(struct wt_status *s)
 		status_printf_ln(s, color(WT_STATUS_HEADER, s),
 				 s->commit_template
 				 ? _("Initial commit")
-				 : _("No commits yet on the branch"));
+				 : _("No commits yet"));
 		status_printf_ln(s, color(WT_STATUS_HEADER, s), "%s", "");
 	}
 
