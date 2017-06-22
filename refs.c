@@ -195,7 +195,7 @@ char *resolve_refdup(const char *refname, int resolve_flags,
 
 /* The argument to filter_refs */
 struct ref_filter {
-	const char *pattern;
+	struct wildmatch_compiled *code;
 	each_ref_fn *fn;
 	void *cb_data;
 };
@@ -230,7 +230,7 @@ static int filter_refs(const char *refname, const struct object_id *oid,
 {
 	struct ref_filter *filter = (struct ref_filter *)data;
 
-	if (wildmatch(filter->pattern, refname, 0))
+	if (wildmatch_match(filter->code, refname))
 		return 0;
 	return filter->fn(refname, oid, flags, filter->cb_data);
 }
@@ -391,12 +391,13 @@ int for_each_glob_ref_in(each_ref_fn fn, const char *pattern,
 		strbuf_addch(&real_pattern, '*');
 	}
 
-	filter.pattern = real_pattern.buf;
+	filter.code = wildmatch_compile(real_pattern.buf, 0);
 	filter.fn = fn;
 	filter.cb_data = cb_data;
 	ret = for_each_ref(filter_refs, &filter);
 
 	strbuf_release(&real_pattern);
+	wildmatch_free(filter.code);
 	return ret;
 }
 

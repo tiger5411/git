@@ -128,14 +128,19 @@ copy_data:
 static int subpath_matches(const char *path, const char *filter)
 {
 	const char *subpath = path;
+	struct wildmatch_compiled *wildmatch_compiled =
+		wildmatch_compile(filter, 0);
 
 	while (subpath) {
-		if (!wildmatch(filter, subpath, 0))
+		if (!wildmatch_match(wildmatch_compiled, subpath)) {
+			wildmatch_free(wildmatch_compiled);
 			return subpath - path;
+		}
 		subpath = strchr(subpath, '/');
 		if (subpath)
 			subpath++;
 	}
+	wildmatch_free(wildmatch_compiled);
 	return -1;
 }
 
