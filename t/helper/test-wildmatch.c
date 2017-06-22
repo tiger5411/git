@@ -11,13 +11,13 @@ int cmd_main(int argc, const char **argv)
 			argv[i] += 3;
 	}
 	if (!strcmp(argv[1], "wildmatch"))
-		return !!wildmatch(argv[3], argv[2], WM_PATHNAME, NULL);
+		return !!wildmatch(argv[3], argv[2], WM_PATHNAME);
 	else if (!strcmp(argv[1], "iwildmatch"))
-		return !!wildmatch(argv[3], argv[2], WM_PATHNAME | WM_CASEFOLD, NULL);
+		return !!wildmatch(argv[3], argv[2], WM_PATHNAME | WM_CASEFOLD);
 	else if (!strcmp(argv[1], "pathmatch"))
-		return !!wildmatch(argv[3], argv[2], 0, NULL);
+		return !!wildmatch(argv[3], argv[2], 0);
 	else if (!strcmp(argv[1], "ipathmatch"))
-		return !!wildmatch(argv[3], argv[2], WM_CASEFOLD, NULL);
+		return !!wildmatch(argv[3], argv[2], WM_CASEFOLD);
 	else
 		return 1;
 }
