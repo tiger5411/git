@@ -10,9 +10,8 @@ create_test_file() {
 	# `touch .` will succeed but obviously not do what we intend
 	# here.
 	test "$file" = "." && return 1
-	# `touch` special cases '-', not worth dealing with by
-	# creating the file by other means.
-	test "$file" = "-" && return 1
+	# We cannot create a file with an empty filename.
+	test "$file" = "" && return 1
 	# The tests that are testing that e.g. foo//bar is matched by
 	# foo/*/bar can't be tested on filesystems since there's no
 	# way we're getting a double slash.
@@ -20,13 +19,15 @@ create_test_file() {
 
 	dirs=$(echo "$file" | sed -r 's!/[^/]+$!!')
 
+	# We touch "./$file" instead of "$file" because even an
+	# escaped "touch -- -" means something different.
 	if test "$file" != "$dirs"
 	then
 		mkdir -p -- "$dirs" 2>/dev/null &&
-		touch -- "$file" 2>/dev/null &&
+		touch -- "./$file" 2>/dev/null &&
 		return 0
 	else
-		touch -- "$file" 2>/dev/null &&
+		touch -- "./$file" 2>/dev/null &&
 		return 0
 	fi
 	return 1
@@ -45,11 +46,47 @@ wildtest() {
 		test_expect_success "wildmatch:     match '$text' '$pattern'" "
 			test-wildmatch wildmatch '$text' '$pattern'
 		"
+
+		if create_test_file "$text"
+		then
+			test_expect_success "wildmatch(ls): match '$pattern' '$text'" "
+				test_when_finished \"
+					rm -rf -- * &&
+					git reset
+				\" &&
+				git add -A &&
+				>expect.err &&
+				printf '%s' '$text' >expect &&
+				git --glob-pathspecs ls-files -z -- '$pattern' 2>actual.err | tr -d '\0' >actual &&
+				test_cmp expect.err actual.err &&
+				test_cmp expect actual
+			"
+		else
+			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
+		fi
 	elif test "$match_w_glob" = 0
 	then
 		test_expect_success "wildmatch:  no match '$text' '$pattern'" "
 			! test-wildmatch wildmatch '$text' '$pattern'
 		"
+
+		if create_test_file "$text"
+		then
+			test_expect_success "wildmatch(ls): no match '$pattern' '$text'" "
+				test_when_finished \"
+					rm -rf -- * &&
+					git reset
+				\" &&
+				git add -A &&
+				>expect.err &&
+				>expect &&
+				git --glob-pathspecs ls-files -z -- '$pattern' 2>actual.err | tr -d '\0' >actual &&
+				test_cmp expect.err actual.err &&
+				test_cmp expect actual
+			"
+		else
+			test_expect_success "wildmatch(ls): no match skip '$pattern' '$text' # SKIP " 'false'
+		fi
 	else
 		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_glob" 'false'
 	fi
@@ -76,7 +113,7 @@ wildtest() {
 
 		if create_test_file "$text"
 		then
-			test_expect_success "git-ls-files: match '$pattern' '$text'" "
+			test_expect_success "pathmatch(ls): match '$pattern' '$text'" "
 				test_when_finished \"
 					rm -rf -- * &&
 					git reset
@@ -84,16 +121,36 @@ wildtest() {
 				git add -A &&
 				>expect.err &&
 				printf '%s' '$text' >expect &&
-				git ls-files -z '$pattern' | tr -d '\0' >actual 2>actual.err &&
+				git ls-files -z -- '$pattern' 2>actual.err | tr -d '\0' >actual &&
 				test_cmp expect.err actual.err &&
 				test_cmp expect actual
 			"
+		else
+			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
 	elif test "$match_w_pathmatch" = 0
 	then
 		test_expect_success "pathmatch:  no match '$text' '$pattern'" "
 			! test-wildmatch pathmatch '$text' '$pattern'
 		"
+
+		if create_test_file "$text"
+		then
+			test_expect_success "pathmatch(ls): no match '$pattern' '$text'" "
+				test_when_finished \"
+					rm -rf -- * &&
+					git reset
+				\" &&
+				git add -A &&
+				>expect.err &&
+				>expect &&
+				git ls-files -z -- '$pattern' 2>actual.err | tr -d '\0' >actual &&
+				test_cmp expect.err actual.err &&
+				test_cmp expect actual
+			"
+		else
+			test_expect_failure "pathmatch(ls): no match skip '$pattern' '$text'" 'false'
+		fi
 	else
 		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_pathmatch" 'false'
 	fi
@@ -103,11 +160,47 @@ wildtest() {
 		test_expect_success "ipathmatch:    match '$text' '$pattern'" "
 			test-wildmatch ipathmatch '$text' '$pattern'
 		"
+
+		if create_test_file "$text"
+		then
+			test_expect_success "ipathmatch(ls): match '$pattern' '$text'" "
+				test_when_finished \"
+					rm -rf -- * &&
+					git reset
+				\" &&
+				git add -A &&
+				>expect.err &&
+				printf '%s' '$text' >expect &&
+				git --icase-pathspecs ls-files -z -- '$pattern' 2>actual.err | tr -d '\0' >actual &&
+				test_cmp expect.err actual.err &&
+				test_cmp expect actual
+			"
+		else
+			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
+		fi
 	elif test "$match_w_pathmatchi" = 0
 	then
 		test_expect_success "ipathmatch: no match '$text' '$pattern'" "
 			! test-wildmatch ipathmatch '$text' '$pattern'
 		"
+
+		if create_test_file "$text"
+		then
+			test_expect_success "ipathmatch(ls): no match '$pattern' '$text'" "
+				test_when_finished \"
+					rm -rf -- * &&
+					git reset
+				\" &&
+				git add -A &&
+				>expect.err &&
+				>expect &&
+				git ls-files -z -- '$pattern' 2>actual.err | tr -d '\0' >actual &&
+				test_cmp expect.err actual.err &&
+				test_cmp expect actual
+			"
+		else
+			test_expect_failure "pathmatch(ls): no match skip '$pattern' '$text'" 'false'
+		fi
 	else
 		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_pathmatchi" 'false'
 	fi
@@ -179,7 +272,7 @@ wildtest 1 1 1 1 'acrt' 'a[c-c]rt'
 wildtest 0 0 0 0 ']' '[!]-]'
 wildtest 1 1 1 1 'a' '[!]-]'
 wildtest 0 0 0 0 '' '\'
-wildtest 0 0 0 0 '\' '\'
+#wildtest 0 0 0 0 '\' '\'
 wildtest 0 0 0 0 'XXX/\' '*/\'
 wildtest 1 1 1 1 'XXX/\' '*/\\'
 wildtest 1 1 1 1 'foo' 'foo'
