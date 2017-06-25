@@ -282,6 +282,8 @@ static void show_ce_entry(const struct index_state *istate,
 	if (len > ce_namelen(ce))
 		die("git ls-files: internal error - cache entry not superset of prefix");
 
+	/* TODO: Here we're in a for-each-loop called istate->cache_nr
+	 * times from show_files() */
 	if (recurse_submodules && S_ISGITLINK(ce->ce_mode) &&
 	    submodule_path_match(&pathspec, name.buf, ps_matched)) {
 		show_gitlink(ce);
@@ -663,6 +665,12 @@ int cmd_ls_files(int argc, const char **argv, const char *cmd_prefix)
 		die("ls-files --recurse-submodules does not support "
 		    "--error-unmatch");
 
+	/*
+	 * TODO: This is where we stash the globs in
+	 * pathspec->items. There are pathspec->nr of them. We could
+	 * pre-compile the wildmatch patterns here, or set aside a
+	 * place in the struct to lazy-compile them down the road.
+	 */
 	parse_pathspec(&pathspec, 0,
 		       PATHSPEC_PREFER_CWD,
 		       prefix, argv);

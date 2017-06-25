@@ -89,6 +89,25 @@ int git_fnmatch(const struct pathspec_item *item,
 			ps_strcmp(item, pattern,
 				  string + string_len - pattern_len);
 	}
+
+	/*
+	 * TODO: This is the main hot path, but untangling this whole
+	 * munging of the prefix is a PITA. We take e.g. the pattern
+	 * "t/" + "**.sh" and then conclude that there's a directory
+	 * "t", and then match its entries (recursively) against
+	 * "**.sh".
+	 *
+	 * We should try to just always match the full glob against
+	 * the full pattern. See my "BUG: wildmatches ... don't match
+	 * properly due to internal optimizations" on the mailing list
+	 * (<CACBZZX5u5fF4fJBJ3CwH0DmLBw4D32jN5o=Om-iqwQdPG93DFg@mail.gmail.com>).
+	 *
+	 * TODO: Fix the case of ./git-rev-list HEAD -- "d/[a-m]*"
+	 * fucking up the pattern
+	 *
+	 * TODO: Write a test to make sure the "BUG: wildmatches
+	 * like..." bug is fixed.
+	 */
 	if (item->magic & PATHSPEC_GLOB)
 		return wildmatch(pattern, string,
 				 WM_PATHNAME |
