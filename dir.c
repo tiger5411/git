@@ -74,7 +74,7 @@ int fspathncmp(const char *a, const char *b, size_t count)
 
 int git_fnmatch(const struct pathspec_item *item,
 		const char *pattern, const char *string,
-		int prefix)
+		int prefix, const char *orig_string)
 {
 	if (prefix > 0) {
 		if (ps_strncmp(item, pattern, string, prefix))
@@ -109,12 +109,12 @@ int git_fnmatch(const struct pathspec_item *item,
 	 * like..." bug is fixed.
 	 */
 	if (item->magic & PATHSPEC_GLOB)
-		return wildmatch(pattern, string,
+		return wildmatch(item->match, orig_string,
 				 WM_PATHNAME |
 				 (item->magic & PATHSPEC_ICASE ? WM_CASEFOLD : 0));
 	else
 		/* wildmatch has not learned no FNM_PATHNAME mode yet */
-		return wildmatch(pattern, string,
+		return wildmatch(item->match, orig_string,
 				 item->magic & PATHSPEC_ICASE ? WM_CASEFOLD : 0);
 }
 
@@ -346,7 +346,7 @@ static int match_pathspec_item(const struct pathspec_item *item, int prefix,
 
 	if (item->nowildcard_len < item->len &&
 	    !git_fnmatch(item, match, name,
-			 item->nowildcard_len - prefix))
+			 item->nowildcard_len - prefix, name - prefix))
 		return MATCHED_FNMATCH;
 
 	/* Perform checks to see if "name" is a super set of the pathspec */
