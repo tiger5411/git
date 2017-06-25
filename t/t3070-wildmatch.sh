@@ -4,6 +4,34 @@ test_description='wildmatch tests'
 
 . ./test-lib.sh
 
+create_test_file() {
+	file=$1
+
+	# `touch .` will succeed but obviously not do what we intend
+	# here.
+	test "$file" = "." && return 1
+	# `touch` special cases '-', not worth dealing with by
+	# creating the file by other means.
+	test "$file" = "-" && return 1
+	# The tests that are testing that e.g. foo//bar is matched by
+	# foo/*/bar can't be tested on filesystems since there's no
+	# way we're getting a double slash.
+	echo "$file" | grep -F '//' && return 1
+
+	dirs=$(echo "$file" | sed -r 's!/[^/]+$!!')
+
+	if test "$file" != "$dirs"
+	then
+		mkdir -p -- "$dirs" 2>/dev/null &&
+		touch -- "$file" 2>/dev/null &&
+		return 0
+	else
+		touch -- "$file" 2>/dev/null &&
+		return 0
+	fi
+	return 1
+}
+
 wildtest() {
 	match_w_glob=$1
 	match_w_globi=$2
@@ -45,6 +73,22 @@ wildtest() {
 		test_expect_success "pathmatch:     match '$text' '$pattern'" "
 			test-wildmatch pathmatch '$text' '$pattern'
 		"
+
+		if create_test_file "$text"
+		then
+			test_expect_success "git-ls-files: match '$pattern' '$text'" "
+				test_when_finished \"
+					rm -rf -- * &&
+					git reset
+				\" &&
+				git add -A &&
+				>expect.err &&
+				printf '%s' '$text' >expect &&
+				git ls-files -z '$pattern' | tr -d '\0' >actual 2>actual.err &&
+				test_cmp expect.err actual.err &&
+				test_cmp expect actual
+			"
+		fi
 	elif test "$match_w_pathmatch" = 0
 	then
 		test_expect_success "pathmatch:  no match '$text' '$pattern'" "
