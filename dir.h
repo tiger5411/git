@@ -320,7 +320,7 @@ extern int fspathncmp(const char *a, const char *b, size_t count);
 struct pathspec_item;
 extern int git_fnmatch(const struct pathspec_item *item,
 		       const char *pattern, const char *string,
-		       int prefix, const char *orig_string);
+		       int prefix);
 
 extern int submodule_path_match(const struct pathspec *ps,
 				const char *submodule_name,
