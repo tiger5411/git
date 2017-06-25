@@ -90,6 +90,12 @@ int git_fnmatch(const struct pathspec_item *item,
 				  string + string_len - pattern_len);
 	}
 
+	if (getenv("WDUMP"))
+		fprintf(stderr, "pat = <%s> string = <%s> wo-offset = <%s>\n",
+			item->match,
+			string,
+			string - prefix);
+
 	/*
 	 * TODO: This is the main hot path, but untangling this whole
 	 * munging of the prefix is a PITA. We take e.g. the pattern
@@ -399,6 +405,9 @@ static int do_match_pathspec(const struct pathspec *ps,
 			     unsigned flags)
 {
 	int i, retval = 0, exclude = flags & DO_MATCH_EXCLUDE;
+
+	if (getenv("WDUMP"))
+		fprintf(stderr, "Should not be truncated <%s>\n", name);
 
 	GUARD_PATHSPEC(ps,
 		       PATHSPEC_FROMTOP |

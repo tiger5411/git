@@ -274,7 +274,12 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 /* Match the "pattern" against the "text" string. */
 int wildmatch(const char *pattern, const char *text, unsigned int flags)
 {
-	return dowild((const uchar*)pattern, (const uchar*)text, flags);
+	int ret = dowild((const uchar*)pattern, (const uchar*)text, flags);
+
+	if (getenv("WDUMP"))
+		fprintf(stderr, "p = <%s> t = <%s> ret = <%d>\n", pattern, text, ret);
+
+	return ret;
 }
 
 struct wildmatch_compiled *wildmatch_compile(const char *pattern,
