@@ -1047,7 +1047,8 @@ match_wildcards:
 		 */
 
 		strbuf_add(base, entry->path, pathlen);
-
+		if (getenv("WDUMP"))
+			fprintf(stderr, "m = <%s> s = <%s> so = <%s>\n", match, base->buf + base_offset, base->buf);
 		if (!git_fnmatch(item, match, base->buf + base_offset,
 				 item->nowildcard_len)) {
 			strbuf_setlen(base, base_offset + baselen);
