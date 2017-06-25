@@ -994,7 +994,7 @@ static enum interesting do_match(const struct name_entry *entry,
 
 			if (item->nowildcard_len < item->len) {
 				if (!git_fnmatch(item, match + baselen, entry->path,
-						 item->nowildcard_len - baselen))
+						 item->nowildcard_len - baselen, entry->path))
 					return entry_interesting;
 
 				/*
@@ -1049,7 +1049,7 @@ match_wildcards:
 		strbuf_add(base, entry->path, pathlen);
 
 		if (!git_fnmatch(item, match, base->buf + base_offset,
-				 item->nowildcard_len)) {
+				 item->nowildcard_len, base->buf)) {
 			strbuf_setlen(base, base_offset + baselen);
 			return entry_interesting;
 		}
