@@ -16,6 +16,8 @@ int cmd_main(int argc, const char **argv)
 		return !!wildmatch(argv[3], argv[2], WM_PATHNAME | WM_CASEFOLD, NULL);
 	else if (!strcmp(argv[1], "pathmatch"))
 		return !!wildmatch(argv[3], argv[2], 0, NULL);
+	else if (!strcmp(argv[1], "ipathmatch"))
+		return !!wildmatch(argv[3], argv[2], WM_CASEFOLD, NULL);
 	else
 		return 1;
 }
