@@ -77,6 +77,7 @@
  * https://sourceforge.net/p/predef/wiki/Endianness/ and
  * http://www.oracle.com/technetwork/server-storage/solaris/portingtosolaris-138514.html
  */
+#error "bigend because of __sparc"
 #define SHA1DC_BIGENDIAN
 
 #else /* Not under GCC-alike or glibc or <processor whitelist> */
@@ -95,6 +96,7 @@
  * Solaris / illumos defines either _LITTLE_ENDIAN or _BIG_ENDIAN in
  * <sys/isa_defs.h>.
  */
+#error "bigend because of _BIG_ENDIAN"
 #define SHA1DC_BIGENDIAN
 #else
 /*#error "Uncomment this to see if you fall through all the detection"*/
