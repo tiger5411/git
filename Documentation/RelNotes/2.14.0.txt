@@ -28,6 +28,9 @@ Backward compatibility notes and other notable changes.
    upstream PCRE maintainer has abandoned v1 maintenance for all but
    the most critical bug fixes, use of v2 is recommended.
 
+   Version v2 of the library is fully backwards compatible with the
+   Perl-compatible regular expression syntax exposed by git (sans a
+   few obscure bugfixes).
 
 Updates since v2.13
 -------------------
