@@ -88,8 +88,7 @@ UI, Workflows & Features
    learned to say "it's a pathspec" a bit more often when the syntax
    looks like so.
 
- * Update "perl-compatible regular expression" support to enable JIT
-   and also allow linking with the newer PCRE v2 library.
+ * Update "perl-compatible regular expression" support to enable JIT.
 
  * "filter-branch" learned a pseudo filter "--setup" that can be used
    to define common functions/variables that can be used by other
