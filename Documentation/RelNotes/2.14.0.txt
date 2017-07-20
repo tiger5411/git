@@ -88,7 +88,16 @@ UI, Workflows & Features
    learned to say "it's a pathspec" a bit more often when the syntax
    looks like so.
 
- * Update "perl-compatible regular expression" support to enable JIT.
+ * Update "perl-compatible regular expression" support to enable
+   JIT.
+
+   This makes grep.patternType=perl (and -P and --perl-regexp) much
+   faster for "git grep" and "git log", and is generally faster than
+   the system's POSIX regular expression implementation. Users
+   concerned with "git grep" performance or "git log --grep"
+   performance might want to try setting grep.patternType=perl. Note
+   that the syntax isn't compatible with git's default of
+   grep.patternType=basic.
 
  * "filter-branch" learned a pseudo filter "--setup" that can be used
    to define common functions/variables that can be used by other
