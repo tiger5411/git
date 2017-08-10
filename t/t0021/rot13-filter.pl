@@ -30,7 +30,7 @@
 #     to the "list_available_blobs" response.
 #
 
-use 5.008;
+use v5.10.0;
 use lib (split(/:/, $ENV{GITPERLLIB}));
 use strict;
 use warnings;

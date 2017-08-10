@@ -16,7 +16,7 @@
 #    and second line is the subject of the message.
 #
 
-use 5.008;
+use v5.10.0;
 use strict;
 use warnings;
 use POSIX qw/strftime/;

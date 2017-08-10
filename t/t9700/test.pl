@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 use lib (split(/:/, $ENV{GITPERLLIB}));
 
-use 5.008;
+use v5.10.0;
 use warnings;
 use strict;
 

@@ -1,5 +1,5 @@
 package Git::I18N;
-use 5.008;
+use v5.10.0;
 use strict;
 use warnings;
 BEGIN {

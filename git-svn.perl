@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Copyright (C) 2006, Eric Wong <normalperson@yhbt.net>
 # License: GPL v2 or later
-use 5.008;
+use v5.10.0;
 use warnings;
 use strict;
 use vars qw/	$AUTHOR $VERSION

@@ -10,7 +10,7 @@
 #
 # Any arguments that are unknown to this script are forwarded to 'git diff'.
 
-use 5.008;
+use v5.10.0;
 use strict;
 use warnings;
 use Error qw(:try);

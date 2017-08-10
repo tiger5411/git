@@ -1,6 +1,6 @@
 package DiffHighlight;
 
-use 5.008;
+use v5.10.0;
 use warnings FATAL => 'all';
 use strict;
 
