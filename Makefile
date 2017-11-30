@@ -2274,13 +2274,13 @@ po/build/locale/%/LC_MESSAGES/git.mo: po/%.po
 	$(QUIET_MSGFMT)mkdir -p $(dir $@) && $(MSGFMT) -o $@ $<
 
 PMFILES := $(wildcard perl/*.pm perl/*/*.pm perl/*/*/*.pm perl/*/*/*/*.pm)
-PMCFILES := $(patsubst perl/%.pm,perl/build/%.pmc,$(PMFILES))
+PMCFILES := $(patsubst perl/%.pm,perl/build/lib/%.pmc,$(PMFILES))
 
 ifndef NO_PERL
 all:: $(PMCFILES)
 endif
 
-perl/build/%.pmc: perl/%.pm
+perl/build/lib/%.pmc: perl/%.pm
 	$(QUIET_GEN)mkdir -p $(dir $@) && \
 	sed -e 's|@@LOCALEDIR@@|$(localedir_SQ)|g' < $< > $@
 
@@ -2544,7 +2544,7 @@ ifndef NO_GETTEXT
 endif
 ifndef NO_PERL
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(perllibdir_SQ)'
-	(cd perl/build && $(TAR) cf - .) | \
+	(cd perl/build/lib && $(TAR) cf - .) | \
 	(cd '$(DESTDIR_SQ)$(perllibdir_SQ)' && umask 022 && $(TAR) xof -)
 	$(MAKE) -C gitweb install
 endif

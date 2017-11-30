@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use lib '../../perl/build';
+use lib '../../perl/build/lib';
 use strict;
 use warnings;
 use Git;

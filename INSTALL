@@ -84,7 +84,7 @@ Issues of note:
 
 	GIT_EXEC_PATH=`pwd`
 	PATH=`pwd`:$PATH
-	GITPERLLIB=`pwd`/perl/build
+	GITPERLLIB=`pwd`/perl/build/lib
 	export GIT_EXEC_PATH PATH GITPERLLIB
 
  - By default (unless NO_PERL is provided) Git will ship various perl
