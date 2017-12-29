@@ -97,6 +97,15 @@ static void diff_tree_tweak_rev(struct rev_info *rev, struct setup_revision_opt 
 	}
 }
 
+
+static int diff_tree_config(const char *var, const char *value, void *cb)
+{
+	if (git_color_config(var, value, cb) < 0)
+		return -1;
+
+	return git_diff_basic_config(var, value, cb);
+}
+
 int cmd_diff_tree(int argc, const char **argv, const char *prefix)
 {
 	char line[1000];
@@ -108,7 +117,7 @@ int cmd_diff_tree(int argc, const char **argv, const char *prefix)
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage(diff_tree_usage);
 
-	git_config(git_diff_basic_config, NULL); /* no "diff" UI options */
+	git_config(diff_tree_config, NULL); /* no "diff" UI options */
 	init_revisions(opt, prefix);
 	if (read_cache() < 0)
 		die(_("index file corrupt"));
