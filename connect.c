@@ -774,13 +774,23 @@ static enum protocol parse_connect_url(const char *url_orig, char **ret_host,
 	return protocol;
 }
 
-static const char *get_ssh_command(void)
+static const char *get_ssh_command(int flags)
 {
 	const char *ssh;
 
+	if (flags & CONNECT_SEND && (ssh = getenv("GIT_SSH_SEND_COMMAND")))
+		return ssh;
+	else if (flags & CONNECT_RECEIVE && (ssh = getenv("GIT_SSH_RECEIVE_COMMAND")))
+		return ssh;
 	if ((ssh = getenv("GIT_SSH_COMMAND")))
 		return ssh;
 
+	if (flags & CONNECT_SEND &&
+	    !git_config_get_string_const("core.sshsendcommand", &ssh))
+		return ssh;
+	else if (flags & CONNECT_RECEIVE &&
+	    !git_config_get_string_const("core.sshreceivecommand", &ssh))
+		return ssh;
 	if (!git_config_get_string_const("core.sshcommand", &ssh))
 		return ssh;
 
@@ -997,7 +1007,7 @@ static void fill_ssh_args(struct child_process *conn, const char *ssh_host,
 	if (looks_like_command_line_option(ssh_host))
 		die("strange hostname '%s' blocked", ssh_host);
 
-	ssh = get_ssh_command();
+	ssh = get_ssh_command(flags);
 	if (ssh) {
 		variant = determine_ssh_variant(ssh, 1);
 	} else {
@@ -1008,7 +1018,12 @@ static void fill_ssh_args(struct child_process *conn, const char *ssh_host,
 		 */
 		conn->use_shell = 0;
 
-		ssh = getenv("GIT_SSH");
+		if (flags & CONNECT_SEND)
+			ssh = getenv("GIT_SSH_SEND");
+		else if (flags & CONNECT_RECEIVE)
+			ssh = getenv("GIT_SSH_RECEIVE");
+		if (!ssh)
+			ssh = getenv("GIT_SSH");
 		if (!ssh)
 			ssh = "ssh";
 		variant = determine_ssh_variant(ssh, 0);
