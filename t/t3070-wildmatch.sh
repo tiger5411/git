@@ -87,6 +87,52 @@ wildtest_test_function() {
 
 }
 
+wildtest_test_ls_files() {
+	text=$1
+	pattern=$2
+	match_expect=$3
+	match_function=$4
+
+	if test "$match_expect" = 'E'
+	then
+		if test -e .git/created_test_file
+		then
+			test_expect_success "$match_function (via ls-files): match dies on '$pattern' '$text'" "
+				printf '%s' '$text' >expect &&
+				test_must_fail git --glob-pathspecs ls-files -z -- '$pattern'
+			"
+		else
+			test_expect_failure "$match_function (via ls-files): match skip '$pattern' '$text'" 'false'
+		fi
+	elif test "$match_expect" = 1
+	then
+		if test -e .git/created_test_file
+		then
+			test_expect_success "$match_function (via ls-files): match '$pattern' '$text'" "
+				printf '%s' '$text' >expect &&
+				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
+				$wildtest_stdout_stderr_cmp
+			"
+		else
+			test_expect_failure "$match_function (via ls-files): match skip '$pattern' '$text'" 'false'
+		fi
+	elif test "$match_expect" = 0
+	then
+		if test -e .git/created_test_file
+		then
+			test_expect_success "$match_function (via ls-files): no match '$pattern' '$text'" "
+				>expect &&
+				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
+				$wildtest_stdout_stderr_cmp
+			"
+		else
+			test_expect_failure "$match_function (via ls-files): no match skip '$pattern' '$text'" 'false'
+		fi
+	else
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_expect" 'false'
+	fi
+}
+
 wildtest_stdout_stderr_cmp="
 	tr -d '\0' <actual.raw >actual &&
 	>expect.err &&
@@ -156,44 +202,7 @@ wildtest() {
 	wildtest_test_function "$text" "$pattern" $match_glob "wildmatch"
 
 	# $1: Case sensitive glob match: ls-files
-	if test "$match_file_glob" = 'E'
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "wildmatch(ls): match dies on '$pattern' '$text'" "
-				printf '%s' '$text' >expect &&
-				test_must_fail git --glob-pathspecs ls-files -z -- '$pattern'
-			"
-		else
-			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
-		fi
-	elif test "$match_file_glob" = 1
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "wildmatch(ls): match '$pattern' '$text'" "
-				printf '%s' '$text' >expect &&
-				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
-			"
-		else
-			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
-		fi
-	elif test "$match_file_glob" = 0
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "wildmatch(ls): no match '$pattern' '$text'" "
-				>expect &&
-				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
-			"
-		else
-			test_expect_failure "wildmatch(ls): no match skip '$pattern' '$text'" 'false'
-		fi
-	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_glob" 'false'
-	fi
+	wildtest_test_ls_files "$text" "$pattern" $match_file_glob "wildmatch"
 
 	# $2: Case insensitive glob match: test-wildmatch
 	wildtest_test_function "$text" "$pattern" $match_iglob "iwildmatch"
