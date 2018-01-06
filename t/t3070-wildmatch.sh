@@ -221,44 +221,7 @@ wildtest() {
 	wildtest_test_function "$text" "$pattern" $match_pathmatchi "ipathmatch"
 
 	# $4: Case insensitive path match: ls-files
-	if test "$match_file_pathmatchi" = 'E'
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "ipathmatch(ls): match dies on '$pattern' '$text'" "
-				printf '%s' '$text' >expect &&
-				test_must_fail git --icase-pathspecs ls-files -z -- '$pattern'
-			"
-		else
-			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
-		fi
-	elif test "$match_file_pathmatchi" = 1
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "ipathmatch(ls): match '$pattern' '$text'" "
-				printf '%s' '$text' >expect &&
-				git --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
-			"
-		else
-			test_expect_failure "ipathmatch(ls): match skip '$pattern' '$text'" 'false'
-		fi
-	elif test "$match_file_pathmatchi" = 0
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "ipathmatch(ls): no match '$pattern' '$text'" "
-				>expect &&
-				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
-			"
-		else
-			test_expect_failure "ipathmatch(ls): no match skip '$pattern' '$text'" 'false'
-		fi
-	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_pathmatchi" 'false'
-	fi
+	wildtest_test_ls_files "$text" "$pattern" $match_file_pathmatchi "ipathmatch" " --icase-pathspecs"
 }
 
 # Basic wildmatch features
