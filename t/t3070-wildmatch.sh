@@ -90,15 +90,13 @@ wildtest() {
 		if test -e .git/created_test_file
 		then
 			git reset &&
-			git clean -dxf
+			git clean -df
 		fi
 	'
 
 	printf '%s' "$text" >.git/expected_test_file
 
 	test_expect_success "setup wildtest file test for $text" '
-		git reset &&
-		git clean -dxf &&
 		file=$(cat .git/expected_test_file) &&
 		if should_create_test_file "$file"
 		then
