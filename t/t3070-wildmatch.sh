@@ -214,7 +214,7 @@ wildtest() {
 	# $3: Case sensitive path match: test-wildmatch
 	wildtest_test_function "$text" "$pattern" $match_pathmatch "pathmatch"
 
-	# $4: Case sensitive path match: ls-files
+	# $3: Case sensitive path match: ls-files
 	wildtest_test_ls_files "$text" "$pattern" $match_file_pathmatch "pathmatch" ""
 
 	# $4: Case insensitive path match: test-wildmatch
