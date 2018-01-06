@@ -65,8 +65,10 @@ should_create_test_file() {
 }
 
 wildtest_test_function() {
-	match_expect=$1
-	match_function=$2
+	text=$1
+	pattern=$2
+	match_expect=$3
+	match_function=$4
 
 	# $1: Case sensitive glob match: test-wildmatch
 	if test "$match_expect" = 1
@@ -151,7 +153,7 @@ wildtest() {
 	'
 
 	# $1: Case sensitive glob match: test-wildmatch
-	wildtest_test_function $match_glob "wildmatch"
+	wildtest_test_function "$text" "$pattern" $match_glob "wildmatch"
 
 	# $1: Case sensitive glob match: ls-files
 	if test "$match_file_glob" = 'E'
@@ -194,7 +196,7 @@ wildtest() {
 	fi
 
 	# $2: Case insensitive glob match: test-wildmatch
-	wildtest_test_function $match_iglob "iwildmatch"
+	wildtest_test_function "$text" "$pattern" $match_iglob "iwildmatch"
 
 	# $2: Case insensitive glob match: ls-files
 	if test "$match_file_iglob" = 'E'
@@ -237,7 +239,7 @@ wildtest() {
 	fi
 
 	# $3: Case sensitive path match: test-wildmatch
-	wildtest_test_function $match_pathmatch "pathmatch"
+	wildtest_test_function "$text" "$pattern" $match_pathmatch "pathmatch"
 
 	# $4: Case sensitive path match: ls-files
 	if test "$match_file_pathmatch" = 'E'
@@ -280,7 +282,7 @@ wildtest() {
 	fi
 
 	# $4: Case insensitive path match: test-wildmatch
-	wildtest_test_function $match_pathmatchi "ipathmatch"
+	wildtest_test_function "$text" "$pattern" $match_pathmatchi "ipathmatch"
 
 	# $4: Case insensitive path match: ls-files
 	if test "$match_file_pathmatchi" = 'E'
