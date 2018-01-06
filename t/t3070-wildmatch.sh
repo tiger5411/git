@@ -7,14 +7,6 @@ test_description='wildmatch tests'
 create_test_file() {
 	file=$1
 
-	# These tests limp along under Cygwin, but the failures on
-	# native Windows are still too many. Skip file tests there
-	# until they're sorted out.
-	if test_have_prereq MINGW
-	then
-		return 1
-	fi
-
 	case $file in
 	# `touch .` will succeed but obviously not do what we intend
 	# here.
@@ -36,7 +28,7 @@ create_test_file() {
 	*/)
 		return 1
 		;;
-	# On Cygwin, \ in paths is silently converted to /, which
+	# On Windows, \ in paths is silently converted to /, which
 	# would result in the "touch" below working, but the test
 	# itself failing. See 6fd1106aa4 ("t3700: Skip a test with
 	# backslashes in pathspec", 2009-03-13) for prior art and
