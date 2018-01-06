@@ -48,6 +48,16 @@ should_create_test_file() {
 		;;
 	esac
 
+	if test_have_prereq MINGW
+	then
+		case $file in
+		" ")
+			# Files called " " are forbidden on Windows
+			return 1
+			;;
+		esac
+	fi
+
 	return 0
 }
 
