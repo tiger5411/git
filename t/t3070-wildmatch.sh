@@ -92,6 +92,7 @@ wildtest_test_ls_files() {
 	pattern=$2
 	match_expect=$3
 	match_function=$4
+	ls_files_args=$5
 
 	if test "$match_expect" = 'E'
 	then
@@ -99,7 +100,7 @@ wildtest_test_ls_files() {
 		then
 			test_expect_success "$match_function (via ls-files): match dies on '$pattern' '$text'" "
 				printf '%s' '$text' >expect &&
-				test_must_fail git --glob-pathspecs ls-files -z -- '$pattern'
+				test_must_fail git$ls_files_args ls-files -z -- '$pattern'
 			"
 		else
 			test_expect_failure "$match_function (via ls-files): match skip '$pattern' '$text'" 'false'
@@ -110,7 +111,7 @@ wildtest_test_ls_files() {
 		then
 			test_expect_success "$match_function (via ls-files): match '$pattern' '$text'" "
 				printf '%s' '$text' >expect &&
-				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
+				git$ls_files_args ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
 			"
 		else
@@ -122,7 +123,7 @@ wildtest_test_ls_files() {
 		then
 			test_expect_success "$match_function (via ls-files): no match '$pattern' '$text'" "
 				>expect &&
-				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
+				git$ls_files_args ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
 			"
 		else
@@ -202,50 +203,13 @@ wildtest() {
 	wildtest_test_function "$text" "$pattern" $match_glob "wildmatch"
 
 	# $1: Case sensitive glob match: ls-files
-	wildtest_test_ls_files "$text" "$pattern" $match_file_glob "wildmatch"
+	wildtest_test_ls_files "$text" "$pattern" $match_file_glob "wildmatch" " --glob-pathspecs"
 
 	# $2: Case insensitive glob match: test-wildmatch
 	wildtest_test_function "$text" "$pattern" $match_iglob "iwildmatch"
 
 	# $2: Case insensitive glob match: ls-files
-	if test "$match_file_iglob" = 'E'
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "iwildmatch(ls): match dies on '$pattern' '$text'" "
-				printf '%s' '$text' >expect &&
-				test_must_fail git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern'
-			"
-		else
-			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
-		fi
-	elif test "$match_file_iglob" = 1
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "iwildmatch(ls): match '$pattern' '$text'" "
-				printf '%s' '$text' >expect &&
-				git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
-			"
-		else
-			test_expect_failure "iwildmatch(ls): match skip '$pattern' '$text'" 'false'
-		fi
-	elif test "$match_file_iglob" = 0
-	then
-		if test -e .git/created_test_file
-		then
-			test_expect_success "iwildmatch(ls): no match '$pattern' '$text'" "
-				>expect &&
-				git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
-			"
-		else
-			test_expect_failure "iwildmatch(ls): no match skip '$pattern' '$text'" 'false'
-		fi
-	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_iglob" 'false'
-	fi
+	wildtest_test_ls_files "$text" "$pattern" $match_file_iglob "iwildmatch" " --glob-pathspecs --icase-pathspecs"
 
 	# $3: Case sensitive path match: test-wildmatch
 	wildtest_test_function "$text" "$pattern" $match_pathmatch "pathmatch"
