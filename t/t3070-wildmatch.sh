@@ -55,6 +55,9 @@ should_create_test_file() {
 			# Files called " " are forbidden on Windows
 			return 1
 			;;
+		*\**|*\[*)
+			return 1
+			;;
 		esac
 	fi
 
