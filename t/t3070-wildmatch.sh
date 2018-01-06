@@ -75,26 +75,26 @@ wildtest() {
 	then
 		# When test-wildmatch and git ls-files produce the same
 		# result.
-		match_w_glob=$1
-		match_f_w_glob=$match_w_glob
-		match_w_globi=$2
-		match_f_w_globi=$match_w_globi
-		match_w_pathmatch=$3
-		match_f_w_pathmatch=$match_w_pathmatch
-		match_w_pathmatchi=$4
-		match_f_w_pathmatchi=$match_w_pathmatchi
+		match_glob=$1
+		match_file_glob=$match_glob
+		match_iglob=$2
+		match_file_iglob=$match_iglob
+		match_pathmatch=$3
+		match_file_pathmatch=$match_pathmatch
+		match_pathmatchi=$4
+		match_file_pathmatchi=$match_pathmatchi
 		text=$5
 		pattern=$6
 	elif test "$#" = 10
 	then
-		match_w_glob=$1
-		match_w_globi=$2
-		match_w_pathmatch=$3
-		match_w_pathmatchi=$4
-		match_f_w_glob=$5
-		match_f_w_globi=$6
-		match_f_w_pathmatch=$7
-		match_f_w_pathmatchi=$8
+		match_glob=$1
+		match_iglob=$2
+		match_pathmatch=$3
+		match_pathmatchi=$4
+		match_file_glob=$5
+		match_file_iglob=$6
+		match_file_pathmatch=$7
+		match_file_pathmatchi=$8
 		text=$9
 		pattern=${10}
 	fi
@@ -130,22 +130,22 @@ wildtest() {
 	'
 
 	# $1: Case sensitive glob match: test-wildmatch
-	if test "$match_w_glob" = 1
+	if test "$match_glob" = 1
 	then
 		test_expect_success "wildmatch: match '$text' '$pattern'" "
 			test-wildmatch wildmatch '$text' '$pattern'
 		"
-	elif test "$match_w_glob" = 0
+	elif test "$match_glob" = 0
 	then
 		test_expect_success "wildmatch: no match '$text' '$pattern'" "
 			! test-wildmatch wildmatch '$text' '$pattern'
 		"
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_glob" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_glob" 'false'
 	fi
 
 	# $1: Case sensitive glob match: ls-files
-	if test "$match_f_w_glob" = 'E'
+	if test "$match_file_glob" = 'E'
 	then
 		if test -e .git/created_test_file
 		then
@@ -156,7 +156,7 @@ wildtest() {
 		else
 			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_glob" = 1
+	elif test "$match_file_glob" = 1
 	then
 		if test -e .git/created_test_file
 		then
@@ -168,7 +168,7 @@ wildtest() {
 		else
 			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_glob" = 0
+	elif test "$match_file_glob" = 0
 	then
 		if test -e .git/created_test_file
 		then
@@ -181,26 +181,26 @@ wildtest() {
 			test_expect_failure "wildmatch(ls): no match skip '$pattern' '$text'" 'false'
 		fi
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_f_w_glob" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_glob" 'false'
 	fi
 
 	# $2: Case insensitive glob match: test-wildmatch
-	if test "$match_w_globi" = 1
+	if test "$match_iglob" = 1
 	then
 		test_expect_success "iwildmatch: match '$text' '$pattern'" "
 			test-wildmatch iwildmatch '$text' '$pattern'
 		"
-	elif test "$match_w_globi" = 0
+	elif test "$match_iglob" = 0
 	then
 		test_expect_success "iwildmatch: no match '$text' '$pattern'" "
 			! test-wildmatch iwildmatch '$text' '$pattern'
 		"
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_globi" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_iglob" 'false'
 	fi
 
 	# $2: Case insensitive glob match: ls-files
-	if test "$match_f_w_globi" = 'E'
+	if test "$match_file_iglob" = 'E'
 	then
 		if test -e .git/created_test_file
 		then
@@ -211,7 +211,7 @@ wildtest() {
 		else
 			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_globi" = 1
+	elif test "$match_file_iglob" = 1
 	then
 		if test -e .git/created_test_file
 		then
@@ -223,7 +223,7 @@ wildtest() {
 		else
 			test_expect_failure "iwildmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_globi" = 0
+	elif test "$match_file_iglob" = 0
 	then
 		if test -e .git/created_test_file
 		then
@@ -236,26 +236,26 @@ wildtest() {
 			test_expect_failure "iwildmatch(ls): no match skip '$pattern' '$text'" 'false'
 		fi
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_f_w_globi" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_iglob" 'false'
 	fi
 
 	# $3: Case sensitive path match: test-wildmatch
-	if test "$match_w_pathmatch" = 1
+	if test "$match_pathmatch" = 1
 	then
 		test_expect_success "pathmatch: match '$text' '$pattern'" "
 			test-wildmatch pathmatch '$text' '$pattern'
 		"
-	elif test "$match_w_pathmatch" = 0
+	elif test "$match_pathmatch" = 0
 	then
 		test_expect_success "pathmatch: no match '$text' '$pattern'" "
 			! test-wildmatch pathmatch '$text' '$pattern'
 		"
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_pathmatch" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_pathmatch" 'false'
 	fi
 
 	# $4: Case sensitive path match: ls-files
-	if test "$match_f_w_pathmatch" = 'E'
+	if test "$match_file_pathmatch" = 'E'
 	then
 		if test -e .git/created_test_file
 		then
@@ -266,7 +266,7 @@ wildtest() {
 		else
 			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_pathmatch" = 1
+	elif test "$match_file_pathmatch" = 1
 	then
 		if test -e .git/created_test_file
 		then
@@ -278,7 +278,7 @@ wildtest() {
 		else
 			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_pathmatch" = 0
+	elif test "$match_file_pathmatch" = 0
 	then
 		if test -e .git/created_test_file
 		then
@@ -291,26 +291,26 @@ wildtest() {
 			test_expect_failure "pathmatch(ls): no match skip '$pattern' '$text'" 'false'
 		fi
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_f_w_pathmatch" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_pathmatch" 'false'
 	fi
 
 	# $4: Case insensitive path match: test-wildmatch
-	if test "$match_w_pathmatchi" = 1
+	if test "$match_pathmatchi" = 1
 	then
 		test_expect_success "ipathmatch: match '$text' '$pattern'" "
 			test-wildmatch ipathmatch '$text' '$pattern'
 		"
-	elif test "$match_w_pathmatchi" = 0
+	elif test "$match_pathmatchi" = 0
 	then
 		test_expect_success "ipathmatch: no match '$text' '$pattern'" "
 			! test-wildmatch ipathmatch '$text' '$pattern'
 		"
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_w_pathmatchi" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_pathmatchi" 'false'
 	fi
 
 	# $4: Case insensitive path match: ls-files
-	if test "$match_f_w_pathmatchi" = 'E'
+	if test "$match_file_pathmatchi" = 'E'
 	then
 		if test -e .git/created_test_file
 		then
@@ -321,7 +321,7 @@ wildtest() {
 		else
 			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_pathmatchi" = 1
+	elif test "$match_file_pathmatchi" = 1
 	then
 		if test -e .git/created_test_file
 		then
@@ -333,7 +333,7 @@ wildtest() {
 		else
 			test_expect_failure "ipathmatch(ls): match skip '$pattern' '$text'" 'false'
 		fi
-	elif test "$match_f_w_pathmatchi" = 0
+	elif test "$match_file_pathmatchi" = 0
 	then
 		if test -e .git/created_test_file
 		then
@@ -346,7 +346,7 @@ wildtest() {
 			test_expect_failure "ipathmatch(ls): no match skip '$pattern' '$text'" 'false'
 		fi
 	else
-		test_expect_success "PANIC: Test framework error. Unknown matches value $match_f_w_pathmatchi" 'false'
+		test_expect_success "PANIC: Test framework error. Unknown matches value $match_file_pathmatchi" 'false'
 	fi
 }
 
