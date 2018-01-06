@@ -179,6 +179,29 @@ wildtest() {
 
 	printf '%s' "$text" >.git/expected_test_file
 
+# TODO: Try to just do this with a tree objects:
+# u hello (master) $ git ls-tree 631d134796e8e528cec8490b71b897827291f1d2
+# 100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391    ".\305\207it"
+# u hello (master) $ printf "100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391\ta[bc]d" | git mktree
+# b79dc4f6bccebd02e48d27658be9072edbdfad91
+# u hello (master) $ ^C
+# u hello (master) $ git ls-tree b79dc4f6bccebd02e48d27658be9072edbdfad91
+# 100644 blob e69de29bb2d1d6434b8b29ae775ad8c2e48c5391    a[bc]d
+# u hello (master) $ git read-tree 631d134796e8e528cec8490b71b897827291f1d2
+# u hello (master) $ git st
+# AD ".\305\207it"
+# ?? foo
+# u hello (master) $ git read-tree b79dc4f6bccebd02e48d27658be9072edbdfad91
+# u hello (master) $ git st
+# AD a[bc]d
+# ?? foo
+# u hello (master) $ git ls-files 'a*d'
+# a[bc]d
+# u hello (master) $ git reset
+# u hello (master) $ git st
+# ?? foo
+
+
 	test_expect_success "setup wildtest file test for $text" '
 		file=$(cat .git/expected_test_file) &&
 		if should_create_test_file "$file"
