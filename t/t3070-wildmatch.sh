@@ -199,28 +199,20 @@ wildtest() {
 		fi
 	'
 
-	# $1: Case sensitive glob match: test-wildmatch
+	# $1: Case sensitive glob match: test-wildmatch & ls-files
 	wildtest_test_function "$text" "$pattern" $match_glob "wildmatch"
-
-	# $1: Case sensitive glob match: ls-files
 	wildtest_test_ls_files "$text" "$pattern" $match_file_glob "wildmatch" " --glob-pathspecs"
 
-	# $2: Case insensitive glob match: test-wildmatch
+	# $2: Case insensitive glob match: test-wildmatch & ls-files
 	wildtest_test_function "$text" "$pattern" $match_iglob "iwildmatch"
-
-	# $2: Case insensitive glob match: ls-files
 	wildtest_test_ls_files "$text" "$pattern" $match_file_iglob "iwildmatch" " --glob-pathspecs --icase-pathspecs"
 
-	# $3: Case sensitive path match: test-wildmatch
+	# $3: Case sensitive path match: test-wildmatch & ls-files
 	wildtest_test_function "$text" "$pattern" $match_pathmatch "pathmatch"
-
-	# $3: Case sensitive path match: ls-files
 	wildtest_test_ls_files "$text" "$pattern" $match_file_pathmatch "pathmatch" ""
 
-	# $4: Case insensitive path match: test-wildmatch
+	# $4: Case insensitive path match: test-wildmatch & ls-files
 	wildtest_test_function "$text" "$pattern" $match_pathmatchi "ipathmatch"
-
-	# $4: Case insensitive path match: ls-files
 	wildtest_test_ls_files "$text" "$pattern" $match_file_pathmatchi "ipathmatch" " --icase-pathspecs"
 }
 
