@@ -79,7 +79,7 @@ wildtest_test_function() {
 	elif test "$match_expect" = 0
 	then
 		test_expect_success "$match_function: no match '$text' '$pattern'" "
-			! test-wildmatch $match_function '$text' '$pattern'
+			test_must_fail test-wildmatch $match_function '$text' '$pattern'
 		"
 	else
 		test_expect_success "PANIC: Test framework error. Unknown matches value $match_expect" 'false'
