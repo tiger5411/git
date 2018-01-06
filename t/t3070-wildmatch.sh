@@ -4,7 +4,7 @@ test_description='wildmatch tests'
 
 . ./test-lib.sh
 
-create_test_file() {
+should_create_test_file() {
 	file=$1
 
 	case $file in
@@ -48,34 +48,12 @@ create_test_file() {
 		;;
 	esac
 
-	# Turn foo/bar/baz into foo/bar to create foo/bar as a
-	# directory structure.
-	dirs=${file%/*}
-
-	# We touch "./$file" instead of "$file" because even an
-	# escaped "touch -- -" means get arguments from stdin.
-	if test "$file" != "$dirs"
-	then
-		mkdir -p -- "$dirs" &&
-		touch -- "./$file" &&
-		return 0
-	else
-		touch -- "./$file" &&
-		return 0
-	fi
-	return 1
+	return 0
 }
-
-wildtest_file_setup="
-	test_when_finished '
-		git reset &&
-		git clean -dxf
-	' &&
-	git add -A &&
-	>expect.err"
 
 wildtest_stdout_stderr_cmp="
 	tr -d '\0' <actual.raw >actual &&
+	>expect.err &&
 	test_cmp expect.err actual.err &&
 	test_cmp expect actual"
 
@@ -108,6 +86,38 @@ wildtest() {
 		pattern=${10}
 	fi
 
+	test_expect_success 'cleanup after previous file test' '
+		if test -e .git/created_test_file
+		then
+			git reset &&
+			git clean -dxf
+		fi
+	'
+
+	printf '%s' "$text" >.git/expected_test_file
+
+	test_expect_success "setup wildtest file test for $text" '
+		git reset &&
+		git clean -dxf &&
+		file=$(cat .git/expected_test_file) &&
+		if should_create_test_file "$file"
+		then
+			dirs=${file%/*}
+			if test "$file" != "$dirs"
+			then
+				mkdir -p -- "$dirs" &&
+				touch -- "./$text"
+			else
+				touch -- "./$file"
+			fi &&
+			git add -A &&
+			printf "%s" "$file" >.git/created_test_file
+		elif test -e .git/created_test_file
+		then
+			rm .git/created_test_file
+		fi
+	'
+
 	# $1: Case sensitive glob match: test-wildmatch
 	if test "$match_w_glob" = 1
 	then
@@ -126,10 +136,9 @@ wildtest() {
 	# $1: Case sensitive glob match: ls-files
 	if test "$match_f_w_glob" = 'E'
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "wildmatch(ls): match dies on '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git --glob-pathspecs ls-files -z -- '$pattern'
 			"
@@ -138,10 +147,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_glob" = 1
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "wildmatch(ls): match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -151,10 +159,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_glob" = 0
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "wildmatch(ls): no match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				>expect &&
 				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -184,10 +191,9 @@ wildtest() {
 	# $2: Case insensitive glob match: ls-files
 	if test "$match_f_w_globi" = 'E'
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "iwildmatch(ls): match dies on '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern'
 			"
@@ -196,10 +202,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_globi" = 1
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "iwildmatch(ls): match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -209,10 +214,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_globi" = 0
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "iwildmatch(ls): no match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				>expect &&
 				git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -242,10 +246,9 @@ wildtest() {
 	# $4: Case sensitive path match: ls-files
 	if test "$match_f_w_pathmatch" = 'E'
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "pathmatch(ls): match dies on '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git ls-files -z -- '$pattern'
 			"
@@ -254,10 +257,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_pathmatch" = 1
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "pathmatch(ls): match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -267,10 +269,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_pathmatch" = 0
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "pathmatch(ls): no match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				>expect &&
 				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -300,10 +301,9 @@ wildtest() {
 	# $4: Case insensitive path match: ls-files
 	if test "$match_f_w_pathmatchi" = 'E'
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "ipathmatch(ls): match dies on '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git --icase-pathspecs ls-files -z -- '$pattern'
 			"
@@ -312,10 +312,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_pathmatchi" = 1
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "ipathmatch(ls): match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
@@ -325,10 +324,9 @@ wildtest() {
 		fi
 	elif test "$match_f_w_pathmatchi" = 0
 	then
-		if create_test_file "$text"
+		if test -e .git/created_test_file
 		then
 			test_expect_success "ipathmatch(ls): no match '$pattern' '$text'" "
-				$wildtest_file_setup &&
 				>expect &&
 				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
 				$wildtest_stdout_stderr_cmp
