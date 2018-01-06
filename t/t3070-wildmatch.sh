@@ -94,6 +94,12 @@ wildtest_test_ls_files() {
 	match_function=$4
 	ls_files_args=$5
 
+	wildtest_test_stdout_stderr_cmp="
+		tr -d '\0' <actual.raw >actual &&
+		>expect.err &&
+		test_cmp expect.err actual.err &&
+		test_cmp expect actual"
+
 	if test "$match_expect" = 'E'
 	then
 		if test -e .git/created_test_file
@@ -112,7 +118,7 @@ wildtest_test_ls_files() {
 			test_expect_success "$match_function (via ls-files): match '$pattern' '$text'" "
 				printf '%s' '$text' >expect &&
 				git$ls_files_args ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
+				$wildtest_test_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "$match_function (via ls-files): match skip '$pattern' '$text'" 'false'
@@ -124,7 +130,7 @@ wildtest_test_ls_files() {
 			test_expect_success "$match_function (via ls-files): no match '$pattern' '$text'" "
 				>expect &&
 				git$ls_files_args ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				$wildtest_stdout_stderr_cmp
+				$wildtest_test_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "$match_function (via ls-files): no match skip '$pattern' '$text'" 'false'
@@ -133,12 +139,6 @@ wildtest_test_ls_files() {
 		test_expect_success "PANIC: Test framework error. Unknown matches value $match_expect" 'false'
 	fi
 }
-
-wildtest_stdout_stderr_cmp="
-	tr -d '\0' <actual.raw >actual &&
-	>expect.err &&
-	test_cmp expect.err actual.err &&
-	test_cmp expect actual"
 
 wildtest() {
 	if test "$#" = 6
