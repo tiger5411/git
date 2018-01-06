@@ -66,20 +66,18 @@ create_test_file() {
 	return 1
 }
 
-wildtest_file_setup() {
-	test_when_finished "
-		rm -rf -- * &&
-		git reset
-	" &&
+wildtest_file_setup="
+	test_when_finished '
+		git reset &&
+		git clean -dxf
+	' &&
 	git add -A &&
-	>expect.err
-}
+	>expect.err"
 
-wildtest_stdout_stderr_cmp() {
+wildtest_stdout_stderr_cmp="
 	tr -d '\0' <actual.raw >actual &&
 	test_cmp expect.err actual.err &&
-	test_cmp expect actual
-}
+	test_cmp expect actual"
 
 wildtest() {
 	if test "$#" = 6
@@ -131,7 +129,7 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "wildmatch(ls): match dies on '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git --glob-pathspecs ls-files -z -- '$pattern'
 			"
@@ -143,10 +141,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "wildmatch(ls): match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "wildmatch(ls): match skip '$pattern' '$text'" 'false'
@@ -156,10 +154,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "wildmatch(ls): no match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				>expect &&
 				git --glob-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "wildmatch(ls): no match skip '$pattern' '$text'" 'false'
@@ -189,7 +187,7 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "iwildmatch(ls): match dies on '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern'
 			"
@@ -201,10 +199,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "iwildmatch(ls): match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "iwildmatch(ls): match skip '$pattern' '$text'" 'false'
@@ -214,10 +212,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "iwildmatch(ls): no match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				>expect &&
 				git --glob-pathspecs --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "iwildmatch(ls): no match skip '$pattern' '$text'" 'false'
@@ -247,7 +245,7 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "pathmatch(ls): match dies on '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git ls-files -z -- '$pattern'
 			"
@@ -259,10 +257,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "pathmatch(ls): match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "pathmatch(ls): match skip '$pattern' '$text'" 'false'
@@ -272,10 +270,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "pathmatch(ls): no match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				>expect &&
 				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "pathmatch(ls): no match skip '$pattern' '$text'" 'false'
@@ -305,7 +303,7 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "ipathmatch(ls): match dies on '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				test_must_fail git --icase-pathspecs ls-files -z -- '$pattern'
 			"
@@ -317,10 +315,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "ipathmatch(ls): match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				printf '%s' '$text' >expect &&
 				git --icase-pathspecs ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "ipathmatch(ls): match skip '$pattern' '$text'" 'false'
@@ -330,10 +328,10 @@ wildtest() {
 		if create_test_file "$text"
 		then
 			test_expect_success "ipathmatch(ls): no match '$pattern' '$text'" "
-				wildtest_file_setup &&
+				$wildtest_file_setup &&
 				>expect &&
 				git ls-files -z -- '$pattern' >actual.raw 2>actual.err &&
-				wildtest_stdout_stderr_cmp
+				$wildtest_stdout_stderr_cmp
 			"
 		else
 			test_expect_failure "ipathmatch(ls): no match skip '$pattern' '$text'" 'false'
