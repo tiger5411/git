@@ -65,8 +65,12 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 		flags |= OBJECT_INFO_ALLOW_UNKNOWN_TYPE;
 
 	if (get_oid_with_context(obj_name, GET_OID_RECORD_PATH,
-				 &oid, &obj_context))
-		die("Not a valid object name %s", obj_name);
+				 &oid, &obj_context)) {
+		if (opt == 'e')
+			return 1;
+		else
+			die("Not hello a valid object name %s", obj_name);
+	}
 
 	if (!path)
 		path = obj_context.path;

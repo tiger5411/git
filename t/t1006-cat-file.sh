@@ -201,6 +201,13 @@ do
     '
 done
 
+test_expect_success 'Providing -e should suppress all error output' '
+	! git cat-file -e some-garbage >stdout 2>stderr &&
+	>expect &&
+	test_cmp expect stdout &&
+	test_cmp expect stderr
+'
+
 for opt in t s e p
 do
     test_expect_success "Passing -$opt with --follow-symlinks fails" '
