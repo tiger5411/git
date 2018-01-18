@@ -95,7 +95,7 @@ static void add_push_refspec(struct remote *remote, const char *ref)
 	remote->push_refspec[remote->push_refspec_nr++] = ref;
 }
 
-static void add_fetch_refspec(struct remote *remote, const char *ref)
+void add_fetch_refspec(struct remote *remote, const char *ref)
 {
 	ALLOC_GROW(remote->fetch_refspec,
 		   remote->fetch_refspec_nr + 1,
@@ -173,6 +173,7 @@ static struct remote *make_remote(const char *name, int len)
 
 	ret = xcalloc(1, sizeof(struct remote));
 	ret->prune = -1;  /* unspecified */
+	ret->prune_tags = -1;  /* unspecified */
 	ALLOC_GROW(remotes, remotes_nr + 1, remotes_alloc);
 	remotes[remotes_nr++] = ret;
 	ret->name = xstrndup(name, len);
@@ -391,6 +392,8 @@ static int handle_config(const char *key, const char *value, void *cb)
 		remote->skip_default_update = git_config_bool(key, value);
 	else if (!strcmp(subkey, "prune"))
 		remote->prune = git_config_bool(key, value);
+	else if (!strcmp(subkey, "prunetags"))
+		remote->prune_tags = git_config_bool(key, value);
 	else if (!strcmp(subkey, "url")) {
 		const char *v;
 		if (git_config_string(&v, key, value))
