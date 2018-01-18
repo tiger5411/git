@@ -617,6 +617,7 @@ test_configured_prune () {
 test_configured_prune unset unset unset unset kept   kept   ""
 test_configured_prune unset unset unset unset kept   kept   "--no-prune"
 test_configured_prune unset unset unset unset pruned kept   "--prune"
+test_configured_prune unset unset unset unset pruned pruned "--prune --prune-tags" # WIP: broken, see commit msg
 test_configured_prune unset unset unset unset kept   pruned \
 	"--prune origin 'refs/tags/*:refs/tags/*'"
 test_configured_prune unset unset unset unset pruned pruned \

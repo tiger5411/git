@@ -38,6 +38,10 @@ static int fetch_prune_config = -1; /* unspecified */
 static int prune = -1; /* unspecified */
 #define PRUNE_BY_DEFAULT 0 /* do we prune by default? */
 
+static int fetch_prune_tags_config = -1; /* unspecified */
+static int prune_tags = -1; /* unspecified */
+#define PRUNE_TAGS_BY_DEFAULT 0 /* do we prune tags by default? */
+
 static int all, append, dry_run, force, keep, multiple, update_head_ok, verbosity, deepen_relative;
 static int progress = -1;
 static int tags = TAGS_DEFAULT, unshallow, update_shallow, deepen;
@@ -61,6 +65,11 @@ static int git_fetch_config(const char *k, const char *v, void *cb)
 {
 	if (!strcmp(k, "fetch.prune")) {
 		fetch_prune_config = git_config_bool(k, v);
+		return 0;
+	}
+
+	if (!strcmp(k, "fetch.prunetags")) {
+		fetch_prune_tags_config = git_config_bool(k, v);
 		return 0;
 	}
 
@@ -126,6 +135,8 @@ static struct option builtin_fetch_options[] = {
 		    N_("number of submodules fetched in parallel")),
 	OPT_BOOL('p', "prune", &prune,
 		 N_("prune remote-tracking branches no longer on remote")),
+	OPT_BOOL('P', "prune-tags", &prune_tags,
+		 N_("prune local tags not found on remote")),
 	{ OPTION_CALLBACK, 0, "recurse-submodules", &recurse_submodules, N_("on-demand"),
 		    N_("control recursive fetching of submodules"),
 		    PARSE_OPT_OPTARG, option_fetch_parse_recurse_submodules },
@@ -1212,6 +1223,8 @@ static void add_options_to_argv(struct argv_array *argv)
 		argv_array_push(argv, "--dry-run");
 	if (prune != -1)
 		argv_array_push(argv, prune ? "--prune" : "--no-prune");
+	if (prune_tags != -1)
+		argv_array_push(argv, prune_tags ? "--prune-tags" : "--no-prune-tags");
 	if (update_head_ok)
 		argv_array_push(argv, "--update-head-ok");
 	if (force)
@@ -1270,6 +1283,7 @@ static int fetch_one(struct remote *remote, int argc, const char **argv)
 	static const char **refs = NULL;
 	struct refspec *refspec;
 	int ref_nr = 0;
+	int j = 0;
 	int exit_code;
 
 	if (!remote)
@@ -1288,10 +1302,27 @@ static int fetch_one(struct remote *remote, int argc, const char **argv)
 			prune = PRUNE_BY_DEFAULT;
 	}
 
+	if (prune_tags < 0) {
+		/* no command line request */
+		if (0 <= gtransport->remote->prune_tags)
+			prune_tags = gtransport->remote->prune_tags;
+		else if (0 <= fetch_prune_tags_config)
+			prune_tags = fetch_prune_tags_config;
+		else
+			prune_tags = PRUNE_TAGS_BY_DEFAULT;
+	}
+
+	if (argc > 0 || prune_tags) {
+		size_t nr_alloc = st_add3(argc, prune_tags, 1);
+		refs = xcalloc(nr_alloc, sizeof(const char *));
+		if (prune_tags) {
+			refs[j++] = xstrfmt("refs/tags/*:refs/tags/*");
+			ref_nr++;
+		}
+	}
+
 	if (argc > 0) {
-		int j = 0;
 		int i;
-		refs = xcalloc(st_add(argc, 1), sizeof(const char *));
 		for (i = 0; i < argc; i++) {
 			if (!strcmp(argv[i], "tag")) {
 				i++;
@@ -1301,8 +1332,8 @@ static int fetch_one(struct remote *remote, int argc, const char **argv)
 						    argv[i], argv[i]);
 			} else
 				refs[j++] = argv[i];
+			ref_nr++;
 		}
-		ref_nr = j;
 	}
 
 	sigchain_push_common(unlock_pack_on_signal);
