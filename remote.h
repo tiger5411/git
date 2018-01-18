@@ -47,6 +47,7 @@ struct remote {
 	int skip_default_update;
 	int mirror;
 	int prune;
+	int prune_tags;
 
 	const char *receivepack;
 	const char *uploadpack;
@@ -132,6 +133,8 @@ struct ref {
 #define REF_NORMAL	(1u << 0)
 #define REF_HEADS	(1u << 1)
 #define REF_TAGS	(1u << 2)
+
+void add_fetch_refspec(struct remote *remote, const char *ref);
 
 extern struct ref *find_ref_by_name(const struct ref *list, const char *name);
 
