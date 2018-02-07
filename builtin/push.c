@@ -50,11 +50,11 @@ static const char *map_refspec(const char *ref,
 	if (count_refspec_match(ref, local_refs, &matched) != 1)
 		return ref;
 
-	if (remote->push) {
+	if (remote->xpush) {
 		struct refspec query;
 		memset(&query, 0, sizeof(struct refspec));
 		query.src = matched->name;
-		if (!query_refspecs(remote->push, remote->push_refspec_nr, &query) &&
+		if (!query_refspecs(remote->xpush, remote->xpush_nr, &query) &&
 		    query.dst) {
 			struct strbuf buf = STRBUF_INIT;
 			strbuf_addf(&buf, "%s%s:%s",

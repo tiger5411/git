@@ -690,9 +690,9 @@ const char *remote_ref_for_branch(struct branch *branch, int for_push,
 				pushremote_for_branch(branch, NULL);
 			struct remote *remote = remote_get(remote_name);
 
-			if (remote && remote->push_refspec_nr &&
-			    (dst = apply_refspecs(remote->push,
-						  remote->push_refspec_nr,
+			if (remote && remote->xpush_nr &&
+			    (dst = apply_refspecs(remote->xpush,
+						  remote->xpush_nr,
 						  branch->refname))) {
 				if (explicit)
 					*explicit = 1;
@@ -729,8 +729,8 @@ static struct remote *remote_get_1(const char *name,
 		add_url_alias(ret, name);
 	if (!valid_remote(ret))
 		return NULL;
-	ret->fetch = parse_fetch_refspec(ret->fetch_refspec_nr, ret->fetch_refspec);
-	ret->push = parse_push_refspec(ret->push_refspec_nr, ret->push_refspec);
+	ret->xfetch = parse_fetch_refspec(ret->fetch_refspec_nr, ret->fetch_refspec);
+	ret->xpush = parse_push_refspec(ret->push_refspec_nr, ret->push_refspec);
 	return ret;
 }
 
@@ -761,11 +761,11 @@ int for_each_remote(each_remote_fn fn, void *priv)
 		struct remote *r = remotes[i];
 		if (!r)
 			continue;
-		if (!r->fetch)
-			r->fetch = parse_fetch_refspec(r->fetch_refspec_nr,
+		if (!r->xfetch)
+			r->xfetch = parse_fetch_refspec(r->fetch_refspec_nr,
 						       r->fetch_refspec);
-		if (!r->push)
-			r->push = parse_push_refspec(r->push_refspec_nr,
+		if (!r->xpush)
+			r->xpush = parse_push_refspec(r->push_refspec_nr,
 						     r->push_refspec);
 		result = fn(r, priv);
 	}
@@ -945,7 +945,7 @@ char *apply_refspecs(struct refspec *refspecs, int nr_refspec,
 
 int remote_find_tracking(struct remote *remote, struct refspec *refspec)
 {
-	return query_refspecs(remote->fetch, remote->fetch_refspec_nr, refspec);
+	return query_refspecs(remote->xfetch, remote->xfetch_nr, refspec);
 }
 
 static struct ref *alloc_ref_with_prefix(const char *prefix, size_t prefixlen,
@@ -1738,7 +1738,7 @@ static const char *tracking_for_push_dest(struct remote *remote,
 {
 	char *ret;
 
-	ret = apply_refspecs(remote->fetch, remote->fetch_refspec_nr, refname);
+	ret = apply_refspecs(remote->xfetch, remote->xfetch_nr, refname);
 	if (!ret)
 		return error_buf(err,
 				 _("push destination '%s' on remote '%s' has no local tracking branch"),
@@ -1760,7 +1760,7 @@ static const char *branch_get_push_1(struct branch *branch, struct strbuf *err)
 		char *dst;
 		const char *ret;
 
-		dst = apply_refspecs(remote->push, remote->push_refspec_nr,
+		dst = apply_refspecs(remote->xpush, remote->xpush_nr,
 				     branch->refname);
 		if (!dst)
 			return error_buf(err,
@@ -2354,7 +2354,7 @@ static int remote_tracking(struct remote *remote, const char *refname,
 {
 	char *dst;
 
-	dst = apply_refspecs(remote->fetch, remote->fetch_refspec_nr, refname);
+	dst = apply_refspecs(remote->xfetch, remote->xfetch_nr, refname);
 	if (!dst)
 		return -1; /* no tracking ref for refname at remote */
 	if (read_ref(dst, oid))

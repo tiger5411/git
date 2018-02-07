@@ -28,14 +28,18 @@ struct remote {
 	int pushurl_alloc;
 
 	const char **push_refspec;
-	struct refspec *push;
 	int push_refspec_nr;
 	int push_refspec_alloc;
+	struct refspec *xpush;
+	int xpush_nr;
+	int xpush_alloc;
 
 	const char **fetch_refspec;
-	struct refspec *fetch;
 	int fetch_refspec_nr;
 	int fetch_refspec_alloc;
+	struct refspec *xfetch;
+	int xfetch_nr;
+	int xfetch_alloc;
 
 	/*
 	 * -1 to never fetch tags

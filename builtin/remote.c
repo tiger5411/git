@@ -333,7 +333,7 @@ static int get_ref_states(const struct ref *remote_refs, struct ref_states *stat
 	int i;
 
 	for (i = 0; i < states->remote->fetch_refspec_nr; i++)
-		if (get_fetch_map(remote_refs, states->remote->fetch + i, &tail, 1))
+		if (get_fetch_map(remote_refs, states->remote->xfetch + i, &tail, 1))
 			die(_("Could not get fetch map for refspec %s"),
 				states->remote->fetch_refspec[i]);
 
@@ -346,8 +346,8 @@ static int get_ref_states(const struct ref *remote_refs, struct ref_states *stat
 		else
 			string_list_append(&states->tracked, abbrev_branch(ref->name));
 	}
-	stale_refs = get_stale_heads(states->remote->fetch,
-				     states->remote->fetch_refspec_nr, fetch_map);
+	stale_refs = get_stale_heads(states->remote->xfetch,
+				     states->remote->xfetch_nr, fetch_map);
 	for (ref = stale_refs; ref; ref = ref->next) {
 		struct string_list_item *item =
 			string_list_append(&states->stale, abbrev_branch(ref->name));
@@ -440,8 +440,8 @@ static int get_push_ref_states_noquery(struct ref_states *states)
 		info->status = PUSH_STATUS_NOTQUERIED;
 		info->dest = xstrdup(item->string);
 	}
-	for (i = 0; i < remote->push_refspec_nr; i++) {
-		struct refspec *spec = remote->push + i;
+	for (i = 0; i < remote->xpush_nr; i++) {
+		struct refspec *spec = remote->xpush + i;
 		if (spec->matching)
 			item = string_list_append(&states->push, _("(matching)"));
 		else if (strlen(spec->src))
