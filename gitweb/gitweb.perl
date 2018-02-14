@@ -490,7 +490,6 @@ our %feature = (
 	# Currently available providers are gravatar and picon.
 	# If an unknown provider is specified, the feature is disabled.
 
-	# Gravatar depends on Digest::MD5.
 	# Picon currently relies on the indiana.edu database.
 
 	# To enable system wide have in $GITWEB_CONFIG
@@ -1166,18 +1165,11 @@ sub configure_gitweb_features {
 	our @snapshot_fmts = gitweb_get_feature('snapshot');
 	@snapshot_fmts = filter_snapshot_fmts(@snapshot_fmts);
 
-	# check that the avatar feature is set to a known provider name,
-	# and for each provider check if the dependencies are satisfied.
-	# if the provider name is invalid or the dependencies are not met,
-	# reset $git_avatar to the empty string.
+	# check that the avatar feature is set to a known provider
+	# name, if the provider name is invalid, reset $git_avatar to
+	# the empty string.
 	our ($git_avatar) = gitweb_get_feature('avatar');
-	if ($git_avatar eq 'gravatar') {
-		$git_avatar = '' unless (eval { require Digest::MD5; 1; });
-	} elsif ($git_avatar eq 'picon') {
-		# no dependencies
-	} else {
-		$git_avatar = '';
-	}
+	$git_avatar = '' unless $git_avatar =~ /^(?:gravatar|picon)$/s;
 
 	our @extra_branch_refs = gitweb_get_feature('extra-branch-refs');
 	@extra_branch_refs = filter_and_validate_refs (@extra_branch_refs);
@@ -2165,6 +2157,7 @@ sub picon_url {
 sub gravatar_url {
 	my $email = lc shift;
 	my $size = shift;
+	require Digest::MD5;
 	$avatar_cache{$email} ||=
 		"//www.gravatar.com/avatar/" .
 			Digest::MD5::md5_hex($email) . "?s=";
