@@ -1324,8 +1324,9 @@ sub _temp_cache {
 }
 
 sub _verify_require {
-	eval { require File::Temp; require File::Spec; };
-	$@ and throw Error::Simple($@);
+	require File::Temp;
+	require File::Spec;
+	return;
 }
 
 =item temp_reset ( FILEHANDLE )
