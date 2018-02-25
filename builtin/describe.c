@@ -159,7 +159,7 @@ static int get_name(const char *path, const struct object_id *oid, int flag, voi
 		struct string_list_item *item;
 
 		for_each_string_list_item(item, &exclude_patterns) {
-			if (!wildmatch(item->string, path_to_match, 0))
+			if (!wildmatch_(item->string, path_to_match, 0))
 				return 0;
 		}
 	}
@@ -173,7 +173,7 @@ static int get_name(const char *path, const struct object_id *oid, int flag, voi
 		struct string_list_item *item;
 
 		for_each_string_list_item(item, &patterns) {
-			if (!wildmatch(item->string, path_to_match, 0)) {
+			if (!wildmatch_(item->string, path_to_match, 0)) {
 				found = 1;
 				break;
 			}

@@ -247,7 +247,7 @@ static int match_ref_pattern(const char *refname,
 {
 	int matched = 0;
 	if (item->util == NULL) {
-		if (!wildmatch(item->string, refname, 0))
+		if (!wildmatch_(item->string, refname, 0))
 			matched = 1;
 	} else {
 		const char *rest;

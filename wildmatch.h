@@ -15,7 +15,7 @@ struct wildmatch_compiled {
 	unsigned int flags;
 };
 
-int wildmatch(const char *pattern, const char *text, unsigned int flags);
+int wildmatch_(const char *pattern, const char *text, unsigned int flags);
 struct wildmatch_compiled *wildmatch_compile(const char *pattern,
 					     unsigned int flags);
 int wildmatch_match(struct wildmatch_compiled *wildmatch_compiled,
