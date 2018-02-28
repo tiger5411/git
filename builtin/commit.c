@@ -1402,6 +1402,7 @@ int run_commit_hook(int editor_is_used, const char *index_file, const char *name
 
 int cmd_commit(int argc, const char **argv, const char *prefix)
 {
+	const char *argv_gc_auto[] = {"gc", "--auto", NULL};
 	static struct wt_status s;
 	static struct option builtin_commit_options[] = {
 		OPT__QUIET(&quiet, N_("suppress summary after successful commit")),
@@ -1608,6 +1609,7 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 
 	rerere(0);
 	run_commit_hook(use_editor, get_index_file(), "post-commit", NULL);
+	run_command_v_opt(argv_gc_auto, RUN_GIT_CMD);
 	if (amend && !no_post_rewrite) {
 		commit_post_rewrite(current_head, &oid);
 	}
