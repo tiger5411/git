@@ -1032,7 +1032,7 @@ int rebuild_existing_bitmaps(struct packing_data *mapping,
 		oe = packlist_find(mapping, sha1, NULL);
 
 		if (oe)
-			reposition[i] = oe->in_pack_pos + 1;
+			reposition[i] = mapping->in_pack_pos[oe - mapping->objects] + 1;
 	}
 
 	rebuild = bitmap_new();
