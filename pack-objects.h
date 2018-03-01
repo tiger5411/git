@@ -78,4 +78,6 @@ static inline uint32_t pack_name_hash(const char *name)
 	return hash;
 }
 
+#define DEFAULT_DELTA_CACHE_SIZE (256 * 1024 * 1024)
+
 #endif
