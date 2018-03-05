@@ -70,7 +70,9 @@ enum dfs_state {
  */
 struct object_entry {
 	struct pack_idx_entry idx;
-	unsigned long size;	/* uncompressed size */
+	/* object uncompressed size _if_ size_valid is true */
+	uint32_t size_;
+	unsigned size_valid:1;
 	unsigned in_pack_idx:OE_IN_PACK_BITS;	/* already in pack */
 	off_t in_pack_offset;
 	uint32_t delta_idx;	/* delta base object */
@@ -256,6 +258,52 @@ static inline void oe_set_delta_sibling(struct packing_data *pack,
 		e->delta_sibling_idx = (delta - pack->objects) + 1;
 	else
 		e->delta_sibling_idx = 0;
+}
+
+static inline unsigned long oe_size(const struct object_entry *e)
+{
+	if (e->size_valid) {
+		return e->size_;
+	} else {
+		unsigned long size;
+
+		sha1_object_info(e->idx.oid.hash, &size);
+		return size;
+	}
+}
+
+static inline int contains_in_32bits(unsigned long limit)
+{
+	uint32_t truncated_limit = (uint32_t)limit;
+
+	return limit == truncated_limit;
+}
+
+static inline int oe_size_less_than(const struct object_entry *e,
+				    unsigned long limit)
+{
+	if (e->size_valid)
+		return e->size_ < limit;
+	if (contains_in_32bits(limit))
+		return 1;
+	return oe_size(e) < limit;
+}
+
+static inline int oe_size_greater_than(const struct object_entry *e,
+				       unsigned long limit)
+{
+	if (e->size_valid)
+		return e->size_ > limit;
+	if (contains_in_32bits(limit))
+		return 0;
+	return oe_size(e) > limit;
+}
+
+static inline void oe_set_size(struct object_entry *e,
+			       unsigned long size)
+{
+	e->size_ = size;
+	e->size_valid = e->size_ == size;
 }
 
 #endif
