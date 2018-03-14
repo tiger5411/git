@@ -30,6 +30,9 @@ do
 	--flag-no-cross-directory-hardlinks=*)
 		NO_CROSS_DIRECTORY_HARDLINKS="${1#--flag-no-cross-directory-hardlinks=}"
 		;;
+	--flag-no-install-cp-fallback=*)
+		NO_INSTALL_CP_FALLBACK="${1#--flag-no-install-cp-fallback=}"
+		;;
 	--list-bindir-standalone=*)
 		list_bindir_standalone="${1#--list-bindir-standalone=}"
 		;;

@@ -348,6 +348,10 @@ all::
 # Define NO_INSTALL_HARDLINKS if you prefer to use either symbolic links or
 # copies to install built-in git commands e.g. git-cat-file.
 #
+# Define NO_INSTALL_CP_FALLBACK if you'd rather have the installation
+# fail than implicitly fall back on a copy if a plain "ln" or "ln -s"
+# (depending on the NO_*_HARDLINKS flags) fails.
+#
 # Define USE_NED_ALLOCATOR if you want to replace the platforms default
 # memory allocators with the nedmalloc allocator written by Niall Douglas.
 #
@@ -2817,6 +2821,7 @@ endif
 		--flag-install-symlinks="$(INSTALL_SYMLINKS)" \
 		--flag-no-install-hardlinks="$(NO_INSTALL_HARDLINKS)" \
 		--flag-no-cross-directory-hardlinks="$(NO_CROSS_DIRECTORY_HARDLINKS)" \
+		--flag-no-install-cp-fallback="$(NO_INSTALL_CP_FALLBACK)" \
 		--list-bindir-standalone="git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS))" \
 		--list-bindir-git-dashed="$(filter $(install_bindir_programs),$(BUILT_INS))" \
 		--list-execdir-git-dashed="$(BUILT_INS)" \
