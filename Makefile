@@ -335,6 +335,10 @@ all::
 # Define NO_INSTALL_HARDLINKS if you prefer to use either symbolic links or
 # copies to install built-in git commands e.g. git-cat-file.
 #
+# Define NO_INSTALL_CP_FALLBACK if you'd rather have the installation
+# fail than implicitly fall back on a copy if a plain "ln" or "ln -s"
+# (depending on the NO_*_HARDLINKS flags) fails.
+#
 # Define USE_NED_ALLOCATOR if you want to replace the platforms default
 # memory allocators with the nedmalloc allocator written by Niall Douglas.
 #
@@ -2607,14 +2611,18 @@ endif
 		test -z "$(NO_INSTALL_HARDLINKS)" && \
 		ln "$$bindir/git$X" "$$bindir/$$p" || \
 		ln -s "git$X" "$$bindir/$$p" || \
-		cp "$$bindir/git$X" "$$bindir/$$p" || exit; \
+		{ test -z "$(NO_INSTALL_CP_FALLBACK)" && \
+		  cp "$$bindir/git$X" "$$bindir/$$p"; \
+		} || exit; \
 	done && \
 	for p in $(BUILT_INS); do \
 		$(RM) "$$execdir/$$p" && \
 		test -z "$(NO_INSTALL_HARDLINKS)" && \
 		ln "$$execdir/git$X" "$$execdir/$$p" || \
 		ln -s "git$X" "$$execdir/$$p" || \
-		cp "$$execdir/git$X" "$$execdir/$$p" || exit; \
+		{ test -z "$(NO_INSTALL_CP_FALLBACK)" && \
+		  cp "$$execdir/git$X" "$$execdir/$$p"; \
+		} || exit; \
 	done && \
 	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
 	for p in $$remote_curl_aliases; do \
@@ -2622,7 +2630,9 @@ endif
 		test -z "$(NO_INSTALL_HARDLINKS)" && \
 		ln "$$execdir/git-remote-http$X" "$$execdir/$$p" || \
 		ln -s "git-remote-http$X" "$$execdir/$$p" || \
-		cp "$$execdir/git-remote-http$X" "$$execdir/$$p" || exit; \
+		{ test -z "$(NO_INSTALL_CP_FALLBACK)" && \
+		  cp "$$execdir/git-remote-http$X" "$$execdir/$$p"; \
+		} || exit; \
 	done && \
 	./check_bindir "z$$bindir" "z$$execdir" "$$bindir/git-add$X"
 
