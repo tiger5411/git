@@ -1702,6 +1702,61 @@ test_expect_success '--dump-aliases must be used alone' '
 	test_must_fail git send-email --dump-aliases --to=janice@example.com -1 refs/heads/accounting
 '
 
+test_expect_success '--send-delay expects whole non-negative seconds' '
+	test_must_fail git send-email --send-delay=-1 HEAD~ 2>errors &&
+	test_i18ngrep "Invalid --send-delay setting" errors &&
+	test_must_fail git send-email --send-delay=1.5 HEAD~ 2>errors &&
+	test_i18ngrep "Invalid --send-delay setting" errors &&
+	test_must_fail git -c sendemail.smtpSendDelay=-1 send-email HEAD~ 2>errors &&
+	test_i18ngrep "Invalid --send-delay setting" errors &&
+	test_must_fail git -c sendemail.smtpSendDelay=1.5 send-email HEAD~ 2>errors &&
+	test_i18ngrep "Invalid --send-delay setting" errors
+'
+
+test_expect_success $PREREQ "there is no default --send-delay" '
+	clean_fake_sendmail &&
+	rm -fr outdir &&
+	git format-patch -3 -o outdir &&
+	git send-email \
+		--from="Example <nobody@example.com>" \
+		--to=nobody@example.com \
+		--smtp-server="$(pwd)/fake.sendmail" \
+		outdir/*.patch \
+		2>stderr >stdout &&
+	test $(grep -c "X-Mailer:" stdout) = 3 &&
+	test $(grep -c "X-Mailer-Send-Delay:" stdout) = 0
+'
+
+test_expect_success $PREREQ '--send-delay adds a X-Mailer-Send-Delay header to affected E-Mails' '
+	clean_fake_sendmail &&
+	rm -fr outdir &&
+	git format-patch -3 -o outdir &&
+	git send-email \
+		--from="Example <nobody@example.com>" \
+		--to=nobody@example.com \
+		--smtp-server="$(pwd)/fake.sendmail" \
+		--send-delay=2 \
+		outdir/*.patch \
+		2>stderr >stdout &&
+	test $(grep -c "X-Mailer:" stdout) = 3 &&
+	test $(grep -c "X-Mailer-Send-Delay:" stdout) = 2
+'
+
+test_expect_success $PREREQ '--send-delay=0 disables any imposed delay on E-Mail sending' '
+	clean_fake_sendmail &&
+	rm -fr outdir &&
+	git format-patch -3 -o outdir &&
+	git -c sendemail.smtpSendDelay=3 send-email \
+		--from="Example <nobody@example.com>" \
+		--to=nobody@example.com \
+		--smtp-server="$(pwd)/fake.sendmail" \
+		--send-delay=0 \
+		outdir/*.patch \
+		2>stderr >stdout &&
+	test $(grep -c "X-Mailer:" stdout) = 3 &&
+	test $(grep -c "X-Mailer-Send-Delay:" stdout) = 0
+'
+
 test_sendmail_aliases () {
 	msg="$1" && shift &&
 	expect="$@" &&

@@ -89,6 +89,7 @@ git send-email --dump-aliases
     --batch-size            <int>  * send max <int> message per connection.
     --relogin-delay         <int>  * delay <int> seconds between two successive login.
                                      This option can only be used with --batch-size
+    --send-delay            <int>  * ensure that <int> seconds pass between two successive sends.
 
   Automating:
     --identity              <str>  * Use the sendemail.<id> options.
@@ -225,7 +226,7 @@ my ($cover_cc, $cover_to);
 my ($to_cmd, $cc_cmd);
 my ($smtp_server, $smtp_server_port, @smtp_server_options);
 my ($smtp_authuser, $smtp_encryption, $smtp_ssl_cert_path);
-my ($batch_size, $relogin_delay);
+my ($batch_size, $relogin_delay, $send_delay);
 my ($identity, $aliasfiletype, @alias_files, $smtp_domain, $smtp_auth);
 my ($validate, $confirm);
 my (@suppress_cc);
@@ -259,6 +260,7 @@ my %config_settings = (
     "smtpauth" => \$smtp_auth,
     "smtpbatchsize" => \$batch_size,
     "smtprelogindelay" => \$relogin_delay,
+    "smtpsenddelay" => \$send_delay,
     "to" => \@initial_to,
     "tocmd" => \$to_cmd,
     "cc" => \@initial_cc,
@@ -373,6 +375,7 @@ $rc = GetOptions(
 		    "no-xmailer" => sub {$use_xmailer = 0},
 		    "batch-size=i" => \$batch_size,
 		    "relogin-delay=i" => \$relogin_delay,
+		    "send-delay=s" => \$send_delay,
 	 );
 
 usage() if $help;
@@ -484,6 +487,8 @@ if ($confirm_unconfigured) {
 };
 die sprintf(__("Unknown --confirm setting: '%s'\n"), $confirm)
 	unless $confirm =~ /^(?:auto|cc|compose|always|never)/;
+die sprintf(__("Invalid --send-delay setting: '%s'\n"), $send_delay)
+	if defined $send_delay and $send_delay !~ /^[0-9]+$/s;
 
 # Debugging, print out the suppressions.
 if (0) {
@@ -1552,7 +1557,8 @@ $references = $initial_in_reply_to || '';
 $subject = $initial_subject;
 $message_num = 0;
 
-foreach my $t (@files) {
+foreach my $i (0 .. $#files) {
+	my $t = $files[$i];
 	open my $fh, "<", $t or die sprintf(__("can't open file %s"), $t);
 
 	my $author = undef;
@@ -1731,6 +1737,10 @@ foreach my $t (@files) {
 	}
 	if (defined $xfer_encoding or $has_content_type) {
 		unshift @xh, 'MIME-Version: 1.0' unless $has_mime_version;
+	}
+	if ($send_delay && $i > 0) {
+		push @xh, "X-Mailer-Send-Delay: $send_delay";
+		sleep $send_delay;
 	}
 
 	$needs_confirm = (

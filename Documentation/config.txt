@@ -3068,6 +3068,12 @@ sendemail.smtpReloginDelay::
 	Seconds wait before reconnecting to smtp server.
 	See also the `--relogin-delay` option of linkgit:git-send-email[1].
 
+sendemail.smtpSendDelay::
+	Seconds wait in between message sending before sending another
+	message. Set it to 0 to impose no extra delay, defaults to 0.
++
+See also the `--send-delay` option of linkgit:git-send-email[1].
+
 showbranch.default::
 	The default set of branches for linkgit:git-show-branch[1].
 	See linkgit:git-show-branch[1].
