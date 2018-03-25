@@ -3070,7 +3070,18 @@ sendemail.smtpReloginDelay::
 
 sendemail.smtpSendDelay::
 	Seconds wait in between message sending before sending another
-	message. Set it to 0 to impose no extra delay, defaults to 0.
+	message. Set it to 0 to impose no extra delay, defaults to 1
+	to wait 1 second.
++
+The reason for imposing a default delay is because certain popular
+E-Mail clients such as Google's GMail completely ignore the "Date"
+header, which format-patch is careful to set such that the patches
+will be displayed in order, and instead sort by the time the E-mail
+was received.
++
+This causes sent E-Mail to be shown completely out of order in such
+clients, imposing the delay is a workaround that should usually work
+(although it's by no means guaranteed).
 +
 See also the `--send-delay` option of linkgit:git-send-email[1].
 

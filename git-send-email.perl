@@ -489,6 +489,7 @@ die sprintf(__("Unknown --confirm setting: '%s'\n"), $confirm)
 	unless $confirm =~ /^(?:auto|cc|compose|always|never)/;
 die sprintf(__("Invalid --send-delay setting: '%s'\n"), $send_delay)
 	if defined $send_delay and $send_delay !~ /^[0-9]+$/s;
+$send_delay = 1 unless defined $send_delay;
 
 # Debugging, print out the suppressions.
 if (0) {

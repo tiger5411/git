@@ -1713,7 +1713,7 @@ test_expect_success '--send-delay expects whole non-negative seconds' '
 	test_i18ngrep "Invalid --send-delay setting" errors
 '
 
-test_expect_success $PREREQ "there is no default --send-delay" '
+test_expect_success $PREREQ "there is a default --send-delay" '
 	clean_fake_sendmail &&
 	rm -fr outdir &&
 	git format-patch -3 -o outdir &&
@@ -1724,7 +1724,7 @@ test_expect_success $PREREQ "there is no default --send-delay" '
 		outdir/*.patch \
 		2>stderr >stdout &&
 	test $(grep -c "X-Mailer:" stdout) = 3 &&
-	test $(grep -c "X-Mailer-Send-Delay:" stdout) = 0
+	test $(grep -c "X-Mailer-Send-Delay:" stdout) = 2
 '
 
 test_expect_success $PREREQ '--send-delay adds a X-Mailer-Send-Delay header to affected E-Mails' '
