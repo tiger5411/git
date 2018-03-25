@@ -270,6 +270,10 @@ must be used for each option.
 	with --batch-size option.  Defaults to the `sendemail.smtpReloginDelay`
 	configuration variable.
 
+--send-delay=<int>::
+	Wait $<int> between sending emails. Defaults to the
+	`sendemail.smtpSendDelay` configuration variable.
+
 Automating
 ~~~~~~~~~~
 
