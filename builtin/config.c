@@ -26,6 +26,7 @@ static char term = '\n';
 static int use_global_config, use_system_config, use_local_config;
 static struct git_config_source given_config_source;
 static int actions, types;
+static char *type;
 static int end_null;
 static int respect_includes_opt = -1;
 static struct config_options config_options;
@@ -84,6 +85,7 @@ static struct option builtin_config_options[] = {
 	OPT_BIT(0, "get-color", &actions, N_("find the color configured: slot [default]"), ACTION_GET_COLOR),
 	OPT_BIT(0, "get-colorbool", &actions, N_("find the color setting: slot [stdout-is-tty]"), ACTION_GET_COLORBOOL),
 	OPT_GROUP(N_("Type")),
+	OPT_STRING('t', "type", &type, N_("type"), N_("value is given this type")),
 	OPT_BIT(0, "bool", &types, N_("value is \"true\" or \"false\""), TYPE_BOOL),
 	OPT_BIT(0, "int", &types, N_("value is decimal number"), TYPE_INT),
 	OPT_BIT(0, "bool-or-int", &types, N_("value is --bool or --int"), TYPE_BOOL_OR_INT),
@@ -493,6 +495,21 @@ static char *default_user_config(void)
 	return strbuf_detach(&buf, NULL);
 }
 
+static int type_name_to_specifier(char *name)
+{
+	if (!(strcmp(name, "bool")))
+		return TYPE_BOOL;
+	else if (!(strcmp(name, "int")))
+		return TYPE_INT;
+	else if (!(strcmp(name, "bool-or-int")))
+		return TYPE_BOOL_OR_INT;
+	else if (!(strcmp(name, "path")))
+		return TYPE_PATH;
+	else if (!(strcmp(name, "expiry-date")))
+		return TYPE_EXPIRY_DATE;
+	die(_("unexpected --type argument, %s"), name);
+}
+
 int cmd_config(int argc, const char **argv, const char *prefix)
 {
 	int nongit = !startup_info->have_repository;
@@ -599,6 +616,14 @@ int cmd_config(int argc, const char **argv, const char *prefix)
 		error("--show-origin is only applicable to --get, --get-all, "
 			  "--get-regexp, and --list.");
 		usage_with_options(builtin_config_usage, builtin_config_options);
+	}
+
+	if (type) {
+		if (types != 0) {
+			error("usage of --type is ambiguous");
+			usage_with_options(builtin_config_usage, builtin_config_options);
+		}
+		types = type_name_to_specifier(type);
 	}
 
 	if (actions & PAGING_ACTIONS)
