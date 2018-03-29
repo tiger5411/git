@@ -1611,4 +1611,25 @@ test_expect_success '--local requires a repo' '
 	test_expect_code 128 nongit git config --local foo.bar
 '
 
+cat >.git/config <<-\EOF &&
+[core]
+foo = true
+EOF
+
+test_expect_success '--type allows valid type specifiers' '
+	echo "true" >expect &&
+	git config --type=bool core.foo >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success '--type rejects unknown specifiers' '
+	test_must_fail git config --type=nonsense core.foo 2>error &&
+	test_i18ngrep "unexpected --type argument" error
+'
+
+test_expect_success '--type does not allow for ambiguity' '
+	test_must_fail git config --type=bool --bool core.foo 2>error &&
+	test_i18ngrep "usage of --type is ambiguous" error
+'
+
 test_done
