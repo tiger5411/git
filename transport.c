@@ -19,6 +19,7 @@
 #include "sigchain.h"
 #include "transport-internal.h"
 #include "protocol.h"
+#include "object-store.h"
 
 static void set_upstreams(struct transport *transport, struct ref *refs,
 	int pretend)
