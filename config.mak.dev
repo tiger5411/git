@@ -1,4 +1,6 @@
+ifndef EAGER_DEVELOPER
 CFLAGS += -Werror
+endif
 CFLAGS += -Wdeclaration-after-statement
 CFLAGS += -Wno-format-zero-length
 CFLAGS += -Wold-style-definition
@@ -21,12 +23,14 @@ CFLAGS += -Wextra
 # if a function is public, there should be a prototype and the right
 # header file should be included. If not, it should be static.
 CFLAGS += -Wmissing-prototypes
+ifndef EAGER_DEVELOPER
 # These are disabled because we have these all over the place.
 CFLAGS += -Wno-empty-body
 CFLAGS += -Wno-missing-field-initializers
 CFLAGS += -Wno-sign-compare
 CFLAGS += -Wno-unused-function
 CFLAGS += -Wno-unused-parameter
+endif
 endif
 
 # uninitialized warnings on gcc 4.9.2 in xdiff/xdiffi.c and config.c

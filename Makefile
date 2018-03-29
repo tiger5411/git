@@ -434,7 +434,9 @@ all::
 #
 # Define DEVELOPER to enable more compiler warnings. Compiler version
 # and faimily are auto detected, but could be overridden by defining
-# COMPILER_FEATURES (see config.mak.dev)
+# COMPILER_FEATURES (see config.mak.dev).
+# Define EAGER_DEVELOPER keeps compiler warnings non-fatal, but no warning
+# class is suppressed anymore.
 
 GIT-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./GIT-VERSION-GEN
@@ -1041,6 +1043,9 @@ include config.mak.uname
 -include config.mak.autogen
 -include config.mak
 
+ifdef EAGER_DEVELOPER
+DEVELOPER = Yes
+endif
 ifdef DEVELOPER
 include config.mak.dev
 endif
