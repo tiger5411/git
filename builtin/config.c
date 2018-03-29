@@ -62,6 +62,7 @@ static int show_origin;
 #define TYPE_BOOL_OR_INT (1<<2)
 #define TYPE_PATH (1<<3)
 #define TYPE_EXPIRY_DATE (1<<4)
+#define TYPE_COLOR (1<<5)
 
 static struct option builtin_config_options[] = {
 	OPT_GROUP(N_("Config file location")),
@@ -177,6 +178,11 @@ static int format_config(struct strbuf *buf, const char *key_, const char *value
 			if (git_config_expiry_date(&t, key_, value_) < 0)
 				return -1;
 			strbuf_addf(buf, "%"PRItime, t);
+		} else if (types == TYPE_COLOR) {
+			char v[COLOR_MAXLEN];
+			if (git_config_color(v, key_, value_) < 0)
+				return -1;
+			strbuf_addstr(buf, v);
 		} else if (value_) {
 			strbuf_addstr(buf, value_);
 		} else {
@@ -321,6 +327,19 @@ static char *normalize_value(const char *key, const char *value)
 			return xstrfmt("%d", v);
 		else
 			return xstrdup(v ? "true" : "false");
+	}
+	if (types == TYPE_COLOR) {
+		char v[COLOR_MAXLEN];
+		if (!git_config_color(v, key, value))
+			/*
+			 * The contents of `v` now contain an ANSI escape
+			 * sequence, not suitable for including within a
+			 * configuration file. Treat the above as a
+			 * "sanity-check", and return the given value, which we
+			 * know is representable as valid color code.
+			 */
+			return xstrdup(value);
+		die("cannot parse color '%s'", value);
 	}
 
 	die("BUG: cannot normalize type %d", types);
@@ -519,6 +538,8 @@ static int type_name_to_specifier(char *name)
 		return TYPE_PATH;
 	else if (!(strcmp(name, "expiry-date")))
 		return TYPE_EXPIRY_DATE;
+	else if (!(strcmp(name, "color")))
+		return TYPE_COLOR;
 	die(_("unexpected --type argument, %s"), name);
 }
 

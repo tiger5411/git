@@ -38,10 +38,8 @@ existing values that match the regexp are updated or unset.  If
 you want to handle the lines that do *not* match the regex, just
 prepend a single exclamation mark in front (see also <<EXAMPLES>>).
 
-A type specifier may be given as an argument to `--type` to make 'git config'
-ensure that the variable(s) are of the given type and convert the value to the
-canonical form. If no type specifier is passed, no checks or transformations are
-performed on the value.
+`color`::
+    The value is taken as an ANSI color escape sequence.
 
 When reading, the values are read from the system, global and
 repository local configuration files by default, and options
@@ -177,6 +175,7 @@ Valid `[type]`'s include:
   ~/` from the command line to let your shell do the expansion.)
 - 'expiry-date': canonicalize by converting from a fixed or relative ate-string
   to a timestamp. This specifier has no effect when setting the value.
+- 'color': canonicalize by converting to an ANSI color escape sequence.
 +
 
 --bool::
@@ -184,6 +183,7 @@ Valid `[type]`'s include:
 --bool-or-int::
 --path::
 --expiry-date::
+--color::
   Historical options for selecting a type specifier. Prefer instead `--type`,
   (see: above).
 
@@ -223,6 +223,9 @@ Valid `[type]`'s include:
 	output it as the ANSI color escape sequence to the standard
 	output.  The optional `default` parameter is used instead, if
 	there is no color configured for `name`.
++
+It is preferred to use `--type=color`, or `--type=color --default=[default]`
+instead of `--get-color`.
 
 -e::
 --edit::
