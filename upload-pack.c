@@ -1416,8 +1416,8 @@ int upload_pack_v2(struct repository *r, struct argv_array *keys,
 			create_pack_file();
 			state = FETCH_DONE;
 			break;
-		case FETCH_DONE:
-			continue;
+		default:
+			BUG("Added a new fetch_state without updating switch");
 		}
 	}
 
