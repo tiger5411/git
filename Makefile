@@ -432,11 +432,16 @@ all::
 # When cross-compiling, define HOST_CPU as the canonical name of the CPU on
 # which the built Git will run (for instance "x86_64").
 #
-# Define DEVELOPER to enable more compiler warnings. Compiler version
-# and faimily are auto detected, but could be overridden by defining
-# COMPILER_FEATURES (see config.mak.dev).
-# Define EAGER_DEVELOPER keeps compiler warnings non-fatal, but no warning
-# class is suppressed anymore.
+# Define DEVELOPER to enable more compiler warnings. We'll also enable
+# -Werror unless DEVELOPER_NONFATAL is defined. To enable even more
+# pedantic warnings that'll flag some potential existing issues in the
+# codebase turn on DEVELOPER_EXTRA, which implicitly sets DEVELOPER as
+# well, This is -Wextra with a whitelist of disabled warnings. Unless
+# DEVELOPER_NONFATAL is set DEVELOPER_EXTRA will turn it on
+# implicitly, so if you for some reason want both DEVELOPER and
+# DEVELOPER_EXTRA with fatal warnings, you need to set
+# DEVELOPER_FATAL=1 to force -Werror. See config.mak.dev for how this
+# all works.
 
 GIT-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./GIT-VERSION-GEN
@@ -1043,7 +1048,7 @@ include config.mak.uname
 -include config.mak.autogen
 -include config.mak
 
-ifdef EAGER_DEVELOPER
+ifdef DEVELOPER_EXTRA
 DEVELOPER = Yes
 endif
 ifdef DEVELOPER

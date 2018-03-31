@@ -1,6 +1,12 @@
-ifndef EAGER_DEVELOPER
+ifndef DEVELOPER_NONFATAL
+ifndef DEVELOPER_EXTRA
 CFLAGS += -Werror
 endif
+endif
+ifdef DEVELOPER_FATAL
+CFLAGS += -Werror
+endif
+
 CFLAGS += -Wdeclaration-after-statement
 CFLAGS += -Wno-format-zero-length
 CFLAGS += -Wold-style-definition
@@ -23,7 +29,7 @@ CFLAGS += -Wextra
 # if a function is public, there should be a prototype and the right
 # header file should be included. If not, it should be static.
 CFLAGS += -Wmissing-prototypes
-ifndef EAGER_DEVELOPER
+ifndef DEVELOPER_EXTRA
 # These are disabled because we have these all over the place.
 CFLAGS += -Wno-empty-body
 CFLAGS += -Wno-missing-field-initializers
