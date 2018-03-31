@@ -22,6 +22,7 @@ static struct refspec s_tag_refspec = {
 	"refs/tags/*"
 };
 
+/* See TAG_REFSPEC for the string version */
 const struct refspec *tag_refspec = &s_tag_refspec;
 
 struct counted_string {
@@ -103,6 +104,17 @@ static void add_fetch_refspec(struct remote *remote, const char *ref)
 	remote->fetch_refspec[remote->fetch_refspec_nr++] = ref;
 }
 
+void add_prune_tags_to_fetch_refspec(struct remote *remote)
+{
+	int nr = remote->fetch_refspec_nr;
+	int bufsize = nr  + 1;
+	int size = sizeof(struct refspec);
+
+	remote->fetch = xrealloc(remote->fetch, size  * bufsize);
+	memcpy(&remote->fetch[nr], tag_refspec, size);
+	add_fetch_refspec(remote, xstrdup(TAG_REFSPEC));
+}
+
 static void add_url(struct remote *remote, const char *url)
 {
 	ALLOC_GROW(remote->url, remote->url_nr + 1, remote->url_alloc);
@@ -173,6 +185,7 @@ static struct remote *make_remote(const char *name, int len)
 
 	ret = xcalloc(1, sizeof(struct remote));
 	ret->prune = -1;  /* unspecified */
+	ret->prune_tags = -1;  /* unspecified */
 	ALLOC_GROW(remotes, remotes_nr + 1, remotes_alloc);
 	remotes[remotes_nr++] = ret;
 	ret->name = xstrndup(name, len);
@@ -391,6 +404,8 @@ static int handle_config(const char *key, const char *value, void *cb)
 		remote->skip_default_update = git_config_bool(key, value);
 	else if (!strcmp(subkey, "prune"))
 		remote->prune = git_config_bool(key, value);
+	else if (!strcmp(subkey, "prunetags"))
+		remote->prune_tags = git_config_bool(key, value);
 	else if (!strcmp(subkey, "url")) {
 		const char *v;
 		if (git_config_string(&v, key, value))
@@ -1970,33 +1985,33 @@ static void unmark_and_free(struct commit_list *list, unsigned int mark)
 int ref_newer(const struct object_id *new_oid, const struct object_id *old_oid)
 {
 	struct object *o;
-	struct commit *old, *new;
+	struct commit *old_commit, *new_commit;
 	struct commit_list *list, *used;
 	int found = 0;
 
 	/*
-	 * Both new and old must be commit-ish and new is descendant of
-	 * old.  Otherwise we require --force.
+	 * Both new_commit and old_commit must be commit-ish and new_commit is descendant of
+	 * old_commit.  Otherwise we require --force.
 	 */
 	o = deref_tag(parse_object(old_oid), NULL, 0);
 	if (!o || o->type != OBJ_COMMIT)
 		return 0;
-	old = (struct commit *) o;
+	old_commit = (struct commit *) o;
 
 	o = deref_tag(parse_object(new_oid), NULL, 0);
 	if (!o || o->type != OBJ_COMMIT)
 		return 0;
-	new = (struct commit *) o;
+	new_commit = (struct commit *) o;
 
-	if (parse_commit(new) < 0)
+	if (parse_commit(new_commit) < 0)
 		return 0;
 
 	used = list = NULL;
-	commit_list_insert(new, &list);
+	commit_list_insert(new_commit, &list);
 	while (list) {
-		new = pop_most_recent_commit(&list, TMP_MARK);
-		commit_list_insert(new, &used);
-		if (new == old) {
+		new_commit = pop_most_recent_commit(&list, TMP_MARK);
+		commit_list_insert(new_commit, &used);
+		if (new_commit == old_commit) {
 			found = 1;
 			break;
 		}

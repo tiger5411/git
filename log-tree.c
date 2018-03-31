@@ -499,7 +499,7 @@ static void show_one_mergetag(struct commit *commit,
 	int status, nth;
 	size_t payload_size, gpg_message_offset;
 
-	hash_object_file(extra->value, extra->len, typename(OBJ_TAG), &oid);
+	hash_object_file(extra->value, extra->len, type_name(OBJ_TAG), &oid);
 	tag = lookup_tag(&oid);
 	if (!tag)
 		return; /* error message already given */
@@ -658,9 +658,6 @@ void show_log(struct rev_info *opt)
 		show_signature(opt, commit);
 		show_mergetag(opt, commit);
 	}
-
-	if (!get_cached_commit_buffer(commit, NULL))
-		return;
 
 	if (opt->show_notes) {
 		int raw;

@@ -1638,6 +1638,7 @@ extern struct packed_git {
 	int index;		/* for builtin/pack-objects.c */
 	unsigned pack_local:1,
 		 pack_keep:1,
+		 pack_keep_in_core:1,
 		 freshened:1,
 		 do_not_close:1,
 		 pack_promisor:1;
@@ -1664,7 +1665,7 @@ struct pack_entry {
  * usual "XXXXXX" trailer, and the resulting filename is written into the
  * "template" buffer. Returns the open descriptor.
  */
-extern int odb_mkstemp(struct strbuf *template, const char *pattern);
+extern int odb_mkstemp(struct strbuf *temp_filename, const char *pattern);
 
 /*
  * Create a pack .keep file named "name" (which should generally be the output
@@ -1735,7 +1736,7 @@ struct object_info {
 	unsigned long *sizep;
 	off_t *disk_sizep;
 	unsigned char *delta_base_sha1;
-	struct strbuf *typename;
+	struct strbuf *type_name;
 	void **contentp;
 
 	/* Response */

@@ -1,6 +1,8 @@
 #ifndef PACK_OBJECTS_H
 #define PACK_OBJECTS_H
 
+#define DEFAULT_DELTA_CACHE_SIZE (256 * 1024 * 1024)
+
 #define OE_DFS_STATE_BITS	2
 #define OE_DEPTH_BITS		12
 #define OE_IN_PACK_BITS		10
@@ -76,6 +78,7 @@ enum dfs_state {
  * [1] during try_delta phase we don't bother with compressing because
  * the delta could be quickly replaced with a better one.
  */
+
 struct object_entry {
 	struct pack_idx_entry idx;
 	void *delta_data;	/* cached delta (uncompressed) */
