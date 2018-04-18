@@ -117,6 +117,12 @@ ours::
 	branches.  Note that this is different from the -Xours option to
 	the 'recursive' merge strategy.
 
+theirs::
+	This resolves any number of heads, but the resulting tree of
+	the merge is always that of the Nth branch head specified via
+	`-X n`. If it's not specified it'll default ot `-X 2`,
+	supplying `-X 1` makes this equivalent to the `ours` strategy.
+
 subtree::
 	This is a modified recursive strategy. When merging trees A and
 	B, if B corresponds to a subtree of A, B is first adjusted to
