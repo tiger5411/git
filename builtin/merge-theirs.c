@@ -7,6 +7,7 @@
 #include "git-compat-util.h"
 #include "builtin.h"
 #include "run-command.h"
+#include "diff.h"
 
 static const char builtin_merge_theirs_usage[] =
 	"git merge-theirs <base>... -- HEAD <remote>...";
@@ -56,8 +57,14 @@ int cmd_merge_theirs(int argc, const char **argv, const char *prefix)
 	if (get_oid(branch, &commit))
 		die(_("could not resolve ref '%s'"), branch);
 
+	/* Final sanity checks, copied from merge-ours.c */
+	if (read_cache() < 0)
+		die_errno("read_cache failed");
+	if (index_differs_from("HEAD", NULL, 0))
+		exit(2);
+
 	/* Read the Nth tree */
 	read_tree_hex_oid(oid_to_hex(&commit));
 
-	return 0;
+	exit(0);
 }
