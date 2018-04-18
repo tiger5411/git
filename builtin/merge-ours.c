@@ -18,7 +18,6 @@ int cmd_merge_ours(int argc, const char **argv, const char *prefix)
 {
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage(builtin_merge_ours_usage);
-
 	/*
 	 * The contents of the current index becomes the tree we
 	 * commit.  The index must match HEAD, or this merge cannot go
