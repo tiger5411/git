@@ -17,6 +17,8 @@ int cmd_merge_theirs(int argc, const char **argv, const char *prefix)
 	const int argc_offset = 3;
 	char *end;
 	int mainline;
+	const char *branch;
+	struct object_id commit;
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage(builtin_merge_theirs_usage);
@@ -35,6 +37,11 @@ int cmd_merge_theirs(int argc, const char **argv, const char *prefix)
 		die(_("'-s theirs -X N' expects a number greater than zero"));
 	if (mainline >= (argc - argc_offset))
 		die(_("'-s theirs -X N' must come with a corresponding Nth commit to merge!"));
+
+	/* Have the branch name */
+	branch = argv[argc_offset + mainline];
+	if (get_oid(branch, &commit))
+		die(_("could not resolve ref '%s'"), branch);
 
 	fprintf(stderr, "Converted %s to %d. So we select %s with %d\n", mainline_str, mainline, argv[argc_offset + mainline], argc);
 
