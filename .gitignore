@@ -93,6 +93,7 @@
 /git-merge-recursive
 /git-merge-resolve
 /git-merge-subtree
+/git-merge-theirs
 /git-mergetool
 /git-mergetool--lib
 /git-mktag

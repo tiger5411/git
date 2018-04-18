@@ -81,6 +81,7 @@ static struct strategy all_strategy[] = {
 	{ "octopus",    DEFAULT_OCTOPUS },
 	{ "resolve",    0 },
 	{ "ours",       NO_FAST_FORWARD | NO_TRIVIAL },
+	{ "theirs",     NO_FAST_FORWARD | NO_TRIVIAL },
 	{ "subtree",    NO_FAST_FORWARD | NO_TRIVIAL },
 };
 
