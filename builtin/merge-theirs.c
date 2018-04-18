@@ -42,6 +42,8 @@ int cmd_merge_theirs(int argc, const char **argv, const char *prefix)
 	/*
 	 * Parse the --N part of `git merge-theirs --N base -- HEAD
 	 * other-branch [other-branch-2 ...]`.
+	 *
+	 * TODO: Handle no -X argument being equivalent to -X 2.
 	 */
 	mainline_str = argv[1];
 	if (!mainline_str[2])
