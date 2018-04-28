@@ -979,8 +979,8 @@ test_expect_success 'push requires --force to update lightweight tag' '
 		git tag -f Tag &&
 		test_must_fail git push ../child2 Tag &&
 		git push --force ../child2 Tag &&
-		git tag -f Tag &&
-		test_must_fail git push ../child2 Tag HEAD~ &&
+		git tag -f Tag HEAD~ &&
+		test_must_fail git push ../child2 Tag &&
 		git push --force ../child2 Tag
 	)
 '
