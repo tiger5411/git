@@ -981,7 +981,17 @@ test_expect_success 'push requires --force to update lightweight tag' '
 		git push --force ../child2 Tag &&
 		git tag -f Tag HEAD~ &&
 		test_must_fail git push ../child2 Tag &&
-		git push --force ../child2 Tag
+		git push --force ../child2 Tag &&
+		git tag -f Tag &&
+		test_must_fail git push ../child2 "refs/tags/*:refs/tags/*" &&
+		git push --force ../child2 "refs/tags/*:refs/tags/*" &&
+		git tag -f Tag HEAD~ &&
+		git push ../child2 "+refs/tags/*:refs/tags/*" &&
+		git tag -f Tag &&
+		git push --no-force ../child2 "+refs/tags/*:refs/tags/*" &&
+		git tag -f Tag HEAD~ &&
+		test_must_fail git push ../child2 tag Tag &&
+		git push --force ../child2 tag Tag
 	)
 '
 
