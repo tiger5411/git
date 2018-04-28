@@ -686,10 +686,10 @@ test_configured_prune_type () {
 # $9 git-fetch $cmdline:
 #
 #                     $1    $2    $3    $4    $5     $6     $7  $8
-test_configured_prune unset unset unset unset kept   kept   yes yes ""
-test_configured_prune unset unset unset unset kept   kept   yes yes "--no-prune"
-test_configured_prune unset unset unset unset pruned kept   yes yes "--prune"
-test_configured_prune unset unset unset unset kept   pruned yes yes \
+test_configured_prune unset unset unset unset kept   kept   yes no  ""
+test_configured_prune unset unset unset unset kept   kept   yes no  "--no-prune"
+test_configured_prune unset unset unset unset pruned kept   yes no  "--prune"
+test_configured_prune unset unset unset unset kept   pruned no  no  \
 	"--prune origin refs/tags/*:refs/tags/*"
 test_configured_prune unset unset unset unset kept   pruned yes yes \
 	"--prune origin +refs/tags/*:refs/tags/*"
