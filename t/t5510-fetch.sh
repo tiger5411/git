@@ -604,7 +604,8 @@ test_configured_prune_type () {
 		# make sure a newbranch is there in . and also in one
 		git branch -f newbranch &&
 		git tag -f newtag &&
-		git tag -f clobberedtag &&
+		git tag -f clobberedtag-a &&
+		git tag -f clobberedtag-l -a -m"one" &&
 		(
 			cd one &&
 			test_unconfig fetch.prune &&
@@ -614,15 +615,17 @@ test_configured_prune_type () {
 			git fetch '"$cmdline_setup"' &&
 			git rev-parse --verify refs/remotes/origin/newbranch &&
 			git rev-parse --verify refs/tags/newtag &&
-			git rev-parse --verify refs/tags/clobberedtag
+			git rev-parse --verify refs/tags/clobberedtag-a &&
+			git rev-parse --verify refs/tags/clobberedtag-l
 		) &&
 
 		# now remove them
 		git branch -d newbranch &&
 		git tag -d newtag &&
 
-		# now clobber it
-		git tag -f clobberedtag HEAD~ &&
+		# now clobber them
+		git tag -f clobberedtag-l HEAD~ &&
+		git tag -f clobberedtag-a -a -m"two" HEAD~ &&
 
 		# then test
 		(
@@ -661,7 +664,17 @@ test_configured_prune_type () {
 				git rev-parse --verify refs/tags/newtag
 				;;
 			esac &&
-			git rev-parse --verify refs/tags/clobberedtag >actual &&
+			git rev-parse --verify refs/tags/clobberedtag-l >actual &&
+			git rev-parse --verify refs/tags/v1.0^{} >expected &&
+			case "$expected_clobbered_tag" in
+			yes)
+				! test_cmp expected actual
+				;;
+			no)
+				test_cmp expected actual
+				;;
+			esac &&
+			git rev-parse --verify refs/tags/clobberedtag-a^{} >actual &&
 			git rev-parse --verify refs/tags/v1.0^{} >expected &&
 			case "$expected_clobbered_tag" in
 			yes)
