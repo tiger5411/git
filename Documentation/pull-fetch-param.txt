@@ -43,10 +43,13 @@ same rules apply for fetching as when pushing, see the `<refspec>...`
 section of linkgit:git-push[1] for what those are. Exceptions to those
 rules particular to 'git fetch' are noted below.
 +
-Unlike when pushing with linkgit:git-push[1], any updates to
-`refs/tags/*` will be accepted without `+` in the refspec (or
-`--force`). The receiving promiscuously considers all tag updates from
-a remote to be forced fetches.
+Until Git version 2.20, and unlike when pushing with
+linkgit:git-push[1], any updates to `refs/tags/*` would be accepted
+without `+` in the refspec (or `--force`). The receiving promiscuously
+considered all tag updates from a remote to be forced fetches. Since
+Git version 2.20 updates to `refs/tags/*` work the same way as when
+pushing. I.e. any updates will be rejected without `+` in the refspec
+(or `--force`).
 +
 Unlike when pushing with linkgit:git-push[1], any updates outside of
 `refs/{tags,heads}/*` will be accepted without `+` in the refspec (or
