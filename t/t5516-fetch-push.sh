@@ -965,35 +965,43 @@ test_expect_success 'push into aliased refs (inconsistent)' '
 	)
 '
 
-test_expect_success 'push requires --force to update lightweight tag' '
-	mk_test testrepo heads/master &&
-	mk_child testrepo child1 &&
-	mk_child testrepo child2 &&
-	(
-		cd child1 &&
-		git tag Tag &&
-		git push ../child2 Tag &&
-		>file1 &&
-		git add file1 &&
-		git commit -m "file1" &&
-		git tag -f Tag &&
-		test_must_fail git push ../child2 Tag &&
-		git push --force ../child2 Tag &&
-		git tag -f Tag HEAD~ &&
-		test_must_fail git push ../child2 Tag &&
-		git push --force ../child2 Tag &&
-		git tag -f Tag &&
-		test_must_fail git push ../child2 "refs/tags/*:refs/tags/*" &&
-		git push --force ../child2 "refs/tags/*:refs/tags/*" &&
-		git tag -f Tag HEAD~ &&
-		git push ../child2 "+refs/tags/*:refs/tags/*" &&
-		git tag -f Tag &&
-		git push --no-force ../child2 "+refs/tags/*:refs/tags/*" &&
-		git tag -f Tag HEAD~ &&
-		test_must_fail git push ../child2 tag Tag &&
-		git push --force ../child2 tag Tag
-	)
-'
+test_force_push_tag () {
+	tag_type_description=$1
+	tag_args=$2
+
+	test_expect_success "push requires --force to update $tag_type_description" "
+		mk_test testrepo heads/master &&
+		mk_child testrepo child1 &&
+		mk_child testrepo child2 &&
+		(
+			cd child1 &&
+			git tag Tag &&
+			git push ../child2 Tag &&
+			>file1 &&
+			git add file1 &&
+			git commit -m 'file1' &&
+			git tag $tag_args Tag &&
+			test_must_fail git push ../child2 Tag &&
+			git push --force ../child2 Tag &&
+			git tag $tag_args Tag HEAD~ &&
+			test_must_fail git push ../child2 Tag &&
+			git push --force ../child2 Tag &&
+			git tag $tag_args Tag &&
+			test_must_fail git push ../child2 'refs/tags/*:refs/tags/*' &&
+			git push --force ../child2 'refs/tags/*:refs/tags/*' &&
+			git tag $tag_args Tag HEAD~ &&
+			git push ../child2 '+refs/tags/*:refs/tags/*' &&
+			git tag $tag_args Tag &&function
+			git push --no-force ../child2 '+refs/tags/*:refs/tags/*' &&
+			git tag $tag_args Tag HEAD~ &&
+			test_must_fail git push ../child2 tag Tag &&
+			git push --force ../child2 tag Tag
+		)
+	"
+}
+
+test_force_push_tag "lightweight tag" "-f"
+test_force_push_tag "annotated tag" "-f -a -m'msg'"
 
 test_expect_success 'push --porcelain' '
 	mk_empty testrepo &&
