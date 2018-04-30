@@ -38,6 +38,16 @@ check_equal()
 	fi
 }
 
+check_equal_i18n()
+{
+	if test_have_prereq C_LOCALE_OUTPUT
+	then
+		check_equal "$@"
+	else
+		return 0
+	fi
+}
+
 undo()
 {
 	git reset --hard HEAD~
@@ -250,7 +260,7 @@ test_expect_success 'merge the added subproj again, should do nothing' '
 		# this shouldn not actually do anything, since FETCH_HEAD
 		# is already a parent
 		result=$(git merge -s ours -m "merge -s -ours" FETCH_HEAD) &&
-		check_equal "${result}" "Already up to date."
+		check_equal_i18n "${result}" "Already up to date."
 	)
 '
 
