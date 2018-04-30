@@ -159,9 +159,13 @@ test_expect_failure 'two semi-ambiguous commit-ish' '
 	git log 0000000000...
 '
 
-test_expect_failure 'three semi-ambiguous tree-ish' '
+test_expect_success 'three semi-ambiguous tree-ish' '
 	# Likewise for tree-ish.  HEAD, v1.0.0 and HEAD^{tree} share
 	# the prefix but peeling them to tree yields the same thing
+	test_must_fail git rev-parse --verify 0000000000: &&
+
+	# For ^{tree} we can disambiguate because HEAD and v1.0.0 will
+	# be excluded.
 	git rev-parse --verify 0000000000^{tree}
 '
 
@@ -267,8 +271,12 @@ test_expect_success 'ambiguous commit-ish' '
 # There are three objects with this prefix: a blob, a tree, and a tag. We know
 # the blob will not pass as a treeish, but the tree and tag should (and thus
 # cause an error).
-test_expect_success 'ambiguous tags peel to treeish' '
-	test_must_fail git rev-parse 0000000000f^{tree}
+test_expect_success 'ambiguous tags peel to treeish or tree' '
+	test_must_fail git rev-parse 0000000000f: &&
+	git rev-parse 0000000000f^{tree} >stdout &&
+	test_line_count = 1 stdout &&
+	grep -q ^0000000000fd8bcc56 stdout
+
 '
 
 test_expect_success 'rev-parse --disambiguate' '
@@ -365,7 +373,9 @@ test_expect_success 'core.disambiguate config can prefer types' '
 test_expect_success 'core.disambiguate does not override context' '
 	# treeish ambiguous between tag and tree
 	test_must_fail \
-		git -c core.disambiguate=committish rev-parse $sha1^{tree}
+		git -c core.disambiguate=committish rev-parse $sha1: &&
+	# tree not ambiguous between tag and tree
+	git -c core.disambiguate=committish rev-parse $sha1^{tree}
 '
 
 test_done
