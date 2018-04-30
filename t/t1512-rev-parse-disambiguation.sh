@@ -341,8 +341,8 @@ test_expect_success C_LOCALE_OUTPUT 'ambiguity hints' '
 test_expect_success C_LOCALE_OUTPUT 'ambiguity hints respect type' '
 	test_must_fail git rev-parse 000000000^{commit} 2>stderr &&
 	grep ^hint: stderr >hints &&
-	# 5 commits, 1 tag (which is a commitish), plus intro line
-	test_line_count = 7 hints &&
+	# 5 commits plus intro line
+	test_line_count = 6 hints &&
 	git rev-parse 000000000^{tag} >stdout &&
 	test_line_count = 1 stdout &&
 	grep -q ^0000000000f8f stdout &&
@@ -366,7 +366,8 @@ test_expect_success 'core.disambiguate config can prefer types' '
 	# ambiguous between tree and tag
 	sha1=0000000000f &&
 	test_must_fail git rev-parse $sha1 &&
-	git rev-parse $sha1^{commit} &&
+	# there is no commit so ^{commit} comes up empty
+	test_must_fail git rev-parse $sha1^{commit} &&
 	git -c core.disambiguate=committish rev-parse $sha1
 '
 
