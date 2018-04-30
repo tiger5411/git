@@ -337,7 +337,11 @@ test_expect_success C_LOCALE_OUTPUT 'ambiguity hints respect type' '
 	test_line_count = 7 hints &&
 	git rev-parse 000000000^{tag} >stdout &&
 	test_line_count = 1 stdout &&
-	grep -q ^0000000000f8f stdout
+	grep -q ^0000000000f8f stdout &&
+	test_must_fail git rev-parse 000000000^{blob} 2>stderr &&
+	grep ^hint: stderr >hints &&
+	# 5 blobs plus intro line &&
+	test_line_count = 6 hints
 '
 
 test_expect_success C_LOCALE_OUTPUT 'failed type-selector still shows hint' '

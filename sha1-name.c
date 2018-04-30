@@ -971,6 +971,8 @@ static int peel_onion(const char *name, int len, struct object_id *oid,
 		lookup_flags |= GET_OID_TAG;
 	else if (expected_type == OBJ_TREE)
 		lookup_flags |= GET_OID_TREEISH;
+	else if (expected_type == OBJ_BLOB)
+		lookup_flags |= GET_OID_BLOB;
 
 	if (get_oid_1(name, sp - name - 2, &outer, lookup_flags))
 		return -1;
