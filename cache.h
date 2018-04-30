@@ -1322,8 +1322,9 @@ struct object_context {
 #define GET_OID_TREE             010
 #define GET_OID_TREEISH          020
 #define GET_OID_BLOB             040
-#define GET_OID_FOLLOW_SYMLINKS 0100
-#define GET_OID_RECORD_PATH     0200
+#define GET_OID_TAG             0100
+#define GET_OID_FOLLOW_SYMLINKS 0200
+#define GET_OID_RECORD_PATH     0400
 #define GET_OID_ONLY_TO_DIE    04000
 
 #define GET_OID_DISAMBIGUATORS \

@@ -334,7 +334,10 @@ test_expect_success C_LOCALE_OUTPUT 'ambiguity hints respect type' '
 	test_must_fail git rev-parse 000000000^{commit} 2>stderr &&
 	grep ^hint: stderr >hints &&
 	# 5 commits, 1 tag (which is a commitish), plus intro line
-	test_line_count = 7 hints
+	test_line_count = 7 hints &&
+	git rev-parse 000000000^{tag} >stdout &&
+	test_line_count = 1 stdout &&
+	grep -q ^0000000000f8f stdout
 '
 
 test_expect_success C_LOCALE_OUTPUT 'failed type-selector still shows hint' '
