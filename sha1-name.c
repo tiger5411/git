@@ -221,6 +221,12 @@ static int finish_object_disambiguation(struct disambiguate_state *ds,
 	return 0;
 }
 
+static int disambiguate_tag_only(const struct object_id *oid, void *cb_data_unused)
+{
+	int kind = oid_object_info(oid, NULL);
+	return kind == OBJ_TAG;
+}
+
 static int disambiguate_commit_only(const struct object_id *oid, void *cb_data_unused)
 {
 	int kind = oid_object_info(oid, NULL);
@@ -288,7 +294,8 @@ int set_disambiguate_hint_config(const char *var, const char *value)
 		{ "committish", disambiguate_committish_only },
 		{ "tree", disambiguate_tree_only },
 		{ "treeish", disambiguate_treeish_only },
-		{ "blob", disambiguate_blob_only }
+		{ "blob", disambiguate_blob_only },
+		{ "tag", disambiguate_tag_only }
 	};
 	int i;
 
@@ -429,6 +436,8 @@ static int get_short_oid(const char *name, int len, struct object_id *oid,
 		ds.fn = disambiguate_treeish_only;
 	else if (flags & GET_OID_BLOB)
 		ds.fn = disambiguate_blob_only;
+	else if (flags & GET_OID_TAG)
+		ds.fn = disambiguate_tag_only;
 	else
 		ds.fn = default_disambiguate_hint;
 
@@ -958,6 +967,8 @@ static int peel_onion(const char *name, int len, struct object_id *oid,
 	lookup_flags &= ~GET_OID_DISAMBIGUATORS;
 	if (expected_type == OBJ_COMMIT)
 		lookup_flags |= GET_OID_COMMITTISH;
+	else if (expected_type == OBJ_TAG)
+		lookup_flags |= GET_OID_TAG;
 	else if (expected_type == OBJ_TREE)
 		lookup_flags |= GET_OID_TREEISH;
 
