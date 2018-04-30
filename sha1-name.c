@@ -966,7 +966,7 @@ static int peel_onion(const char *name, int len, struct object_id *oid,
 
 	lookup_flags &= ~GET_OID_DISAMBIGUATORS;
 	if (expected_type == OBJ_COMMIT)
-		lookup_flags |= GET_OID_COMMITTISH;
+		lookup_flags |= GET_OID_COMMIT;
 	else if (expected_type == OBJ_TAG)
 		lookup_flags |= GET_OID_TAG;
 	else if (expected_type == OBJ_TREE)
