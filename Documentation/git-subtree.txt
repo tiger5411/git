@@ -345,6 +345,9 @@ AUTHOR
 ------
 Written by Avery Pennarun <apenwarr@gmail.com>
 
+SEE ALSO
+--------
+linkgit:git-submodule[1].
 
 GIT
 ---

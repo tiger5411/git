@@ -9,10 +9,7 @@ This test verifies the basic operation of the add, pull, merge
 and split subcommands of git subtree.
 '
 
-TEST_DIRECTORY=$(pwd)/../../../t
-export TEST_DIRECTORY
-
-. ../../../t/test-lib.sh
+. ./test-lib.sh
 
 subtree_test_create_repo()
 {

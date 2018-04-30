@@ -402,7 +402,7 @@ for details.
 
 SEE ALSO
 --------
-linkgit:gitsubmodules[7], linkgit:gitmodules[5].
+linkgit:gitsubmodules[7], linkgit:gitmodules[5], linkgit:git-subtree[1].
 
 GIT
 ---
