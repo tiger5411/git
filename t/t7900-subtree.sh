@@ -304,7 +304,7 @@ test_expect_success 'split requires option --prefix' '
 		test_debug "cat expected" &&
 		test_debug "printf '"actual: "'" &&
 		test_debug "cat actual" &&
-		test_cmp expected actual
+		test_i18ncmp expected actual
 	)
 '
 
@@ -324,7 +324,7 @@ test_expect_success 'split requires path given by option --prefix must exist' '
 		test_debug "cat expected" &&
 		test_debug "printf '"actual: "'" &&
 		test_debug "cat actual" &&
-		test_cmp expected actual
+		test_i18ncmp expected actual
 	)
 '
 
