@@ -922,6 +922,10 @@ Is set to `none` by default to show all object types. Can also be
 tags), `tree` (peel: `$sha1^{tree}`), `treeish` (everything except
 blobs, peel syntax: `$sha1:`), `blob` (peel: `$sha1^{blob}`) or `tag`
 (peel: `$sha1^{tag}`). The peel syntax will override any config value.
++
+If no objects of the selected type exist the disambiguation will fall
+back to `none` and print a warning indicating no objects of the
+selected type could be found for that prefix.
 
 add.ignoreErrors::
 add.ignore-errors (deprecated)::
