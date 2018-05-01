@@ -376,6 +376,14 @@ extern void free_name_hash(struct index_state *istate);
 enum object_type {
 	OBJ_BAD = -1,
 	OBJ_NONE = 0,
+	/*
+	 * Why have our our "real" object types in this order? They're
+	 * ordered topologically:
+	 *
+	 * tag(4)    -> commit(1), tree(2), blob(3)
+	 * commit(1) -> tree(2)
+	 * tree(2)   -> blob(3)
+	 */
 	OBJ_COMMIT = 1,
 	OBJ_TREE = 2,
 	OBJ_BLOB = 3,
