@@ -344,7 +344,10 @@ test_expect_success C_LOCALE_OUTPUT 'failed type-selector still shows hint' '
 	echo 872 | git hash-object --stdin -w &&
 	test_must_fail git rev-parse ee3d^{commit} 2>stderr &&
 	grep ^hint: stderr >hints &&
-	test_line_count = 3 hints
+	test_line_count = 3 hints &&
+	grep ^warning stderr >warnings &&
+	grep -q "Your hint.*was ignored" warnings &&
+	grep -q "the provide short SHA1 ee3d" stderr
 '
 
 test_expect_success 'core.disambiguate config can prefer types' '

@@ -438,6 +438,7 @@ static int get_short_oid(const char *name, int len, struct object_id *oid,
 
 	if (!quietly && (status == SHORT_NAME_AMBIGUOUS)) {
 		struct oid_array collect = OID_ARRAY_INIT;
+		int ignored_hint = 0;
 
 		error(_("short SHA1 %s is ambiguous"), ds.hex_pfx);
 
@@ -447,8 +448,10 @@ static int get_short_oid(const char *name, int len, struct object_id *oid,
 		 * that case, we still want to show them, so disable the hint
 		 * function entirely.
 		 */
-		if (!ds.ambiguous)
+		if (!ds.ambiguous) {
 			ds.fn = NULL;
+			ignored_hint = 1;
+		}
 
 		advise(_("The candidates are:"));
 		for_each_abbrev(ds.hex_pfx, collect_ambiguous, &collect);
@@ -457,6 +460,12 @@ static int get_short_oid(const char *name, int len, struct object_id *oid,
 		if (oid_array_for_each(&collect, show_ambiguous_object, &ds))
 			BUG("show_ambiguous_object shouldn't return non-zero");
 		oid_array_clear(&collect);
+
+		if (ignored_hint) {
+			warning(_("Your hint (via core.disambiguate or peel syntax) was ignored, we fell\n"
+				  "back to showing all object types since no object of the requested type\n"
+				  "matched the provide short SHA1 %s"), ds.hex_pfx);
+		}
 	}
 
 	return status;
