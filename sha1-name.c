@@ -368,6 +368,29 @@ static int show_ambiguous_object(const struct object_id *oid, void *data)
 		struct tag *tag = lookup_tag(oid);
 		if (!parse_tag(tag) && tag->tag)
 			strbuf_addf(&desc, " %s", tag->tag);
+	} else if (type == OBJ_BLOB) {
+		struct object_info oi = OBJECT_INFO_INIT;
+		unsigned long size;
+		unsigned flags = OBJECT_INFO_LOOKUP_REPLACE;
+
+		oi.sizep = &size;
+		if (oid_object_info_extended(oid, &oi, flags) < 0)
+			BUG("Couldn't get object info for %s", oid_to_hex(oid));
+		strbuf_addf(&desc, " of size %lu", *oi.sizep);
+	} else if (type == OBJ_TREE) {
+		struct tree *tree;
+		struct tree_desc desc;
+		struct name_entry entry;
+
+		if (!lookup_tree(oid))
+			BUG("Couldn't get tree info for %s", oid_to_hex(oid));
+		parse_tree_gently(tree, 0);
+		init_tree_desc(&desc, tree->buffer, tree->size);
+
+		while (tree_entry(&desc, &entry)) {
+			fprintf(stderr, "found entry\n");
+		}
+		strbuf_addf(&desc, " of size %lu", tree->size);
 	}
 
 	advise("  %s %s%s",
