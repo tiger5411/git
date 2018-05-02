@@ -450,6 +450,24 @@ test_expect_success 'git worktree --no-guess-remote option overrides config' '
 	)
 '
 
+test_expect_success '"add" <path> <branch> dwims with checkout.implicitRemote' '
+	test_when_finished rm -rf repo_upstream repo_dwim foo &&
+	setup_remote_repo repo_upstream repo_dwim &&
+	git init repo_dwim &&
+	(
+		cd repo_dwim &&
+		git remote add repo_upstream2 ../repo_upstream &&
+		git fetch repo_upstream2 &&
+		test_must_fail git worktree add ../foo foo &&
+		git -c checkout.implicitRemote=repo_upstream worktree add ../foo foo
+	) &&
+	(
+		cd foo &&
+		test_branch_upstream foo repo_upstream foo &&
+		test_cmp_rev refs/remotes/repo_upstream/foo refs/heads/foo
+	)
+'
+
 post_checkout_hook () {
 	gitdir=${1:-.git}
 	test_when_finished "rm -f $gitdir/hooks/post-checkout" &&
