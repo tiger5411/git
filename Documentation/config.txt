@@ -898,6 +898,21 @@ core.notesRef::
 This setting defaults to "refs/notes/commits", and it can be overridden by
 the `GIT_NOTES_REF` environment variable.  See linkgit:git-notes[1].
 
+core.DWIMRemote::
+	Various git commands will look at references on the configured
+	remotes and DW[YI]M (Do What (You|I) Mean) if the reference
+	only exists on one remote. This setting allows for setting the
+	name of a special remote that should always win when it comes
+	to disambiguation. The typical use-case is to set this to
+	`origin`.
++
+Currently this is used by linkgit:git-checkout[1] when `git checkout
+<something>' will checkout the '<something>' branch on another remote,
+and linkgit:git-worktree[1] when 'git worktree add' similarly DWYM
+when a branch is unique across remotes, or this setting is set to a
+special remote. This setting might be used for other commands or
+functionality in the future when appropriate.
+
 core.sparseCheckout::
 	Enable "sparse checkout" feature. See section "Sparse checkout" in
 	linkgit:git-read-tree[1] for more information.
