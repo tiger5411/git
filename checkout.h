@@ -8,9 +8,12 @@ struct tracking_name_data {
 	char *dst_ref;
 	struct object_id *dst_oid;
 	int num_matches;
+	const char *default_remote;
+	char *default_dst_ref;
+	struct object_id *default_dst_oid;
 };
 
-#define TRACKING_NAME_DATA_INIT { NULL, NULL, NULL, 0 }
+#define TRACKING_NAME_DATA_INIT { NULL, NULL, NULL, 0, NULL, NULL, NULL }
 
 /*
  * Check if the branch name uniquely matches a branch name on a remote

@@ -91,6 +91,18 @@ test_expect_success 'checkout of branch from multiple remotes fails with advice'
 	test_i18ngrep ! "^hint: " stderr
 '
 
+test_expect_success 'checkout of branch from multiple remotes succeeds with checkout.defaultRemote #1' '
+	git checkout -B master &&
+	status_uno_is_clean &&
+	test_might_fail git branch -D foo &&
+
+	git -c checkout.defaultRemote=repo_a checkout foo &&
+	status_uno_is_clean &&
+	test_branch foo &&
+	test_cmp_rev remotes/repo_a/foo HEAD &&
+	test_branch_upstream foo repo_a foo
+'
+
 test_expect_success 'checkout of branch from a single remote succeeds #1' '
 	git checkout -B master &&
 	test_might_fail git branch -D bar &&
