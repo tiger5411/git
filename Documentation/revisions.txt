@@ -169,6 +169,10 @@ existing tag object.
   and dereference the tag recursively until a non-tag object is
   found.
 
+'<rev>:'::
+  The suffix ':' resolves the object as treeish and is synonymous with
+  '<rev>{caret}\{tree\}'.
+
 '<rev>{caret}{/<text>}', e.g. 'HEAD^{/fix nasty bug}'::
   A suffix '{caret}' to a revision parameter, followed by a brace
   pair that contains a text led by a slash,
