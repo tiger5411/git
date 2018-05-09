@@ -493,8 +493,8 @@ and it will show what the last commit (in `HEAD`) actually changed.
 
 [NOTE]
 ============
-Here is an ASCII art by Jon Loeliger that illustrates how
-various 'diff-{asterisk}' commands compare things.
+Here is an ASCII art that illustrates how various 'diff-{asterisk}'
+commands compare things.
 
                       diff-tree
                        +----+
