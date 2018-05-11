@@ -1294,23 +1294,20 @@ int check_push_refs(struct ref *src, int nr_refspec, const char **refspec_names)
  * dst (e.g. pushing to a new branch, done in match_explicit_refs).
  */
 int match_push_refs(struct ref *src, struct ref **dst,
-		    int nr_refspec, const char **refspec, int flags)
+		    struct refspec *rs, int flags)
 {
-	struct refspec rs = REFSPEC_INIT_PUSH;
 	int send_all = flags & MATCH_REFS_ALL;
 	int send_mirror = flags & MATCH_REFS_MIRROR;
 	int send_prune = flags & MATCH_REFS_PRUNE;
 	int errs;
-	static const char *default_refspec[] = { ":", NULL };
 	struct ref *ref, **dst_tail = tail_ref(dst);
 	struct string_list dst_ref_index = STRING_LIST_INIT_NODUP;
 
-	if (!nr_refspec) {
-		nr_refspec = 1;
-		refspec = default_refspec;
-	}
-	refspec_appendn(&rs, refspec, nr_refspec);
-	errs = match_explicit_refs(src, *dst, &dst_tail, &rs);
+	/* If no refspec is provided, use the default ":" */
+	if (!rs->nr)
+		refspec_append(rs, ":");
+
+	errs = match_explicit_refs(src, *dst, &dst_tail, rs);
 
 	/* pick the remainder */
 	for (ref = src; ref; ref = ref->next) {
@@ -1319,7 +1316,7 @@ int match_push_refs(struct ref *src, struct ref **dst,
 		const struct refspec_item *pat = NULL;
 		char *dst_name;
 
-		dst_name = get_ref_match(&rs, ref, send_mirror, FROM_SRC, &pat);
+		dst_name = get_ref_match(rs, ref, send_mirror, FROM_SRC, &pat);
 		if (!dst_name)
 			continue;
 
@@ -1368,7 +1365,7 @@ int match_push_refs(struct ref *src, struct ref **dst,
 				/* We're already sending something to this ref. */
 				continue;
 
-			src_name = get_ref_match(&rs, ref, send_mirror, FROM_DST, NULL);
+			src_name = get_ref_match(rs, ref, send_mirror, FROM_DST, NULL);
 			if (src_name) {
 				if (!src_ref_index.nr)
 					prepare_ref_index(&src_ref_index, src);
@@ -1380,8 +1377,6 @@ int match_push_refs(struct ref *src, struct ref **dst,
 		}
 		string_list_clear(&src_ref_index, 0);
 	}
-
-	refspec_clear(&rs);
 
 	if (errs)
 		return -1;
