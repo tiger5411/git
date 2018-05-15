@@ -87,11 +87,6 @@ static void add_fetch_refspec(struct remote *remote, const char *ref)
 	refspec_append(&remote->fetch, ref);
 }
 
-void add_prune_tags_to_fetch_refspec(struct remote *remote)
-{
-	refspec_append(&remote->fetch, TAG_REFSPEC);
-}
-
 static void add_url(struct remote *remote, const char *url)
 {
 	ALLOC_GROW(remote->url, remote->url_nr + 1, remote->url_alloc);
