@@ -1,5 +1,6 @@
 #ifndef SUBMODULE_H
 #define SUBMODULE_H
+#include "refspec.h"
 
 struct repository;
 struct diff_options;
@@ -100,7 +101,6 @@ extern int submodule_touches_in_range(struct object_id *a,
 extern int find_unpushed_submodules(struct oid_array *commits,
 				    const char *remotes_name,
 				    struct string_list *needs_pushing);
-struct refspec;
 extern int push_unpushed_submodules(struct oid_array *commits,
 				    const struct remote *remote,
 				    const struct refspec *rs,
