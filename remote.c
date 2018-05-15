@@ -77,16 +77,6 @@ static const char *alias_url(const char *url, struct rewrites *r)
 	return xstrfmt("%s%s", r->rewrite[longest_i]->base, url + longest->len);
 }
 
-static void add_push_refspec(struct remote *remote, const char *ref)
-{
-	refspec_append(&remote->push, ref);
-}
-
-static void add_fetch_refspec(struct remote *remote, const char *ref)
-{
-	refspec_append(&remote->fetch, ref);
-}
-
 static void add_url(struct remote *remote, const char *url)
 {
 	ALLOC_GROW(remote->url, remote->url_nr + 1, remote->url_alloc);
@@ -261,9 +251,9 @@ static void read_remotes_file(struct remote *remote)
 		if (skip_prefix(buf.buf, "URL:", &v))
 			add_url_alias(remote, xstrdup(skip_spaces(v)));
 		else if (skip_prefix(buf.buf, "Push:", &v))
-			add_push_refspec(remote, xstrdup(skip_spaces(v)));
+			refspec_append(&remote->push, xstrdup(skip_spaces(v)));
 		else if (skip_prefix(buf.buf, "Pull:", &v))
-			add_fetch_refspec(remote, xstrdup(skip_spaces(v)));
+			refspec_append(&remote->fetch, xstrdup(skip_spaces(v)));
 	}
 	strbuf_release(&buf);
 	fclose(f);
@@ -302,14 +292,14 @@ static void read_branches_file(struct remote *remote)
 		frag = "master";
 
 	add_url_alias(remote, strbuf_detach(&buf, NULL));
-	add_fetch_refspec(remote, xstrfmt("refs/heads/%s:refs/heads/%s",
-					  frag, remote->name));
+	refspec_append(&remote->fetch, xstrfmt("refs/heads/%s:refs/heads/%s",
+					       frag, remote->name));
 
 	/*
 	 * Cogito compatible push: push current HEAD to remote #branch
 	 * (master if missing)
 	 */
-	add_push_refspec(remote, xstrfmt("HEAD:refs/heads/%s", frag));
+	refspec_append(&remote->push, xstrfmt("HEAD:refs/heads/%s", frag));
 	remote->fetch_tags = 1; /* always auto-follow */
 }
 
@@ -395,12 +385,12 @@ static int handle_config(const char *key, const char *value, void *cb)
 		const char *v;
 		if (git_config_string(&v, key, value))
 			return -1;
-		add_push_refspec(remote, v);
+		refspec_append(&remote->push, v);
 	} else if (!strcmp(subkey, "fetch")) {
 		const char *v;
 		if (git_config_string(&v, key, value))
 			return -1;
-		add_fetch_refspec(remote, v);
+		refspec_append(&remote->fetch, v);
 	} else if (!strcmp(subkey, "receivepack")) {
 		const char *v;
 		if (git_config_string(&v, key, value))
