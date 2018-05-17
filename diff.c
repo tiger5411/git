@@ -4713,15 +4713,23 @@ int diff_opt_parse(struct diff_options *options,
 		options->color_moved_ws_handling &= ~XDF_IGNORE_WHITESPACE_AT_EOL;
 	else if (!strcmp(arg, "--color-moved-no-ignore-space-prefix-delta"))
 		options->color_moved_ws_handling &= ~COLOR_MOVED_DELTA_WHITESPACES;
-	else if (!strcmp(arg, "--color-moved-ignore-all-space"))
+	else if (!strcmp(arg, "--color-moved-ignore-all-space")) {
+		if (options->color_moved == COLOR_MOVED_NO)
+			options->color_moved = COLOR_MOVED_DEFAULT;
 		options->color_moved_ws_handling |= XDF_IGNORE_WHITESPACE;
-	else if (!strcmp(arg, "--color-moved-ignore-space-change"))
+	} else if (!strcmp(arg, "--color-moved-ignore-space-change")) {
 		options->color_moved_ws_handling |= XDF_IGNORE_WHITESPACE_CHANGE;
-	else if (!strcmp(arg, "--color-moved-ignore-space-at-eol"))
+		if (options->color_moved == COLOR_MOVED_NO)
+			options->color_moved = COLOR_MOVED_DEFAULT;
+	} else if (!strcmp(arg, "--color-moved-ignore-space-at-eol")) {
 		options->color_moved_ws_handling |= XDF_IGNORE_WHITESPACE_AT_EOL;
-	else if (!strcmp(arg, "--color-moved-ignore-space-prefix-delta"))
+		if (options->color_moved == COLOR_MOVED_NO)
+			options->color_moved = COLOR_MOVED_DEFAULT;
+	} else if (!strcmp(arg, "--color-moved-ignore-space-prefix-delta")) {
 		options->color_moved_ws_handling |= COLOR_MOVED_DELTA_WHITESPACES;
-	else if (!strcmp(arg, "--indent-heuristic"))
+		if (options->color_moved == COLOR_MOVED_NO)
+			options->color_moved = COLOR_MOVED_DEFAULT;
+	} else if (!strcmp(arg, "--indent-heuristic"))
 		DIFF_XDL_SET(options, INDENT_HEURISTIC);
 	else if (!strcmp(arg, "--no-indent-heuristic"))
 		DIFF_XDL_CLR(options, INDENT_HEURISTIC);

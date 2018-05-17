@@ -1875,7 +1875,11 @@ test_expect_success 'compare whitespace delta across moved blocks' '
 
 	git diff --color --color-moved --color-moved-ignore-space-prefix-delta |
 		grep -v "index" |
-		test_decode_color >actual &&
+		test_decode_color >actual1 &&
+
+	git diff --color --color-moved-ignore-space-prefix-delta |
+		grep -v "index" |
+		test_decode_color >actual2 &&
 
 	q_to_tab <<-\EOF >expected &&
 		<BOLD>diff --git a/text.txt b/text.txt<RESET>
@@ -1898,7 +1902,8 @@ test_expect_success 'compare whitespace delta across moved blocks' '
 		<BOLD;YELLOW>+<RESET><BOLD;YELLOW>not adjust<RESET>
 	EOF
 
-	test_cmp expected actual
+	test_cmp expected actual1 &&
+	test_cmp expected actual2
 '
 
 test_done
