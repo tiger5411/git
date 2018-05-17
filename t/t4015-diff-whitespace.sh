@@ -1847,4 +1847,58 @@ test_expect_success 'only move detection ignores white spaces' '
 	test_cmp expected actual
 '
 
+test_expect_success 'compare whitespace delta across moved blocks' '
+
+	git reset --hard &&
+	q_to_tab <<-\EOF >text.txt &&
+	QIndented
+	QText across
+	Qthree lines
+	QBut! <- this stands out
+	Qthis one
+	QQline did
+	Qnot adjust
+	EOF
+
+	git add text.txt &&
+	git commit -m "add text.txt" &&
+
+	q_to_tab <<-\EOF >text.txt &&
+	QQIndented
+	QQText across
+	QQthree lines
+	QQQBut! <- this stands out
+	this one
+	Qline did
+	not adjust
+	EOF
+
+	git diff --color --color-moved --color-moved-ignore-space-prefix-delta |
+		grep -v "index" |
+		test_decode_color >actual &&
+
+	q_to_tab <<-\EOF >expected &&
+		<BOLD>diff --git a/text.txt b/text.txt<RESET>
+		<BOLD>--- a/text.txt<RESET>
+		<BOLD>+++ b/text.txt<RESET>
+		<CYAN>@@ -1,7 +1,7 @@<RESET>
+		<BOLD;MAGENTA>-QIndented<RESET>
+		<BOLD;MAGENTA>-QText across<RESET>
+		<BOLD;MAGENTA>-Qthree lines<RESET>
+		<RED>-QBut! <- this stands out<RESET>
+		<BOLD;MAGENTA>-Qthis one<RESET>
+		<BOLD;MAGENTA>-QQline did<RESET>
+		<BOLD;MAGENTA>-Qnot adjust<RESET>
+		<BOLD;YELLOW>+<RESET>QQ<BOLD;YELLOW>Indented<RESET>
+		<BOLD;YELLOW>+<RESET>QQ<BOLD;YELLOW>Text across<RESET>
+		<BOLD;YELLOW>+<RESET>QQ<BOLD;YELLOW>three lines<RESET>
+		<GREEN>+<RESET>QQQ<GREEN>But! <- this stands out<RESET>
+		<BOLD;YELLOW>+<RESET><BOLD;YELLOW>this one<RESET>
+		<BOLD;YELLOW>+<RESET>Q<BOLD;YELLOW>line did<RESET>
+		<BOLD;YELLOW>+<RESET><BOLD;YELLOW>not adjust<RESET>
+	EOF
+
+	test_cmp expected actual
+'
+
 test_done
