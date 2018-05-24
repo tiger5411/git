@@ -28,6 +28,7 @@
 #include "oidmap.h"
 #include "oidset.h"
 #include "commit-slab.h"
+#include "alias.h"
 
 #define GIT_REFLOG_ACTION "GIT_REFLOG_ACTION"
 
