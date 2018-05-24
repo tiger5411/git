@@ -53,4 +53,6 @@ void write_commit_graph(const char *obj_dir,
 			int nr_commits,
 			int append);
 
+int verify_commit_graph(struct commit_graph *g);
+
 #endif
