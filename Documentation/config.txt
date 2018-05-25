@@ -3350,7 +3350,9 @@ security checks may be added in future releases.
 On the receiving side, failing fsckObjects will make those objects
 unreachable, see "QUARANTINE ENVIRONMENT" in
 linkgit:git-receive-pack[1]. On the fetch side, malformed objects will
-instead be left unreferenced in the repository.
+instead be left unreferenced in the repository. That difference in
+behavior should not be relied upon. In the future, such objects may be
+quarantined for "fetch" as well.
 
 transfer.hideRefs::
 	String(s) `receive-pack` and `upload-pack` use to decide which
