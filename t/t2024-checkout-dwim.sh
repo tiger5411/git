@@ -10,7 +10,9 @@ Ensures that checkout on an unborn branch does what the user expects'
 test_branch () {
 	printf "%s\n" "refs/heads/$1" >expect.HEAD &&
 	git symbolic-ref HEAD >actual.HEAD &&
-	test_cmp expect.HEAD actual.HEAD
+	test_cmp expect.HEAD actual.HEAD &&
+	git status --porcelain >status &&
+	test_line_count = 0 status
 }
 
 # Is branch "refs/heads/$1" set to pull from "$2/$3"?
