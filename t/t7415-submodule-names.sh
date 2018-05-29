@@ -93,6 +93,15 @@ test_expect_success 'transfer.fsckObjects detects evil superproject (index)' '
 	test_must_fail git push dst.git HEAD
 '
 
+test_expect_success 'transfer.fsckObjects needs to be on to protect downstream' '
+	git init --bare intermediary.git &&
+	git -C intermediary.git config transfer.fsckObjects false &&
+	git -C intermediary.git fetch ../ master:master &&
+	git init --bare downstream.git &&
+	git -C downstream.git fetch ../intermediary.git &&
+	test_must_fail git -C downstream.git fsck
+'
+
 # Normally our packs contain commits followed by trees followed by blobs. This
 # reverses the order, which requires backtracking to find the context of a
 # blob. We'll start with a fresh gitmodules-only tree to make it simpler.
