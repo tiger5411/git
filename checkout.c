@@ -18,13 +18,10 @@ static int check_tracking_name(struct remote *remote, void *cb_data)
 	struct refspec query;
 	memset(&query, 0, sizeof(struct refspec));
 	query.src = cb->src_ref;
-	fprintf(stderr, "Am in checking name\n");
 	if (remote_find_tracking(remote, &query)) {
-		if (getenv("AVAR")) fprintf(stderr, "CB found matching ref in remote <%s>\n", remote->name);
 		free(query.dst);
 		return 0;
 	} else if (get_oid(query.dst, cb->dst_oid)) {
-		if (getenv("AVAR")) fprintf(stderr, "CB found matching oid in remote <%s>\n", remote->name);
 		free(query.dst);
 		return 0;
 	}
