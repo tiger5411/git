@@ -311,6 +311,19 @@ int git_config_colorbool(const char *var, const char *value)
 	if (!var)
 		return -1;
 
+	/*
+	 * If future git versions introduce new color.ui settings we
+	 * don't want to die right below when git_config_bool() fails
+	 * to parse them as bool.
+	 */
+	if (git_parse_maybe_bool(value) < 0) {
+		static int warned = 0;
+		if (!warned++)
+			warning(_("unknown value '%s' for '%s', falling back to 'auto'"),
+				value, var);
+		return GIT_COLOR_AUTO;
+	}
+
 	/* Missing or explicit false to turn off colorization */
 	if (!git_config_bool(var, value))
 		return 0;

@@ -1291,6 +1291,11 @@ color.ui::
 	want such output to use color when written to the terminal (as
 	determined by a call to `isatty(3)`) or to a pager (unless
 	`color.pager` is set to false).
++
+Setting this to some value unknown to git will warn and fall back to
+`auto`. This is so that new values can be recognized in the future
+without the git configuration file being incompatible between versions
+to the point of most porcelain commands dying on the older version.
 
 column.ui::
 	Specify whether supported commands should output in columns.

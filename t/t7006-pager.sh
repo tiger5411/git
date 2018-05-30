@@ -309,10 +309,26 @@ test_expect_success 'no color when stdout is a regular file' '
 	! colorful colorless.log
 '
 
+test_expect_success 'unknown color.ui values default to "auto" (regular file)' '
+	rm -f colorless.log &&
+	test_config color.ui doesnotexist &&
+	git log >colorless.log 2>err &&
+	test_i18ngrep "falling back" err &&
+	! colorful colorless.log
+'
+
 test_expect_success TTY 'color when writing to a pager' '
 	rm -f paginated.out &&
 	test_config color.ui auto &&
 	test_terminal git log &&
+	colorful paginated.out
+'
+
+test_expect_success TTY 'unknown color.ui values default to "auto" (pager)' '
+	rm -f paginated.out &&
+	test_config color.ui doesnotexist &&
+	test_terminal git log 2>err &&
+	test_i18ngrep "falling back" err &&
 	colorful paginated.out
 '
 
