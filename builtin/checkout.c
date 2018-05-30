@@ -973,7 +973,7 @@ static int parse_branchname_arg(int argc, const char **argv,
 			recover_with_dwim = 0;
 
 		if (recover_with_dwim) {
-			if (getenv("AVAR")) fprintf(stderr, "Trying to discover unique tracking name <%s>", arg);
+			if (getenv("AVAR")) fprintf(stderr, "Trying to discover unique tracking name <%s>\n", arg);
 			const char *remote = unique_tracking_name(arg, rev);
 			if (getenv("AVAR")) fprintf(stderr, "DWIM recovery value is <%s> and oid now <%s>\n", remote, oid_to_hex(rev));
 			if (remote) {
