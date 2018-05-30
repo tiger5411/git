@@ -1103,21 +1103,19 @@ clean.requireForce::
 	-i or -n.   Defaults to true.
 
 color.advice::
-	A boolean to enable/disable color in hints (e.g. when a push
-	failed, see `advice.*` for a list).  May be set to `always`,
-	`false` (or `never`) or `auto` (or `true`), in which case colors
-	are used only when the error output goes to a terminal. If
-	unset, then the value of `color.ui` is used (`auto` by default).
+	Enables or disables colors in hints (e.g. when a push failed,
+	see `advice.*` for a list). See `color.ui` for possible values
+	and the default. If unset, the value of `color.ui` is used as
+	a fallback.
 
 color.advice.hint::
 	Use customized color for hints.
 
 color.branch::
-	A boolean to enable/disable color in the output of
-	linkgit:git-branch[1]. May be set to `always`,
-	`false` (or `never`) or `auto` (or `true`), in which case colors are used
-	only when the output is to a terminal. If unset, then the
-	value of `color.ui` is used (`auto` by default).
+	Enables or disables colors in the output of
+	linkgit:git-branch[1]. See `color.ui` for possible values and
+	the default. If unset, the value of `color.ui` is used as a
+	fallback.
 
 color.branch.<slot>::
 	Use customized color for branch coloration. `<slot>` is one of
@@ -1127,13 +1125,11 @@ color.branch.<slot>::
 	refs).
 
 color.diff::
-	Whether to use ANSI escape sequences to add color to patches.
-	If this is set to `always`, linkgit:git-diff[1],
-	linkgit:git-log[1], and linkgit:git-show[1] will use color
-	for all patches.  If it is set to `true` or `auto`, those
-	commands will only use color when output is to the terminal.
-	If unset, then the value of `color.ui` is used (`auto` by
-	default).
+	Enables or disables colors when patches are emitted
+	(e.g. linkgit:git-diff[1], linkgit:git-log[1], and
+	linkgit:git-show[1]). See `color.ui` for possible values and
+	the default. If unset, the value of `color.ui` is used as a
+	fallback.
 +
 This does not affect linkgit:git-format-patch[1] or the
 'git-diff-{asterisk}' plumbing commands.  Can be overridden on the
@@ -1165,10 +1161,10 @@ color.decorate.<slot>::
 	branches, remote-tracking branches, tags, stash and HEAD, respectively.
 
 color.grep::
-	When set to `always`, always highlight matches.  When `false` (or
-	`never`), never.  When set to `true` or `auto`, use color only
-	when the output is written to the terminal.  If unset, then the
-	value of `color.ui` is used (`auto` by default).
+	Enables or disables colors in the output of
+	linkgit:git-grep[1]. See `color.ui` for possible values and
+	the default. If unset, the value of `color.ui` is used as a
+	fallback.
 
 color.grep.<slot>::
 	Use customized color for grep colorization.  `<slot>` specifies which
@@ -1197,12 +1193,11 @@ color.grep.<slot>::
 --
 
 color.interactive::
-	When set to `always`, always use colors for interactive prompts
-	and displays (such as those used by "git-add --interactive" and
-	"git-clean --interactive"). When false (or `never`), never.
-	When set to `true` or `auto`, use colors only when the output is
-	to the terminal. If unset, then the value of `color.ui` is
-	used (`auto` by default).
+	Enables or disables colors in interactive prompts and displays
+	(such as those used by "git-add --interactive" and "git-clean
+	--interactive"). See `color.ui` for possible values and the
+	default. If unset, the value of `color.ui` is used as a
+	fallback.
 
 color.interactive.<slot>::
 	Use customized color for 'git add --interactive' and 'git clean
@@ -1215,27 +1210,24 @@ color.pager::
 	use (default is true).
 
 color.push::
-	A boolean to enable/disable color in push errors. May be set to
-	`always`, `false` (or `never`) or `auto` (or `true`), in which
-	case colors are used only when the error output goes to a terminal.
-	If unset, then the value of `color.ui` is used (`auto` by default).
+	Enables or disables colors in push errors. See `color.ui` for
+	possible values and the default. If unset, the value of
+	`color.ui` is used as a fallback.
 
 color.push.error::
 	Use customized color for push errors.
 
 color.showBranch::
-	A boolean to enable/disable color in the output of
-	linkgit:git-show-branch[1]. May be set to `always`,
-	`false` (or `never`) or `auto` (or `true`), in which case colors are used
-	only when the output is to a terminal. If unset, then the
-	value of `color.ui` is used (`auto` by default).
+	Enables or disables colors in the output of
+	linkgit:git-show-branch[1]. See `color.ui` for possible values
+	and the default. If unset, the value of `color.ui` is used as
+	a fallback.
 
 color.status::
-	A boolean to enable/disable color in the output of
-	linkgit:git-status[1]. May be set to `always`,
-	`false` (or `never`) or `auto` (or `true`), in which case colors are used
-	only when the output is to a terminal. If unset, then the
-	value of `color.ui` is used (`auto` by default).
+	Enables or disables colors in the output of
+	linkgit:git-status[1]. See `color.ui` for possible values
+	and the default. If unset, the value of `color.ui` is used as
+	a fallback.
 
 color.status.<slot>::
 	Use customized color for status colorization. `<slot>` is
@@ -1279,10 +1271,9 @@ blame.coloring::
 	or 'none' which is the default.
 
 color.transport::
-	A boolean to enable/disable color when pushes are rejected. May be
-	set to `always`, `false` (or `never`) or `auto` (or `true`), in which
-	case colors are used only when the error output goes to a terminal.
-	If unset, then the value of `color.ui` is used (`auto` by default).
+	Enables or disables colors when pushes are rejected. See
+	`color.ui` for possible values and the default. If unset, the
+	value of `color.ui` is used as a fallback.
 
 color.transport.rejected::
 	Use customized color when a push was rejected.
