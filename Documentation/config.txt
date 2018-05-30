@@ -1288,7 +1288,9 @@ color.ui::
 	or the `--color` option. Set it to `always` if you want all
 	output not intended for machine consumption to use color, to
 	`true` or `auto` (this is the default since Git 1.8.4) if you
-	want such output to use color when written to the terminal.
+	want such output to use color when written to the terminal (as
+	determined by a call to `isatty(3)`) or to a pager (unless
+	`color.pager` is set to false).
 
 column.ui::
 	Specify whether supported commands should output in columns.
