@@ -46,11 +46,14 @@ const char *unique_tracking_name(const char *name, struct object_id *oid)
 	free(cb_data.src_ref);
 	free((char *)implicit_remote);
 	if (cb_data.unique) {
+		if (getenv("AVAR")) fprintf(stderr, "Returning unique ref <%s>\n", cb_data.dst_ref);
 		free(cb_data.implicit_dst_ref);
 		return cb_data.dst_ref;
 	}
 	free(cb_data.dst_ref);
-	if (cb_data.implicit_dst_ref)
+	if (cb_data.implicit_dst_ref) {
+		if (getenv("AVAR")) fprintf(stderr, "Returning checkout.implicitRemote ref <%s>\n", cb_data.implicit_dst_ref);
 		return cb_data.implicit_dst_ref;
+	}
 	return NULL;
 }
