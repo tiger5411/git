@@ -57,6 +57,7 @@ struct strbuf;
 #define GIT_COLOR_NEVER  0
 #define GIT_COLOR_ALWAYS 1
 #define GIT_COLOR_AUTO   2
+#define GIT_COLOR_ISATTY 3
 
 /* A default list of colors to use for commit graphs and show-branch output */
 extern const char *column_colors_ansi[];

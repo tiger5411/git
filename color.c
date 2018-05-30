@@ -306,6 +306,8 @@ int git_config_colorbool(const char *var, const char *value)
 			return 1;
 		if (!strcasecmp(value, "auto"))
 			return GIT_COLOR_AUTO;
+		if (!strcasecmp(value, "isatty"))
+			return GIT_COLOR_ISATTY;
 	}
 
 	if (!var)
@@ -332,13 +334,14 @@ int git_config_colorbool(const char *var, const char *value)
 	return GIT_COLOR_AUTO;
 }
 
-static int check_auto_color(int fd)
+static int check_auto_color(int fd, int isatty_only)
 {
 	static int color_stderr_is_tty = -1;
 	int *is_tty_p = fd == 1 ? &color_stdout_is_tty : &color_stderr_is_tty;
 	if (*is_tty_p < 0)
 		*is_tty_p = isatty(fd);
-	if (*is_tty_p || (fd == 1 && pager_in_use() && pager_use_color)) {
+	if (*is_tty_p || (!isatty_only && fd == 1 && pager_in_use() &&
+			  pager_use_color)) {
 		if (!is_terminal_dumb())
 			return 1;
 	}
@@ -359,9 +362,10 @@ int want_color_fd(int fd, int var)
 	if (var < 0)
 		var = git_use_color_default;
 
-	if (var == GIT_COLOR_AUTO) {
+	if (var == GIT_COLOR_AUTO || var == GIT_COLOR_ISATTY) {
+		int isatty_only = var == GIT_COLOR_ISATTY;
 		if (want_auto[fd] < 0)
-			want_auto[fd] = check_auto_color(fd);
+			want_auto[fd] = check_auto_color(fd, isatty_only);
 		return want_auto[fd];
 	}
 	return var;

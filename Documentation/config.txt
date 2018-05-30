@@ -1292,6 +1292,16 @@ color.ui::
 	determined by a call to `isatty(3)`) or to a pager (unless
 	`color.pager` is set to false).
 +
+If you don't like the magic of `auto` and prefer for git to just ask
+`isatty(3)` whether it's connected to a terminal set this to
+`isatty`. This will cause it to always obey that function, except
+(like `auto`) if `TERM=dumb` is set in the environment. Currently this
+is equivalent to setting `auto` and `color.pager=false`, but in the
+future `auto` may be smart enough to handle other cases, i.e. when
+`isatty(3)` returns `1` but something else other than `TERM=dumb`
+suggests the terminal can't handle colors or not. If you'd like to
+avoid all that magic use `isatty`.
++
 Setting this to some value unknown to git will warn and fall back to
 `auto`. This is so that new values can be recognized in the future
 without the git configuration file being incompatible between versions

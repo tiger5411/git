@@ -309,6 +309,13 @@ test_expect_success 'no color when stdout is a regular file' '
 	! colorful colorless.log
 '
 
+test_expect_success 'no color when stdout is a regular file (isatty)' '
+	rm -f colorless.log &&
+	test_config color.ui isatty &&
+	git log >colorless.log &&
+	! colorful colorless.log
+'
+
 test_expect_success 'unknown color.ui values default to "auto" (regular file)' '
 	rm -f colorless.log &&
 	test_config color.ui doesnotexist &&
@@ -336,6 +343,14 @@ test_expect_success TTY 'colors are suppressed by color.pager' '
 	rm -f paginated.out &&
 	test_config color.ui auto &&
 	test_config color.pager false &&
+	test_terminal git log &&
+	! colorful paginated.out
+'
+
+test_expect_success TTY 'colors are suppressed by color.ui=isatty when writing to a pager' '
+	rm -f paginated.out &&
+	test_config color.ui isatty &&
+	test_config color.pager true &&
 	test_terminal git log &&
 	! colorful paginated.out
 '
