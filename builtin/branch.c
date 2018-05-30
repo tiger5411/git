@@ -34,6 +34,7 @@ static const char * const builtin_branch_usage[] = {
 	NULL
 };
 
+static int used_deprecated_reflog_option;
 static const char *head;
 static struct object_id head_oid;
 
@@ -576,8 +577,7 @@ static int edit_branch_description(const char *branch_name)
 static int deprecated_reflog_option_cb(const struct option *opt,
 				       const char *arg, int unset)
 {
-	warning("the '-l' alias for '--create-reflog' is deprecated;");
-	warning("it will be removed in a future version of Git");
+	used_deprecated_reflog_option = 1;
 	*(int *)opt->value = !unset;
 	return 0;
 }
@@ -702,6 +702,17 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 
 	if (list)
 		setup_auto_pager("branch", 1);
+
+	if (used_deprecated_reflog_option) {
+		if (list) {
+			warning("the '-l' option is an alias for '--create-reflog' and");
+			warning("has no effect in list mode. This option will soon be");
+			warning("removed and you should omit it (or use '--list' instead).");
+		} else {
+			warning("the '-l' alias for '--create-reflog' is deprecated;");
+			warning("it will be removed in a future version of Git");
+		}
+	}
 
 	if (delete) {
 		if (!argc)
