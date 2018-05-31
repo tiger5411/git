@@ -1266,9 +1266,11 @@ int cmd_checkout(int argc, const char **argv, const char *prefix)
 	}
 
 	UNLEAK(opts);
-	if (opts.patch_mode || opts.pathspec.nr)
-		return checkout_paths(&opts, new_branch_info.name,
-				      &dwim_remotes_matched);
-	else
+	if (opts.patch_mode || opts.pathspec.nr) {
+		int ret = checkout_paths(&opts, new_branch_info.name,
+					 &dwim_remotes_matched);
+		return ret;
+	} else {
 		return checkout_branch(&opts, &new_branch_info);
+	}
 }
