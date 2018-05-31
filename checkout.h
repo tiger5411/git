@@ -7,10 +7,10 @@ struct tracking_name_data {
 	/* const */ char *src_ref;
 	char *dst_ref;
 	struct object_id *dst_oid;
-	int unique;
+	int num_matches;
 };
 
-#define TRACKING_NAME_DATA_INIT { NULL, NULL, NULL, 1 }
+#define TRACKING_NAME_DATA_INIT { NULL, NULL, NULL, 0 }
 
 /*
  * Check if the branch name uniquely matches a branch name on a remote
