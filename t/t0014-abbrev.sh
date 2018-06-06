@@ -107,4 +107,34 @@ do
 	"
 done
 
+test_expect_success 'describe setup' '
+	git tag -a -mannotated A.annotated &&
+	test_commit B
+'
+
+test_expect_success 'describe core.abbrev and --abbrev special cases' '
+	# core.abbrev=0 behaves as usual...
+	test_must_fail git -c core.abbrev=0 describe &&
+
+	# ...but --abbrev=0 is special-cased to print the nearest tag,
+	# not fall back on "4" like git-log.
+	echo A.annotated >expected &&
+	git describe --abbrev=0 >actual &&
+	test_cmp expected actual
+'
+
+sed_g_tr_n() {
+	sed 's/.*g//' | tr_d_n
+}
+
+for i in $(test_seq 4 40)
+do
+	test_expect_success "describe core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i describe | sed_g_tr_n >describe &&
+		test_byte_count = $i describe &&
+		git describe --abbrev=$i | sed_g_tr_n >describe &&
+		test_byte_count = $i describe
+	"
+done
+
 test_done
