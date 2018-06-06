@@ -5128,16 +5128,28 @@ int diff_opt_parse(struct diff_options *options,
 	else if (!strcmp(arg, "--abbrev"))
 		options->abbrev = DEFAULT_ABBREV;
 	else if (skip_prefix(arg, "--abbrev=", &arg)) {
+		int v;
 		char *end;
 		if (!strcmp(arg, ""))
 			die("--abbrev expects a value, got '%s'", arg);
-		options->abbrev = strtoul(arg, &end, 10);
+		v = strtoul(arg, &end, 10);
 		if (*end)
 			die("--abbrev expects a numerical value, got '%s'", arg);
-		if (options->abbrev < MINIMUM_ABBREV) {
+		if (*arg == '+' || *arg == '-') {
+			if (v == 0) {
+				die("relative abbrev must be non-zero");
+			} else if (abs(v) > the_hash_algo->hexsz) {
+				die("relative abbrev impossibly out of range");
+			} else {
+				default_abbrev_relative = v;
+				options->abbrev = DEFAULT_ABBREV;
+			}
+		} else if (v < MINIMUM_ABBREV) {
 			options->abbrev = MINIMUM_ABBREV;
-		} else if (the_hash_algo->hexsz < options->abbrev) {
+		} else if (the_hash_algo->hexsz < v) {
 			options->abbrev = the_hash_algo->hexsz;
+		} else {
+			options->abbrev = v;
 		}
 	}
 	else if ((argcount = parse_long_opt("src-prefix", av, &optarg))) {
