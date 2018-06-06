@@ -1,0 +1,118 @@
+#!/bin/sh
+
+test_description='test core.abbrev and related features'
+
+. ./test-lib.sh
+
+tr_d_n() {
+	tr -d '\n'
+}
+
+cut_tr_d_n_field_n() {
+	cut -d " " -f $1 | tr_d_n
+}
+
+test_expect_success 'setup' '
+	test_commit A &&
+	git tag -a -mannotated A.annotated &&
+	test_commit B &&
+	test_commit C &&
+	mkdir X Y &&
+	touch X/file1 Y/file2
+'
+
+test_expect_success 'the FALLBACK_DEFAULT_ABBREV is 7' '
+	git log -1 --pretty=format:%h >log &&
+	test_byte_count = 7 log
+'
+
+test_expect_success 'abbrev empty value handling differs ' '
+	test_must_fail git -c core.abbrev= log -1 --pretty=format:%h 2>stderr &&
+	test_i18ngrep "bad numeric config value.*invalid unit" stderr &&
+
+	git branch -v --abbrev= | cut_tr_d_n_field_n 3 >branch &&
+	test_byte_count = 40 branch &&
+
+	git log --abbrev= -1 --pretty=format:%h >log &&
+	test_byte_count = 4 log &&
+
+	git diff --raw --abbrev= HEAD~ >diff &&
+	cut_tr_d_n_field_n 3 <diff >diff.3 &&
+	test_byte_count = 4 diff.3 &&
+	cut_tr_d_n_field_n 4 <diff >diff.4 &&
+	test_byte_count = 4 diff.4 &&
+
+	test_must_fail git diff --raw --abbrev= --no-index X Y >diff &&
+	cut_tr_d_n_field_n 3 <diff >diff.3 &&
+	test_byte_count = 40 diff.3 &&
+	cut_tr_d_n_field_n 4 <diff >diff.4 &&
+	test_byte_count = 40 diff.4
+'
+
+test_expect_success 'abbrev non-integer value handling differs ' '
+	test_must_fail git -c core.abbrev=XYZ log -1 --pretty=format:%h 2>stderr &&
+	test_i18ngrep "bad numeric config value.*invalid unit" stderr &&
+
+	test_must_fail git branch -v --abbrev=XYZ 2>stderr &&
+	test_i18ngrep "expects a numerical value" stderr &&
+
+	git log --abbrev=XYZ -1 --pretty=format:%h 2>stderr &&
+	! test -s stderr &&
+
+	git diff --raw --abbrev=XYZ HEAD~ 2>stderr &&
+	! test -s stderr &&
+
+	test_must_fail git diff --raw --abbrev=XYZ --no-index X Y 2>stderr &&
+	test_i18ngrep "expects a numerical value" stderr
+'
+
+for i in -41 -20 -10 -1 0 1 2 3 41
+do
+	test_expect_success "core.abbrev value $i out of range errors out" "
+		test_must_fail git -c core.abbrev=$i log -1 --pretty=format:%h 2>stderr &&
+		test_i18ngrep 'abbrev length out of range' stderr
+	"
+done
+
+for i in -41 -20 -10 -1
+do
+	test_expect_success "negative --abbrev=$i value out of range means --abbrev=40" "
+		git log --abbrev=$i -1 --pretty=format:%h >log &&
+		test_byte_count = 40 log
+	"
+done
+
+for i in 0 1 2 3 4
+do
+	test_expect_success "non-negative --abbrev=$i value <MINIMUM_ABBREV falls back on MINIMUM_ABBREV" "
+		git log --abbrev=$i -1 --pretty=format:%h >log &&
+		test_byte_count = 4 log
+	"
+done
+
+for i in 41 9001
+do
+	test_expect_success "non-negative --abbrev=$i value >MINIMUM_ABBREV falls back on 40" "
+		git log --abbrev=$i -1 --pretty=format:%h >log &&
+		test_byte_count = 40 log
+	"
+done
+
+for i in $(test_seq 4 40)
+do
+	test_expect_success "core.abbrev=$i and --abbrev=$i in combination within the valid range" "
+		# Both core.abbrev=X and --abbrev=X do the same thing
+		# in isolation
+		git -c core.abbrev=$i log -1 --pretty=format:%h >log &&
+		test_byte_count = $i log &&
+		git log --abbrev=$i -1 --pretty=format:%h >log &&
+		test_byte_count = $i log &&
+
+		# The --abbrev option should take priority over
+		# core.abbrev
+		git -c core.abbrev=20 log --abbrev=$i -1 --pretty=format:%h >log &&
+		test_byte_count = $i log
+	"
+done
+
+test_done
