@@ -74,7 +74,7 @@ test_expect_success 'abbrev non-integer value handling differs ' '
 	test_i18ngrep "expects a numerical value" stderr
 '
 
-for i in -41 -20 -10 -1 0 1 2 3 41
+for i in -41 -20 -10 -1 -0 +0 0 1 2 3 41
 do
 	test_expect_success "core.abbrev value $i out of range errors out" "
 		test_must_fail git -c core.abbrev=$i log -1 --pretty=format:%h 2>stderr &&
@@ -90,7 +90,7 @@ do
 	"
 done
 
-for i in 0 1 2 3 4
+for i in 0 1 2 3 4 -0 +0 +1 +2 +3 +4
 do
 	test_expect_success "non-negative --abbrev=$i value <MINIMUM_ABBREV falls back on MINIMUM_ABBREV" "
 		git log --abbrev=$i -1 --pretty=format:%h >log &&
@@ -98,7 +98,7 @@ do
 	"
 done
 
-for i in 41 9001
+for i in 41 9001 +41 +9001
 do
 	test_expect_success "non-negative --abbrev=$i value >MINIMUM_ABBREV falls back on 40" "
 		git log --abbrev=$i -1 --pretty=format:%h >log &&
@@ -114,6 +114,10 @@ do
 		git -c core.abbrev=$i log -1 --pretty=format:%h >log &&
 		test_byte_count = $i log &&
 		git log --abbrev=$i -1 --pretty=format:%h >log &&
+		test_byte_count = $i log &&
+
+		# core.abbrev=+N is the same as core.abbrev=N
+		git -c core.abbrev=+$i log -1 --pretty=format:%h >log &&
 		test_byte_count = $i log &&
 
 		# The --abbrev option should take priority over
@@ -172,15 +176,38 @@ do
 	"
 done
 
+test_expect_success 'blame core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 blame A.t | cut_tr_d_n_field_n 1 >blame &&
+	test_must_fail git -c core.abbrev=-1 blame A.t | cut_tr_d_n_field_n 1 >blame &&
+
+	git blame --abbrev=-1 A.t | cut_tr_d_n_field_n 1 >blame &&
+	test_byte_count = 5 blame &&
+
+	git blame --abbrev=+1 A.t | cut_tr_d_n_field_n 1 >blame &&
+	test_byte_count = 5 blame
+'
+
 for i in $(test_seq 4 40)
 do
 	test_expect_success "branch core.abbrev=$i and --abbrev=$i" "
 		git -c core.abbrev=$i branch -v | cut_tr_d_n_field_n 3 >branch &&
 		test_byte_count = $i branch &&
+
 		git branch --abbrev=$i -v | cut_tr_d_n_field_n 3 >branch &&
 		test_byte_count = $i branch
 	"
 done
+
+test_expect_success 'branch core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 branch -v | cut_tr_d_n_field_n 3 >branch &&
+	test_must_fail git -c core.abbrev=-1 branch -v | cut_tr_d_n_field_n 3 >branch &&
+
+	git branch --abbrev=-1 -v | cut_tr_d_n_field_n 3 >branch &&
+	test_byte_count = 4 branch &&
+
+	git branch --abbrev=+1 -v | cut_tr_d_n_field_n 3 >branch &&
+	test_byte_count = 4 branch
+'
 
 test_expect_success 'describe core.abbrev and --abbrev special cases' '
 	# core.abbrev=0 behaves as usual...
@@ -203,6 +230,17 @@ do
 	"
 done
 
+test_expect_success 'describe core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 describe | sed_g_tr_d_n >describe &&
+	test_must_fail git -c core.abbrev=-1 describe | sed_g_tr_d_n >describe &&
+
+	git describe --abbrev=-1 | sed_g_tr_d_n >describe &&
+	test_byte_count = 4 describe &&
+
+	git describe --abbrev=+1 | sed_g_tr_d_n >describe &&
+	test_byte_count = 4 describe
+'
+
 for i in $(test_seq 4 40)
 do
 	test_expect_success "log core.abbrev=$i and --abbrev=$i" "
@@ -212,6 +250,20 @@ do
 		test_byte_count = $i log
 	"
 done
+
+test_expect_success 'log core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 log --pretty=format:%h -1 2>stderr &&
+	test_i18ngrep "abbrev length out of range" stderr &&
+
+	test_must_fail git -c core.abbrev=-1 log --pretty=format:%h -1 2>stderr &&
+	test_i18ngrep "abbrev length out of range" stderr &&
+
+	git log --abbrev=+1 --pretty=format:%h -1 | tr_d_n >log &&
+	test_byte_count = 4 log &&
+
+	git log --abbrev=-1 --pretty=format:%h -1 | tr_d_n >log &&
+	test_byte_count = 40 log
+'
 
 for i in $(test_seq 4 40)
 do
@@ -244,6 +296,46 @@ do
 	"
 done
 
+test_expect_success 'diff --no-index --raw core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 diff --no-index --raw X Y 2>stderr &&
+	test_i18ngrep "abbrev length out of range" stderr &&
+
+	test_must_fail git -c core.abbrev=-1 diff --no-index --raw X Y 2>stderr &&
+	test_i18ngrep "abbrev length out of range" stderr &&
+
+	test_must_fail git diff --no-index --raw --abbrev=+1 X Y >diff &&
+	cut_tr_d_n_field_n 3 <diff >diff.3 &&
+	test_byte_count = 4 diff.3 &&
+	cut_tr_d_n_field_n 4 <diff >diff.4 &&
+	test_byte_count = 4 diff.4 &&
+
+	test_must_fail git diff --no-index --raw --abbrev=-1 X Y >diff &&
+	cut_tr_d_n_field_n 3 <diff >diff.3 &&
+	test_byte_count = 4 diff.3 &&
+	cut_tr_d_n_field_n 4 <diff >diff.4 &&
+	test_byte_count = 4 diff.4
+'
+
+test_expect_success 'diff --raw core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 diff HEAD~ 2>stderr &&
+	test_i18ngrep "abbrev length out of range" stderr &&
+
+	test_must_fail git -c core.abbrev=-1 diff HEAD~ 2>stderr &&
+	test_i18ngrep "abbrev length out of range" stderr &&
+
+	git diff --raw --abbrev=+1 HEAD~ >diff &&
+	cut_tr_d_n_field_n 3 <diff >diff.3 &&
+	test_byte_count = 4 diff.3 &&
+	cut_tr_d_n_field_n 4 <diff >diff.4 &&
+	test_byte_count = 4 diff.4 &&
+
+	git diff --raw --abbrev=-1 HEAD~ >diff &&
+	cut_tr_d_n_field_n 3 <diff >diff.3 &&
+	test_byte_count = 40 diff.3 &&
+	cut_tr_d_n_field_n 4 <diff >diff.4 &&
+	test_byte_count = 40 diff.4
+'
+
 for i in $(test_seq 4 40)
 do
 	test_expect_success "ls-files core.abbrev=$i and --abbrev=$i" "
@@ -254,6 +346,17 @@ do
 	"
 done
 
+test_expect_success 'ls-files core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 ls-files --stage A.t | cut_tr_d_n_field_n 2 >ls-files &&
+	test_must_fail git -c core.abbrev=-1 ls-files --stage A.t | cut_tr_d_n_field_n 2 >ls-files &&
+
+	git ls-files --abbrev=-1 --stage A.t | cut_tr_d_n_field_n 2 >ls-files &&
+	test_byte_count = 4 ls-files &&
+
+	git ls-files --abbrev=+1 --stage A.t | cut_tr_d_n_field_n 2 >ls-files &&
+	test_byte_count = 4 ls-files
+'
+
 for i in $(test_seq 4 40)
 do
 	test_expect_success "ls-tree core.abbrev=$i and --abbrev=$i" "
@@ -263,6 +366,17 @@ do
 		test_byte_count = $i ls-tree
 	"
 done
+
+test_expect_success 'ls-tree core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 ls-tree HEAD A.t | cut -f 1 | cut_tr_d_n_field_n 3 >ls-tree &&
+	test_must_fail git -c core.abbrev=-1 ls-tree HEAD A.t | cut -f 1 | cut_tr_d_n_field_n 3 >ls-tree &&
+
+	git ls-tree --abbrev=-1 HEAD A.t | cut -f 1 | cut_tr_d_n_field_n 3 >ls-tree &&
+	test_byte_count = 4 ls-tree &&
+
+	git ls-tree --abbrev=+1 HEAD A.t | cut -f 1 | cut_tr_d_n_field_n 3 >ls-tree &&
+	test_byte_count = 4 ls-tree
+'
 
 for i in $(test_seq 4 40)
 do
@@ -275,5 +389,16 @@ do
 		test_byte_count = $i show-ref
 	"
 done
+
+test_expect_success 'show-ref core.abbrev=[-+]1 and --abbrev=[-+]1' '
+	test_must_fail git -c core.abbrev=+1 show-ref --hash refs/heads/master | tr_d_n >show-ref &&
+	test_must_fail git -c core.abbrev=-1 show-ref --hash refs/heads/master | tr_d_n >show-ref &&
+
+	git show-ref --abbrev=-1 --hash refs/heads/master | tr_d_n >show-ref &&
+	test_byte_count = 4 show-ref &&
+
+	git show-ref --abbrev=+1 --hash refs/heads/master | tr_d_n >show-ref &&
+	test_byte_count = 4 show-ref
+'
 
 test_done
