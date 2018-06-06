@@ -576,6 +576,7 @@ int find_unique_abbrev_r(char *hex, const struct object_id *oid, int len)
 	struct disambiguate_state ds;
 	struct min_abbrev_data mad;
 	struct object_id oid_ret;
+	int dar = default_abbrev_relative;
 	if (len < 0) {
 		unsigned long count = approximate_object_count();
 		/*
@@ -601,6 +602,23 @@ int find_unique_abbrev_r(char *hex, const struct object_id *oid, int len)
 	oid_to_hex_r(hex, oid);
 	if (len == GIT_SHA1_HEXSZ || !len)
 		return GIT_SHA1_HEXSZ;
+
+	if (dar) {
+		if (len + dar > GIT_SHA1_HEXSZ)
+			return GIT_SHA1_HEXSZ;
+
+		if (len + dar < MINIMUM_ABBREV) {
+			len = MINIMUM_ABBREV;
+			dar = 0;
+		}
+
+		if (validate_abbrev) {
+			len += dar;
+		} else {
+			hex[len + dar] = 0;
+			return len + dar;
+		}
+	}
 
 	mad.init_len = len;
 	mad.cur_len = len;
