@@ -671,6 +671,10 @@ int find_unique_abbrev_r(char *hex, const struct object_id *oid, int len)
 		}
 		len += dar;
 	}
+	if (!validate_abbrev) {
+		hex[len] = 0;
+		return len;
+	}
 
 	mad.init_len = len;
 	mad.cur_len = len;
