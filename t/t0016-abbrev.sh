@@ -16,6 +16,10 @@ nocaret() {
 	sed 's/\^//'
 }
 
+sed_g_tr_d_n() {
+	sed 's/.*g//' | tr_d_n
+}
+
 test_expect_success 'setup' '
 	test_commit A &&
 	git tag -a -mannotated A.annotated &&
@@ -175,6 +179,27 @@ do
 		test_byte_count = $i branch &&
 		git branch --abbrev=$i -v | cut_tr_d_n_field_n 3 >branch &&
 		test_byte_count = $i branch
+	"
+done
+
+test_expect_success 'describe core.abbrev and --abbrev special cases' '
+	# core.abbrev=0 behaves as usual...
+	test_must_fail git -c core.abbrev=0 describe &&
+
+	# ...but --abbrev=0 is special-cased to print the nearest tag,
+	# not fall back on "4" like git-log.
+	echo A.annotated >expected &&
+	git describe --abbrev=0 >actual &&
+	test_cmp expected actual
+'
+
+for i in $(test_seq 4 40)
+do
+	test_expect_success "describe core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i describe | sed_g_tr_d_n >describe &&
+		test_byte_count = $i describe &&
+		git describe --abbrev=$i | sed_g_tr_d_n >describe &&
+		test_byte_count = $i describe
 	"
 done
 
