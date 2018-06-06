@@ -244,4 +244,36 @@ do
 	"
 done
 
+for i in $(test_seq 4 40)
+do
+	test_expect_success "ls-files core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i ls-files --stage A.t | cut_tr_d_n_field_n 2 >ls-files &&
+		test_byte_count = 40 ls-files &&
+		git ls-files --abbrev=$i --stage A.t | cut_tr_d_n_field_n 2 >ls-files &&
+		test_byte_count = $i ls-files
+	"
+done
+
+for i in $(test_seq 4 40)
+do
+	test_expect_success "ls-tree core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i ls-tree HEAD A.t | cut -f 1 | cut_tr_d_n_field_n 3 >ls-tree &&
+		test_byte_count = 40 ls-tree &&
+		git ls-tree --abbrev=$i HEAD A.t | cut -f 1 | cut_tr_d_n_field_n 3 >ls-tree &&
+		test_byte_count = $i ls-tree
+	"
+done
+
+for i in $(test_seq 4 40)
+do
+	test_expect_success "show-ref core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i show-ref --hash refs/heads/master | tr_d_n >show-ref &&
+		test_byte_count = 40 show-ref &&
+		git show-ref --hash --abbrev=$i refs/heads/master | tr_d_n >show-ref &&
+		test_byte_count = $i show-ref &&
+		git show-ref --hash=$i refs/heads/master | tr_d_n >show-ref &&
+		test_byte_count = $i show-ref
+	"
+done
+
 test_done
