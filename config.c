@@ -1162,6 +1162,13 @@ static int git_default_core_config(const char *var, const char *value, void *cb)
 		return 0;
 	}
 
+	if (!strcmp(var, "core.validateabbrev")) {
+		if (!value)
+			return config_error_nonbool(var);
+		validate_abbrev =  git_config_bool(var, value);
+		return 0;
+	}
+
 	if (!strcmp(var, "core.abbrev")) {
 		if (!value)
 			return config_error_nonbool(var);
