@@ -72,4 +72,29 @@ do
 	"
 done
 
+tr_d_n() {
+	tr -d '\n'
+}
+
+cut_tr_d_n_field_n() {
+    cut -d " " -f $1 | tr_d_n
+}
+
+for i in $(test_seq 4 40)
+do
+	test_expect_success "blame core.abbrev=$i and --abbrev=$i" "
+		# See the blame documentation for why this is off-by-one
+		git -c core.abbrev=$i blame A.t | cut_tr_d_n_field_n 1 >blame &&
+		test_byte_count = \$(($i + 1)) blame &&
+		git blame --abbrev=$i A.t | cut_tr_d_n_field_n 1 >blame &&
+		# This is a bug in blame --abbrev
+		if test $i -eq 40
+		then
+			test_byte_count = $i blame
+		else
+			test_byte_count = \$(($i + 1)) blame
+		fi
+	"
+done
+
 test_done
