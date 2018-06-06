@@ -601,3 +601,9 @@ core.abbrev::
 	in your repository, which hopefully is enough for
 	abbreviated object names to stay unique for some time.
 	The minimum length is 4.
++
+This can also be set to relative values such as `+2` or `-2`, which
+means to add or subtract N characters from the SHA-1 that Git would
+otherwise print, this allows for producing more future-proof SHA-1s
+for use within a given project, while adjusting the value for the
+current approximate number of objects.
