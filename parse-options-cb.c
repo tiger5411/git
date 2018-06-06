@@ -16,13 +16,22 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 	if (!arg) {
 		v = unset ? 0 : DEFAULT_ABBREV;
 	} else {
+		const char *origarg = arg;
 		v = strtol(arg, (char **)&arg, 10);
 		if (*arg)
 			return opterror(opt, "expects a numerical value", 0);
-		if (v && v < MINIMUM_ABBREV)
+		if (*origarg == '+' || *origarg == '-') {
+			if (v == 0) {
+				return opterror(opt, "relative abbrev must be non-zero", 0);
+			} else {
+				default_abbrev_relative = v;
+				v = -1;
+			}
+		} else if (v && v < MINIMUM_ABBREV) {
 			v = MINIMUM_ABBREV;
-		else if (v > 40)
+		} else if (v > 40) {
 			v = 40;
+		}
 	}
 	*(int *)(opt->value) = v;
 	return 0;
