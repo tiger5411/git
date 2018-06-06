@@ -12,6 +12,10 @@ cut_tr_d_n_field_n() {
 	cut -d " " -f $1 | tr_d_n
 }
 
+nocaret() {
+	sed 's/\^//'
+}
+
 test_expect_success 'setup' '
 	test_commit A &&
 	git tag -a -mannotated A.annotated &&
@@ -112,6 +116,50 @@ do
 		# core.abbrev
 		git -c core.abbrev=20 log --abbrev=$i -1 --pretty=format:%h >log &&
 		test_byte_count = $i log
+	"
+done
+
+for i in $(test_seq 4 40)
+do
+	for opt in --porcelain --line-porcelain
+	do
+		test_expect_success "blame $opt ignores core.abbrev=$i and --abbrev=$i" "
+			git -c core.abbrev=$i blame $opt A.t | head -n 1 | cut_tr_d_n_field_n 1 >blame &&
+			test_byte_count = 40 blame &&
+			git blame $opt --abbrev=$i A.t | head -n 1 | cut_tr_d_n_field_n 1 >blame &&
+			test_byte_count = 40 blame
+		"
+	done
+
+
+	test_expect_success "blame core.abbrev=$i and --abbrev=$i with boundary" "
+		# See the blame documentation for why this is off-by-one
+		git -c core.abbrev=$i blame A.t | cut_tr_d_n_field_n 1 | nocaret >blame &&
+		test_byte_count = $i blame &&
+		git blame --abbrev=$i A.t | cut_tr_d_n_field_n 1 | nocaret >blame &&
+		if test $i -eq 40
+		then
+			test_byte_count = 39 blame
+		else
+			test_byte_count = $i blame
+		fi
+	"
+
+	test_expect_success "blame core.abbrev=$i and --abbrev=$i without boundary" "
+		git -c core.abbrev=$i blame B.t | cut_tr_d_n_field_n 1 | nocaret >blame &&
+		if test $i -eq 40
+		then
+			test_byte_count = $i blame
+		else
+			test_byte_count = \$(($i + 1)) blame
+		fi &&
+		git blame --abbrev=$i B.t | cut_tr_d_n_field_n 1 | nocaret >blame &&
+		if test $i -eq 40
+		then
+			test_byte_count = $i blame
+		else
+			test_byte_count = \$(($i + 1)) blame
+		fi
 	"
 done
 
