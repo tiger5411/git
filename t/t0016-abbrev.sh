@@ -168,4 +168,14 @@ do
 	"
 done
 
+for i in $(test_seq 4 40)
+do
+	test_expect_success "branch core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i branch -v | cut_tr_d_n_field_n 3 >branch &&
+		test_byte_count = $i branch &&
+		git branch --abbrev=$i -v | cut_tr_d_n_field_n 3 >branch &&
+		test_byte_count = $i branch
+	"
+done
+
 test_done
