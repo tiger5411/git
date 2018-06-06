@@ -99,6 +99,9 @@ requested, resulting in unaligned output.
 Before 2.19, setting `core.abbrev=40` wouldn't apply the above rule
 and would cause blame to emit output that was unaligned. This bug has
 since been fixed.
++
+Can also be set to a relative value, see `core.abbrev` in
+linkgit:git-diff[1].
 
 
 THE PORCELAIN FORMAT

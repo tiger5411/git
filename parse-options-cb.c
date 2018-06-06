@@ -16,12 +16,22 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 	if (!arg) {
 		v = unset ? 0 : DEFAULT_ABBREV;
 	} else {
+		const char *origarg = arg;
 		if (!strcmp(arg, ""))
 			return opterror(opt, "expects a value", 0);
 		v = strtol(arg, (char **)&arg, 10);
 		if (*arg)
 			return opterror(opt, "expects a numerical value", 0);
-		if (v && v < MINIMUM_ABBREV) {
+		if (*origarg == '+' || *origarg == '-') {
+			if (v == 0) {
+				return opterror(opt, "relative abbrev must be non-zero", 0);
+			} else if (abs(v) > GIT_SHA1_HEXSZ) {
+				return opterror(opt, "relative abbrev impossibly out of range", 0);
+			} else {
+				default_abbrev_relative = v;
+				v = -1;
+			}
+		} else if (v && v < MINIMUM_ABBREV) {
 			v = MINIMUM_ABBREV;
 		} else if (v > GIT_SHA1_HEXSZ) {
 			v = GIT_SHA1_HEXSZ;
