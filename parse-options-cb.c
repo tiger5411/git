@@ -19,10 +19,11 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 		v = strtol(arg, (char **)&arg, 10);
 		if (*arg)
 			return opterror(opt, "expects a numerical value", 0);
-		if (v && v < MINIMUM_ABBREV)
+		if (v && v < MINIMUM_ABBREV) {
 			v = MINIMUM_ABBREV;
-		else if (v > GIT_SHA1_HEXSZ)
+		} else if (v > GIT_SHA1_HEXSZ) {
 			v = GIT_SHA1_HEXSZ;
+		}
 	}
 	*(int *)(opt->value) = v;
 	return 0;
