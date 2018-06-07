@@ -22,8 +22,8 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 				     opt->long_name);
 		if (v && v < MINIMUM_ABBREV)
 			v = MINIMUM_ABBREV;
-		else if (v > 40)
-			v = 40;
+		else if (v > GIT_SHA1_HEXSZ)
+			v = GIT_SHA1_HEXSZ;
 	}
 	*(int *)(opt->value) = v;
 	return 0;
