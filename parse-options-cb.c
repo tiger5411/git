@@ -21,8 +21,8 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 			return opterror(opt, "expects a numerical value", 0);
 		if (v && v < MINIMUM_ABBREV)
 			v = MINIMUM_ABBREV;
-		else if (v > 40)
-			v = 40;
+		else if (v > GIT_SHA1_HEXSZ)
+			v = GIT_SHA1_HEXSZ;
 	}
 	*(int *)(opt->value) = v;
 	return 0;
