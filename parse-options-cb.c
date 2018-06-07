@@ -20,10 +20,11 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 		if (*arg)
 			return error(_("option `%s' expects a numerical value"),
 				     opt->long_name);
-		if (v && v < MINIMUM_ABBREV)
+		if (v && v < MINIMUM_ABBREV) {
 			v = MINIMUM_ABBREV;
-		else if (v > GIT_SHA1_HEXSZ)
+		} else if (v > GIT_SHA1_HEXSZ) {
 			v = GIT_SHA1_HEXSZ;
+		}
 	}
 	*(int *)(opt->value) = v;
 	return 0;
