@@ -16,6 +16,8 @@ int parse_opt_abbrev_cb(const struct option *opt, const char *arg, int unset)
 	if (!arg) {
 		v = unset ? 0 : DEFAULT_ABBREV;
 	} else {
+		if (!strcmp(arg, ""))
+			return opterror(opt, "expects a value", 0);
 		v = strtol(arg, (char **)&arg, 10);
 		if (*arg)
 			return opterror(opt, "expects a numerical value", 0);

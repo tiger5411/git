@@ -4802,6 +4802,8 @@ int diff_opt_parse(struct diff_options *options,
 		options->abbrev = DEFAULT_ABBREV;
 	else if (skip_prefix(arg, "--abbrev=", &arg)) {
 		char *end;
+		if (!strcmp(arg, ""))
+			die("--abbrev expects a value, got '%s'", arg);
 		options->abbrev = strtoul(arg, &end, 10);
 		if (*end)
 			die("--abbrev expects a numerical value, got '%s'", arg);
