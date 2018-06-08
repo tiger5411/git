@@ -213,4 +213,35 @@ do
 	"
 done
 
+for i in $(test_seq 4 40)
+do
+	test_expect_success "diff --no-index --raw core.abbrev=$i and --abbrev=$i" "
+		test_must_fail git -c core.abbrev=$i diff --no-index --raw X Y >diff &&
+		cut_tr_d_n_field_n 3 <diff >diff.3 &&
+		test_byte_count = $i diff.3 &&
+		cut_tr_d_n_field_n 4 <diff >diff.4 &&
+		test_byte_count = $i diff.4 &&
+
+		test_must_fail git diff --no-index --raw --abbrev=$i X Y >diff &&
+		cut_tr_d_n_field_n 3 <diff >diff.3 &&
+		test_byte_count = $i diff.3 &&
+		cut_tr_d_n_field_n 4 <diff >diff.4 &&
+		test_byte_count = $i diff.4
+	"
+
+	test_expect_success "diff --raw core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i diff --raw HEAD~ >diff &&
+		cut_tr_d_n_field_n 3 <diff >diff.3 &&
+		test_byte_count = $i diff.3 &&
+		cut_tr_d_n_field_n 4 <diff >diff.4 &&
+		test_byte_count = $i diff.4 &&
+
+		git diff --raw --abbrev=$i HEAD~ >diff &&
+		cut_tr_d_n_field_n 3 <diff >diff.3 &&
+		test_byte_count = $i diff.3 &&
+		cut_tr_d_n_field_n 4 <diff >diff.4 &&
+		test_byte_count = $i diff.4
+	"
+done
+
 test_done
