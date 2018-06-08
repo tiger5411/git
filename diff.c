@@ -4801,7 +4801,10 @@ int diff_opt_parse(struct diff_options *options,
 	else if (!strcmp(arg, "--abbrev"))
 		options->abbrev = DEFAULT_ABBREV;
 	else if (skip_prefix(arg, "--abbrev=", &arg)) {
-		options->abbrev = strtoul(arg, NULL, 10);
+		char *end;
+		options->abbrev = strtoul(arg, &end, 10);
+		if (*end)
+			die("--abbrev expects a numerical value, got '%s'", arg);
 		if (options->abbrev < MINIMUM_ABBREV)
 			options->abbrev = MINIMUM_ABBREV;
 		else if (the_hash_algo->hexsz < options->abbrev)
