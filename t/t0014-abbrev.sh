@@ -64,14 +64,14 @@ test_expect_success 'abbrev non-integer value handling differs ' '
 	test_must_fail git branch -v --abbrev=XYZ 2>stderr &&
 	test_i18ngrep "expects a numerical value" stderr &&
 
-	git log --abbrev=XYZ -1 --pretty=format:%h 2>stderr &&
-	! test -s stderr &&
+	test_must_fail git log --abbrev=XYZ -1 --pretty=format:%h 2>stderr &&
+	test_i18ngrep "expects a numerical value" stderr &&
 
-	git diff --raw --abbrev=XYZ HEAD~ 2>stderr &&
-	! test -s stderr &&
+	test_must_fail git diff --raw --abbrev=XYZ HEAD~ 2>stderr &&
+	test_i18ngrep "expects a numerical value" stderr &&
 
 	test_must_fail git diff --raw --abbrev=XYZ --no-index X Y 2>stderr &&
-	! test -s stderr
+	test_i18ngrep "expects a numerical value" stderr
 '
 
 for i in -41 -20 -10 -1 -0 +0 0 1 2 3 41
