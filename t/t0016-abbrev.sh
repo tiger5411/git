@@ -38,23 +38,17 @@ test_expect_success 'abbrev empty value handling differs ' '
 	test_must_fail git -c core.abbrev= log -1 --pretty=format:%h 2>stderr &&
 	test_i18ngrep "bad numeric config value.*invalid unit" stderr &&
 
-	git branch -v --abbrev= | cut_tr_d_n_field_n 3 >branch &&
-	test_byte_count = 40 branch &&
+	test_must_fail git branch -v --abbrev= 2>stderr &&
+	test_i18ngrep "expects a value" stderr &&
 
-	git log --abbrev= -1 --pretty=format:%h >log &&
-	test_byte_count = 4 log &&
+	test_must_fail git log --abbrev= -1 --pretty=format:%h 2>stderr &&
+	test_i18ngrep "expects a value" stderr &&
 
-	git diff --raw --abbrev= HEAD~ >diff &&
-	cut_tr_d_n_field_n 3 <diff >diff.3 &&
-	test_byte_count = 4 diff.3 &&
-	cut_tr_d_n_field_n 4 <diff >diff.4 &&
-	test_byte_count = 4 diff.4 &&
+	test_must_fail git diff --raw --abbrev= HEAD~ 2>stderr &&
+	test_i18ngrep "expects a value" stderr &&
 
-	test_must_fail git diff --raw --abbrev= --no-index X Y >diff &&
-	cut_tr_d_n_field_n 3 <diff >diff.3 &&
-	test_byte_count = 40 diff.3 &&
-	cut_tr_d_n_field_n 4 <diff >diff.4 &&
-	test_byte_count = 40 diff.4
+	test_must_fail git diff --raw --abbrev= --no-index X Y 2>stderr &&
+	test_i18ngrep "expects a value" stderr
 '
 
 test_expect_success 'abbrev non-integer value handling differs ' '

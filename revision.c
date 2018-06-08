@@ -2234,6 +2234,8 @@ static int handle_revision_opt(struct rev_info *revs, int argc, const char **arg
 		revs->abbrev = DEFAULT_ABBREV;
 	} else if (skip_prefix(arg, "--abbrev=", &optarg)) {
 		char *end;
+		if (!strcmp(optarg, ""))
+			die("--abbrev expects a value, got '%s'", optarg);
 		revs->abbrev = strtoul(optarg, &end, 10);
 		if (*end)
 			die("--abbrev expects a numerical value, got '%s'", optarg);
