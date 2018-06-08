@@ -5134,10 +5134,11 @@ int diff_opt_parse(struct diff_options *options,
 		options->abbrev = strtoul(arg, &end, 10);
 		if (*end)
 			die("--abbrev expects a numerical value, got '%s'", arg);
-		if (options->abbrev < MINIMUM_ABBREV)
+		if (options->abbrev < MINIMUM_ABBREV) {
 			options->abbrev = MINIMUM_ABBREV;
-		else if (the_hash_algo->hexsz < options->abbrev)
+		} else if (the_hash_algo->hexsz < options->abbrev) {
 			options->abbrev = the_hash_algo->hexsz;
+		}
 	}
 	else if ((argcount = parse_long_opt("src-prefix", av, &optarg))) {
 		options->a_prefix = optarg;
