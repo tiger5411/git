@@ -2233,7 +2233,10 @@ static int handle_revision_opt(struct rev_info *revs, int argc, const char **arg
 	} else if (!strcmp(arg, "--abbrev")) {
 		revs->abbrev = DEFAULT_ABBREV;
 	} else if (skip_prefix(arg, "--abbrev=", &optarg)) {
-		revs->abbrev = strtoul(optarg, NULL, 10);
+		char *end;
+		revs->abbrev = strtoul(optarg, &end, 10);
+		if (*end)
+			die("--abbrev expects a numerical value, got '%s'", optarg);
 		if (revs->abbrev < MINIMUM_ABBREV)
 			revs->abbrev = MINIMUM_ABBREV;
 		else if (revs->abbrev > hexsz)
