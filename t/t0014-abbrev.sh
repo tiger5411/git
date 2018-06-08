@@ -135,7 +135,12 @@ do
 	test_expect_success "blame core.abbrev=$i and --abbrev=$i with boundary" "
 		# See the blame documentation for why this is off-by-one
 		git -c core.abbrev=$i blame A.t | cut_tr_d_n_field_n 1 | nocaret >blame &&
-		test_byte_count = $i blame &&
+		if test $i -eq 40
+		then
+			test_byte_count = 39 blame
+		else
+			test_byte_count = $i blame
+		fi &&
 		git blame --abbrev=$i A.t | cut_tr_d_n_field_n 1 | nocaret >blame &&
 		if test $i -eq 40
 		then
