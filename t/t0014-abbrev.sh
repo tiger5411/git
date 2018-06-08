@@ -203,4 +203,14 @@ do
 	"
 done
 
+for i in $(test_seq 4 40)
+do
+	test_expect_success "log core.abbrev=$i and --abbrev=$i" "
+		git -c core.abbrev=$i log --pretty=format:%h -1 | tr_d_n >log &&
+		test_byte_count = $i log &&
+		git log --abbrev=$i --pretty=format:%h -1 | tr_d_n >log &&
+		test_byte_count = $i log
+	"
+done
+
 test_done
