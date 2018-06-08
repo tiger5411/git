@@ -2239,10 +2239,11 @@ static int handle_revision_opt(struct rev_info *revs, int argc, const char **arg
 		revs->abbrev = strtoul(optarg, &end, 10);
 		if (*end)
 			die("--abbrev expects a numerical value, got '%s'", optarg);
-		if (revs->abbrev < MINIMUM_ABBREV)
+		if (revs->abbrev < MINIMUM_ABBREV) {
 			revs->abbrev = MINIMUM_ABBREV;
-		else if (revs->abbrev > hexsz)
+		} else if (revs->abbrev > hexsz) {
 			revs->abbrev = hexsz;
+		}
 	} else if (!strcmp(arg, "--abbrev-commit")) {
 		revs->abbrev_commit = 1;
 		revs->abbrev_commit_given = 1;
