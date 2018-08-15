@@ -1,5 +1,7 @@
 # Guard against environment variables
 MAN1_TXT =
+MAN1_TXT_WIP =
+TCLTK_FILES =
 MAN5_TXT =
 MAN7_TXT =
 TECH_DOCS =
@@ -7,13 +9,24 @@ ARTICLES =
 SP_ARTICLES =
 OBSOLETE_HTML =
 
-MAN1_TXT += $(filter-out \
+MAN1_TXT_WIP += $(filter-out \
 		$(addsuffix .txt, $(ARTICLES) $(SP_ARTICLES)), \
 		$(wildcard git-*.txt))
-MAN1_TXT += git.txt
-MAN1_TXT += gitk.txt
-MAN1_TXT += gitremote-helpers.txt
-MAN1_TXT += gitweb.txt
+MAN1_TXT_WIP += git.txt
+MAN1_TXT_WIP += gitremote-helpers.txt
+MAN1_TXT_WIP += gitweb.txt
+
+ifndef NO_TCLTK
+MAN1_TXT_WIP += gitk.txt
+MAN1_TXT = $(MAN1_TXT_WIP)
+else
+TCLTK_FILES += git-gui.txt
+TCLTK_FILES += gitk.txt
+TCLTK_FILES += git-citool.txt
+MAN1_TXT = $(filter-out \
+		$(TCLTK_FILES), \
+		$(MAN1_TXT_WIP))
+endif
 
 MAN5_TXT += gitattributes.txt
 MAN5_TXT += githooks.txt
