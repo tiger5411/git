@@ -29,8 +29,8 @@ int cmd_write_tree(int argc, const char **argv, const char *unused_prefix)
 		  PARSE_OPT_LITERAL_ARGHELP },
 		{ OPTION_BIT, 0, "ignore-cache-tree", &flags, NULL,
 		  N_("only useful for debugging"),
-		  PARSE_OPT_HIDDEN | PARSE_OPT_NOARG, NULL,
-		  WRITE_TREE_IGNORE_CACHE_TREE },
+		  PARSE_OPT_HIDDEN | PARSE_OPT_NOARG | PARSE_OPT_NOCOMPLETE,
+		  NULL, WRITE_TREE_IGNORE_CACHE_TREE },
 		OPT_END()
 	};
 

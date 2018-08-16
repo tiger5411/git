@@ -153,7 +153,8 @@ static struct option builtin_fetch_options[] = {
 		   &recurse_submodules_default, N_("on-demand"),
 		   N_("default for recursive fetching of submodules "
 		      "(lower priority than config files)"),
-		   PARSE_OPT_HIDDEN, option_fetch_parse_recurse_submodules },
+		   PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE,
+		   option_fetch_parse_recurse_submodules },
 	OPT_BOOL(0, "update-shallow", &update_shallow,
 		 N_("accept refs that update .git/shallow")),
 	{ OPTION_CALLBACK, 0, "refmap", NULL, N_("refmap"),

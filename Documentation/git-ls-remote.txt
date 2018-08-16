@@ -43,6 +43,9 @@ OPTIONS
 	SSH and where the SSH daemon does not use the PATH configured by the
 	user.
 
+--exec=<git-upload-pack>::
+	Same as --upload-pack=<git-upload-pack>.
+
 --exit-code::
 	Exit with status "2" when no matching refs are found in the remote
 	repository. Usually the command exits with status "0" to indicate

@@ -598,7 +598,8 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 		OPT_SET_INT('t', "track",  &track, N_("set up tracking mode (see git-pull(1))"),
 			BRANCH_TRACK_EXPLICIT),
 		OPT_SET_INT_F(0, "set-upstream", &track, N_("do not use"),
-			BRANCH_TRACK_OVERRIDE, PARSE_OPT_HIDDEN),
+			      BRANCH_TRACK_OVERRIDE,
+			      PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE),
 		OPT_STRING('u', "set-upstream-to", &new_upstream, N_("upstream"), N_("change the upstream info")),
 		OPT_BOOL(0, "unset-upstream", &unset_upstream, N_("Unset the upstream info")),
 		OPT__COLOR(&branch_use_color, N_("use colored output")),
@@ -624,7 +625,7 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 		{
 			OPTION_CALLBACK, 'l', NULL, &reflog, NULL,
 			N_("deprecated synonym for --create-reflog"),
-			PARSE_OPT_NOARG | PARSE_OPT_HIDDEN,
+			PARSE_OPT_NOARG | PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE,
 			deprecated_reflog_option_cb
 		},
 		OPT_BOOL(0, "edit-description", &edit_description,

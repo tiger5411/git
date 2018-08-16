@@ -146,7 +146,7 @@ static struct option pull_options[] = {
 		PARSE_OPT_NOARG),
 	OPT_PASSTHRU(0, "summary", &opt_diffstat, NULL,
 		N_("(synonym to --stat)"),
-		PARSE_OPT_NOARG | PARSE_OPT_HIDDEN),
+		PARSE_OPT_NOARG | PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE),
 	OPT_PASSTHRU(0, "log", &opt_log, N_("n"),
 		N_("add (at most <n>) entries from shortlog to merge commit message"),
 		PARSE_OPT_OPTARG),

@@ -892,7 +892,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 			N_("show only matches from files that match all patterns")),
 		OPT_SET_INT_F(0, "debug", &opt.debug,
 			      N_("show parse tree for grep expression"),
-			      1, PARSE_OPT_HIDDEN),
+			      1, PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE),
 		OPT_GROUP(""),
 		{ OPTION_STRING, 'O', "open-files-in-pager", &show_in_pager,
 			N_("pager"), N_("show matching files in the pager"),

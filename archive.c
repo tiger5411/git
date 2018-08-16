@@ -414,7 +414,8 @@ static void parse_treeish_arg(const char **argv,
 #define OPT__COMPR(s, v, h, p) \
 	OPT_SET_INT_F(s, NULL, v, h, p, PARSE_OPT_NONEG)
 #define OPT__COMPR_HIDDEN(s, v, p) \
-	OPT_SET_INT_F(s, NULL, v, "", p, PARSE_OPT_NONEG | PARSE_OPT_HIDDEN)
+	OPT_SET_INT_F(s, NULL, v, "", p, \
+	PARSE_OPT_NONEG | PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE)
 
 static int parse_archive_args(int argc, const char **argv,
 		const struct archiver **ar, struct archiver_args *args,

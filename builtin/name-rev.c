@@ -426,7 +426,8 @@ int cmd_name_rev(int argc, const char **argv, const char *prefix)
 			/* A Hidden OPT_BOOL */
 			OPTION_SET_INT, 0, "peel-tag", &peel_tag, NULL,
 			N_("dereference tags in the input (internal use)"),
-			PARSE_OPT_NOARG | PARSE_OPT_HIDDEN, NULL, 1,
+			PARSE_OPT_NOARG | PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE,
+			NULL, 1,
 		},
 		OPT_END(),
 	};

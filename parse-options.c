@@ -437,7 +437,7 @@ static void show_negated_gitcomp(const struct option *opts, int nr_noopts)
 
 		if (!opts->long_name)
 			continue;
-		if (opts->flags & (PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE))
+		if (opts->flags & PARSE_OPT_NOCOMPLETE)
 			continue;
 		if (opts->flags & PARSE_OPT_NONEG)
 			continue;
@@ -485,7 +485,7 @@ static int show_gitcomp(struct parse_opt_ctx_t *ctx,
 
 		if (!opts->long_name)
 			continue;
-		if (opts->flags & (PARSE_OPT_HIDDEN | PARSE_OPT_NOCOMPLETE))
+		if (opts->flags & PARSE_OPT_NOCOMPLETE)
 			continue;
 
 		switch (opts->type) {

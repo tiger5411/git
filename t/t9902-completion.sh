@@ -1423,6 +1423,7 @@ test_expect_success 'double dash "git checkout"' '
 	test_completion "git checkout --" <<-\EOF
 	--quiet Z
 	--detach Z
+	--guess Z
 	--track Z
 	--orphan=Z
 	--ours Z
