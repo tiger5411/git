@@ -35,6 +35,7 @@ while (<>) {
 		chomp;
 	}
 
+	/\bhead\s+-c\b/ and err 'head -c is not portable (use test_copy_bytes BYTES <file >out)';
 	/\bsed\s+-i/ and err 'sed -i is not portable';
 	/\becho\s+-[neE]/ and err 'echo with option is not portable (use printf)';
 	/^\s*declare\s+/ and err 'arrays/declare not portable';
