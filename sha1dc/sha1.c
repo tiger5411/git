@@ -25,6 +25,7 @@
 
 #include "sha1.h"
 #include "ubc_check.h"
+#include "../progress.h"
 
 #if (defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || defined(__x86_64) || \
      defined(i386) || defined(__i386) || defined(__i386__) || defined(__i486__)  || \
@@ -1820,6 +1821,8 @@ void SHA1DCSetCallback(SHA1_CTX* ctx, collision_block_callback callback)
 void SHA1DCUpdate(SHA1_CTX* ctx, const char* buf, size_t len)
 {
 	unsigned left, fill;
+	struct progress *progress;
+	size_t len_cp = len, done = 0;
 
 	if (len == 0)
 		return;
@@ -1836,6 +1839,8 @@ void SHA1DCUpdate(SHA1_CTX* ctx, const char* buf, size_t len)
 		len -= fill;
 		left = 0;
 	}
+
+	progress = start_delayed_progress(_("Hashing"), len_cp);
 	while (len >= 64)
 	{
 		ctx->total += 64;
@@ -1848,7 +1853,12 @@ void SHA1DCUpdate(SHA1_CTX* ctx, const char* buf, size_t len)
 #endif /* defined(SHA1DC_ALLOW_UNALIGNED_ACCESS) */
 		buf += 64;
 		len -= 64;
+		done += 64;
+		display_progress(progress, done);
 	}
+	display_progress(progress, len_cp);
+	stop_progress(&progress);
+
 	if (len > 0)
 	{
 		ctx->total += len;
