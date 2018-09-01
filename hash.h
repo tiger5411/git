@@ -52,8 +52,9 @@
 #define GIT_HASH_UNKNOWN 0
 /* SHA-1 */
 #define GIT_HASH_SHA1 1
+#define GIT_HASH_SHA1_WITH_PROGRESS 2
 /* Number of algorithms supported (including unknown). */
-#define GIT_HASH_NALGOS (GIT_HASH_SHA1 + 1)
+#define GIT_HASH_NALGOS (GIT_HASH_SHA1_WITH_PROGRESS + 1)
 
 /* A suitably aligned type for stack allocations of hash contexts. */
 union git_hash_ctx {
@@ -95,7 +96,11 @@ struct git_hash_algo {
 
 	/* The OID of the empty blob. */
 	const struct object_id *empty_blob;
+
+	/* Are we showing hashing progress? And if so what are we doing? */
+	int show_progress;
+	char *progress_title;
 };
-extern const struct git_hash_algo hash_algos[GIT_HASH_NALGOS];
+extern struct git_hash_algo hash_algos[GIT_HASH_NALGOS];
 
 #endif

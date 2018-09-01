@@ -88,7 +88,7 @@ struct repository {
 	struct index_state *index;
 
 	/* Repository's current hash algorithm, as serialized on disk. */
-	const struct git_hash_algo *hash_algo;
+	struct git_hash_algo *hash_algo;
 
 	/* Configurations */
 

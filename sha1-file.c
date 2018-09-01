@@ -32,6 +32,7 @@
 #include "packfile.h"
 #include "fetch-object.h"
 #include "object-store.h"
+#include "progress.h"
 
 /* The maximum size for an object header. */
 #define MAX_HEADER_LEN 32
@@ -61,7 +62,33 @@ static void git_hash_sha1_init(git_hash_ctx *ctx)
 
 static void git_hash_sha1_update(git_hash_ctx *ctx, const void *data, size_t len)
 {
-	git_SHA1_Update(&ctx->sha1, data, len);
+	void *chunk;
+	int i;
+
+	for (i = 0; i < len; i++) {
+		chunk = (void *)data + i;
+		git_SHA1_Update(&ctx->sha1, chunk, 1);
+	}
+}
+
+static void git_hash_sha1_update_progress(git_hash_ctx *ctx, const void *data, size_t len)
+{
+	struct progress *progress;
+	void *chunk;
+	int i;
+
+	if (len >= 100000) {
+		progress = start_delayed_progress(_(the_hash_algo->progress_title), len);
+		for (i = 0; i < len; i++) {
+			chunk = (void *)data + i;
+			git_SHA1_Update(&ctx->sha1, chunk, 1);
+			display_progress(progress, i);
+		}
+		display_progress(progress, i);
+		stop_progress(&progress);
+	} else {
+		git_SHA1_Update(&ctx->sha1, data, len);
+	}
 }
 
 static void git_hash_sha1_final(unsigned char *hash, git_hash_ctx *ctx)
@@ -84,7 +111,7 @@ static void git_hash_unknown_final(unsigned char *hash, git_hash_ctx *ctx)
 	BUG("trying to finalize unknown hash");
 }
 
-const struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
+struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
 	{
 		NULL,
 		0x00000000,
@@ -94,6 +121,8 @@ const struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
 		git_hash_unknown_update,
 		git_hash_unknown_final,
 		NULL,
+		NULL,
+		0,
 		NULL,
 	},
 	{
@@ -107,6 +136,22 @@ const struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
 		git_hash_sha1_final,
 		&empty_tree_oid,
 		&empty_blob_oid,
+		0,
+		NULL,
+	},
+	{
+		"sha-1",
+		/* "sha1", big-endian */
+		0x73686131,
+		GIT_SHA1_RAWSZ,
+		GIT_SHA1_HEXSZ,
+		git_hash_sha1_init,
+		git_hash_sha1_update_progress,
+		git_hash_sha1_final,
+		&empty_tree_oid,
+		&empty_blob_oid,
+		0,
+		NULL,
 	},
 };
 

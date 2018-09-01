@@ -66,6 +66,9 @@ static int verify_packfile(struct packed_git *p,
 	if (!is_pack_valid(p))
 		return error("packfile %s cannot be accessed", p->pack_name);
 
+	repo_set_hash_algo(the_repository, GIT_HASH_SHA1_WITH_PROGRESS);
+	the_hash_algo->show_progress = 1;
+	the_hash_algo->progress_title = xstrdup("Hashing");
 	the_hash_algo->init_fn(&ctx);
 	do {
 		unsigned long remaining;
@@ -78,6 +81,9 @@ static int verify_packfile(struct packed_git *p,
 		the_hash_algo->update_fn(&ctx, in, remaining);
 	} while (offset < pack_sig_ofs);
 	the_hash_algo->final_fn(hash, &ctx);
+	free(the_hash_algo->progress_title);
+	repo_set_hash_algo(the_repository, GIT_HASH_SHA1);
+
 	pack_sig = use_pack(p, w_curs, pack_sig_ofs, NULL);
 	if (hashcmp(hash, pack_sig))
 		err = error("%s pack checksum mismatch",
