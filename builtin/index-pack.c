@@ -85,6 +85,13 @@ static int show_resolving_progress;
 static int show_stat;
 static int check_self_contained_and_connected;
 
+static int verify_fsck_mode;
+/* unlike our normal 2-part progress, this counts up only total objects */
+struct progress *fsck_progress;
+static uint32_t fsck_progress_cur;
+static uint32_t fsck_progress_total;
+static const char *fsck_progress_title;
+
 static struct progress *progress;
 
 /* We always read in 4kB chunks. */
@@ -1100,6 +1107,8 @@ static void *threaded_second_pass(void *data)
 		int i;
 		counter_lock();
 		display_progress(progress, nr_resolved_deltas);
+		display_progress(fsck_progress,
+				 fsck_progress_cur + nr_resolved_deltas);
 		counter_unlock();
 		work_lock();
 		while (nr_dispatched < nr_objects &&
@@ -1145,18 +1154,23 @@ static void parse_pack_objects(unsigned char *hash)
 			nr_ofs_deltas++;
 			ofs_delta->obj_no = i;
 			ofs_delta++;
+			/* no fsck_progress; we only count it when we've resolved the delta */
 		} else if (obj->type == OBJ_REF_DELTA) {
 			ALLOC_GROW(ref_deltas, nr_ref_deltas + 1, ref_deltas_alloc);
 			oidcpy(&ref_deltas[nr_ref_deltas].oid, &ref_delta_oid);
 			ref_deltas[nr_ref_deltas].obj_no = i;
 			nr_ref_deltas++;
+			/* no fsck_progress; we only count it when we've resolved the delta */
 		} else if (!data) {
 			/* large blobs, check later */
 			obj->real_type = OBJ_BAD;
 			nr_delays++;
-		} else
+			display_progress(fsck_progress, ++fsck_progress_cur);
+		} else {
 			sha1_object(data, NULL, obj->size, obj->type,
 				    &obj->idx.oid);
+			display_progress(fsck_progress, ++fsck_progress_cur);
+		}
 		free(data);
 		display_progress(progress, i+1);
 	}
@@ -1238,6 +1252,8 @@ static void resolve_deltas(void)
 			continue;
 		resolve_base(obj);
 		display_progress(progress, nr_resolved_deltas);
+		display_progress(fsck_progress,
+				 fsck_progress_cur + nr_resolved_deltas);
 	}
 }
 
@@ -1391,6 +1407,8 @@ static void fix_unresolved_deltas(struct hashfile *f)
 					base_obj->data, base_obj->size, type);
 		find_unresolved_deltas(base_obj);
 		display_progress(progress, nr_resolved_deltas);
+		display_progress(fsck_progress,
+				 fsck_progress_cur + nr_resolved_deltas);
 	}
 	free(sorted_by_pos);
 }
@@ -1714,6 +1732,11 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 				verify = 1;
 				show_stat = 1;
 				stat_only = 1;
+			} else if (!strcmp(arg, "--verify-fsck")) {
+				verify_fsck_mode = 1;
+				verify = 1;
+				strict = 1;
+				do_fsck_object = 1;
 			} else if (skip_to_optional_arg(arg, "--keep", &keep_msg)) {
 				; /* nothing to do */
 			} else if (skip_to_optional_arg(arg, "--promisor", &promisor_msg)) {
@@ -1746,6 +1769,15 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 				verbose = 1;
 			} else if (!strcmp(arg, "--show-resolving-progress")) {
 				show_resolving_progress = 1;
+			} else if (skip_prefix(arg, "--fsck-progress=", &arg)) {
+				char *end;
+				fsck_progress_cur = strtoul(arg, &end, 10);
+				if (*end++ != ',')
+					die("bad fsck-progress arg: %s", arg);
+				fsck_progress_total = strtoul(end, &end, 10);
+				if (*end++ != ',')
+					die("bad fsck-progress arg: %s", arg);
+				fsck_progress_title = end;
 			} else if (!strcmp(arg, "--report-end-of-input")) {
 				report_end_of_input = 1;
 			} else if (!strcmp(arg, "-o")) {
@@ -1800,6 +1832,10 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	}
 #endif
 
+	if (fsck_progress_total)
+		fsck_progress = start_progress(fsck_progress_title,
+					       fsck_progress_total);
+
 	curr_pack = open_pack_file(pack_name);
 	parse_pack_header();
 	objects = xcalloc(st_add(nr_objects, 1), sizeof(struct object_entry));
@@ -1833,8 +1869,11 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	else
 		close(input_fd);
 
-	if (do_fsck_object && fsck_finish(&fsck_options))
+	if (do_fsck_object && fsck_finish(&fsck_options)) {
+		if (verify_fsck_mode)
+			return 1; /* quietly return error */
 		die(_("fsck error in pack objects"));
+	}
 
 	free(objects);
 	strbuf_release(&index_name_buf);

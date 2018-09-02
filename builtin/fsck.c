@@ -386,25 +386,6 @@ out:
 	return err;
 }
 
-static int fsck_obj_buffer(const struct object_id *oid, enum object_type type,
-			   unsigned long size, void *buffer, int *eaten)
-{
-	/*
-	 * Note, buffer may be NULL if type is OBJ_BLOB. See
-	 * verify_packfile(), data_valid variable for details.
-	 */
-	struct object *obj;
-	obj = parse_object_buffer(the_repository, oid, type, size, buffer,
-				  eaten);
-	if (!obj) {
-		errors_found |= ERROR_OBJECT;
-		return error("%s: object corrupt or missing", oid_to_hex(oid));
-	}
-	obj->flags &= ~(REACHABLE | SEEN);
-	obj->flags |= HAS_OBJ;
-	return fsck_obj(obj, buffer, size);
-}
-
 static int default_refs;
 
 static void fsck_handle_reflog_oid(const char *refname, struct object_id *oid,
@@ -662,6 +643,32 @@ static int mark_packed_for_connectivity(const struct object_id *oid,
 	return 0;
 }
 
+static int verify_pack(struct packed_git *p,
+		       unsigned long count, unsigned long total)
+{
+	struct child_process index_pack = CHILD_PROCESS_INIT;
+
+	if (is_pack_valid(p) < 0)
+		return -1;
+	for_each_object_in_pack(p, mark_packed_for_connectivity, NULL, 0);
+
+	index_pack.git_cmd = 1;
+	argv_array_pushl(&index_pack.args,
+			 "index-pack",
+			 "--verify-fsck",
+			 NULL);
+	if (show_progress)
+		argv_array_pushf(&index_pack.args,
+				 "--fsck-progress=%lu,%lu,Checking pack %s",
+				 count, total, sha1_to_hex(p->sha1));
+	argv_array_push(&index_pack.args, p->pack_name);
+
+	if (run_command(&index_pack))
+		return -1;
+
+	return 0;
+}
+
 static char const * const fsck_usage[] = {
 	N_("git fsck [<options>] [<object>...]"),
 	NULL
@@ -737,7 +744,6 @@ int cmd_fsck(int argc, const char **argv, const char *prefix)
 		if (check_full) {
 			struct packed_git *p;
 			uint32_t total = 0, count = 0;
-			struct progress *progress = NULL;
 
 			if (show_progress) {
 				for (p = get_packed_git(the_repository); p;
@@ -746,18 +752,21 @@ int cmd_fsck(int argc, const char **argv, const char *prefix)
 						continue;
 					total += p->num_objects;
 				}
-
-				progress = start_progress(_("Checking objects"), total);
 			}
 			for (p = get_packed_git(the_repository); p;
 			     p = p->next) {
 				/* verify gives error messages itself */
-				if (verify_pack(p, fsck_obj_buffer,
-						progress, count))
+				if (verify_pack(p, count, total))
 					errors_found |= ERROR_PACK;
 				count += p->num_objects;
 			}
-			stop_progress(&progress);
+			/*
+			 * Our child index-pack never calls stop_progress(),
+			 * which lets each child appear on the same line. Now
+			 * that we've finished all of them, we have to tie that
+			 * off.
+			 */
+			fprintf(stderr, "\n");
 		}
 
 		if (fsck_finish(&fsck_obj_options))
