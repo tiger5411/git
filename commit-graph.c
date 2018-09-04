@@ -13,6 +13,7 @@
 #include "commit-graph.h"
 #include "object-store.h"
 #include "alloc.h"
+#include "progress.h"
 
 #define GRAPH_SIGNATURE 0x43475048 /* "CGPH" */
 #define GRAPH_CHUNKID_OIDFANOUT 0x4f494446 /* "OIDF" */
@@ -548,6 +549,8 @@ struct packed_oid_list {
 	struct object_id *list;
 	int nr;
 	int alloc;
+	struct progress *progress;
+	int progress_done;
 };
 
 static int add_packed_commits(const struct object_id *oid,
@@ -559,6 +562,9 @@ static int add_packed_commits(const struct object_id *oid,
 	enum object_type type;
 	off_t offset = nth_packed_object_offset(pack, pos);
 	struct object_info oi = OBJECT_INFO_INIT;
+
+	if (list->progress)
+		display_progress(list->progress, ++list->progress_done);
 
 	oi.typep = &type;
 	if (packed_object_info(the_repository, pack, offset, &oi) < 0)
@@ -591,8 +597,13 @@ static void close_reachable(struct packed_oid_list *oids)
 {
 	int i;
 	struct commit *commit;
+	struct progress *progress = NULL;
+	int j = 0;
 
+	progress = start_delayed_progress(
+		_("Annotating commits in commit graph"), 0);
 	for (i = 0; i < oids->nr; i++) {
+		display_progress(progress, ++j);
 		commit = lookup_commit(the_repository, &oids->list[i]);
 		if (commit)
 			commit->object.flags |= UNINTERESTING;
@@ -604,6 +615,7 @@ static void close_reachable(struct packed_oid_list *oids)
 	 * closure.
 	 */
 	for (i = 0; i < oids->nr; i++) {
+		display_progress(progress, ++j);
 		commit = lookup_commit(the_repository, &oids->list[i]);
 
 		if (commit && !parse_commit(commit))
@@ -611,19 +623,25 @@ static void close_reachable(struct packed_oid_list *oids)
 	}
 
 	for (i = 0; i < oids->nr; i++) {
+		display_progress(progress, ++j);
 		commit = lookup_commit(the_repository, &oids->list[i]);
 
 		if (commit)
 			commit->object.flags &= ~UNINTERESTING;
 	}
+	stop_progress(&progress);
 }
 
 static void compute_generation_numbers(struct packed_commit_list* commits)
 {
 	int i;
 	struct commit_list *list = NULL;
+	struct progress *progress = NULL;
 
+	progress = start_progress(
+		_("Computing commit graph generation numbers"), commits->nr);
 	for (i = 0; i < commits->nr; i++) {
+		display_progress(progress, i);
 		if (commits->list[i]->generation != GENERATION_NUMBER_INFINITY &&
 		    commits->list[i]->generation != GENERATION_NUMBER_ZERO)
 			continue;
@@ -655,6 +673,8 @@ static void compute_generation_numbers(struct packed_commit_list* commits)
 			}
 		}
 	}
+	display_progress(progress, i);
+	stop_progress(&progress);
 }
 
 static int add_ref_to_list(const char *refname,
@@ -692,9 +712,12 @@ void write_commit_graph(const char *obj_dir,
 	int num_chunks;
 	int num_extra_edges;
 	struct commit_list *parent;
+	struct progress *progress = NULL;
 
 	oids.nr = 0;
 	oids.alloc = approximate_object_count() / 4;
+	oids.progress = NULL;
+	oids.progress_done = 0;
 
 	if (append) {
 		prepare_commit_graph_one(the_repository, obj_dir);
@@ -721,6 +744,9 @@ void write_commit_graph(const char *obj_dir,
 		int dirlen;
 		strbuf_addf(&packname, "%s/pack/", obj_dir);
 		dirlen = packname.len;
+		oids.progress = start_delayed_progress(
+			_("Finding commits for commit graph"), 0);
+		oids.progress_done = 0;
 		for (i = 0; i < pack_indexes->nr; i++) {
 			struct packed_git *p;
 			strbuf_setlen(&packname, dirlen);
@@ -733,15 +759,19 @@ void write_commit_graph(const char *obj_dir,
 			for_each_object_in_pack(p, add_packed_commits, &oids, 0);
 			close_pack(p);
 		}
+		stop_progress(&oids.progress);
 		strbuf_release(&packname);
 	}
 
 	if (commit_hex) {
+		progress = start_delayed_progress(
+			_("Finding commits for commit graph"), commit_hex->nr);
 		for (i = 0; i < commit_hex->nr; i++) {
 			const char *end;
 			struct object_id oid;
 			struct commit *result;
 
+			display_progress(progress, i);
 			if (commit_hex->items[i].string &&
 			    parse_oid_hex(commit_hex->items[i].string, &oid, &end))
 				continue;
@@ -754,10 +784,16 @@ void write_commit_graph(const char *obj_dir,
 				oids.nr++;
 			}
 		}
+		display_progress(progress, i);
+		stop_progress(&progress);
 	}
 
-	if (!pack_indexes && !commit_hex)
+	if (!pack_indexes && !commit_hex) {
+		oids.progress = start_delayed_progress(
+			_("Finding commits for commit graph"), 0);
 		for_each_packed_object(add_packed_commits, &oids, 0);
+		stop_progress(&oids.progress);
+	}
 
 	close_reachable(&oids);
 
