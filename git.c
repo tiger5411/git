@@ -696,31 +696,25 @@ static int run_argv(int *argcp, const char ***argv)
 			struct strbuf sb = STRBUF_INIT;
 			int i;
 			for (i = 1; i < cmd_list.nr; i++) {
- 				if (i != cmd_list.nr - 1) {
-					/*
-					 * TRANSLATORS: This is a
-					 * single item in the list
-					 * printed out by the "alias
-					 * loop" message below.
-					 */
-					strbuf_addf(&sb, _("    %d. %s -> %s"),
-						    i,
-						    cmd_list.items[i - 1].string,
-						    cmd_list.items[i].string);
-					strbuf_addstr(&sb, "\n");
-				} else {
-					/*
-					 * TRANSLATORS: This is a the
-					 * last item in the list
-					 * printed out by the "alias
-					 * loop" message below.
-					 */
-					strbuf_addf(&sb, _("    %d. %s -> %s <== Would loop back to item #1"),
-						    i,
-						    cmd_list.items[i - 1].string,
-						    cmd_list.items[i].string);
-				}
+				/*
+				 * TRANSLATORS: This is a single item
+				 * in the list printed out by the
+				 * "alias loop" message below.
+				 */
+				strbuf_addf(&sb, _("    %d. %s = %s\n"),
+					    i,
+					    cmd_list.items[i - 1].string,
+					    cmd_list.items[i].string);
 			}
+			/*
+			 * TRANSLATORS: This is the last item in the
+			 * list printed out by the "alias loop"
+			 * message below.
+			 */
+			strbuf_addf(&sb, _("    %d. %s = %s <== This is where the loop started!"),
+				    i,
+				    cmd_list.items[i - 1].string,
+				    *argv[0]);
 			/*
 			 * TRANSLATORS: The %s here at the end is
 			 * going to be a list of aliases as formatted
