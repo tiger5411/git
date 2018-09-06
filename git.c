@@ -694,17 +694,43 @@ static int run_argv(int *argcp, const char ***argv)
 
 		if (string_list_has_string(&cmd_list, *argv[0])) {
 			struct strbuf sb = STRBUF_INIT;
-			int i;
+			int i, seen_at_idx = -1;
+
+			/*
+			 * Find the re-entry point for the alias
+			 * loop. TODO: There really should be a
+			 * "return the index of the first matching"
+			 * helper in string-list.c.
+			 */ 
+			for (i = 0; i < cmd_list.nr; i++) {
+				if (!strcmp(*argv[0], cmd_list.items[i].string))
+					seen_at_idx = i;
+			}
+			assert(seen_at_idx != -1);
+
 			for (i = 1; i < cmd_list.nr; i++) {
-				/*
-				 * TRANSLATORS: This is a single item
-				 * in the list printed out by the
-				 * "alias loop" message below.
-				 */
-				strbuf_addf(&sb, _("    %d. %s = %s\n"),
-					    i,
-					    cmd_list.items[i - 1].string,
-					    cmd_list.items[i].string);
+				if (i - 1 == seen_at_idx)
+					/*
+					 * TRANSLATORS: This is a the
+					 * re-enttry point in the list
+					 * printed out by the "alias
+					 * loop" message below.
+					 */
+					strbuf_addf(&sb, _("    %d. %s = %s <== The re-entry point in the loop\n"),
+						    i,
+						    cmd_list.items[i - 1].string,
+						    cmd_list.items[i].string);
+				else
+					/*
+					 * TRANSLATORS: This is a
+					 * single item in the list
+					 * printed out by the "alias
+					 * loop" message below.
+					 */
+					strbuf_addf(&sb, _("    %d. %s = %s\n"),
+						    i,
+						    cmd_list.items[i - 1].string,
+						    cmd_list.items[i].string);
 			}
 			/*
 			 * TRANSLATORS: This is the last item in the
