@@ -674,6 +674,7 @@ static void execv_dashed_external(const char **argv)
 static int run_argv(int *argcp, const char ***argv)
 {
 	int done_alias = 0;
+	struct string_list cmd_list = STRING_LIST_INIT_NODUP;
 
 	while (1) {
 		/*
@@ -691,16 +692,22 @@ static int run_argv(int *argcp, const char ***argv)
 		/* .. then try the external ones */
 		execv_dashed_external(*argv);
 
-		/* It could be an alias -- this works around the insanity
+		if (string_list_has_string(&cmd_list, *argv[0]))
+			die(_("loop alias: %s is called twice"), *argv[0]);
+
+		string_list_append(&cmd_list, *argv[0]);
+
+		/*
+		 * It could be an alias -- this works around the insanity
 		 * of overriding "git log" with "git show" by having
 		 * alias.log = show
 		 */
-		if (done_alias)
-			break;
 		if (!handle_alias(argcp, argv))
 			break;
-		done_alias = 1;
+		done_alias++;
 	}
+
+	string_list_clear(&cmd_list, 0);
 
 	return done_alias;
 }
