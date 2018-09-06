@@ -692,8 +692,44 @@ static int run_argv(int *argcp, const char ***argv)
 		/* .. then try the external ones */
 		execv_dashed_external(*argv);
 
-		if (string_list_has_string(&cmd_list, *argv[0]))
-			die(_("loop alias: %s is called twice"), *argv[0]);
+		if (string_list_has_string(&cmd_list, *argv[0])) {
+			struct strbuf sb = STRBUF_INIT;
+			int i;
+			for (i = 1; i < cmd_list.nr; i++) {
+ 				if (i != cmd_list.nr - 1) {
+					/*
+					 * TRANSLATORS: This is a
+					 * single item in the list
+					 * printed out by the "alias
+					 * loop" message below.
+					 */
+					strbuf_addf(&sb, _("    %d. %s -> %s"),
+						    i,
+						    cmd_list.items[i - 1].string,
+						    cmd_list.items[i].string);
+					strbuf_addstr(&sb, "\n");
+				} else {
+					/*
+					 * TRANSLATORS: This is a the
+					 * last item in the list
+					 * printed out by the "alias
+					 * loop" message below.
+					 */
+					strbuf_addf(&sb, _("    %d. %s -> %s <== Would loop back to item #1"),
+						    i,
+						    cmd_list.items[i - 1].string,
+						    cmd_list.items[i].string);
+				}
+			}
+			/*
+			 * TRANSLATORS: The %s here at the end is
+			 * going to be a list of aliases as formatted
+			 * by the messages whose comments mention
+			 * "alias loop" above.
+			 */
+			die(_("alias loop: When expanding the alias '%s' (%s) we ran into a loop:\n%s"),
+			    cmd_list.items[0].string, *argv[0], sb.buf);
+		}
 
 		string_list_append(&cmd_list, *argv[0]);
 
