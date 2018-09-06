@@ -747,8 +747,8 @@ static int run_argv(int *argcp, const char ***argv)
 			 * by the messages whose comments mention
 			 * "alias loop" above.
 			 */
-			die(_("alias loop: When expanding the alias '%s' (%s) we ran into a loop:\n%s"),
-			    cmd_list.items[0].string, *argv[0], sb.buf);
+			die(_("alias loop: When expanding the alias '%s' we ran into a loop:\n%s"),
+			    cmd_list.items[0].string, sb.buf);
 		}
 
 		string_list_append(&cmd_list, *argv[0]);
