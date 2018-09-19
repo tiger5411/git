@@ -10,6 +10,7 @@
 #include "diff.h"
 #include "revision.h"
 #include "reachable.h"
+#include "progress.h"
 
 /* NEEDSWORK: switch to using parse_options */
 static const char reflog_expire_usage[] =
@@ -225,14 +226,20 @@ static void mark_reachable(struct expire_reflog_policy_cb *cb)
 	struct commit_list *pending;
 	timestamp_t expire_limit = cb->mark_limit;
 	struct commit_list *leftover = NULL;
+	struct progress *progress = NULL;
+	int i = 0;
 
 	for (pending = cb->mark_list; pending; pending = pending->next)
 		pending->item->object.flags &= ~REACHABLE;
 
 	pending = cb->mark_list;
+	progress = start_delayed_progress(
+		_("Marking unreachable commits in reflog for expiry"), 0);
 	while (pending) {
 		struct commit_list *parent;
 		struct commit *commit = pop_commit(&pending);
+
+		display_progress(progress, ++i);
 		if (commit->object.flags & REACHABLE)
 			continue;
 		if (parse_commit(commit))
@@ -253,6 +260,7 @@ static void mark_reachable(struct expire_reflog_policy_cb *cb)
 		}
 	}
 	cb->mark_list = leftover;
+	stop_progress(&progress);
 }
 
 static int unreachable(struct expire_reflog_policy_cb *cb, struct commit *commit, struct object_id *oid)
