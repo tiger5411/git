@@ -785,7 +785,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 	int use_index = 1;
 	int pattern_type_arg = GREP_PATTERN_TYPE_UNSPECIFIED;
 	int allow_revs;
-	int unused_recursive; /* this is never used */
+	int recursive = 0;
 
 	struct option options[] = {
 		OPT_BOOL(0, "cached", &cached,
@@ -803,7 +803,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 			N_("show non-matching lines")),
 		OPT_BOOL('i', "ignore-case", &opt.ignore_case,
 			N_("case insensitive matching")),
-		OPT_BOOL('r', "recursive", &unused_recursive,
+		OPT_BOOL('r', "recursive", &recursive,
 			N_("does nothing, git-grep is always recursive, for grep(1) muscle memory compatibility")),
 		OPT_BOOL('w', "word-regexp", &opt.word_regexp,
 			N_("match patterns only at word boundaries")),
@@ -926,6 +926,8 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 			     PARSE_OPT_STOP_AT_NON_OPTION);
 	grep_commit_pattern_type(pattern_type_arg, &opt);
 
+	if (opt.max_depth != -1 && recursive)
+		die(_("The --max-depth and --recursive options are incompatible"));
 	if (use_index && !startup_info->have_repository) {
 		int fallback = 0;
 		git_config_get_bool("grep.fallbacktonoindex", &fallback);

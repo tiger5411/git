@@ -1697,4 +1697,8 @@ test_expect_success 'grep does not report i-t-a and assume unchanged with -L' '
 	test_cmp expected actual
 '
 
+test_expect_success 'grep --recursive is incompatible with --max-depth' '
+	test_must_fail git grep --recursive --max-depth=1
+'
+
 test_done
