@@ -290,6 +290,12 @@ providing this option will cause it to die.
 	Do not output matched lines; instead, exit with status 0 when
 	there is a match and with non-zero status when there isn't.
 
+-r::
+--recursive::
+	This option does nothing. git-grep is always recursive. This
+	noop option is provided for compatibility with the muscle
+	memory of people used to grep(1).
+
 <tree>...::
 	Instead of searching tracked files in the working tree, search
 	blobs in the given trees.

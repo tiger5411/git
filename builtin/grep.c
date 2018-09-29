@@ -785,6 +785,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 	int use_index = 1;
 	int pattern_type_arg = GREP_PATTERN_TYPE_UNSPECIFIED;
 	int allow_revs;
+	int unused_recursive; /* this is never used */
 
 	struct option options[] = {
 		OPT_BOOL(0, "cached", &cached,
@@ -802,6 +803,8 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 			N_("show non-matching lines")),
 		OPT_BOOL('i', "ignore-case", &opt.ignore_case,
 			N_("case insensitive matching")),
+		OPT_BOOL('r', "recursive", &unused_recursive,
+			N_("does nothing, git-grep is always recursive, for grep(1) muscle memory compatibility")),
 		OPT_BOOL('w', "word-regexp", &opt.word_regexp,
 			N_("match patterns only at word boundaries")),
 		OPT_SET_INT('a', "text", &opt.binary,

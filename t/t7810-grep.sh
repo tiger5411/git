@@ -469,6 +469,14 @@ do
 		git grep --count -h -e b $H -- ab >actual &&
 		test_cmp expected actual
 	'
+
+	for flag in '' ' -r' ' --recursive'
+	do
+		test_expect_success "grep $flag . (testing that --recursive is a noop)" '
+			git grep$flag . >actual &&
+			test_line_count = 43 actual
+	'
+	done
 done
 
 cat >expected <<EOF
