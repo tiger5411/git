@@ -11,6 +11,7 @@
 struct commit;
 
 char *get_commit_graph_filename(const char *obj_dir);
+int commit_graph_exists(const char *graph_file);
 
 /*
  * Given a commit struct, try to fill the commit struct info, including:

@@ -57,6 +57,18 @@ static struct commit_graph *alloc_commit_graph(void)
 	return g;
 }
 
+int commit_graph_exists(const char *graph_file)
+{
+	struct stat st;
+	if (stat(graph_file, &st)) {
+		if (errno == ENOENT)
+			return 0;
+		else
+			return -1;
+	}
+	return 1;
+}
+
 struct commit_graph *load_commit_graph_one(const char *graph_file)
 {
 	void *graph_map;

@@ -43,6 +43,7 @@ static int gc_auto_threshold = 6700;
 static int gc_auto_pack_limit = 50;
 static int gc_write_commit_graph;
 static int detach_auto = 1;
+static int detach_clone_auto = 0;
 static timestamp_t gc_log_expire_time;
 static const char *gc_log_expire = "1.day.ago";
 static const char *prune_expire = "2.weeks.ago";
@@ -133,6 +134,7 @@ static void gc_config(void)
 	git_config_get_int("gc.autopacklimit", &gc_auto_pack_limit);
 	git_config_get_bool("gc.writecommitgraph", &gc_write_commit_graph);
 	git_config_get_bool("gc.autodetach", &detach_auto);
+	git_config_get_bool("gc.clone.autodetach", &detach_clone_auto);
 	git_config_get_expiry("gc.pruneexpire", &prune_expire);
 	git_config_get_expiry("gc.worktreepruneexpire", &prune_worktrees_expire);
 	git_config_get_expiry("gc.logexpiry", &gc_log_expire);
@@ -366,8 +368,19 @@ static int need_to_gc(void)
 		return 0;
 
 	if (run_hook_le(NULL, "pre-auto-gc", NULL))
-		return 0;
+		return -1;
 	return 1;
+}
+
+static int need_to_optimize(void) {
+	if (gc_write_commit_graph) {
+		char *obj_dir = get_object_directory();
+		char *graph_name = get_commit_graph_filename(obj_dir);
+
+		if (commit_graph_exists(graph_name) == 0) /* ENOENT */
+			return 1;
+	}
+	return 0;
 }
 
 /* return NULL on success, else hostname running the gc */
@@ -488,6 +501,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 {
 	int aggressive = 0;
 	int auto_gc = 0;
+	int cloning = 0;
 	int quiet = 0;
 	int force = 0;
 	const char *name;
@@ -495,6 +509,8 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 	int daemonized = 0;
 	int keep_base_pack = -1;
 	timestamp_t dummy;
+	int should_gc;
+	int should_optimize;
 
 	struct option builtin_gc_options[] = {
 		OPT__QUIET(&quiet, N_("suppress progress reporting")),
@@ -503,6 +519,8 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 			PARSE_OPT_OPTARG, NULL, (intptr_t)prune_expire },
 		OPT_BOOL(0, "aggressive", &aggressive, N_("be more thorough (increased runtime)")),
 		OPT_BOOL_F(0, "auto", &auto_gc, N_("enable auto-gc mode"),
+			   PARSE_OPT_NOCOMPLETE),
+		OPT_BOOL_F(0, "cloning", &cloning, N_("enable cloning mode"),
 			   PARSE_OPT_NOCOMPLETE),
 		OPT_BOOL_F(0, "force", &force,
 			   N_("force running gc even if there may be another gc running"),
@@ -552,22 +570,27 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		/*
 		 * Auto-gc should be least intrusive as possible.
 		 */
-		if (!need_to_gc())
+		should_gc = need_to_gc();
+		if (should_gc == -1)
 			return 0;
-		if (!quiet) {
+		should_optimize = need_to_optimize();
+		if (!should_gc && !should_optimize)
+			return 0;
+		if (!quiet && should_gc) {
 			if (detach_auto)
 				fprintf(stderr, _("Auto packing the repository in background for optimum performance.\n"));
 			else
 				fprintf(stderr, _("Auto packing the repository for optimum performance.\n"));
 			fprintf(stderr, _("See \"git help gc\" for manual housekeeping.\n"));
 		}
-		if (detach_auto) {
+		if (detach_auto &&
+		    (!cloning || (cloning && detach_clone_auto))) {
 			if (report_last_gc_error())
 				return -1;
 
 			if (lock_repo_for_gc(force, &pid))
 				return 0;
-			if (gc_before_repack())
+			if (should_gc && gc_before_repack())
 				return -1;
 			delete_tempfile(&pidfile);
 
@@ -608,45 +631,48 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		atexit(process_log_file_at_exit);
 	}
 
-	if (gc_before_repack())
-		return -1;
+	if (!auto_gc || should_gc) {
+		if (gc_before_repack())
+			return -1;
 
-	if (!repository_format_precious_objects) {
-		close_all_packs(the_repository->objects);
-		if (run_command_v_opt(repack.argv, RUN_GIT_CMD))
-			return error(FAILED_RUN, repack.argv[0]);
+		if (!repository_format_precious_objects) {
+			close_all_packs(the_repository->objects);
+			if (run_command_v_opt(repack.argv, RUN_GIT_CMD))
+				return error(FAILED_RUN, repack.argv[0]);
 
-		if (prune_expire) {
-			argv_array_push(&prune, prune_expire);
-			if (quiet)
-				argv_array_push(&prune, "--no-progress");
-			if (repository_format_partial_clone)
-				argv_array_push(&prune,
-						"--exclude-promisor-objects");
-			if (run_command_v_opt(prune.argv, RUN_GIT_CMD))
-				return error(FAILED_RUN, prune.argv[0]);
+			if (prune_expire) {
+				argv_array_push(&prune, prune_expire);
+				if (quiet)
+					argv_array_push(&prune, "--no-progress");
+				if (repository_format_partial_clone)
+					argv_array_push(&prune,
+							"--exclude-promisor-objects");
+				if (run_command_v_opt(prune.argv, RUN_GIT_CMD))
+					return error(FAILED_RUN, prune.argv[0]);
+			}
 		}
+
+
+		if (prune_worktrees_expire) {
+			argv_array_push(&prune_worktrees, prune_worktrees_expire);
+			if (run_command_v_opt(prune_worktrees.argv, RUN_GIT_CMD))
+				return error(FAILED_RUN, prune_worktrees.argv[0]);
+		}
+
+		if (run_command_v_opt(rerere.argv, RUN_GIT_CMD))
+			return error(FAILED_RUN, rerere.argv[0]);
+
+		report_garbage = report_pack_garbage;
+		reprepare_packed_git(the_repository);
+		if (pack_garbage.nr > 0)
+			clean_pack_garbage();
 	}
-
-	if (prune_worktrees_expire) {
-		argv_array_push(&prune_worktrees, prune_worktrees_expire);
-		if (run_command_v_opt(prune_worktrees.argv, RUN_GIT_CMD))
-			return error(FAILED_RUN, prune_worktrees.argv[0]);
-	}
-
-	if (run_command_v_opt(rerere.argv, RUN_GIT_CMD))
-		return error(FAILED_RUN, rerere.argv[0]);
-
-	report_garbage = report_pack_garbage;
-	reprepare_packed_git(the_repository);
-	if (pack_garbage.nr > 0)
-		clean_pack_garbage();
 
 	if (gc_write_commit_graph)
 		write_commit_graph_reachable(get_object_directory(), 0,
 					     !quiet && !daemonized);
 
-	if (auto_gc && too_many_loose_objects())
+	if (auto_gc && should_gc && too_many_loose_objects())
 		warning(_("There are too many unreachable loose objects; "
 			"run 'git prune' to remove them."));
 

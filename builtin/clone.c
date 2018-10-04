@@ -897,6 +897,8 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 	struct remote *remote;
 	int err = 0, complete_refs_before_fetch = 1;
 	int submodule_progress;
+	const char *argv_gc_auto[]       = {"gc", "--auto", "--cloning", NULL};
+	const char *argv_gc_auto_quiet[] = {"gc", "--auto", "--cloning", "--quiet", NULL};
 
 	struct refspec rs = REFSPEC_INIT_FETCH;
 	struct argv_array ref_prefixes = ARGV_ARRAY_INIT;
@@ -1245,5 +1247,11 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 
 	refspec_clear(&rs);
 	argv_array_clear(&ref_prefixes);
+
+	if (0 <= option_verbosity)
+		run_command_v_opt_cd_env(argv_gc_auto, RUN_GIT_CMD, git_dir, NULL);
+	else
+		run_command_v_opt_cd_env(argv_gc_auto_quiet, RUN_GIT_CMD, git_dir, NULL);
+
 	return err;
 }

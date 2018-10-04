@@ -1623,6 +1623,11 @@ gc.autoDetach::
 	Make `git gc --auto` return immediately and run in background
 	if the system supports it. Default is true.
 
+gc.clone.autoDetach::
+	Make `git gc --auto` return immediately and run in background
+	if the system supports it when run via
+	linkgit:git-clone[1]. Default is false.
+
 gc.bigPackThreshold::
 	If non-zero, all packs larger than this limit are kept when
 	`git gc` is run. This is very similar to `--keep-base-pack`
