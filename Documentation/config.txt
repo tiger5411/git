@@ -1621,12 +1621,19 @@ gc.autoPackLimit::
 
 gc.autoDetach::
 	Make `git gc --auto` return immediately and run in background
-	if the system supports it. Default is true.
+	if the system supports it. Default is true. Overridden by
+	`gc.clone.autoDetach` when running linkgit:git-clone[1].
 
 gc.clone.autoDetach::
 	Make `git gc --auto` return immediately and run in background
 	if the system supports it when run via
 	linkgit:git-clone[1]. Default is false.
++
+The reason this defaults to false is because the only time we'll have
+work to do after a 'git clone' is if something like
+`gc.writeCommitGraph` is true, in that case we'd like to compute the
+optimized file before returning, so that say commands that benefit
+from commit graph aren't slow until it's generated in the background.
 
 gc.bigPackThreshold::
 	If non-zero, all packs larger than this limit are kept when
