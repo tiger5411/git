@@ -209,6 +209,7 @@ int cmd_revert(int argc, const char **argv, const char *prefix)
 {
 	struct replay_opts opts = REPLAY_OPTS_INIT;
 	int res;
+	const char *argv_gc_auto[] = {"gc", "--auto", NULL};
 
 	if (isatty(0))
 		opts.edit = 1;
@@ -217,6 +218,7 @@ int cmd_revert(int argc, const char **argv, const char *prefix)
 	res = run_sequencer(argc, argv, &opts);
 	if (res < 0)
 		die(_("revert failed"));
+	run_command_v_opt(argv_gc_auto, RUN_GIT_CMD);
 	return res;
 }
 
@@ -224,11 +226,13 @@ int cmd_cherry_pick(int argc, const char **argv, const char *prefix)
 {
 	struct replay_opts opts = REPLAY_OPTS_INIT;
 	int res;
+	const char *argv_gc_auto[] = {"gc", "--auto", NULL};
 
 	opts.action = REPLAY_PICK;
 	sequencer_init_config(&opts);
 	res = run_sequencer(argc, argv, &opts);
 	if (res < 0)
 		die(_("cherry-pick failed"));
+	run_command_v_opt(argv_gc_auto, RUN_GIT_CMD);
 	return res;
 }
