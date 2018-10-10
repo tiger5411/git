@@ -1635,6 +1635,34 @@ gc.autoDetach::
 	Make `git gc --auto` return immediately and run in background
 	if the system supports it. Default is true.
 
+gc.autoExitCode::
+	Make `git gc --auto` return non-zero if it would have
+	demonized itself (see `gc.autoDetach`) due to a needed gc, but
+	a 'gc.log' is found within the `gc.logExpiry` with an error
+	from a previous run.
++
+When 'git gc' is run with the default of `gc.autoDetach=true` a
+failure might have been noted in the 'gc.log' from a previously
+detached `--auto` run. If the failure is within the time configured in
+`gc.logExpiry` the `--auto` run will abort early and report the error
+in the 'gc.log'.
++
+From version 2.6.3 to version 2.19 of Git encountering this error
+would cause 'git gc' to exit with non-zero, but this was deemed to be
+a hassle for third-party tools to handle since it rarely happens, and
+they usually don't assume that 'git gc --auto' can fail. Therefore
+since version 2.20 of Git 'git gc --auto' will always exit with zero
+if it would have demonized itself, even when encountering such an
+error.
++
+Supplying this option will make 'git gc' exit with non-zero in that
+case, which allows for detecting cases where a repository is in a
+state where git 'gc --auto' is refusing to demonize due to previously
+encountered errors.
++
+This option can also be turned on as a one-off with the
+`--auto-exit-code` option, see linkgit:git-gc[1].
+
 gc.bigPackThreshold::
 	If non-zero, all packs larger than this limit are kept when
 	`git gc` is run. This is very similar to `--keep-base-pack`

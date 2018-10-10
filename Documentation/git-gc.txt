@@ -71,6 +71,13 @@ If houskeeping is required due to many loose objects or packs, all
 other housekeeping tasks (e.g. rerere, working trees, reflog...) will
 be performed as well.
 
+--auto-exit-code::
+	Make `git gc --auto` return non-zero if it would have
+	demonized itself (see `gc.autoDetach`) due to a needed gc, but
+	a 'gc.log' is found within the time period of `gc.logExpiry`
+	with an error from a previous run. See linkgit:git-config[1]
+	for more details about this option which can also be
+	configured with the `gc.autoExitCode` boolean variable.
 
 --prune=<date>::
 	Prune loose objects older than date (default is 2 weeks ago,

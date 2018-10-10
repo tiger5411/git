@@ -41,6 +41,7 @@ static int aggressive_window = 250;
 static int gc_auto_threshold = 6700;
 static int gc_auto_pack_limit = 50;
 static int detach_auto = 1;
+static int gc_auto_exit_code = 0;
 static timestamp_t gc_log_expire_time;
 static const char *gc_log_expire = "1.day.ago";
 static const char *prune_expire = "2.weeks.ago";
@@ -130,6 +131,7 @@ static void gc_config(void)
 	git_config_get_int("gc.auto", &gc_auto_threshold);
 	git_config_get_int("gc.autopacklimit", &gc_auto_pack_limit);
 	git_config_get_bool("gc.autodetach", &detach_auto);
+	git_config_get_bool("gc.autoexitcode", &gc_auto_exit_code);
 	git_config_get_expiry("gc.pruneexpire", &prune_expire);
 	git_config_get_expiry("gc.worktreepruneexpire", &prune_worktrees_expire);
 	git_config_get_expiry("gc.logexpiry", &gc_log_expire);
@@ -518,6 +520,9 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		OPT_BOOL(0, "aggressive", &aggressive, N_("be more thorough (increased runtime)")),
 		OPT_BOOL_F(0, "auto", &auto_gc, N_("enable auto-gc mode"),
 			   PARSE_OPT_NOCOMPLETE),
+		OPT_BOOL_F(0, "auto-exit-code", &gc_auto_exit_code,
+			   N_("exit with non-zero if an error is encountered before gc is daemonized"),
+			   PARSE_OPT_NOCOMPLETE),
 		OPT_BOOL_F(0, "force", &force,
 			   N_("force running gc even if there may be another gc running"),
 			   PARSE_OPT_NOCOMPLETE),
@@ -582,7 +587,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 				exit(128);
 			if (ret == 1)
 				/* Last gc --auto failed. Skip this one. */
-				return 0;
+				return gc_auto_exit_code;
 
 			if (lock_repo_for_gc(force, &pid))
 				return 0;
