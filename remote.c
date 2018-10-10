@@ -13,6 +13,7 @@
 #include "mergesort.h"
 #include "argv-array.h"
 #include "commit-reach.h"
+#include "advice.h"
 
 enum map_direction { FROM_SRC, FROM_DST };
 
@@ -1046,13 +1047,60 @@ static int match_explicit(struct ref *src, struct ref *dst,
 		else if ((dst_guess = guess_ref(dst_value, matched_src))) {
 			matched_dst = make_linked_ref(dst_guess, dst_tail);
 			free(dst_guess);
-		} else
-			error(_("unable to push to unqualified destination: %s\n"
-				"The destination refspec neither matches an "
-				"existing ref on the remote nor\n"
-				"begins with refs/, and we are unable to "
-				"guess a prefix based on the source ref."),
-			      dst_value);
+		} else {
+			struct object_id oid;
+			enum object_type type;
+
+			error("unable to push to unqualified destination: %s", dst_value);
+			if (!advice_push_ambiguous_ref_name)
+				break;
+			if (get_oid(matched_src->name, &oid))
+				BUG("'%s' is not a valid object, "
+				    "match_explicit_lhs() should catch this!",
+				    matched_src->name);
+			type = oid_object_info(the_repository, &oid, NULL);
+			if (type == OBJ_COMMIT) {
+
+				advise(_("The destination refspec neither matches an existing\n"
+					 "ref on the remote nor begins with refs/, and we are\n"
+					 "unable to guess a prefix based on the source ref.\n"
+					 "\n"
+					 "The <src> part of the refspec is a commit object.\n"
+					 "Did you mean to create a new branch by pushing to\n"
+					 "'%s:refs/heads/%s'?"),
+				       matched_src->name, dst_value);
+			} else if (type == OBJ_TAG) {
+				advise(_("The destination refspec neither matches an existing\n"
+					 "ref on the remote nor begins with refs/, and we are\n"
+					 "unable to guess a prefix based on the source ref.\n"
+					 "\n"
+					 "The <src> part of the refspec is a tag object.\n"
+					 "Did you mean to create a new tag by pushing to\n"
+					 "'%s:refs/tags/%s'?"),
+				       matched_src->name, dst_value);
+			} else if (type == OBJ_TREE) {
+				advise(_("The destination refspec neither matches an existing\n"
+					 "ref on the remote nor begins with refs/, and we are\n"
+					 "unable to guess a prefix based on the source ref.\n"
+					 "\n"
+					 "The <src> part of the refspec is a tree object.\n"
+					 "Did you mean to tag a new tree by pushing to\n"
+					 "'%s:refs/tags/%s'?"),
+				       matched_src->name, dst_value);
+			} else if (type == OBJ_BLOB) {
+				advise(_("The destination refspec neither matches an existing\n"
+					 "ref on the remote nor begins with refs/, and we are\n"
+					 "unable to guess a prefix based on the source ref.\n"
+					 "\n"
+					 "The <src> part of the refspec is a blob object.\n"
+					 "Did you mean to tag a new blob by pushing to\n"
+					 "'%s:refs/tags/%s'?"),
+				       matched_src->name, dst_value);
+			} else {
+				BUG("'%s' should be commit/tag/tree/blob, is '%d'",
+				    matched_src->name, type);
+			}
+		}
 		break;
 	default:
 		matched_dst = NULL;
