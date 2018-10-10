@@ -17,10 +17,14 @@ Runs a number of housekeeping tasks within the current repository,
 such as compressing file revisions (to reduce disk space and increase
 performance), removing unreachable objects which may have been
 created from prior invocations of 'git add', packing refs, pruning
-reflog, rerere metadata or stale working trees. May also update ancillary
-indexes such as the commit-graph.
+reflog, rerere metadata or stale working trees. May also update supplemental
+data structures such as the commit-graph.
 
-Users are encouraged to run this task on a regular basis within
+Users should not need to run this manually since most commands that
+might create objects (linkgit:git-fetch[1], linkgit:git-commit[1]
+etc.) either run `git gc --auto`
+
+ are encouraged to run this task on a regular basis within
 each repository to maintain good disk space utilization and good
 operating performance.
 
@@ -43,6 +47,8 @@ OPTIONS
 	persistent, so this option only needs to be used occasionally; every
 	few hundred changesets or so.
 
+note what --aggressive really does.
+
 --auto::
 	With this option, 'git gc' checks whether any housekeeping is
 	required; if not, it exits without performing any work.
@@ -61,6 +67,9 @@ then existing packs (except those marked with a `.keep` file
 or over `gc.bigPackThreshold` limit)
 are consolidated into a single pack by using the `-A` option of
 'git repack'.
+
+TODO: Note here that `gc.auto=0` also disables `gc.autoPackLimit`.
+
 If the amount of memory is estimated not enough for `git repack` to
 run smoothly and `gc.bigPackThreshold` is not set, the largest
 pack will also be excluded (this is the equivalent of running `git gc`
