@@ -19,6 +19,7 @@ static struct test_cmd cmds[] = {
 	{ "dump-untracked-cache", cmd__dump_untracked_cache },
 	{ "example-decorate", cmd__example_decorate },
 	{ "genrandom", cmd__genrandom },
+	{ "gettext-poison", cmd__gettext_poison },
 	{ "hashmap", cmd__hashmap },
 	{ "index-version", cmd__index_version },
 	{ "json-writer", cmd__json_writer },

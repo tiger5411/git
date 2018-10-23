@@ -539,6 +539,7 @@ static struct cmd_struct commands[] = {
 	{ "rm", cmd_rm, RUN_SETUP },
 	{ "send-pack", cmd_send_pack, RUN_SETUP },
 	{ "serve", cmd_serve, RUN_SETUP },
+	{ "sh-i18n--helper", cmd_sh_i18n__helper, 0 },
 	{ "shortlog", cmd_shortlog, RUN_SETUP_GENTLY | USE_PAGER },
 	{ "show", cmd_show, RUN_SETUP },
 	{ "show-branch", cmd_show_branch, RUN_SETUP },
