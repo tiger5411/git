@@ -1260,11 +1260,15 @@ test_expect_success 'refs/remotes/* <src> refspec and unqualified <dst> DWIM and
 		git config --add remote.two.fetch "+refs/blobs/*:refs/remotes/two-blobs/*" &&
 		git fetch --no-tags two &&
 
-		test_must_fail git push origin refs/remotes/two/another:dst 2>err &&
-		test_i18ngrep "error: The destination you" err &&
+		echo commit >expected &&
+		git push origin refs/remotes/two/another:dst &&
+		git -C ../one cat-file -t refs/heads/dst >actual &&
+		test_cmp expected actual &&
 
-		test_must_fail git push origin refs/remotes/two-tags/some-tag:dst-tag 2>err &&
-		test_i18ngrep "error: The destination you" err &&
+		echo tag >expected &&
+		git push origin refs/remotes/two-tags/some-tag:dst-tag &&
+		git -C ../one cat-file -t refs/tags/dst-tag >actual &&
+		test_cmp expected actual &&
 
 		test_must_fail git push origin refs/remotes/two-trees/my-head-tree:dst-tree 2>err &&
 		test_i18ngrep "error: The destination you" err &&

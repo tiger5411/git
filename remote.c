@@ -973,6 +973,21 @@ static char *guess_ref(const char *name, struct ref *peer)
 		strbuf_addstr(&buf, "refs/heads/");
 	} else if (starts_with(r, "refs/tags/")) {
 		strbuf_addstr(&buf, "refs/tags/");
+	} else if (starts_with(r, "refs/remotes/")) {
+		struct object_id oid;
+		enum object_type type;
+
+		if (get_oid(peer->name, &oid))
+			BUG("'%s' is not a valid object, "
+			    "match_explicit_lhs() should catch this!",
+			    peer->name);
+		type = oid_object_info(the_repository, &oid, NULL);
+		if (type == OBJ_COMMIT)
+			strbuf_addstr(&buf, "refs/heads/");
+		else if (type == OBJ_TAG)
+			strbuf_addstr(&buf, "refs/tags/");
+		else
+			return NULL;
 	} else {
 		return NULL;
 	}
@@ -1024,8 +1039,11 @@ static void show_push_unqualified_ref_name_error(const char *dst_value,
 		"- Checking if the <src> being pushed ('%s')\n"
 		"  is a ref in \"refs/{heads,tags}/\". If so we add a corresponding\n"
 		"  refs/{heads,tags}/ prefix on the remote side.\n"
+		"- Checking if the <src> being pushed ('%2$s')\n"
+		"  is a commit or tag in \"refs/remotes/*\". Then we infer a\n"
+		"  corresponding refs/{heads,tags} on the remote side.\n"
 		"\n"
-		"Neither worked, so we gave up. You must fully-qualify the ref."),
+		"None of those worked, so we gave up. You must fully-qualify the ref."),
 	      dst_value, matched_src_name);
 
 	if (!advice_push_unqualified_ref_name)
