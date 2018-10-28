@@ -392,6 +392,9 @@ GIT_TEST_SIDEBAND_ALL=<boolean>, when true, overrides the
 fetch-pack to not request sideband-all (even if the server advertises
 sideband-all).
 
+GIT_TEST_CHECK_COLLISIONS=<boolean> excercises the
+core.checkCollisions=false codepath.
+
 Naming Tests
 ------------
 
