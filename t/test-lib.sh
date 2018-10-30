@@ -454,6 +454,8 @@ GIT_EXIT_OK=
 trap 'die' EXIT
 trap 'exit $?' INT
 
+GIT_FSCK_FAILS=
+
 # The user-facing functions are loaded from a separate file so that
 # test_perf subshells can have them too
 . "$TEST_DIRECTORY/test-lib-functions.sh"
@@ -790,6 +792,25 @@ test_at_end_hook_ () {
 }
 
 test_done () {
+	if test_have_prereq TEST_FSCK
+	then
+		desc='git fsck at end (due to GIT_TEST_FSCK)'
+		if test -n "$GIT_FSCK_FAILS"
+		then
+			test_expect_success "$desc (expected to fail)" '
+				test_must_fail git fsck 2>fsck.err >fsck.out
+			'
+			test_expect_success "$descriptor (expected to fail) -- assert failure mode" "
+				test_path_exists fsck.err &&
+				test_path_exists fsck.out &&
+				$GIT_FSCK_FAILS_TEST
+			"
+		else
+			test_expect_success "$desc" '
+				git fsck
+			'
+		fi
+	fi
 	GIT_EXIT_OK=t
 
 	if test -z "$HARNESS_ACTIVE"
@@ -1268,3 +1289,5 @@ test_lazy_prereq CURL '
 test_lazy_prereq SHA1 '
 	test $(git hash-object /dev/null) = e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 '
+
+test_lazy_prereq TEST_FSCK 'test-tool env-bool GIT_TEST_FSCK'
