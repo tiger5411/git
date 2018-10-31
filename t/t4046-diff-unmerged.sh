@@ -84,4 +84,8 @@ test_expect_success 'diff-files -3' '
 	test_cmp diff-files-3.expect diff-files-3.actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "notice: No default references" fsck.err
+'
+
 test_done

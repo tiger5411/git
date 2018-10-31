@@ -726,6 +726,14 @@ test_expect_success 'batch missing blob request does not inadvertently try to fe
 	git clone --filter=blob:limit=0 "file://$(pwd)/server" client
 '
 
+# We might have "test_done" through lib-httpd.sh. Need to tes
+# GIT_TEST_FSCK_TESTS here.
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "object.*is a tree, not a blob" fsck.err &&
+	test_i18ngrep "object.*is a commit, not a blob" fsck.err &&
+	test_i18ngrep "error in tree.*: broken links" fsck.err
+'
+
 . "$TEST_DIRECTORY"/lib-httpd.sh
 start_httpd
 

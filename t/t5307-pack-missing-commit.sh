@@ -36,4 +36,11 @@ test_expect_success 'pack-objects notices corruption' '
 	test_must_fail git pack-objects --revs pack
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "invalid sha1 pointer" fsck.err &&
+	test_i18ngrep "broken link from.*commit" fsck.out &&
+	test_i18ngrep "to.*commit" fsck.out &&
+	test_i18ngrep "missing commit" fsck.out
+'
+
 test_done

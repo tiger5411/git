@@ -55,5 +55,12 @@ test_expect_success 'first commit is still available' \
    git log $first_commit
    '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "pack checksum mismatch" fsck.err &&
+	test_i18ngrep "index CRC mismatch for object.*at offset 487" fsck.err &&
+	test_i18ngrep "inflate: data stream error.*incorrect data check" fsck.err &&
+	test_i18ngrep "cannot unpack.*at offset 487" fsck.err
+'
+
 test_done
 

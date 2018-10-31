@@ -588,4 +588,9 @@ test_expect_success 'cat-file --unordered works' '
 	test_cmp expect actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "unable to unpack header of" fsck.err &&
+	test_i18ngrep "object corrupt or missing" fsck.err
+'
+
 test_done

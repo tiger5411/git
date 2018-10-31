@@ -174,4 +174,8 @@ test_expect_success '--reset-author with CHERRY_PICK_HEAD' '
 	test_cmp expect actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "invalid reflog entry" fsck.err
+'
+
 test_done

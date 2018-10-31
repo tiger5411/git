@@ -128,4 +128,10 @@ test_expect_success 'show --graph is forbidden' '
   test_must_fail git show --graph HEAD
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "broken link from.*tag" fsck.out &&
+	test_i18ngrep "to.*blob" fsck.out &&
+	test_i18ngrep "missing blob" fsck.out
+'
+
 test_done

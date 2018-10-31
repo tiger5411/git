@@ -22,4 +22,10 @@ test_expect_success 'ls-tree fails with non-zero exit code on broken tree' '
 	test_must_fail git ls-tree -r HEAD
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "invalid sha1 pointer in cache-tree" fsck.err &&
+	test_i18ngrep "broken link from.*tree" fsck.out &&
+	test_i18ngrep "missing tree" fsck.out
+'
+
 test_done

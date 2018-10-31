@@ -911,4 +911,10 @@ test_expect_success 'git bisect reset cleans bisection state properly' '
 	test_path_is_missing "$GIT_DIR/BISECT_START"
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "broken link from.*tree" fsck.out &&
+	test_i18ngrep "to.*tree" fsck.out &&
+	test_i18ngrep "missing tree" fsck.out
+'
+
 test_done

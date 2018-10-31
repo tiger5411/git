@@ -24,4 +24,8 @@ test_expect_success 'no buffer overflow in lazy_init_name_hash' '
 	test-tool lazy-init-name-hash -m
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "notice: No default references" fsck.err
+'
+
 test_done

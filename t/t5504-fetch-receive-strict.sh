@@ -348,4 +348,8 @@ test_expect_success \
 	grep "Cannot demote unterminatedheader" act
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "missingEmail" fsck.err
+'
+
 test_done

@@ -266,4 +266,8 @@ test_expect_success '--cherry-pick avoids looking at full diffs' '
 	git rev-list --cherry-pick ...shy-diff
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "missing blob" fsck.out
+'
+
 test_done

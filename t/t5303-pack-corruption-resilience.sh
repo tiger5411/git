@@ -400,4 +400,12 @@ test_expect_success \
     'printf "\0\1\1X\0" > tail_garbage_opcode &&
      test_must_fail test-tool delta -p /dev/null tail_garbage_opcode /dev/null'
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "pack checksum mismatch" fsck.err &&
+	test_i18ngrep "index CRC mismatch.*at offset 12" fsck.err &&
+	test_i18ngrep "cannot unpack.*at offset 12" fsck.err &&
+	test_i18ngrep "failed to read delta base object.*at offset 12" fsck.err &&
+	test_i18ngrep "failed to read delta base object.*at offset 2032" fsck.err
+'
+
 test_done

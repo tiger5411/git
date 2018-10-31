@@ -275,4 +275,8 @@ test_expect_success 'blame file with CRLF core.autocrlf=true' '
 	grep "A U Thor" actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "missingNameBeforeEmail" fsck.err
+'
+
 test_done

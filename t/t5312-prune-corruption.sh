@@ -111,4 +111,8 @@ test_expect_success 'pack-refs does not drop broken refs during deletion' '
 	test_cmp expect actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "invalid sha1 pointer" fsck.err
+'
+
 test_done

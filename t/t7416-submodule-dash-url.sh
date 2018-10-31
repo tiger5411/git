@@ -46,4 +46,8 @@ test_expect_success 'fsck rejects unprotected dash' '
 	grep gitmodulesUrl err
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "gitmodulesUrl" fsck.err
+'
+
 test_done

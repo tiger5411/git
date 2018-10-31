@@ -191,4 +191,8 @@ test_expect_success 'fsck detects corrupt .gitmodules' '
 	)
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "gitmodulesName" fsck.err
+'
+
 test_done

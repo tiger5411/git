@@ -493,4 +493,9 @@ test_expect_success \
     'test_must_fail git -c core.bigfilethreshold=1 index-pack -o bad.idx test-3.pack 2>msg &&
      test_i18ngrep "SHA1 COLLISION FOUND" msg'
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "sha1 mismatch for" fsck.err &&
+	test_i18ngrep "object corrupt or missing" fsck.err
+'
+
 test_done

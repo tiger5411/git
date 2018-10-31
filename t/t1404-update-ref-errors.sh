@@ -618,4 +618,8 @@ test_expect_success 'delete fails cleanly if packed-refs file is locked' '
 	test_cmp unchanged actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "invalid sha1 pointer" fsck.err
+'
+
 test_done

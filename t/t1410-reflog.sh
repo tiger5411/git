@@ -368,4 +368,8 @@ test_expect_success 'continue walking past root commits' '
 	)
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "invalid reflog entry" fsck.err
+'
+
 test_done

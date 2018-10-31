@@ -76,4 +76,9 @@ test_expect_success 'diff-tree with renames' '
 	test_cmp expect actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "zeroPaddedFilemode" fsck.err &&
+	test_i18ngrep "duplicateEntries" fsck.err
+'
+
 test_done

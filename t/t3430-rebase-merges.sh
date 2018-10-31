@@ -396,4 +396,10 @@ test_expect_success 'with --autosquash and --exec' '
 	grep "G: +G" actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "broken link from.*commit" fsck.out &&
+	test_i18ngrep "to.*tree" fsck.out &&
+	test_i18ngrep "missing tree" fsck.out
+'
+
 test_done

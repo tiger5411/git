@@ -408,4 +408,9 @@ test_expect_success TAR_HUGE,TIME_IS_64BIT,TIME_T_IS_64BIT 'system tar can read 
 	test_cmp expect actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "corrupt loose object" fsck.err &&
+	test_i18ngrep "object corrupt or missing" fsck.err
+'
+
 test_done

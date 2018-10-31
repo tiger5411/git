@@ -128,4 +128,11 @@ test_expect_success 'authors-file imported user without email' '
 
 test_debug 'GIT_DIR=gitconfig.clone/.git git log'
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "object.*is a tree, not a blob" fsck.err &&
+	test_i18ngrep "object.*is a commit, not a blob" fsck.err &&
+	test_i18ngrep "tree.*: broken links" fsck.err &&
+	test_i18ngrep "missingTaggerEntry" fsck.err
+'
+
 test_done

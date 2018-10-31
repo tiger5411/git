@@ -42,4 +42,8 @@ test_expect_success 'rev-parse --resolve-git-dir' '
 	test_cmp expect actual
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "not a git repository" fsck.err
+'
+
 test_done

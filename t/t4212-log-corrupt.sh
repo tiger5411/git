@@ -85,4 +85,10 @@ test_expect_success 'absurdly far-in-future date' '
 	git log -1 --format=%ad $commit
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "badDate" fsck.err &&
+	test_i18ngrep "badDateOverflow" fsck.err &&
+	test_i18ngrep "missingSpaceBeforeDate" fsck.err
+'
+
 test_done

@@ -64,4 +64,8 @@ test_expect_success 'reset --hard' '
 	test_path_is_missing a
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "missing tree" fsck.out
+'
+
 test_done

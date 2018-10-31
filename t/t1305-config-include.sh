@@ -313,4 +313,8 @@ test_expect_success 'include cycles are detected' '
 	test_i18ngrep "exceeded maximum include depth" stderr
 '
 
+GIT_TEST_FSCK_TESTS='
+	test_i18ngrep "exceeded maximum include depth" fsck.err
+'
+
 test_done
