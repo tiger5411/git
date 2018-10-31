@@ -19,6 +19,7 @@ modification *should* take notice and update the test vectors here.
 '
 
 . ./test-lib.sh
+unset GIT_TEST_FSCK
 
 try_local_x () {
 	local x="local" &&
@@ -391,6 +392,31 @@ test_expect_success 'GIT_SKIP_TESTS sh pattern' "
 		> 1..6
 		EOF
 	)
+"
+
+test_expect_success 'GIT_TEST_FSCK=true' "
+	test_when_finished 'sane_unset GIT_TEST_FSCK' &&
+	GIT_TEST_FSCK=true &&
+	export GIT_TEST_FSCK &&
+	run_sub_test_lib_test run-git-fsck-test \
+		'--run basic' --run='1 3 5' <<-\\EOF &&
+	for i in 1 2 3 4 5 6
+	do
+		test_expect_success \"passing test #\$i\" 'true'
+	done
+	GIT_TEST_FSCK=true test_done
+	EOF
+	check_sub_test_lib_test run-git-fsck-test <<-\\EOF
+	> ok 1 - passing test #1
+	> ok 2 # skip passing test #2 (--run)
+	> ok 3 - passing test #3
+	> ok 4 # skip passing test #4 (--run)
+	> ok 5 - passing test #5
+	> ok 6 # skip passing test #6 (--run)
+	> ok 7 # skip git fsck at end (due to GIT_TEST_FSCK) (expected to succeed) (--run)
+	> # passed all 7 test(s)
+	> 1..7
+	EOF
 "
 
 test_expect_success '--run basic' "

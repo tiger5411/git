@@ -343,6 +343,11 @@ of the index for the whole test suite by bypassing the default number of
 cache entries and thread minimums. Setting this to 1 will make the
 index loading single threaded.
 
+GIT_TEST_FSCK=<boolean> if true arranges for "git fsck" to be run at
+the end of the test scripts. Those tests that fail will need to set a
+"GIT_TEST_FSCK_TESTS" variable before we enter "test_done" with a test
+fragment to test that fsck.{out,err} is the expected failure.
+
 Naming Tests
 ------------
 

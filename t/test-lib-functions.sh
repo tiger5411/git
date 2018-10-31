@@ -470,6 +470,7 @@ test_expect_success () {
 # Usage: test_external description command arguments...
 # Example: test_external 'Perl API' perl ../path/to/test.pl
 test_external () {
+	unset GIT_TEST_FSCK
 	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 3 ||
 	error >&5 "bug in the test script: not 3 or 4 parameters to test_external"
@@ -511,6 +512,7 @@ test_external () {
 # Like test_external, but in addition tests that the command generated
 # no output on stderr.
 test_external_without_stderr () {
+	unset GIT_TEST_FSCK
 	# The temporary file has no (and must have no) security
 	# implications.
 	tmp=${TMPDIR:-/tmp}
