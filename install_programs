@@ -50,17 +50,21 @@ do
 	esac
 	shift
 done &&
-{ test "$bindir/" = "$execdir/" ||
-  for p in $list_bindir_standalone; do
-	$RM "$execdir/$p" &&
-	test -n "$INSTALL_SYMLINKS" &&
-	ln -s "$destdir_from_execdir/$bindir_relative/$p" "$execdir/$p" ||
-	{ test -z "$NO_INSTALL_HARDLINKS$NO_CROSS_DIRECTORY_HARDLINKS" &&
-	  ln "$bindir/$p" "$execdir/$p" 2>/dev/null ||
-	  cp "$bindir/$p" "$execdir/$p" || exit; }
-  done;
-} &&
-for p in $list_bindir_git_dashed; do
+
+if test "$bindir/" != "$execdir/"
+then
+	for p in $list_bindir_standalone; do
+		$RM "$execdir/$p" &&
+		test -n "$INSTALL_SYMLINKS" &&
+		ln -s "$destdir_from_execdir/$bindir_relative/$p" "$execdir/$p" ||
+		{ test -z "$NO_INSTALL_HARDLINKS$NO_CROSS_DIRECTORY_HARDLINKS" &&
+		  ln "$bindir/$p" "$execdir/$p" 2>/dev/null ||
+		  cp "$bindir/$p" "$execdir/$p" || exit; }
+	done
+fi &&
+
+for p in $list_bindir_git_dashed
+do
 	$RM "$bindir/$p" &&
 	test -n "$INSTALL_SYMLINKS" &&
 	ln -s "git$X" "$bindir/$p" ||
@@ -69,6 +73,7 @@ for p in $list_bindir_git_dashed; do
 	  ln -s "git$X" "$bindir/$p" 2>/dev/null ||
 	  cp "$bindir/git$X" "$bindir/$p" || exit; }
 done &&
+
 for p in $list_execdir_git_dashed; do
 	$RM "$execdir/$p" &&
 	test -n "$INSTALL_SYMLINKS" &&
@@ -78,6 +83,7 @@ for p in $list_execdir_git_dashed; do
 	  ln -s "git$X" "$execdir/$p" 2>/dev/null ||
 	  cp "$execdir/git$X" "$execdir/$p" || exit; }
 done &&
+
 for p in $list_execdir_curl_aliases; do
 	$RM "$execdir/$p" &&
 	test -n "$INSTALL_SYMLINKS" &&
