@@ -2066,9 +2066,7 @@ version.sp version.s version.o: EXTRA_CPPFLAGS = \
 
 $(BUILT_INS): git$X
 	$(QUIET_BUILT_IN)$(RM) $@ && \
-	ln $< $@ 2>/dev/null || \
-	ln -s $< $@ 2>/dev/null || \
-	cp $< $@
+	ln -s $< $@
 
 command-list.h: generate-cmdlist.sh command-list.txt
 
