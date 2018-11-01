@@ -2821,6 +2821,7 @@ endif
 		--flag-install-symlinks="$(INSTALL_SYMLINKS)" \
 		--flag-no-install-hardlinks="$(NO_INSTALL_HARDLINKS)" \
 		--flag-no-cross-directory-hardlinks="$(NO_CROSS_DIRECTORY_HARDLINKS)" \
+		--flag-no-install-symlinks-fallback="$(NO_INSTALL_SYMLINKS_FALLBACK)" \
 		--flag-no-install-cp-fallback="$(NO_INSTALL_CP_FALLBACK)" \
 		--list-bindir-standalone="git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS))" \
 		--list-bindir-git-dashed="$(filter $(install_bindir_programs),$(BUILT_INS))" \
