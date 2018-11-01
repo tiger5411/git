@@ -2065,7 +2065,8 @@ version.sp version.s version.o: EXTRA_CPPFLAGS = \
 		git rev-parse -q --verify HEAD 2>/dev/null)"'
 
 $(BUILT_INS): git$X
-	$(QUIET_BUILT_IN)$(RM) $@
+	$(QUIET_BUILT_IN)$(RM) $@ && \
+	ln -s $< $@
 
 command-list.h: generate-cmdlist.sh command-list.txt
 
