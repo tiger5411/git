@@ -2808,44 +2808,20 @@ endif
 	bindir=$$(cd '$(DESTDIR_SQ)$(bindir_SQ)' && pwd) && \
 	execdir=$$(cd '$(DESTDIR_SQ)$(gitexec_instdir_SQ)' && pwd) && \
 	destdir_from_execdir_SQ=$$(echo '$(gitexecdir_relative_SQ)' | sed -e 's|[^/][^/]*|..|g') && \
-	{ test "$$bindir/" = "$$execdir/" || \
-	  for p in git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS)); do \
-		$(RM) "$$execdir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/$$p" "$$execdir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)$(NO_CROSS_DIRECTORY_HARDLINKS)" && \
-		  ln "$$bindir/$$p" "$$execdir/$$p" 2>/dev/null || \
-		  cp "$$bindir/$$p" "$$execdir/$$p" || exit; } \
-	  done; \
-	} && \
-	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
-		$(RM) "$$bindir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "git$X" "$$bindir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$bindir/git$X" "$$bindir/$$p" 2>/dev/null || \
-		  ln -s "git$X" "$$bindir/$$p" 2>/dev/null || \
-		  cp "$$bindir/git$X" "$$bindir/$$p" || exit; } \
-	done && \
-	for p in $(BUILT_INS); do \
-		$(RM) "$$execdir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/git$X" "$$execdir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$execdir/git$X" "$$execdir/$$p" 2>/dev/null || \
-		  ln -s "git$X" "$$execdir/$$p" 2>/dev/null || \
-		  cp "$$execdir/git$X" "$$execdir/$$p" || exit; } \
-	done && \
-	remote_curl_aliases="$(REMOTE_CURL_ALIASES)" && \
-	for p in $$remote_curl_aliases; do \
-		$(RM) "$$execdir/$$p" && \
-		test -n "$(INSTALL_SYMLINKS)" && \
-		ln -s "git-remote-http$X" "$$execdir/$$p" || \
-		{ test -z "$(NO_INSTALL_HARDLINKS)" && \
-		  ln "$$execdir/git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  ln -s "git-remote-http$X" "$$execdir/$$p" 2>/dev/null || \
-		  cp "$$execdir/git-remote-http$X" "$$execdir/$$p" || exit; } \
-	done && \
+	./install_programs \
+		--X="$$X" \
+		--RM="$(RM)" \
+		--bindir="$$bindir" \
+		--bindir-relative="$(bindir_relative_SQ)" \
+		--execdir="$$execdir" \
+		--destdir-from-execdir="$$destdir_from_execdir_SQ" \
+		--flag-install-symlinks="$(INSTALL_SYMLINKS)" \
+		--flag-no-install-hardlinks="$(NO_INSTALL_HARDLINKS)" \
+		--flag-no-cross-directory-hardlinks="$(NO_CROSS_DIRECTORY_HARDLINKS)" \
+		--list-bindir-standalone="git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS))" \
+		--list-bindir-git-dashed="$(filter $(install_bindir_programs),$(BUILT_INS))" \
+		--list-execdir-git-dashed="$(BUILT_INS)" \
+		--list-execdir-curl-aliases="$(REMOTE_CURL_ALIASES)" && \
 	./check_bindir "z$$bindir" "z$$execdir" "$$bindir/git-add$X"
 
 .PHONY: install-gitweb install-doc install-man install-man-perl install-html install-info install-pdf
