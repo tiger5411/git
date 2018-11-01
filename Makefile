@@ -346,6 +346,13 @@ all::
 # INSTALL_SYMLINKS if you'd prefer not to have the install procedure
 # fallack on hardlinking or copying if "ln -s" fails.
 #
+# Define NO_INSTALL_BUILTIN_EXECDIR_ALIASES if you'd like to skip
+# installing legacy such as "git-init" and "git-add" in the
+# gitexecdir. Unless you're on a system where "which git-init" is
+# expected to returns something set this. Users have been expected to
+# use the likes of "git init" for ages now, these programs were only
+# provided for legacy compatibility.
+#
 # Define NO_CROSS_DIRECTORY_HARDLINKS if you plan to distribute the installed
 # programs as a tar, where bin/ and libexec/ might be on different file systems.
 #
@@ -2823,6 +2830,7 @@ endif
 		--flag-no-install-hardlinks="$(NO_INSTALL_HARDLINKS)" \
 		--flag-no-cross-directory-hardlinks="$(NO_CROSS_DIRECTORY_HARDLINKS)" \
 		--flag-no-install-symlinks-fallback="$(NO_INSTALL_SYMLINKS_FALLBACK)" \
+		--flag-no-install-builtin-execdir-aliases="$(NO_INSTALL_BUILTIN_EXECDIR_ALIASES)" \
 		--list-bindir-standalone="git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS))" \
 		--list-bindir-git-dashed="$(filter $(install_bindir_programs),$(BUILT_INS))" \
 		--list-execdir-git-dashed="$(BUILT_INS)" \

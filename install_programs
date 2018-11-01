@@ -33,6 +33,9 @@ do
 	--flag-no-install-symlinks-fallback=*)
 		NO_INSTALL_SYMLINKS_FALLBACK="${1#--flag-no-install-symlinks-fallback=}"
 		;;
+	--flag-no-install-builtin-execdir-aliases=*)
+		NO_INSTALL_BUILTIN_EXECDIR_ALIASES="${1#--flag-no-install-builtin-execdir-aliases=}"
+		;;
 	--list-bindir-standalone=*)
 		list_bindir_standalone="${1#--list-bindir-standalone=}"
 		;;
@@ -54,7 +57,7 @@ do
 	shift
 done &&
 
-if test "$bindir/" != "$execdir/"
+if test "$bindir/" != "$execdir/" -a -z "$NO_INSTALL_BUILTIN_EXECDIR_ALIASES"
 then
 	for p in $list_bindir_standalone; do
 		$RM "$execdir/$p" &&
@@ -87,20 +90,23 @@ do
 	fi
 done &&
 
-for p in $list_execdir_git_dashed; do
-	$RM "$execdir/$p" &&
-	if test -n "$INSTALL_SYMLINKS" -a -n "$NO_INSTALL_SYMLINKS_FALLBACK"
-	then
-		ln -s "$destdir_from_execdir/$bindir_relative/git$X" "$execdir/$p"
-	else
-		test -n "$INSTALL_SYMLINKS" &&
-		ln -s "$destdir_from_execdir/$bindir_relative/git$X" "$execdir/$p" ||
-		{ test -z "$NO_INSTALL_HARDLINKS" &&
-		  ln "$execdir/git$X" "$execdir/$p" ||
-		  ln -s "git$X" "$execdir/$p" ||
-		  cp "$execdir/git$X" "$execdir/$p" || exit; }
-	fi
-done &&
+if test -z "$NO_INSTALL_BUILTIN_EXECDIR_ALIASES"
+then
+	for p in $list_execdir_git_dashed; do
+		$RM "$execdir/$p" &&
+		if test -n "$INSTALL_SYMLINKS" -a -n "$NO_INSTALL_SYMLINKS_FALLBACK"
+		then
+			ln -s "$destdir_from_execdir/$bindir_relative/git$X" "$execdir/$p"
+		else
+			test -n "$INSTALL_SYMLINKS" &&
+			ln -s "$destdir_from_execdir/$bindir_relative/git$X" "$execdir/$p" ||
+			{ test -z "$NO_INSTALL_HARDLINKS" &&
+			  ln "$execdir/git$X" "$execdir/$p" ||
+			  ln -s "git$X" "$execdir/$p" ||
+			  cp "$execdir/git$X" "$execdir/$p" || exit; }
+		fi
+	done
+fi &&
 
 for p in $list_execdir_curl_aliases; do
 	$RM "$execdir/$p" &&
