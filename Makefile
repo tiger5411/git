@@ -342,6 +342,10 @@ all::
 # within the same directory in some cases, INSTALL_SYMLINKS will
 # always symlink to the final target directly.
 #
+# Define NO_INSTALL_SYMLINKS_FALLBACK if in conjunction with
+# INSTALL_SYMLINKS if you'd prefer not to have the install procedure
+# fallack on hardlinking or copying if "ln -s" fails.
+#
 # Define NO_CROSS_DIRECTORY_HARDLINKS if you plan to distribute the installed
 # programs as a tar, where bin/ and libexec/ might be on different file systems.
 #
@@ -2818,6 +2822,7 @@ endif
 		--flag-install-symlinks="$(INSTALL_SYMLINKS)" \
 		--flag-no-install-hardlinks="$(NO_INSTALL_HARDLINKS)" \
 		--flag-no-cross-directory-hardlinks="$(NO_CROSS_DIRECTORY_HARDLINKS)" \
+		--flag-no-install-symlinks-fallback="$(NO_INSTALL_SYMLINKS_FALLBACK)" \
 		--list-bindir-standalone="git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS))" \
 		--list-bindir-git-dashed="$(filter $(install_bindir_programs),$(BUILT_INS))" \
 		--list-execdir-git-dashed="$(BUILT_INS)" \
