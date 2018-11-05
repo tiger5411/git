@@ -122,6 +122,26 @@ test_expect_success 'changed commit' '
 	test_cmp expected actual
 '
 
+test_expect_success 'changed commit -p & --patch' '
+	git range-diff --no-color -p topic...changed >actual &&
+	test_cmp expected actual &&
+	git range-diff --no-color --patch topic...changed >actual &&
+	test_cmp expected actual
+'
+
+test_expect_success 'changed commit -s & --no-patch' '
+	git range-diff --no-color --no-patch topic...changed >actual &&
+	cat >expected <<-EOF &&
+	1:  4de457d = 1:  a4b3333 s/5/A/
+	2:  fccce22 = 2:  f51d370 s/4/A/
+	3:  147e64e ! 3:  0559556 s/11/B/
+	4:  a63e992 ! 4:  d966c5c s/12/B/
+	EOF
+	test_cmp expected actual &&
+	git range-diff --no-color -s topic...changed >actual &&
+	test_cmp expected actual
+'
+
 test_expect_success 'changed commit with sm config' '
 	git range-diff --no-color --submodule=log topic...changed >actual &&
 	cat >expected <<-EOF &&
@@ -151,6 +171,17 @@ test_expect_success 'changed commit with sm config' '
 	test_cmp expected actual
 '
 
+test_expect_success 'changed commit with sm config --no-patch' '
+	git range-diff --no-color --no-patch --submodule=log topic...changed >actual &&
+	cat >expected <<-EOF &&
+	1:  4de457d = 1:  a4b3333 s/5/A/
+	2:  fccce22 = 2:  f51d370 s/4/A/
+	3:  147e64e ! 3:  0559556 s/11/B/
+	4:  a63e992 ! 4:  d966c5c s/12/B/
+	EOF
+	test_cmp expected actual
+'
+
 test_expect_success 'no commits on one side' '
 	git commit --amend -m "new message" &&
 	git range-diff master HEAD@{1} HEAD
@@ -170,6 +201,17 @@ test_expect_success 'changed message' '
 	    Z diff --git a/file b/file
 	    Z --- a/file
 	    Z +++ b/file
+	3:  147e64e = 3:  b9cb956 s/11/B/
+	4:  a63e992 = 4:  8add5f1 s/12/B/
+	EOF
+	test_cmp expected actual
+'
+
+test_expect_success 'changed message --no-patch' '
+	git range-diff --no-color --no-patch topic...changed-message >actual &&
+	sed s/Z/\ /g >expected <<-EOF &&
+	1:  4de457d = 1:  f686024 s/5/A/
+	2:  fccce22 ! 2:  4ab067d s/4/A/
 	3:  147e64e = 3:  b9cb956 s/11/B/
 	4:  a63e992 = 4:  8add5f1 s/12/B/
 	EOF
@@ -211,6 +253,18 @@ test_expect_success 'dual-coloring' '
 	:      13<RESET>
 	EOF
 	git range-diff changed...changed-message --color --dual-color >actual.raw &&
+	test_decode_color >actual <actual.raw &&
+	test_cmp expect actual
+'
+
+test_expect_success 'dual-coloring --no-patch' '
+	sed -e "s|^:||" >expect <<-\EOF &&
+	:<YELLOW>1:  a4b3333 = 1:  f686024 s/5/A/<RESET>
+	:<RED>2:  f51d370 <RESET><YELLOW>!<RESET><GREEN> 2:  4ab067d<RESET><YELLOW> s/4/A/<RESET>
+	:<RED>3:  0559556 <RESET><YELLOW>!<RESET><GREEN> 3:  b9cb956<RESET><YELLOW> s/11/B/<RESET>
+	:<RED>4:  d966c5c <RESET><YELLOW>!<RESET><GREEN> 4:  8add5f1<RESET><YELLOW> s/12/B/<RESET>
+	EOF
+	git range-diff changed...changed-message --color --dual-color --no-patch >actual.raw &&
 	test_decode_color >actual <actual.raw &&
 	test_cmp expect actual
 '

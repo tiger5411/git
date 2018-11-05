@@ -16,11 +16,14 @@ int cmd_range_diff(int argc, const char **argv, const char *prefix)
 	int creation_factor = RANGE_DIFF_CREATION_FACTOR_DEFAULT;
 	struct diff_options diffopt = { NULL };
 	int simple_color = -1;
+	int no_patch = 0;
 	struct option options[] = {
 		OPT_INTEGER(0, "creation-factor", &creation_factor,
 			    N_("Percentage by which creation is weighted")),
 		OPT_BOOL(0, "no-dual-color", &simple_color,
 			    N_("use simple diff colors")),
+		OPT_BOOL_F('s', "no-patch", &no_patch,
+			 N_("show patch output"), PARSE_OPT_NONEG),
 		OPT_END()
 	};
 	int i, j, res = 0;
@@ -92,7 +95,7 @@ int cmd_range_diff(int argc, const char **argv, const char *prefix)
 	}
 
 	res = show_range_diff(range1.buf, range2.buf, creation_factor,
-			      simple_color < 1, &diffopt);
+			      simple_color < 1, !no_patch, &diffopt);
 
 	strbuf_release(&range1);
 	strbuf_release(&range2);

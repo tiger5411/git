@@ -7,6 +7,7 @@
 
 int show_range_diff(const char *range1, const char *range2,
 		    int creation_factor, int dual_color,
+		    int patch,
 		    struct diff_options *diffopt);
 
 #endif
