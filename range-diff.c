@@ -436,6 +436,7 @@ static struct strbuf *output_prefix_cb(struct diff_options *opt, void *data)
 
 int show_range_diff(const char *range1, const char *range2,
 		    int creation_factor, int dual_color,
+		    int patch,
 		    struct diff_options *diffopt)
 {
 	int res = 0;
@@ -453,7 +454,10 @@ int show_range_diff(const char *range1, const char *range2,
 		struct strbuf indent = STRBUF_INIT;
 
 		memcpy(&opts, diffopt, sizeof(opts));
-		opts.output_format = DIFF_FORMAT_PATCH;
+		if (patch)
+			opts.output_format = DIFF_FORMAT_PATCH;
+		else
+			opts.output_format = DIFF_FORMAT_NO_OUTPUT;
 		opts.flags.suppress_diff_headers = 1;
 		opts.flags.dual_color_diffed_diffs = dual_color;
 		opts.output_prefix = output_prefix_cb;

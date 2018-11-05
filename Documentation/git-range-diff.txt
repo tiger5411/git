@@ -57,6 +57,10 @@ to revert to color all lines according to the outer diff markers
 	See the ``Algorithm`` section below for an explanation why this is
 	needed.
 
+--no-patch::
+	Don't show the range-diff itself, only which patches are the
+	same or were added or removed etc.
+
 <range1> <range2>::
 	Compare the commits specified by the two ranges, where
 	`<range1>` is considered an older version of `<range2>`.
