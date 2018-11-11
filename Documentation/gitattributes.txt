@@ -1188,6 +1188,17 @@ If this attribute is not set or has an invalid value, the value of the
 (See linkgit:git-config[1]).
 
 
+Trashable files
+~~~~~~~~~~~~~~~
+
+`trashable`
+^^^^^^^^^^
+
+Provides an escape hatch for re-enabling a potentially data destroying
+feature which was enabled by default between Git versions 1.5.2 and
+2.20. See the `NOTES` section of linkgit:gitignore[5] for details.
+
+
 USING MACRO ATTRIBUTES
 ----------------------
 

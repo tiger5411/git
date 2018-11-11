@@ -63,8 +63,10 @@ test_expect_success 'two-way with incorrect --exclude-per-directory (2)' '
 	fi
 '
 
-test_expect_success 'two-way clobbering a ignored file' '
+test_expect_success 'two-way keeping a ignored file, trashing a trashable file' '
 
+	read_tree_u_must_fail -m -u --exclude-per-directory=.gitignore master side &&
+	echo file2 trashable >.gitattributes &&
 	read_tree_u_must_succeed -m -u --exclude-per-directory=.gitignore master side
 '
 
@@ -106,7 +108,7 @@ test_expect_success 'three-way not clobbering a working tree file' '
 
 echo >.gitignore file3
 
-test_expect_success 'three-way not complaining on an untracked file' '
+test_expect_success 'three-way complaining on an untracked file, trashing a trashable file' '
 
 	git reset --hard &&
 	rm -f file2 subdir/file2 file3 subdir/file3 &&
@@ -114,6 +116,8 @@ test_expect_success 'three-way not complaining on an untracked file' '
 	echo >file3 file three created in master, untracked &&
 	echo >subdir/file3 file three created in master, untracked &&
 
+	read_tree_u_must_fail -m -u --exclude-per-directory=.gitignore branch-point master side &&
+	echo file3 trashable >.gitattributes &&
 	read_tree_u_must_succeed -m -u --exclude-per-directory=.gitignore branch-point master side
 '
 

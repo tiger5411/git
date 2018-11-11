@@ -844,6 +844,8 @@ test_submodule_switch_recursing_with_args () {
 			git branch -t add_sub1 origin/add_sub1 &&
 			: >sub1 &&
 			echo sub1 >.git/info/exclude &&
+			test_must_fail $command add_sub1 &&
+			echo sub1 trashable >.gitattributes &&
 			$command add_sub1 &&
 			test_superproject_content origin/add_sub1 &&
 			test_submodule_content sub1 origin/add_sub1

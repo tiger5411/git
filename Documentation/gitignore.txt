@@ -140,6 +140,13 @@ not tracked by Git remain untracked.
 To stop tracking a file that is currently tracked, use
 'git rm --cached'.
 
+Between Git versions 1.5.2 and 2.20 untracked files or directories
+which were ignored and conflicted with a file about to be checked out
+(e.g. during linkgit:git-checkout[1] or linkgit:git-merge[1]) would be
+deleted. This could lead to loss of user data and is no longer the
+default, See `trashable` in linkgit:gitattributes[5]. for how to
+selectively enable this behavior.
+
 EXAMPLES
 --------
 

@@ -1895,9 +1895,10 @@ static int check_ok_to_remove(const char *name, int len, int dtype,
 		return 0;
 
 	if (o->dir &&
-	    is_excluded(o->dir, o->src_index, name, &dtype))
+	    is_excluded(o->dir, o->src_index, name, &dtype) &&
+	    is_trashable_file(o->src_index, name))
 		/*
-		 * ce->name is explicitly excluded, so it is Ok to
+		 * ce->name is explicitly trashable, so it is Ok to
 		 * overwrite it.
 		 */
 		return 0;

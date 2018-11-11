@@ -1186,3 +1186,12 @@ void attr_start(void)
 	pthread_mutex_init(&check_vector.mutex, NULL);
 #endif
 }
+
+int is_trashable_file(struct index_state *istate, const char *path)
+{
+	static struct attr_check *check;
+	if (!check)
+		check = attr_check_initl("trashable", NULL);
+	git_check_attr(istate, path, check);
+	return check && ATTR_TRUE(check->items[0].value);
+}
