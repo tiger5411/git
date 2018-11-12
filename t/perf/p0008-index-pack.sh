@@ -7,33 +7,38 @@ test_description="Tests performance of index-pack with loose objects"
 test_perf_fresh_repo
 
 test_expect_success 'setup tests' '
-	for count in 1 10
+	for count in 1 10 100 1000
 	do
-		rm -rf /mnt/ontap_githackers/repo-$count.git &&
-		git init --bare /mnt/ontap_githackers/repo-$count.git &&
-		(
-			cd /mnt/ontap_githackers/repo-$count.git &&
-			for i in $(seq 256); do
-				i=$(printf %02x $i) &&
-				mkdir objects/$i &&
-				for j in $(seq --format=%038g $count)
+		if test -d /mnt/ontap_githackers/repo-$count.git
+		then
+			rm -rf /mnt/ontap_githackers/repo-$count.git/objects/pack
+		else
+			git init --bare /mnt/ontap_githackers/repo-$count.git &&
+			(
+				cd /mnt/ontap_githackers/repo-$count.git &&
+				for i in $(seq 0 255)
 				do
-					>objects/$i/$j
+					i=$(printf %02x $i) &&
+					mkdir objects/$i &&
+					for j in $(seq --format=%038g $count)
+					do
+						>objects/$i/$j
+					done
 				done
-			done
-		)
+			)
+		fi
 	done
 '
 
-for count in 1 10
+echo 3 | sudo tee /proc/sys/vm/drop_caches
+for count in 1 10 100 1000
 do
 	test_perf "index-pack with 256*$count loose objects" "
 		(
 			cd /mnt/ontap_githackers/repo-$count.git &&
-			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/git/.git/objects/pack/pack-080126d635c9749fc1ab6049050c51f85c62e2e3.pack
+			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/pcre2/.git/objects/pack/pack-abe912a3c921fc611336dfde81b96ab185ad1fa4.pack
 		)
 	"
 done
-'
 
 test_done
