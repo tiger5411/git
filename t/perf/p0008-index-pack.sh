@@ -30,9 +30,9 @@ test_expect_success 'setup tests' '
 	done
 '
 
-echo 3 | sudo tee /proc/sys/vm/drop_caches
 for count in 1 10 100 250 500 750 1000
 do
+	echo 3 | sudo tee /proc/sys/vm/drop_caches
 	test_perf "index-pack with 256*$count loose objects" "
 		(
 			cd /mnt/ontap_githackers/repo-$count.git &&
