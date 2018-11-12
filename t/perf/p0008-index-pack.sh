@@ -36,7 +36,8 @@ do
 	test_perf "index-pack with 256*$count loose objects" "
 		(
 			cd /mnt/ontap_githackers/repo-$count.git &&
-			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/pcre2/.git/objects/pack/pack-abe912a3c921fc611336dfde81b96ab185ad1fa4.pack
+			rm -fv objects/pack/*;
+			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/pcre2/.git/objects/pack/pack-*.pack
 		)
 	"
 done
