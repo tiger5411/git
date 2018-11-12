@@ -37,7 +37,7 @@ do
 		(
 			cd /mnt/ontap_githackers/repo-$count.git &&
 			rm -fv objects/pack/*;
-			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/mu/.git/objects/pack/pack-*.pack
+			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/sha1collisiondetection/.git/objects/pack/pack-*.pack
 		)
 	"
 done
