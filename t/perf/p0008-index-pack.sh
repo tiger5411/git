@@ -7,7 +7,7 @@ test_description="Tests performance of index-pack with loose objects"
 test_perf_fresh_repo
 
 test_expect_success 'setup tests' '
-	for count in 1 10 100 1000
+	for count in 1 10 100 250 500 750 1000
 	do
 		if test -d /mnt/ontap_githackers/repo-$count.git
 		then
@@ -31,13 +31,13 @@ test_expect_success 'setup tests' '
 '
 
 echo 3 | sudo tee /proc/sys/vm/drop_caches
-for count in 1 10 100 1000
+for count in 1 10 100 250 500 750 1000
 do
 	test_perf "index-pack with 256*$count loose objects" "
 		(
 			cd /mnt/ontap_githackers/repo-$count.git &&
 			rm -fv objects/pack/*;
-			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/sha1collisiondetection/.git/objects/pack/pack-*.pack
+			git -c core.checkCollisions=false index-pack -v --stdin </home/aearnfjord/g/DBD-mysql/.git/objects/pack/pack-*.pack
 		)
 	"
 done
