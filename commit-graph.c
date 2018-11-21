@@ -472,7 +472,7 @@ static void write_graph_chunk_data(struct hashfile *f, int hash_len,
 {
 	struct commit **list = commits;
 	struct commit **last = commits + nr_commits;
-	uint32_t num_extra_edges = 0;
+	uint32_t num_large_edges = 0;
 
 	while (list < last) {
 		struct commit_list *parent;
@@ -504,7 +504,7 @@ static void write_graph_chunk_data(struct hashfile *f, int hash_len,
 		if (!parent)
 			edge_value = GRAPH_PARENT_NONE;
 		else if (parent->next)
-			edge_value = GRAPH_OCTOPUS_EDGES_NEEDED | num_extra_edges;
+			edge_value = GRAPH_OCTOPUS_EDGES_NEEDED | num_large_edges;
 		else {
 			edge_value = sha1_pos(parent->item->object.oid.hash,
 					      commits,
@@ -518,7 +518,7 @@ static void write_graph_chunk_data(struct hashfile *f, int hash_len,
 
 		if (edge_value & GRAPH_OCTOPUS_EDGES_NEEDED) {
 			do {
-				num_extra_edges++;
+				num_large_edges++;
 				parent = parent->next;
 			} while (parent);
 		}
@@ -765,7 +765,7 @@ void write_commit_graph(const char *obj_dir,
 	uint32_t chunk_ids[5];
 	uint64_t chunk_offsets[5];
 	int num_chunks;
-	int num_extra_edges;
+	int num_large_edges;
 	struct commit_list *parent;
 	struct progress *progress = NULL;
 
@@ -875,7 +875,7 @@ void write_commit_graph(const char *obj_dir,
 	commits.alloc = count_distinct;
 	ALLOC_ARRAY(commits.list, commits.alloc);
 
-	num_extra_edges = 0;
+	num_large_edges = 0;
 	for (i = 0; i < oids.nr; i++) {
 		int num_parents = 0;
 		if (i > 0 && oideq(&oids.list[i - 1], &oids.list[i]))
@@ -889,11 +889,11 @@ void write_commit_graph(const char *obj_dir,
 			num_parents++;
 
 		if (num_parents > 2)
-			num_extra_edges += num_parents - 1;
+			num_large_edges += num_parents - 1;
 
 		commits.nr++;
 	}
-	num_chunks = num_extra_edges ? 4 : 3;
+	num_chunks = num_large_edges ? 4 : 3;
 
 	if (commits.nr >= GRAPH_PARENT_MISSING)
 		die(_("too many commits to write graph"));
@@ -920,7 +920,7 @@ void write_commit_graph(const char *obj_dir,
 	chunk_ids[0] = GRAPH_CHUNKID_OIDFANOUT;
 	chunk_ids[1] = GRAPH_CHUNKID_OIDLOOKUP;
 	chunk_ids[2] = GRAPH_CHUNKID_DATA;
-	if (num_extra_edges)
+	if (num_large_edges)
 		chunk_ids[3] = GRAPH_CHUNKID_LARGEEDGES;
 	else
 		chunk_ids[3] = 0;
@@ -930,7 +930,7 @@ void write_commit_graph(const char *obj_dir,
 	chunk_offsets[1] = chunk_offsets[0] + GRAPH_FANOUT_SIZE;
 	chunk_offsets[2] = chunk_offsets[1] + GRAPH_OID_LEN * commits.nr;
 	chunk_offsets[3] = chunk_offsets[2] + (GRAPH_OID_LEN + 16) * commits.nr;
-	chunk_offsets[4] = chunk_offsets[3] + 4 * num_extra_edges;
+	chunk_offsets[4] = chunk_offsets[3] + 4 * num_large_edges;
 
 	for (i = 0; i <= num_chunks; i++) {
 		uint32_t chunk_write[3];
