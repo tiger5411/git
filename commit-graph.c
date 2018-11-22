@@ -660,10 +660,17 @@ static void close_reachable(struct packed_oid_list *oids, int report_progress)
 	struct commit *commit;
 	struct progress *progress = NULL;
 	int j = 0;
+	/*
+	 * We loop over the OIDs N times to close the graph
+	 * below. This number must be kept in sync with the number of
+	 * passes.
+	 */
+	const int oid_passes = 3;
 
 	if (report_progress)
 		progress = start_delayed_progress(
-			_("Annotating commit graph"), 0);
+			_("Annotating commit graph"),
+			oid_passes * oids->nr);
 	for (i = 0; i < oids->nr; i++) {
 		display_progress(progress, ++j);
 		commit = lookup_commit(the_repository, &oids->list[i]);
