@@ -252,21 +252,9 @@ do
 			master..unmodified >actual.raw &&
 		sed -e "s|^:||" -e "s|:$||" >expect <<-\EOF &&
 		:1:  4de457d = 1:  35b9b25 s/5/A/
-		:     a => b | 0
-		:     1 file changed, 0 insertions(+), 0 deletions(-)
-		:    :
 		:2:  fccce22 = 2:  de345ab s/4/A/
-		:     a => b | 0
-		:     1 file changed, 0 insertions(+), 0 deletions(-)
-		:    :
 		:3:  147e64e = 3:  9af6654 s/11/B/
-		:     a => b | 0
-		:     1 file changed, 0 insertions(+), 0 deletions(-)
-		:    :
 		:4:  a63e992 = 4:  2901f77 s/12/B/
-		:     a => b | 0
-		:     1 file changed, 0 insertions(+), 0 deletions(-)
-		:    :
 		:-- :
 		EOF
 		sed -ne "/^1:/,/^--/p" <actual.raw >actual &&
