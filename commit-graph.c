@@ -784,6 +784,7 @@ void write_commit_graph(const char *obj_dir,
 	struct commit_list *parent;
 	struct progress *progress = NULL;
 	uint64_t progress_cnt = 0;
+	struct strbuf progress_title = STRBUF_INIT;
 
 	if (!commit_graph_compatible(the_repository))
 		return;
@@ -966,8 +967,13 @@ void write_commit_graph(const char *obj_dir,
 		int graph_passes = 3;
 		if (num_large_edges)
 			graph_passes++;
+		strbuf_addf(&progress_title,
+			    Q_("Writing out commit graph in %d pass",
+			       "Writing out commit graph in %d passes",
+			       graph_passes),
+			    graph_passes);
 		progress = start_delayed_progress(
-			_("Writing out commit graph"),
+			progress_title.buf,
 			graph_passes * commits.nr);
 	}
 	write_graph_chunk_fanout(f, commits.list, commits.nr, progress, &progress_cnt);
@@ -976,6 +982,7 @@ void write_commit_graph(const char *obj_dir,
 	if (num_large_edges)
 		write_graph_chunk_large_edges(f, commits.list, commits.nr, progress, &progress_cnt);
 	stop_progress(&progress);
+	strbuf_release(&progress_title);
 
 	close_commit_graph(the_repository);
 	finalize_hashfile(f, NULL, CSUM_HASH_IN_STREAM | CSUM_FSYNC);
