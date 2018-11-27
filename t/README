@@ -202,20 +202,21 @@ GIT_TEST_EXEC_PATH defaults to `$GIT_TEST_INSTALLED/git --exec-path`.
 Skipping Tests
 --------------
 
-In some environments, certain tests have no way of succeeding
-due to platform limitation, such as lack of 'unzip' program, or
-filesystem that do not allow arbitrary sequence of non-NUL bytes
-as pathnames.
+Certain tests may fail intermittently or entirely. These should
+ideally be reported as bugs and fixed, or guarded by a prerequisite
+(see "Using test prerequisites" below). But until then they can be
+skipped.
 
-You should be able to say something like
+To skip tests, set the GIT_SKIP_TESTS variable. Individual tests can
+be skipped:
 
     $ GIT_SKIP_TESTS=t9200.8 sh ./t9200-git-cvsexport-commit.sh
 
-and even:
+Or tests matching a glob:
 
     $ GIT_SKIP_TESTS='t[0-4]??? t91?? t9200.8' make
 
-to omit such tests.  The value of the environment variable is a
+The value of the environment variable is a
 SP separated list of patterns that tells which tests to skip,
 and either can match the "t[0-9]{4}" part to skip the whole
 test, or t[0-9]{4} followed by ".$number" to say which
