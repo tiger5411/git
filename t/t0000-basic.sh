@@ -393,6 +393,23 @@ test_expect_success 'GIT_SKIP_TESTS sh pattern' "
 	)
 "
 
+test_expect_success 'GIT_SKIP_TESTS entire file' "
+	(
+		GIT_SKIP_TESTS='git' && export GIT_SKIP_TESTS &&
+		run_sub_test_lib_test git-skip-tests-entire-file \
+			'GIT_SKIP_TESTS' <<-\\EOF &&
+		for i in 1 2 3
+		do
+			test_expect_success \"passing test #\$i\" 'true'
+		done
+		test_done
+		EOF
+		check_sub_test_lib_test git-skip-tests-entire-file <<-\\EOF
+		1..0 # SKIP skip all tests in git
+		EOF
+	)
+"
+
 test_expect_success '--run basic' "
 	run_sub_test_lib_test run-basic \
 		'--run basic' --run='1 3 5' <<-\\EOF &&
