@@ -309,6 +309,35 @@ test_expect_success 'format-patch with <common diff option>' '
 	sed -ne "/^1:/,/^--/p" <actual.raw >actual.range-diff &&
 	sed -e "s|:$||" >expect <<-\EOF &&
 	1:  a63e992 ! 1:  d966c5c s/12/B/
+	    @@ -8,7 +8,7 @@
+	     @@
+	      9
+	      10
+	    - B
+	    + BB
+	     -12
+	     +B
+	      13
+	-- :
+	EOF
+	test_cmp expect actual.range-diff &&
+	sed -ne "/^--- /,/^--/p" <actual.raw >actual.diff &&
+	sed -e "s|:$||" >expect <<-\EOF &&
+	--- a/file
+	+++ b/file
+	@@ -12 +12 @@ BB
+	-12
+	+B
+	-- :
+	EOF
+	test_cmp expect actual.diff &&
+
+	# -U0 & --range-diff-U0
+	git format-patch --cover-letter --stdout -U0 --range-diff-U0 \
+		--range-diff=topic~..topic changed~..changed >actual.raw &&
+	sed -ne "/^1:/,/^--/p" <actual.raw >actual.range-diff &&
+	sed -e "s|:$||" >expect <<-\EOF &&
+	1:  a63e992 ! 1:  d966c5c s/12/B/
 	    @@ -11 +11 @@
 	    - B
 	    + BB
@@ -325,6 +354,18 @@ test_expect_success 'format-patch with <common diff option>' '
 	-- :
 	EOF
 	test_cmp expect actual.diff
+'
+
+test_expect_success 'format-patch option parsing with --range-diff-*' '
+	test_must_fail git format-patch --stdout --unknown \
+		master..unmodified 2>stderr &&
+	test_i18ngrep "unrecognized argument: --unknown" stderr &&
+	test_must_fail git format-patch --stdout --range-diff-unknown \
+		master..unmodified 2>stderr &&
+	test_i18ngrep "unrecognized argument: --range-diff-unknown" stderr &&
+	test_must_fail git format-patch --stdout --unknown --range-diff-unknown \
+		master..unmodified 2>stderr &&
+	test_i18ngrep "unrecognized argument: --unknown" stderr
 '
 
 test_done

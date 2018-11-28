@@ -1023,7 +1023,8 @@ static void show_diffstat(struct rev_info *rev,
 	fprintf(rev->diffopt.file, "\n");
 }
 
-static void make_cover_letter(struct rev_info *rev, int use_stdout,
+static void make_cover_letter(struct rev_info *rev, struct rev_info *rd_rev,
+			      int use_stdout,
 			      struct commit *origin,
 			      int nr, struct commit **list,
 			      const char *branch_name,
@@ -1095,13 +1096,9 @@ static void make_cover_letter(struct rev_info *rev, int use_stdout,
 	}
 
 	if (rev->rdiff1) {
-		struct diff_options opts;
-		memcpy(&opts, &rev->diffopt, sizeof(opts));
-		opts.output_format &= ~(DIFF_FORMAT_DIFFSTAT | DIFF_FORMAT_SUMMARY);
-
 		fprintf_ln(rev->diffopt.file, "%s", rev->rdiff_title);
 		show_range_diff(rev->rdiff1, rev->rdiff2,
-				rev->creation_factor, 1, &opts);
+				rev->creation_factor, 1, &rd_rev->diffopt);
 	}
 }
 
@@ -1485,6 +1482,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	struct commit *commit;
 	struct commit **list = NULL;
 	struct rev_info rev;
+	struct rev_info rd_rev;
 	struct setup_revision_opt s_r_opt;
 	int nr = 0, total, i;
 	int use_stdout = 0;
@@ -1603,6 +1601,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	init_log_defaults();
 	git_config(git_format_config, NULL);
 	repo_init_revisions(the_repository, &rev, prefix);
+	repo_init_revisions(the_repository, &rd_rev, prefix);
 	rev.commit_format = CMIT_FMT_EMAIL;
 	rev.expand_tabs_in_log_default = 0;
 	rev.verbose_header = 1;
@@ -1689,8 +1688,32 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	rev.preserve_subject = keep_subject;
 
 	argc = setup_revisions(argc, argv, &rev, &s_r_opt);
-	if (argc > 1)
-		die(_("unrecognized argument: %s"), argv[1]);
+	if (argc > 1) {
+		struct argv_array args = ARGV_ARRAY_INIT;
+		const char *prefix = "--range-diff";
+		int have_prefix = 0;
+
+		for (i = 0; i < argc; i++) {
+			struct strbuf sb = STRBUF_INIT;
+			char *str;
+
+			strbuf_addstr(&sb, argv[i]);
+			if (starts_with(argv[i], prefix)) {
+				have_prefix = 1;
+				strbuf_remove(&sb, 0, strlen(prefix));
+			}
+			str = strbuf_detach(&sb, NULL);
+			strbuf_release(&sb);
+
+			argv_array_push(&args, str);
+		}
+
+		if (!have_prefix)
+			die(_("unrecognized argument: %s"), argv[1]);
+		argc = setup_revisions(args.argc, args.argv, &rd_rev, NULL);
+		if (argc > 1)
+			die(_("unrecognized argument: %s"), argv[1]);
+	}
 
 	if (rev.diffopt.output_format & DIFF_FORMAT_NAME)
 		die(_("--name-only does not make sense"));
@@ -1702,7 +1725,6 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	if (!use_patch_format &&
 		(!rev.diffopt.output_format ||
 		 rev.diffopt.output_format == DIFF_FORMAT_PATCH))
-		/* Needs to be mirrored in show_range_diff() invocation */
 		rev.diffopt.output_format = DIFF_FORMAT_DIFFSTAT | DIFF_FORMAT_SUMMARY;
 	if (!rev.diffopt.stat_width)
 		rev.diffopt.stat_width = MAIL_DEFAULT_WRAP;
@@ -1877,7 +1899,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	if (cover_letter) {
 		if (thread)
 			gen_message_id(&rev, "cover");
-		make_cover_letter(&rev, use_stdout,
+		make_cover_letter(&rev, &rd_rev, use_stdout,
 				  origin, nr, list, branch_name, quiet);
 		print_bases(&bases, rev.diffopt.file);
 		print_signature(rev.diffopt.file);

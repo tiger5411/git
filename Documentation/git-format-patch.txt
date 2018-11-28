@@ -24,7 +24,8 @@ SYNOPSIS
 		   [--to=<email>] [--cc=<email>]
 		   [--[no-]cover-letter] [--quiet] [--notes[=<ref>]]
 		   [--interdiff=<previous>]
-		   [--range-diff=<previous> [--creation-factor=<percent>]]
+		   [--range-diff=<previous> [--creation-factor=<percent>]
+		      [--range-diff<common diff option>]]
 		   [--progress]
 		   [<common diff options>]
 		   [ <since> | <revision range> ]
@@ -256,6 +257,13 @@ feeding the result to `git send-email`.
 	between the previous and current series of patches by adjusting the
 	creation/deletion cost fudge factor. See linkgit:git-range-diff[1])
 	for details.
+
+--range-diff<common diff option>::
+	Other options prefixed with `--range-diff` are stripped of
+	that prefix and passed as-is to the diff machinery used to
+	generate the range-diff, e.g. `--range-diff-U0` and
+	`--range-diff--no-color`. This allows for adjusting the format
+	of the range-diff independently from the patch itself.
 
 --notes[=<ref>]::
 	Append the notes (see linkgit:git-notes[1]) for the commit
