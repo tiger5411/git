@@ -267,4 +267,64 @@ test_expect_success 'format-patch --range-diff as commentary' '
 	test_i18ngrep "^Range-diff:$" actual
 '
 
+test_expect_success 'format-patch with <common diff option>' '
+	# No diff options
+	git format-patch --cover-letter --stdout --range-diff=topic~..topic \
+		changed~..changed >actual.raw &&
+	sed -ne "/^1:/,/^--/p" <actual.raw >actual.range-diff &&
+	sed -e "s|:$||" >expect <<-\EOF &&
+	1:  a63e992 ! 1:  d966c5c s/12/B/
+	    @@ -8,7 +8,7 @@
+	     @@
+	      9
+	      10
+	    - B
+	    + BB
+	     -12
+	     +B
+	      13
+	-- :
+	EOF
+	test_cmp expect actual.range-diff &&
+	sed -ne "/^--- /,/^--/p" <actual.raw >actual.diff &&
+	sed -e "s|:$||" >expect <<-\EOF &&
+	--- a/file
+	+++ b/file
+	@@ -9,7 +9,7 @@ A
+	 9
+	 10
+	 BB
+	-12
+	+B
+	 13
+	 14
+	 15
+	-- :
+	EOF
+	test_cmp expect actual.diff &&
+
+	# -U0
+	git format-patch --cover-letter --stdout -U0 \
+		--range-diff=topic~..topic changed~..changed >actual.raw &&
+	sed -ne "/^1:/,/^--/p" <actual.raw >actual.range-diff &&
+	sed -e "s|:$||" >expect <<-\EOF &&
+	1:  a63e992 ! 1:  d966c5c s/12/B/
+	    @@ -11 +11 @@
+	    - B
+	    + BB
+	-- :
+	EOF
+	test_cmp expect actual.range-diff &&
+	sed -ne "/^--- /,/^--/p" <actual.raw >actual.diff &&
+	sed -e "s|:$||" >expect <<-\EOF &&
+	--- a/file
+	+++ b/file
+	@@ -12 +12 @@ BB
+	-12
+	+B
+	-- :
+	EOF
+	test_cmp expect actual.diff
+'
+
 test_done
