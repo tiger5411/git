@@ -378,17 +378,17 @@ static int alt_odb_usable(struct raw_object_store *o,
 
 	if (!is_directory(path->buf)) {
 		/* Detect cases where alternate disappeared */
-		error(_("object directory %s does not exist; "
-			"check .git/objects/info/alternates"),
-		      path->buf);
+		warning(_("object directory %s does not exist; "
+			  "check .git/objects/info/alternates"),
+			path->buf);
 		return 0;
 	} else if (is_directory(mkpath("%s/objects", path->buf)) ||
 		   is_directory(mkpath("%s/.git/objects", path->buf))) {
 		/* Detect cases where alternate is a git repository */
-		error(_("object directory %s looks like a git repository; "
-			"alternates must point to the 'objects' directory. "
-			"check .git/objects/info/alternates"),
-		      path->buf);
+		warning(_("object directory %s looks like a git repository; "
+			  "alternates must point to the 'objects' directory. "
+			  "check .git/objects/info/alternates"),
+			path->buf);
 		return 0;
 	}
 
