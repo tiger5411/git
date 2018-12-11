@@ -7,6 +7,7 @@
 test_description='Merge logic in fetch'
 
 . ./test-lib.sh
+sane_unset GIT_TEST_PROTOCOL_VERSION
 
 LF='
 '

@@ -41,7 +41,8 @@ pull_to_client () {
 	test_expect_success "$number pull" '
 		(
 			cd client &&
-			git fetch-pack -k -v .. $heads &&
+			GIT_TEST_PROTOCOL_VERSION=0 \
+				git fetch-pack -k -v .. $heads &&
 
 			case "$heads" in
 			    *A*)
@@ -440,6 +441,7 @@ test_expect_success 'setup tests for the --stdin parameter' '
 '
 
 test_expect_success 'fetch refs from cmdline' '
+	sane_unset GIT_TEST_PROTOCOL_VERSION &&
 	(
 		cd client &&
 		git fetch-pack --no-progress .. $(cat ../input)

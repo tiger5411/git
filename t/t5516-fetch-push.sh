@@ -1129,7 +1129,8 @@ do
 	'
 done
 
-test_expect_success 'fetch exact SHA1' '
+test_expect_success 'fetch exact SHA1 in protocol v0' '
+	sane_unset GIT_TEST_PROTOCOL_VERSION &&
 	mk_test testrepo heads/master hidden/one &&
 	git push testrepo master:refs/hidden/one &&
 	(

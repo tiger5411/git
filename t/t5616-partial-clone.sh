@@ -144,7 +144,8 @@ test_expect_success 'manual prefetch of missing objects' '
 	sort >observed.oids &&
 
 	test_line_count = 6 observed.oids &&
-	git -C pc1 fetch-pack --stdin "file://$(pwd)/srv.bare" <observed.oids &&
+	GIT_TEST_PROTOCOL_VERSION=0 \
+		git -C pc1 fetch-pack --stdin "file://$(pwd)/srv.bare" <observed.oids &&
 
 	git -C pc1 rev-list --quiet --objects --missing=print \
 		master..origin/master >revs &&
