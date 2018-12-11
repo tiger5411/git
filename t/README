@@ -358,6 +358,10 @@ GIT_TEST_MULTI_PACK_INDEX=<boolean>, when true, forces the multi-pack-
 index to be written after every 'git repack' command, and overrides the
 'core.multiPackIndex' setting to true.
 
+GIT_TEST_PROTOCOL_VERSION=<'protocol.version' config value>, when set,
+runs the test suite with the given protocol.version. E.g. "0", "1" or
+"2".
+
 Naming Tests
 ------------
 
