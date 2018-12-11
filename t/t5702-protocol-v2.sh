@@ -5,6 +5,7 @@ test_description='test git wire-protocol version 2'
 TEST_NO_CREATE_REPO=1
 
 . ./test-lib.sh
+sane_unset GIT_TEST_PROTOCOL_VERSION
 
 # Test protocol v2 with 'git://' transport
 #

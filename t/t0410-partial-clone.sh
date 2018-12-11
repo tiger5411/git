@@ -171,6 +171,7 @@ test_expect_success 'fetching of missing objects' '
 '
 
 test_expect_success 'fetching of missing objects works with ref-in-want enabled' '
+	sane_unset GIT_TEST_PROTOCOL_VERSION &&
 	# ref-in-want requires protocol version 2
 	git -C server config protocol.version 2 &&
 	git -C server config uploadpack.allowrefinwant 1 &&

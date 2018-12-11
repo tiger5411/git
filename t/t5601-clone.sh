@@ -345,6 +345,7 @@ expect_ssh () {
 }
 
 test_expect_success 'clone myhost:src uses ssh' '
+	sane_unset GIT_TEST_PROTOCOL_VERSION &&
 	git clone myhost:src ssh-clone &&
 	expect_ssh myhost src
 '
