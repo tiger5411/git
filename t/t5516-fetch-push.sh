@@ -1187,7 +1187,8 @@ test_expect_success 'fetch exact SHA1 in protocol v2' '
 
 	# fetching the hidden object succeeds by default
 	# NEEDSWORK: should this match the v0 behavior instead?
-	git -C child fetch -v ../testrepo $the_commit:refs/heads/copy
+	env GIT_TEST_PROTOCOL_VERSION= \
+		git -C child fetch -v ../testrepo $the_commit:refs/heads/copy
 '
 
 for configallowtipsha1inwant in true false
