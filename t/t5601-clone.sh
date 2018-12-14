@@ -330,6 +330,13 @@ expect_ssh () {
 	{
 		case "$#" in
 		1)
+			case "$1" in
+			none)
+				;;
+			*)
+				echo "expect_ssh: unknown single argument '$1'" >&2
+				return 1
+			esac
 			;;
 		2)
 			echo "ssh: $1 git-upload-pack '$2'"
@@ -338,7 +345,8 @@ expect_ssh () {
 			echo "ssh: $1 $2 git-upload-pack '$3'"
 			;;
 		*)
-			echo "ssh: $1 $2 git-upload-pack '$3' $4"
+			echo "expect_ssh: unknown number of arguments $#: $@" >&2
+			return 1
 		esac
 	} >"$TRASH_DIRECTORY/ssh-expect" &&
 	(cd "$TRASH_DIRECTORY" && test_cmp ssh-expect ssh-output)
