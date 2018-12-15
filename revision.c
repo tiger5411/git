@@ -61,6 +61,9 @@ static void mark_tree_contents_uninteresting(struct repository *r,
 	struct tree_desc desc;
 	struct name_entry entry;
 
+	fprintf(stderr, "MTCU\n");
+	sleep(1);
+
 	if (parse_tree_gently(tree, 1) < 0)
 		return;
 
@@ -165,6 +168,9 @@ static void add_children_by_path(struct repository *r,
 {
 	struct tree_desc desc;
 	struct name_entry entry;
+
+	fprintf(stderr, "ACBP\n");
+	sleep(1);
 
 	if (!tree)
 		return;
