@@ -235,7 +235,7 @@ static void mark_reachable(struct expire_reflog_policy_cb *cb)
 		pending->item->object.flags &= ~REACHABLE;
 
 	pending = cb->mark_list;
-	progress = start_delayed_progress(
+	progress = start_progress( /* TODO: Need a --quiet from git-gc to handle gc.log spam case */
 		_("Marking unreachable commits in reflog for expiry"), 0);
 	while (pending) {
 		struct commit_list *parent;
