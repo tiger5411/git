@@ -54,7 +54,8 @@ static int no_progress, daemon_mode;
 #define ALLOW_REACHABLE_SHA1	02
 /* Allow request of any sha1. Implies ALLOW_TIP_SHA1 and ALLOW_REACHABLE_SHA1. */
 #define ALLOW_ANY_SHA1	07
-static unsigned int allow_unadvertised_object_request;
+static unsigned int allow_unadvertised_object_request = (
+	ALLOW_TIP_SHA1 | ALLOW_REACHABLE_SHA1 | ALLOW_ANY_SHA1);
 static int shallow_nr;
 static struct object_array extra_edge_obj;
 static unsigned int timeout;
@@ -1019,20 +1020,11 @@ static int find_symref(const char *refname, const struct object_id *oid,
 static int upload_pack_config(const char *var, const char *value, void *unused)
 {
 	if (!strcmp("uploadpack.allowtipsha1inwant", var)) {
-		if (git_config_bool(var, value))
-			allow_unadvertised_object_request |= ALLOW_TIP_SHA1;
-		else
-			allow_unadvertised_object_request &= ~ALLOW_TIP_SHA1;
+		warning(_("The uploadpack.allowTipSHA1InWant setting is deprecated, and now always 'true'"));
 	} else if (!strcmp("uploadpack.allowreachablesha1inwant", var)) {
-		if (git_config_bool(var, value))
-			allow_unadvertised_object_request |= ALLOW_REACHABLE_SHA1;
-		else
-			allow_unadvertised_object_request &= ~ALLOW_REACHABLE_SHA1;
+		warning(_("The uploadpack.allowReachableSHA1InWant setting is deprecated, and now always 'true'"));
 	} else if (!strcmp("uploadpack.allowanysha1inwant", var)) {
-		if (git_config_bool(var, value))
-			allow_unadvertised_object_request |= ALLOW_ANY_SHA1;
-		else
-			allow_unadvertised_object_request &= ~ALLOW_ANY_SHA1;
+		warning(_("The uploadpack.allowAnySHA1InWant setting is deprecated, and now always 'true'"));
 	} else if (!strcmp("uploadpack.keepalive", var)) {
 		keepalive = git_config_int(var, value);
 		if (!keepalive)
