@@ -12,6 +12,8 @@ struct commit;
 
 char *get_commit_graph_filename(const char *obj_dir);
 
+int commit_graph_compatible(struct repository *r);
+
 /*
  * Given a commit struct, try to fill the commit struct info, including:
  *  1. tree object

@@ -662,9 +662,14 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 	if (pack_garbage.nr > 0)
 		clean_pack_garbage();
 
-	if (gc_write_commit_graph)
+	if (gc_write_commit_graph) {
+		int verbose = !quiet && !daemonized;
+		if (verbose && !commit_graph_compatible(the_repository))
+			warning(_("The `gc.writeCommitGraph' setting is on, "
+				  "but commit_graph_compatible() = false"));
 		write_commit_graph_reachable(get_object_directory(), 0,
-					     !quiet && !daemonized);
+					     verbose);
+	}
 
 	if (auto_gc && too_many_loose_objects())
 		warning(_("There are too many unreachable loose objects; "

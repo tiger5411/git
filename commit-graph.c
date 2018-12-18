@@ -61,7 +61,7 @@ static struct commit_graph *alloc_commit_graph(void)
 
 extern int read_replace_refs;
 
-static int commit_graph_compatible(struct repository *r)
+int commit_graph_compatible(struct repository *r)
 {
 	if (!r->gitdir)
 		return 0;
