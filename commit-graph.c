@@ -839,7 +839,8 @@ void write_commit_graph(const char *obj_dir,
 				die(_("error adding pack %s"), packname.buf);
 			if (open_pack_index(p))
 				die(_("error opening index for %s"), packname.buf);
-			for_each_object_in_pack(p, add_packed_commits, &oids, 0);
+			for_each_object_in_pack(p, add_packed_commits, &oids,
+						FOR_EACH_OBJECT_PACK_ORDER);
 			close_pack(p);
 			free(p);
 		}
@@ -885,7 +886,8 @@ void write_commit_graph(const char *obj_dir,
 			oids.progress = start_delayed_progress(
 				_("Finding commits for commit graph among packed objects"),
 				approx_nr_objects);
-		for_each_packed_object(add_packed_commits, &oids, 0);
+		for_each_packed_object(add_packed_commits, &oids,
+				       FOR_EACH_OBJECT_PACK_ORDER);
 		if (oids.progress_done < approx_nr_objects)
 			display_progress(oids.progress, approx_nr_objects);
 		stop_progress(&oids.progress);
