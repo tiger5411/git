@@ -106,9 +106,10 @@ do
 		verbose_only=${opt#--*=}
 		;;
 	-q|--q|--qu|--qui|--quie|--quiet)
-		# Ignore --quiet under a TAP::Harness. Saying how many tests
-		# passed without the ok/not ok details is always an error.
-		test -z "$HARNESS_ACTIVE" && quiet=t ;;
+		# Ignore historical --quiet option. The output is
+		# required by TAP, and e.g. "prove(1)" implicitly has
+		# a --quiet-like output by default.
+		;;
 	--with-dashes)
 		with_dashes=t ;;
 	--no-color)
@@ -951,20 +952,6 @@ test_at_end_hook_ () {
 
 test_done () {
 	GIT_EXIT_OK=t
-
-	if test -z "$HARNESS_ACTIVE"
-	then
-		mkdir -p "$TEST_RESULTS_DIR"
-
-		cat >"$TEST_RESULTS_BASE.counts" <<-EOF
-		total $test_count
-		success $test_success
-		fixed $test_fixed
-		broken $test_broken
-		failed $test_failure
-
-		EOF
-	fi
 
 	if test "$test_fixed" != 0
 	then
