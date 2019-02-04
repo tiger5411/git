@@ -618,6 +618,32 @@ static void find_abbrev_len_packed(struct min_abbrev_data *mad)
 		find_abbrev_len_for_pack(p, mad);
 }
 
+int abbrev_length_for_object_count(unsigned long count)
+{
+	int len;
+
+	/*
+	 * Add one because the MSB only tells us the highest bit set,
+	 * not including the value of all the _other_ bits (so "15"
+	 * is only one off of 2^4, but the MSB is the 3rd bit.
+	 */
+	len = msb(count) + 1;
+	/*
+	 * We now know we have on the order of 2^len objects, which
+	 * expects a collision at 2^(len/2). But we also care about hex
+	 * chars, not bits, and there are 4 bits per hex. So all
+	 * together we need to divide by 2 and round up.
+	 */
+	len = DIV_ROUND_UP(len, 2);
+	/*
+	 * For very small repos, we stick with our regular fallback.
+	 */
+	if (len < FALLBACK_DEFAULT_ABBREV)
+		len = FALLBACK_DEFAULT_ABBREV;
+
+	return len;
+}
+
 int find_unique_abbrev_r(char *hex, const struct object_id *oid, int len)
 {
 	struct disambiguate_state ds;
@@ -627,24 +653,7 @@ int find_unique_abbrev_r(char *hex, const struct object_id *oid, int len)
 
 	if (len < 0) {
 		unsigned long count = approximate_object_count();
-		/*
-		 * Add one because the MSB only tells us the highest bit set,
-		 * not including the value of all the _other_ bits (so "15"
-		 * is only one off of 2^4, but the MSB is the 3rd bit.
-		 */
-		len = msb(count) + 1;
-		/*
-		 * We now know we have on the order of 2^len objects, which
-		 * expects a collision at 2^(len/2). But we also care about hex
-		 * chars, not bits, and there are 4 bits per hex. So all
-		 * together we need to divide by 2 and round up.
-		 */
-		len = DIV_ROUND_UP(len, 2);
-		/*
-		 * For very small repos, we stick with our regular fallback.
-		 */
-		if (len < FALLBACK_DEFAULT_ABBREV)
-			len = FALLBACK_DEFAULT_ABBREV;
+		len = abbrev_length_for_object_count(count);
 	}
 
 	oid_to_hex_r(hex, oid);
