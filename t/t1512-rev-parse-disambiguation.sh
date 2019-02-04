@@ -450,4 +450,78 @@ test_expect_success C_LOCALE_OUTPUT 'ambiguous commits are printed by type first
 	done
 '
 
+test_expect_success 'abbreviation length at 2^N-1 and 2^N' '
+	pow_2_min=$(git rev-parse --abbrev-len=3) &&
+	pow_2_eql=$(git rev-parse --abbrev-len=4) &&
+	pow_4_min=$(git rev-parse --abbrev-len=15) &&
+	pow_4_eql=$(git rev-parse --abbrev-len=16) &&
+	pow_6_min=$(git rev-parse --abbrev-len=63) &&
+	pow_6_eql=$(git rev-parse --abbrev-len=64) &&
+	pow_8_min=$(git rev-parse --abbrev-len=255) &&
+	pow_8_eql=$(git rev-parse --abbrev-len=256) &&
+	pow_10_min=$(git rev-parse --abbrev-len=1023) &&
+	pow_10_eql=$(git rev-parse --abbrev-len=1024) &&
+	pow_12_min=$(git rev-parse --abbrev-len=4095) &&
+	pow_12_eql=$(git rev-parse --abbrev-len=4096) &&
+	pow_14_min=$(git rev-parse --abbrev-len=16383) &&
+	pow_14_eql=$(git rev-parse --abbrev-len=16384) &&
+	pow_16_min=$(git rev-parse --abbrev-len=65535) &&
+	pow_16_eql=$(git rev-parse --abbrev-len=65536) &&
+	pow_18_min=$(git rev-parse --abbrev-len=262143) &&
+	pow_18_eql=$(git rev-parse --abbrev-len=262144) &&
+	pow_20_min=$(git rev-parse --abbrev-len=1048575) &&
+	pow_20_eql=$(git rev-parse --abbrev-len=1048576) &&
+	pow_22_min=$(git rev-parse --abbrev-len=4194303) &&
+	pow_22_eql=$(git rev-parse --abbrev-len=4194304) &&
+	pow_24_min=$(git rev-parse --abbrev-len=16777215) &&
+	pow_24_eql=$(git rev-parse --abbrev-len=16777216) &&
+	pow_26_min=$(git rev-parse --abbrev-len=67108863) &&
+	pow_26_eql=$(git rev-parse --abbrev-len=67108864) &&
+	pow_28_min=$(git rev-parse --abbrev-len=268435455) &&
+	pow_28_eql=$(git rev-parse --abbrev-len=268435456) &&
+	pow_30_min=$(git rev-parse --abbrev-len=1073741823) &&
+	pow_30_eql=$(git rev-parse --abbrev-len=1073741824) &&
+	pow_32_min=$(git rev-parse --abbrev-len=4294967295) &&
+
+	cat >actual <<-EOF &&
+	2 = $pow_2_min $pow_2_eql
+	4 = $pow_4_min $pow_4_eql
+	6 = $pow_6_min $pow_6_eql
+	8 = $pow_8_min $pow_8_eql
+	10 = $pow_10_min $pow_10_eql
+	12 = $pow_12_min $pow_12_eql
+	14 = $pow_14_min $pow_14_eql
+	16 = $pow_16_min $pow_16_eql
+	18 = $pow_18_min $pow_18_eql
+	20 = $pow_20_min $pow_20_eql
+	22 = $pow_22_min $pow_22_eql
+	24 = $pow_24_min $pow_24_eql
+	26 = $pow_26_min $pow_26_eql
+	28 = $pow_28_min $pow_28_eql
+	30 = $pow_30_min $pow_30_eql
+	32 = 16
+	EOF
+
+	cat >expected <<-\EOF &&
+	2 = 7 7
+	4 = 7 7
+	6 = 7 7
+	8 = 7 7
+	10 = 7 7
+	12 = 7 7
+	14 = 7 8
+	16 = 8 9
+	18 = 9 10
+	20 = 10 11
+	22 = 11 12
+	24 = 12 13
+	26 = 13 14
+	28 = 14 15
+	30 = 15 16
+	32 = 16
+	EOF
+
+	test_cmp expected actual
+'
+
 test_done

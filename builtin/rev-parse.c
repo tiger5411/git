@@ -773,6 +773,14 @@ int cmd_rev_parse(int argc, const char **argv, const char *prefix)
 					return 1;
 				continue;
 			}
+			if (opt_with_value(arg, "--abbrev-len", &arg)) {
+				unsigned long v;
+				if (!git_parse_ulong(arg, &v))
+					return 1;
+				int len = abbrev_length_for_object_count(v);
+				printf("%d\n", len);
+				continue;
+			}
 			if (!strcmp(arg, "--bisect")) {
 				for_each_fullref_in("refs/bisect/bad", show_reference, NULL, 0);
 				for_each_fullref_in("refs/bisect/good", anti_reference, NULL, 0);
