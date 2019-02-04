@@ -769,7 +769,8 @@ int cmd_rev_parse(int argc, const char **argv, const char *prefix)
 				continue;
 			}
 			if (skip_prefix(arg, "--disambiguate=", &arg)) {
-				for_each_abbrev(arg, show_abbrev, NULL);
+				if (for_each_abbrev(arg, show_abbrev, NULL) < 0)
+					return 1;
 				continue;
 			}
 			if (!strcmp(arg, "--bisect")) {

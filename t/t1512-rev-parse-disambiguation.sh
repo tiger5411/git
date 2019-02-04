@@ -340,6 +340,21 @@ test_expect_success 'rev-parse --disambiguate drops duplicates' '
 	test_cmp expect actual
 '
 
+test_expect_success 'rev-parse --disambiguate errors on invalid input' '
+	test_must_fail git rev-parse --disambiguate= &&
+	test_must_fail git rev-parse --disambiguate=0 &&
+	test_must_fail git rev-parse --disambiguate=00 &&
+	test_must_fail git rev-parse --disambiguate=000 &&
+	git rev-parse --disambiguate=0000 &&
+	if test_have_prereq SHA1
+	then
+		# 40 characters
+		git rev-parse --disambiguate=0000000000000000000000000000000000000000 &&
+		# 41 characters
+		test_must_fail git rev-parse --disambiguate=00000000000000000000000000000000000000000
+	fi
+'
+
 test_expect_success 'ambiguous 40-hex ref' '
 	TREE=$(git mktree </dev/null) &&
 	REF=$(git rev-parse HEAD) &&
