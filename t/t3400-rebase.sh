@@ -311,4 +311,10 @@ test_expect_success 'rebase--merge.sh and --show-current-patch' '
 	)
 '
 
+test_expect_success 'rebase -c rebase.useBuiltin=false warning' '
+	test_must_fail env GIT_TEST_REBASE_USE_BUILTIN= \
+		git -c rebase.useBuiltin=false rebase 2>err &&
+	test_i18ngrep "rebase.useBuiltin support has been removed" err
+'
+
 test_done
