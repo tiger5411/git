@@ -57,8 +57,7 @@ test_expect_success ignore_rev_adding_lines '
 	git commit -m Y &&
 	git tag Y &&
 
-	git rev-parse Y > expect &&
-	sed -i -e "s/[0-9a-f]/0/g" expect &&
+	git rev-parse Y | sed -e "s/[0-9a-f]/0/g" >expect &&
 	git blame --line-porcelain file --ignore-rev Y > blame_raw &&
 
 	grep "^[0-9a-f]\+ 3 3" blame_raw | sed -e "s/ .*//" > actual &&
