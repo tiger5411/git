@@ -1135,21 +1135,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	};
 	int i;
 
-	/*
-	 * NEEDSWORK: Once the builtin rebase has been tested enough
-	 * and git-legacy-rebase.sh is retired to contrib/, this preamble
-	 * can be removed.
-	 */
-
-	if (!use_builtin_rebase()) {
-		const char *path = mkpath("%s/git-legacy-rebase",
-					  git_exec_path());
-
-		if (sane_execvp(path, (char **)argv) < 0)
-			die_errno(_("could not exec %s"), path);
-		else
-			BUG("sane_execvp() returned???");
-	}
+	if (!use_builtin_rebase())
+		warning(_("The rebase.useBuiltin support has been removed!"));
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(builtin_rebase_usage,
