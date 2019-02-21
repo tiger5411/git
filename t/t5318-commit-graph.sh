@@ -400,6 +400,18 @@ corrupt_graph_and_verify() {
 
 }
 
+test_expect_success 'detect permission problem' '
+	corrupt_graph_setup &&
+	chmod 000 $objdir/info/commit-graph &&
+
+	# Skip as root, or in other cases (odd fs or OS) where a
+	# "chmod 000 file" does not yield EACCES on e.g. "cat file"
+	if ! test -r $objdir/info/commit-graph
+	then
+		corrupt_graph_verify "Could not open"
+	fi
+'
+
 test_expect_success 'detect too small' '
 	corrupt_graph_setup &&
 	echo "a small graph" >$objdir/info/commit-graph &&
