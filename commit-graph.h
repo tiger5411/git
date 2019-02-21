@@ -54,8 +54,7 @@ struct commit_graph {
 };
 
 struct commit_graph *load_commit_graph_one(const char *graph_file);
-struct commit_graph *load_commit_graph_one_fd_st(const char *graph_file,
-						 int fd, struct stat *st);
+struct commit_graph *load_commit_graph_one_fd_st(int fd, struct stat *st);
 
 struct commit_graph *parse_commit_graph(void *graph_map, int fd,
 					size_t graph_size);
