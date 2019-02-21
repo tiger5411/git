@@ -70,6 +70,7 @@ void write_commit_graph(const char *obj_dir,
 			struct string_list *commit_hex,
 			int append, int report_progress);
 
+int verify_commit_graph_lite(struct commit_graph *g);
 int verify_commit_graph(struct repository *r, struct commit_graph *g);
 
 void close_commit_graph(struct repository *);
