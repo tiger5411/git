@@ -377,7 +377,13 @@ corrupt_graph_verify() {
 	test_must_fail git commit-graph verify 2>test_err &&
 	grep -v "^+" test_err >err &&
 	test_i18ngrep "$grepstr" err &&
-	git status --short
+	if test -z "$NO_WRITE_TEST_BACKUP"
+	then
+		cp $objdir/info/commit-graph commit-graph-pre-write-test
+	fi &&
+	git status --short &&
+	GIT_TEST_COMMIT_GRAPH_DIE_ON_LOAD=true git commit-graph write &&
+	git commit-graph verify
 }
 
 # usage: corrupt_graph_and_verify <position> <data> <string> [<zero_pos>]
@@ -408,7 +414,7 @@ test_expect_success 'detect permission problem' '
 	# "chmod 000 file" does not yield EACCES on e.g. "cat file"
 	if ! test -r $objdir/info/commit-graph
 	then
-		corrupt_graph_verify "Could not open"
+		NO_WRITE_TEST_BACKUP=1 corrupt_graph_verify "Could not open"
 	fi
 '
 
@@ -528,6 +534,7 @@ test_expect_success 'git fsck (checks commit-graph)' '
 	git fsck &&
 	corrupt_graph_and_verify $GRAPH_BYTE_FOOTER "\00" \
 		"incorrect checksum" &&
+	cp commit-graph-pre-write-test $objdir/info/commit-graph &&
 	test_must_fail git fsck
 '
 
