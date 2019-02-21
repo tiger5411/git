@@ -233,6 +233,9 @@ struct commit_graph *parse_commit_graph(void *graph_map, int fd,
 		last_chunk_offset = chunk_offset;
 	}
 
+	if (verify_commit_graph_lite(graph))
+		return NULL;
+
 	return graph;
 }
 
@@ -1075,6 +1078,36 @@ static void graph_report(const char *fmt, ...)
 #define GENERATION_ZERO_EXISTS 1
 #define GENERATION_NUMBER_EXISTS 2
 
+int verify_commit_graph_lite(struct commit_graph *g)
+{
+	/*
+	 * Basic validation shared between parse_commit_graph()
+	 * which'll be called every time the graph is used, and the
+	 * much more expensive verify_commit_graph() used by
+	 * "commit-graph verify".
+	 *
+	 * There should only be very basic checks here to ensure that
+	 * we don't e.g. segfault in fill_commit_in_graph(), but
+	 * because this is a very hot codepath nothing that e.g. loops
+	 * over g->num_commits, or runs a checksum on the commit-graph
+	 * itself.
+	 */
+	if (!g->chunk_oid_fanout) {
+		error("commit-graph is missing the OID Fanout chunk");
+		return 1;
+	}
+	if (!g->chunk_oid_lookup) {
+		error("commit-graph is missing the OID Lookup chunk");
+		return 1;
+	}
+	if (!g->chunk_commit_data) {
+		error("commit-graph is missing the Commit Data chunk");
+		return 1;
+	}
+
+	return 0;
+}
+
 int verify_commit_graph(struct repository *r, struct commit_graph *g)
 {
 	uint32_t i, cur_fanout_pos = 0;
@@ -1089,15 +1122,7 @@ int verify_commit_graph(struct repository *r, struct commit_graph *g)
 		return 1;
 	}
 
-	verify_commit_graph_error = 0;
-
-	if (!g->chunk_oid_fanout)
-		graph_report("commit-graph is missing the OID Fanout chunk");
-	if (!g->chunk_oid_lookup)
-		graph_report("commit-graph is missing the OID Lookup chunk");
-	if (!g->chunk_commit_data)
-		graph_report("commit-graph is missing the Commit Data chunk");
-
+	verify_commit_graph_error = verify_commit_graph_lite(g);
 	if (verify_commit_graph_error)
 		return verify_commit_graph_error;
 
