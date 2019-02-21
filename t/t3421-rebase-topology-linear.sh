@@ -58,6 +58,21 @@ test_have_prereq !REBASE_P || test_run_rebase success -p
 test_run_rebase () {
 	result=$1
 	shift
+	test_expect_$result "rebase $* is no-op if remote upstream is an ancestor" "
+		reset_rebase &&
+		GIT_TEST_REBASE_USE_BUILTIN=true git rebase $* branch-b branch-e &&
+		test_cmp_rev e HEAD
+	"
+}
+test_run_rebase success ''
+test_run_rebase success --fork-point
+test_run_rebase success -m
+test_run_rebase success -i
+test_have_prereq !REBASE_P || test_run_rebase success -p
+
+test_run_rebase () {
+	result=$1
+	shift
 	test_expect_$result "rebase $* -f rewrites even if upstream is an ancestor" "
 		reset_rebase &&
 		git rebase $* -f b e &&
