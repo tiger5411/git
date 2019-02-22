@@ -684,7 +684,7 @@ static int run_file_diff(int prompt, const char *prefix,
 	for (i = 0; i < argc; i++)
 		argv_array_push(&args, argv[i]);
 	ret = run_command_v_opt_cd_env(args.argv, RUN_GIT_CMD, prefix, env);
-	exit(ret);
+	return ret;
 }
 
 int cmd_difftool(int argc, const char **argv, const char *prefix)
