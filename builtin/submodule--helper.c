@@ -1792,7 +1792,7 @@ static int update_clone_task_finished(int result,
 		return 1;
 	}
 
-	return 0;
+	BUG("unreachable");
 }
 
 static int git_update_clone_config(const char *var, const char *value,

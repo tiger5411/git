@@ -179,6 +179,7 @@ static NORETURN int die_push_simple(struct branch *branch,
 	      "%s"),
 	    remote->name, short_upstream,
 	    remote->name, advice_maybe);
+	return 0;
 }
 
 static const char message_detached_head_die[] =

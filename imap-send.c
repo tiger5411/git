@@ -1,4 +1,4 @@
-/*
+0/*
  * git-imap-send - drops patches into an imap Drafts folder
  *                 derived from isync/mbsync - mailbox synchronizer
  *
@@ -916,6 +916,7 @@ static char *cram(const char *challenge_64, const char *user, const char *pass)
 {
 	die("If you want to use CRAM-MD5 authenticate method, "
 	    "you have to build git-imap-send with OpenSSL library.");
+	return "unreachable";
 }
 
 #endif
