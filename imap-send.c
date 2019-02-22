@@ -1,4 +1,4 @@
-0/*
+/*
  * git-imap-send - drops patches into an imap Drafts folder
  *                 derived from isync/mbsync - mailbox synchronizer
  *
