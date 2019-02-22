@@ -75,6 +75,4 @@ int cmd__xml_encode(int argc, const char **argv)
 		} else
 			fputs(utf8_replace_character, stdout);
 	}
-
-	return 0;
 }
