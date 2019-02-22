@@ -1565,6 +1565,7 @@ static int packed_create_symref(struct ref_store *ref_store,
 			       const char *logmsg)
 {
 	BUG("packed reference store does not support symrefs");
+	return 0;
 }
 
 static int packed_rename_ref(struct ref_store *ref_store,
@@ -1572,6 +1573,7 @@ static int packed_rename_ref(struct ref_store *ref_store,
 			    const char *logmsg)
 {
 	BUG("packed reference store does not support renaming references");
+	return 0;
 }
 
 static int packed_copy_ref(struct ref_store *ref_store,
@@ -1579,6 +1581,7 @@ static int packed_copy_ref(struct ref_store *ref_store,
 			   const char *logmsg)
 {
 	BUG("packed reference store does not support copying references");
+	return 0;
 }
 
 static struct ref_iterator *packed_reflog_iterator_begin(struct ref_store *ref_store)
@@ -1612,6 +1615,7 @@ static int packed_create_reflog(struct ref_store *ref_store,
 			       struct strbuf *err)
 {
 	BUG("packed reference store does not support reflogs");
+	return 0;
 }
 
 static int packed_delete_reflog(struct ref_store *ref_store,

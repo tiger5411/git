@@ -355,7 +355,7 @@ int ll_merge(mmbuffer_t *result_buf,
 	     const struct ll_merge_options *opts)
 {
 	static struct attr_check *check;
-	static const struct ll_merge_options default_opts;
+	static const struct ll_merge_options default_opts = {0};
 	const char *ll_driver_name = NULL;
 	int marker_size = DEFAULT_CONFLICT_MARKER_SIZE;
 	const struct ll_merge_driver *driver;

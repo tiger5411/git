@@ -196,4 +196,6 @@ int cmd_main(int argc, const char **argv)
 		die("invalid command format '%s': %s", argv[2],
 		    split_cmdline_strerror(count));
 	}
+	BUG("unreachable");
+	return 0;
 }

@@ -55,6 +55,7 @@ static int empty_ref_iterator_peel(struct ref_iterator *ref_iterator,
 				   struct object_id *peeled)
 {
 	BUG("peel called for empty iterator");
+	return 0;
 }
 
 static int empty_ref_iterator_abort(struct ref_iterator *ref_iterator)
