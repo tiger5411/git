@@ -221,4 +221,64 @@ test_expect_success 'clone, dissociate from alternates' '
 	( cd C && git fsck )
 '
 
+test_expect_success SHA1,SYMLINKS 'setup repo with manually symlinked objects/*' '
+	git init S &&
+	(
+		cd S &&
+		test_commit A &&
+		git gc &&
+		test_commit B &&
+		(
+			cd .git/objects &&
+			mv 22/3b7836fb19fdf64ba2d3cd6173c6a283141f78 . &&
+			ln -s ../3b7836fb19fdf64ba2d3cd6173c6a283141f78 22/ &&
+			mv 40 forty &&
+			ln -s forty 40 &&
+			mv pack packs &&
+			ln -s packs pack &&
+			>.some-hidden-file &&
+			>some-file &&
+			mkdir .some-hidden-dir &&
+			>.some-hidden-dir/some-file &&
+			>.some-hidden-dir/.some-dot-file &&
+			mkdir some-dir &&
+			>some-dir/some-file &&
+			>some-dir/.some-dot-file
+		)
+	)
+'
+
+test_expect_success SHA1,SYMLINKS 'clone repo with manually symlinked objects/*' '
+	for option in --local --no-hardlinks --shared --dissociate
+	do
+		git clone $option S S$option || return 1 &&
+		git -C S$option fsck || return 1
+	done &&
+	find S-* -type l | sort >actual &&
+	cat >expected <<-EOF &&
+	S--dissociate/.git/objects/22/3b7836fb19fdf64ba2d3cd6173c6a283141f78
+	S--local/.git/objects/22/3b7836fb19fdf64ba2d3cd6173c6a283141f78
+	EOF
+	test_cmp expected actual &&
+	find S-* -name "*some*" | sort >actual &&
+	cat >expected <<-EOF &&
+	S--dissociate/.git/objects/.some-hidden-file
+	S--dissociate/.git/objects/some-dir
+	S--dissociate/.git/objects/some-dir/.some-dot-file
+	S--dissociate/.git/objects/some-dir/some-file
+	S--dissociate/.git/objects/some-file
+	S--local/.git/objects/.some-hidden-file
+	S--local/.git/objects/some-dir
+	S--local/.git/objects/some-dir/.some-dot-file
+	S--local/.git/objects/some-dir/some-file
+	S--local/.git/objects/some-file
+	S--no-hardlinks/.git/objects/.some-hidden-file
+	S--no-hardlinks/.git/objects/some-dir
+	S--no-hardlinks/.git/objects/some-dir/.some-dot-file
+	S--no-hardlinks/.git/objects/some-dir/some-file
+	S--no-hardlinks/.git/objects/some-file
+	EOF
+	test_cmp expected actual
+'
+
 test_done
