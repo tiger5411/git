@@ -149,7 +149,7 @@ int dir_iterator_advance(struct dir_iterator *dir_iterator)
 				continue;
 
 			strbuf_addstr(&iter->base.path, de->d_name);
-			if (stat(iter->base.path.buf, &iter->base.st) < 0) {
+			if (lstat(iter->base.path.buf, &iter->base.st) < 0) {
 				if (errno != ENOENT) {
 					if (iter->pedantic)
 						goto error_out;

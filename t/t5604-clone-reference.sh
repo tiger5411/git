@@ -249,45 +249,16 @@ test_expect_success SHA1,SYMLINKS 'setup repo with manually symlinked objects/*'
 '
 
 test_expect_success SHA1,SYMLINKS 'clone repo with manually symlinked objects/*' '
-	for option in --local --no-hardlinks --shared --dissociate
+	for option in --local --no-hardlinks --dissociate
 	do
-		git clone $option S S$option || return 1 &&
-		git -C S$option fsck || return 1
+		test_must_fail git clone $option S S$option 2>err || return 1 &&
+		test_i18ngrep "the remote end hung up" err || return 1
 	done &&
-	find S-* -type l | sort >actual &&
-	cat >expected <<-EOF &&
-	S--dissociate/.git/objects/22/3b7836fb19fdf64ba2d3cd6173c6a283141f78
-	S--local/.git/objects/22/3b7836fb19fdf64ba2d3cd6173c6a283141f78
-	EOF
-	test_cmp expected actual &&
-	find S-* -name "*some*" | sort >actual &&
-	cat >expected <<-EOF &&
-	S--dissociate/.git/objects/.some-hidden-dir
-	S--dissociate/.git/objects/.some-hidden-dir/.some-dot-file
-	S--dissociate/.git/objects/.some-hidden-dir/some-file
-	S--dissociate/.git/objects/.some-hidden-file
-	S--dissociate/.git/objects/some-dir
-	S--dissociate/.git/objects/some-dir/.some-dot-file
-	S--dissociate/.git/objects/some-dir/some-file
-	S--dissociate/.git/objects/some-file
-	S--local/.git/objects/.some-hidden-dir
-	S--local/.git/objects/.some-hidden-dir/.some-dot-file
-	S--local/.git/objects/.some-hidden-dir/some-file
-	S--local/.git/objects/.some-hidden-file
-	S--local/.git/objects/some-dir
-	S--local/.git/objects/some-dir/.some-dot-file
-	S--local/.git/objects/some-dir/some-file
-	S--local/.git/objects/some-file
-	S--no-hardlinks/.git/objects/.some-hidden-dir
-	S--no-hardlinks/.git/objects/.some-hidden-dir/.some-dot-file
-	S--no-hardlinks/.git/objects/.some-hidden-dir/some-file
-	S--no-hardlinks/.git/objects/.some-hidden-file
-	S--no-hardlinks/.git/objects/some-dir
-	S--no-hardlinks/.git/objects/some-dir/.some-dot-file
-	S--no-hardlinks/.git/objects/some-dir/some-file
-	S--no-hardlinks/.git/objects/some-file
-	EOF
-	test_cmp expected actual
+	git clone --shared S S--shared &&
+	find S--shared -type l | sort >actual &&
+	test_must_be_empty actual &&
+	find S--shared -name "*some*" | sort >actual &&
+	test_must_be_empty actual
 '
 
 test_done
