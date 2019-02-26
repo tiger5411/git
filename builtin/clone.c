@@ -446,8 +446,6 @@ static void copy_or_link_directory(struct strbuf *src, struct strbuf *dest,
 		}
 
 		if (S_ISDIR(iter->st.st_mode)) {
-			if (iter->relative_path[0] == '.')
-				continue;
 			mkdir_if_missing(dest->buf, 0777);
 			continue;
 		}
@@ -463,11 +461,11 @@ static void copy_or_link_directory(struct strbuf *src, struct strbuf *dest,
 		if (!option_no_hardlinks) {
 			if (!link(src->buf, dest->buf))
 				continue;
-			if (option_local > 0 && errno != ENOENT)
-				warning_errno(_("failed to create link '%s'"), dest->buf);
+			if (option_local > 0)
+				die_errno(_("failed to create link '%s'"), dest->buf);
 			option_no_hardlinks = 1;
 		}
-		if (copy_file_with_time(dest->buf, src->buf, 0666) && errno != ENOENT)
+		if (copy_file_with_time(dest->buf, src->buf, 0666))
 			die_errno(_("failed to copy file to '%s'"), dest->buf);
 	}
 
