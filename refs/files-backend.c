@@ -3039,7 +3039,7 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	 * reference itself, plus we might need to update the
 	 * reference if --updateref was specified:
 	 */
-	lock = lock_ref_oid_basic(refs, refname, -1, oid,
+	lock = lock_ref_oid_basic(refs, refname, 0, NULL,
 				  NULL, NULL, REF_NO_DEREF,
 				  &type, &err);
 	if (!lock) {
