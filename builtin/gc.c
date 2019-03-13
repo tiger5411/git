@@ -156,6 +156,8 @@ static int too_many_loose_objects(void)
 	int auto_threshold;
 	int num_loose = 0;
 	int needed = 0;
+	const unsigned hexsz = the_hash_algo->hexsz;
+	const unsigned hexsz_loose = hexsz - 2;
 
 	dir = opendir(git_path("objects/17"));
 	if (!dir)
@@ -163,8 +165,8 @@ static int too_many_loose_objects(void)
 
 	auto_threshold = DIV_ROUND_UP(gc_auto_threshold, 256);
 	while ((ent = readdir(dir)) != NULL) {
-		if (strspn(ent->d_name, "0123456789abcdef") != 38 ||
-		    ent->d_name[38] != '\0')
+		if (strspn(ent->d_name, "0123456789abcdef") != hexsz_loose ||
+		    ent->d_name[hexsz_loose] != '\0')
 			continue;
 		if (++num_loose > auto_threshold) {
 			needed = 1;
