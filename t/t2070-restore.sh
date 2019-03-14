@@ -23,11 +23,6 @@ test_expect_success 'restore without pathspec is not ok' '
 	test_must_fail git restore --source=first
 '
 
-test_expect_success 'restore -p without pathspec is fine' '
-	echo q >cmd &&
-	git restore -p <cmd
-'
-
 test_expect_success 'restore a file, ignoring branch of same name' '
 	cat one >expected &&
 	echo dirty >>one &&

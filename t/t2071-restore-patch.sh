@@ -16,6 +16,11 @@ test_expect_success PERL 'setup' '
 	save_head
 '
 
+test_expect_success PERL 'restore -p without pathspec is fine' '
+	echo q >cmd &&
+	git restore -p <cmd
+'
+
 # note: bar sorts before dir/foo, so the first 'n' is always to skip 'bar'
 
 test_expect_success PERL 'saying "n" does nothing' '
