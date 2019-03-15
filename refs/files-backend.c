@@ -914,6 +914,7 @@ static int create_reflock(const char *path, void *cb)
  */
 static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 					   const char *refname,
+					   int mustexist,
 					   const struct object_id *old_oid,
 					   const struct string_list *extras,
 					   const struct string_list *skip,
@@ -923,9 +924,10 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 	struct strbuf ref_file = STRBUF_INIT;
 	struct ref_lock *lock;
 	int last_errno = 0;
-	int mustexist = (old_oid && !is_null_oid(old_oid));
 	int resolve_flags = RESOLVE_REF_NO_RECURSE;
 	int resolved;
+	mustexist = mustexist == -1 ?
+		(old_oid && !is_null_oid(old_oid)) : mustexist;
 
 	files_assert_main_repository(refs, "lock_ref_oid_basic");
 	assert(err);
@@ -1415,7 +1417,7 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 
 	logmoved = log;
 
-	lock = lock_ref_oid_basic(refs, newrefname, NULL, NULL, NULL,
+	lock = lock_ref_oid_basic(refs, newrefname, -1, NULL, NULL, NULL,
 				  REF_NO_DEREF, NULL, &err);
 	if (!lock) {
 		if (copy)
@@ -1438,7 +1440,7 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 	goto out;
 
  rollback:
-	lock = lock_ref_oid_basic(refs, oldrefname, NULL, NULL, NULL,
+	lock = lock_ref_oid_basic(refs, oldrefname, -1, NULL, NULL, NULL,
 				  REF_NO_DEREF, NULL, &err);
 	if (!lock) {
 		error("unable to lock %s for rollback: %s", oldrefname, err.buf);
@@ -1844,7 +1846,7 @@ static int files_create_symref(struct ref_store *ref_store,
 	struct ref_lock *lock;
 	int ret;
 
-	lock = lock_ref_oid_basic(refs, refname, NULL,
+	lock = lock_ref_oid_basic(refs, refname, -1, NULL,
 				  NULL, NULL, REF_NO_DEREF, NULL,
 				  &err);
 	if (!lock) {
@@ -3037,7 +3039,7 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	 * reference itself, plus we might need to update the
 	 * reference if --updateref was specified:
 	 */
-	lock = lock_ref_oid_basic(refs, refname, oid,
+	lock = lock_ref_oid_basic(refs, refname, -1, oid,
 				  NULL, NULL, REF_NO_DEREF,
 				  &type, &err);
 	if (!lock) {
