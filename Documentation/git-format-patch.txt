@@ -261,6 +261,10 @@ material (this may change in the future).
 	between the previous and current series of patches by adjusting the
 	creation/deletion cost fudge factor. See linkgit:git-range-diff[1])
 	for details.
++
+Defaults to 90, whereas the linkgit:git-range-diff[1] default is
+60. It's assumed that you're submitting a new patch series & that we
+should try harder than normal to find similarities.
 
 --notes[=<ref>]::
 	Append the notes (see linkgit:git-notes[1]) for the commit

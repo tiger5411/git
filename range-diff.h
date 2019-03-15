@@ -4,6 +4,7 @@
 #include "diff.h"
 
 #define RANGE_DIFF_CREATION_FACTOR_DEFAULT 60
+#define RANGE_DIFF_CREATION_FACTOR_FORMAT_PATCH_DEFAULT 90
 
 /*
  * Compare series of commmits in RANGE1 and RANGE2, and emit to the
