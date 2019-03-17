@@ -233,17 +233,17 @@ test_expect_success 'merge --squash c3 with c7' '
 	cat result.9z >file &&
 	git commit --no-edit -a &&
 
-	{
-		cat <<-EOF
-		Squashed commit of the following:
+	cat >expect <<-EOF &&
+	Squashed commit of the following:
 
-		$(git show -s c7)
+	$(git show -s c7)
 
-		# Conflicts:
-		#	file
-		EOF
-	} >expect &&
-	git cat-file commit HEAD | sed -e '1,/^$/d' >actual &&
+	# Conflicts:
+	#	file
+	EOF
+	git cat-file commit HEAD >actual &&
+	sed -e '1,/^$/d' <actual >tmp &&
+	mv tmp actual &&
 	test_cmp expect actual
 '
 
@@ -683,7 +683,7 @@ cat >editor <<\EOF
 	cat <"$1"
 ) >"$1.tmp" && mv "$1.tmp" "$1"
 # strip comments and blank lines from end of message
-sed -e '/^#/d' < "$1" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' > expected
+sed -e '/^#/d' < "$1" | sed -e :a -e '/^\n*$/{$d;N;ba' -e '}' >expected
 EOF
 chmod 755 editor
 
@@ -814,7 +814,7 @@ EOF
 test_expect_success EXECKEEPSPID 'killed merge can be completed with --continue' '
 	git reset --hard c0 &&
 	! "$SHELL_PATH" -c '\''
-	  echo kill -TERM $$ >> .git/FAKE_EDITOR
+	  echo kill -TERM $$ >>.git/FAKE_EDITOR
 	  GIT_EDITOR=.git/FAKE_EDITOR
 	  export GIT_EDITOR
 	  exec git merge --no-ff --edit c1'\'' &&
