@@ -24,6 +24,7 @@
 #include "tree.h"
 #include "tree-walk.h"
 #include "unpack-trees.h"
+#include "wt-status.h"
 #include "xdiff-interface.h"
 
 static const char * const checkout_usage[] = {
@@ -56,6 +57,7 @@ struct checkout_opts {
 	int accept_pathspec;
 	int switch_branch_doing_nothing_is_ok;
 	int only_merge_on_switching_branches;
+	int can_switch_when_in_progress;
 
 	const char *new_branch;
 	const char *new_branch_force;
@@ -1257,6 +1259,26 @@ static int checkout_branch(struct checkout_opts *opts,
 	    !new_branch_info->path)
 		die_expecting_a_branch(new_branch_info);
 
+	if (!opts->can_switch_when_in_progress) {
+		struct wt_status_state state;
+
+		memset(&state, 0, sizeof(state));
+		wt_status_get_state(the_repository, &state, 0);
+
+		if (state.merge_in_progress)
+			die(_("cannot switch branch while merging"));
+		if (state.am_in_progress)
+			die(_("cannot switch branch in the middle of an am session"));
+		if (state.rebase_in_progress || state.rebase_in_progress)
+			die(_("cannot switch branch while rebasing"));
+		if (state.cherry_pick_in_progress)
+			die(_("cannot switch branch while cherry-picking"));
+		if (state.revert_in_progress)
+			die(_("cannot switch branch while reverting"));
+		if (state.bisect_in_progress)
+			die(_("cannot switch branch while bisecting"));
+	}
+
 	if (new_branch_info->path && !opts->force_detach && !opts->new_branch &&
 	    !opts->ignore_other_worktrees) {
 		int flag;
@@ -1514,6 +1536,7 @@ int cmd_checkout(int argc, const char **argv, const char *prefix)
 	opts.only_merge_on_switching_branches = 0;
 	opts.accept_pathspec = 1;
 	opts.implicit_detach = 1;
+	opts.can_switch_when_in_progress = 1;
 
 	options = parse_options_dup(checkout_options);
 	options = add_common_options(&opts, options);
@@ -1539,6 +1562,8 @@ int cmd_switch(int argc, const char **argv, const char *prefix)
 			 N_("second guess 'git switch <no-such-branch>'")),
 		OPT_BOOL(0, "discard-changes", &opts.discard_changes,
 			 N_("throw away local modifications")),
+		OPT_BOOL(0, "ignore-in-progress", &opts.can_switch_when_in_progress,
+			 N_("allow to switch branch when some operation is still in progress")),
 		OPT_END()
 	};
 	int ret;
@@ -1549,6 +1574,7 @@ int cmd_switch(int argc, const char **argv, const char *prefix)
 	opts.switch_branch_doing_nothing_is_ok = 0;
 	opts.only_merge_on_switching_branches = 1;
 	opts.implicit_detach = 0;
+	opts.can_switch_when_in_progress = 0;
 
 	options = parse_options_dup(switch_options);
 	options = add_common_options(&opts, options);
