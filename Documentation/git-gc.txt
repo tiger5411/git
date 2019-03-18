@@ -41,10 +41,20 @@ OPTIONS
 --aggressive::
 	Usually 'git gc' runs very quickly while providing good disk
 	space utilization and performance.  This option will cause
-	'git gc' to more aggressively optimize the repository at the expense
-	of taking much more time.  The effects of this optimization are
-	persistent, so this option only needs to be used occasionally; every
-	few hundred changesets or so.
+	'git gc' to more aggressively optimize the repository to save storage space
+	at the expense of taking much more time.
++
+Using this option may optimize for disk space at the expense of
+runtime performance. See the `--depth` and `--window` documentation in
+linkgit:git-repack[1]. It is not recommended that this option be used
+to improve performance for a given repository without running tailored
+performance benchmarks on it. It may make things better, or worse. Not
+using this at all is the right trade-off for most users and their
+repositories.
++
+The effects of this option are persistent to the extent that
+`gc.autoPackLimit` and friends don't cause a consolidation of existing
+pack(s) generated with this option.
 
 --auto::
 	With this option, 'git gc' checks whether any housekeeping is
