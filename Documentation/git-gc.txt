@@ -49,29 +49,12 @@ OPTIONS
 --auto::
 	With this option, 'git gc' checks whether any housekeeping is
 	required; if not, it exits without performing any work.
-	Some git commands run `git gc --auto` after performing
-	operations that could create many loose objects. Housekeeping
-	is required if there are too many loose objects or too many
-	packs in the repository.
 +
-If the number of loose objects exceeds the value of the `gc.auto`
-configuration variable, then all loose objects are combined into a
-single pack using `git repack -d -l`.  Setting the value of `gc.auto`
-to 0 disables automatic packing of loose objects.
+See the `gc.auto' option in the "CONFIGURATION" below for how this
+heuristic works.
 +
-If the number of packs exceeds the value of `gc.autoPackLimit`,
-then existing packs (except those marked with a `.keep` file
-or over `gc.bigPackThreshold` limit)
-are consolidated into a single pack by using the `-A` option of
-'git repack'.
-If the amount of memory is estimated not enough for `git repack` to
-run smoothly and `gc.bigPackThreshold` is not set, the largest
-pack will also be excluded (this is the equivalent of running `git gc`
-with `--keep-base-pack`).
-Setting `gc.autoPackLimit` to 0 disables automatic consolidation of
-packs.
-+
-If houskeeping is required due to many loose objects or packs, all
+Once housekeeping is triggered by exceeding the limits of
+configurations options such as `gc.auto` and `gc.autoPackLimit`, all
 other housekeeping tasks (e.g. rerere, working trees, reflog...) will
 be performed as well.
 

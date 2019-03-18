@@ -19,13 +19,27 @@ gc.auto::
 	objects in the repository, `git gc --auto` will pack them.
 	Some Porcelain commands use this command to perform a
 	light-weight garbage collection from time to time.  The
-	default value is 6700.  Setting this to 0 disables it.
+	default value is 6700.
++
+Setting this to 0 disables not only automatic packing based on the
+number of loose objects, but any other heuristic `git gc --auto` will
+otherwise use to determine if there's work to do, such as
+`gc.autoPackLimit`.
++
+The repacking of loose objects will be performed with `git repack -d
+-l`.
 
 gc.autoPackLimit::
+
 	When there are more than this many packs that are not
 	marked with `*.keep` file in the repository, `git gc
 	--auto` consolidates them into one larger pack.  The
-	default	value is 50.  Setting this to 0 disables it.
+	default value is 50.  Setting this (or `gc.auto`) to 0
+	disables it. Packs will be consolidated using the `-A` option
+	of `git repack`.
++
+See the `gc.bigPackThreshold` configuration variable below. When in
+use it'll effect how the auto pack limit works.
 
 gc.autoDetach::
 	Make `git gc --auto` return immediately and run in background
@@ -35,13 +49,18 @@ gc.bigPackThreshold::
 	If non-zero, all packs larger than this limit are kept when
 	`git gc` is run. This is very similar to `--keep-base-pack`
 	except that all packs that meet the threshold are kept, not
-	just the base pack. Defaults to zero. Common unit suffixes of
-	'k', 'm', or 'g' are supported.
+	just the base pack. Defaults to zero or a memory heuristic.
+	Common unit suffixes of 'k', 'm', or 'g' are supported.
 +
 Note that if the number of kept packs is more than gc.autoPackLimit,
 this configuration variable is ignored, all packs except the base pack
 will be repacked. After this the number of packs should go below
 gc.autoPackLimit and gc.bigPackThreshold should be respected again.
++
+If the amount of memory is estimated not enough for `git repack` to
+run smoothly and `gc.bigPackThreshold` is not set, the largest pack
+will also be excluded (which is the equivalent of running `git gc`
+with `--keep-base-pack`).
 
 gc.writeCommitGraph::
 	If true, then gc will rewrite the commit-graph file when
