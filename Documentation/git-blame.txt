@@ -231,7 +231,8 @@ See linkgit:gitmailmap[5].
 
 SEE ALSO
 --------
-linkgit:git-annotate[1]
+linkgit:git-annotate[1],
+linkgit:git-praise[1]
 
 GIT
 ---
