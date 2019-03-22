@@ -5,6 +5,7 @@ GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
 . ./test-lib.sh
+. "$TEST_DIRECTORY/lib-terminal.sh"
 
 PROG='git blame -c'
 . "$TEST_DIRECTORY"/annotate-tests.sh
@@ -67,7 +68,34 @@ test_expect_success 'praise' '
 
 test_expect_success 'enforced praise' '
 	test_must_fail git -c blame.culture=blameless blame one 2>err &&
+	grep "must be.*git praise" err &&
+	test_must_fail git -c blame.culture=blameless \
+		-c blame.culture.enforcement=error blame one 2>err &&
 	grep "must be.*git praise" err
+'
+
+test_expect_success 'recommended praise' '
+	git -c blame.culture=blameless \
+		-c blame.culture.enforcement=warning blame one 2>err &&
+	grep "should be.*git praise" err
+'
+
+test_expect_success TTY 'interactive: praise blame.culture.enforcement=*:interactive' '
+	test_must_fail test_terminal git -c blame.culture=blameless \
+		-c blame.culture.enforcement=error:interactive blame one 2>err &&
+	grep "must be.*git praise" err &&
+	test_terminal git -c blame.culture=blameless \
+		-c blame.culture.enforcement=warning:interactive blame one 2>err &&
+	grep "should be.*git praise" err
+'
+
+test_expect_success TTY 'non-interactive: praise blame.culture.enforcement=*:interactive' '
+	git -c blame.culture=blameless \
+		-c blame.culture.enforcement=error:interactive blame one 2>err &&
+	! grep "must be.*git praise" err &&
+	git -c blame.culture=blameless \
+		-c blame.culture.enforcement=warning:interactive blame one 2>err &&
+	! grep "should be.*git praise" err
 '
 
 test_expect_success 'blame with showemail options' '
