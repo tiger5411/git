@@ -220,6 +220,11 @@ test_expect_success 'non ambiguous option (after two options it abbreviates)' '
 	test-tool parse-options --expect="string: 123" --st 123
 '
 
+test_expect_success 'NOCOMPLETE options do not contribute to abbreviation' '
+	test_when_finished "rm -rf A" &&
+	git clone --recurs . A
+'
+
 cat >typo.err <<\EOF
 error: did you mean `--boolean` (with two dashes ?)
 EOF

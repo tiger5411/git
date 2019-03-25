@@ -292,7 +292,8 @@ again:
 		if (!rest) {
 			/* abbreviated? */
 			if (!(p->flags & PARSE_OPT_KEEP_UNKNOWN) &&
-			    !strncmp(long_name, arg, arg_end - arg)) {
+			    !strncmp(long_name, arg, arg_end - arg) &&
+			    !(options->flags & PARSE_OPT_NOCOMPLETE)) {
 is_abbreviated:
 				if (abbrev_option) {
 					/*
