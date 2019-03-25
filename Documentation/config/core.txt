@@ -1,3 +1,15 @@
+core.abbreviatedOptions::
+	Defaults to `true` which allows options to be abbreviated as
+	long as they aren't ambiguous, e.g. for linkgit:git-init[1]
+	the `--bare` option can be abbreviated as `--bar`, `--ba` or
+	even `--b` since no other option starts with those
+	prefixes. However, if such an option were added in the future
+	any use of these abbreviations would break.
++
+By setting this to false (e.g. in scripts) you can defend against such
+future breakages by enforcing that options must always be fully
+provided.
+
 core.fileMode::
 	Tells Git if the executable bit of files in the working tree
 	is to be honored.

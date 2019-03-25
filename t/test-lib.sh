@@ -58,9 +58,9 @@ fi
 export PERL_PATH SHELL_PATH
 
 # Disallow the use of abbreviated options in the test suite by default
-test -n "$GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS" || {
-	GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS=true
-	export GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS
+test -n "$GIT_TEST_ABBREVIATED_OPTIONS" || {
+	GIT_TEST_ABBREVIATED_OPTIONS=false
+	export GIT_TEST_ABBREVIATED_OPTIONS
 }
 
 ################################################################

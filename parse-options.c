@@ -6,7 +6,7 @@
 #include "color.h"
 #include "utf8.h"
 
-static int disallow_abbreviated_options;
+static int abbreviated_options = 1;
 
 #define OPT_SHORT 1
 #define OPT_UNSET 2
@@ -346,7 +346,7 @@ is_abbreviated:
 		return get_value(p, options, all_opts, flags ^ opt_flags);
 	}
 
-	if (disallow_abbreviated_options && (ambiguous_option || abbrev_option))
+	if (!abbreviated_options && (ambiguous_option || abbrev_option))
 		die("disallowed abbreviated or ambiguous option '%.*s'",
 		    (int)(arg_end - arg), arg);
 
@@ -456,6 +456,17 @@ static void parse_options_check(const struct option *opts)
 		exit(128);
 }
 
+static void parse_options_config(void)
+{
+	int env = git_env_bool("GIT_TEST_ABBREVIATED_OPTIONS", -1);
+	if (env != -1) {
+		abbreviated_options = env;
+		return;
+	}
+	git_config_get_bool("core.abbreviatedoptions", &abbreviated_options);
+	return;
+}
+
 void parse_options_start(struct parse_opt_ctx_t *ctx,
 			 int argc, const char **argv, const char *prefix,
 			 const struct option *options, int flags)
@@ -480,6 +491,7 @@ void parse_options_start(struct parse_opt_ctx_t *ctx,
 	    (flags & PARSE_OPT_KEEP_ARGV0))
 		BUG("Can't keep argv0 if you don't have it");
 	parse_options_check(options);
+	parse_options_config();
 }
 
 static void show_negated_gitcomp(const struct option *opts, int nr_noopts)
@@ -714,9 +726,8 @@ int parse_options(int argc, const char **argv, const char *prefix,
 {
 	struct parse_opt_ctx_t ctx;
 
-	disallow_abbreviated_options =
-		git_env_bool("GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS", 0);
 
+	parse_options_config();
 	parse_options_start(&ctx, argc, argv, prefix, options, flags);
 	switch (parse_options_step(&ctx, options, usagestr)) {
 	case PARSE_OPT_HELP:
