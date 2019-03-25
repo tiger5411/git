@@ -96,6 +96,8 @@ typedef enum parse_opt_result parse_opt_ll_cb(struct parse_opt_ctx_t *ctx,
  *				Useful for options with multiple parameters.
  *   PARSE_OPT_NOCOMPLETE: by default all visible options are completable
  *			   by git-completion.bash. This option suppresses that.
+ *			   Will also skip this option when abbreviation is
+ *			   considered. See core.abbreviatedOptions.
  *   PARSE_OPT_COMP_ARG: this option forces to git-completion.bash to
  *			 complete an option as --name= not --name even if
  *			 the option takes optional argument.

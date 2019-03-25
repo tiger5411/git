@@ -236,6 +236,11 @@ test_expect_success 'abbreviated options configured with core.abbreviatedOptions
 	git -c core.abbreviatedOptions=true init --ba C
 '
 
+test_expect_success 'NOCOMPLETE options do not contribute to abbreviation' '
+	test_when_finished "rm -rf A" &&
+	GIT_TEST_ABBREVIATED_OPTIONS=true git clone --recurs . A
+'
+
 cat >typo.err <<\EOF
 error: did you mean `--boolean` (with two dashes ?)
 EOF
