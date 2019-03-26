@@ -1631,6 +1631,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	fprintf(stderr, "options.switch_to = %s\n", options.switch_to);
 	fprintf(stderr, "options.head_name = %s\n", options.head_name);
 	fprintf(stderr, "options.restrict_revision = %s\n", oid_to_hex(&options.restrict_revision->object.oid));
+	exit(1);
 
 	if (repo_read_index(the_repository) < 0)
 		die(_("could not read index"));
