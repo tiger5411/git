@@ -1623,7 +1623,11 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			get_fork_point(options.upstream_name, head);
 	}
 
-	fprintf(stderr, "options.upstream = %s\n", options.upstream_name);
+/*	if (1) {
+		options.upstream_name = options.restrict_revision;
+	}*/
+
+	fprintf(stderr, "options.upstream = %s\n", options.upstream);
 	fprintf(stderr, "options.upstream_name = %s\n", options.upstream_name);
 	if (options.squash_onto)
 		fprintf(stderr, "options.squash_onto = %s\n", oid_to_hex(options.squash_onto));
