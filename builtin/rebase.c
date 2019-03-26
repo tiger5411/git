@@ -1623,6 +1623,15 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			get_fork_point(options.upstream_name, head);
 	}
 
+	fprintf(stderr, "options.upstream = %s\n", options.upstream_name);
+	fprintf(stderr, "options.upstream_name = %s\n", options.upstream_name);
+	fprintf(stderr, "options.squash_onto = %s\n", oid_to_hex(options.squash_onto));
+	fprintf(stderr, "options.onto_name = %s\n", options.onto_name);
+	fprintf(stderr, "options.onto = %s\n", oid_to_hex(&options.onto->object.oid));
+	fprintf(stderr, "options.switch_to = %s\n", options.switch_to);
+	fprintf(stderr, "options.head_name = %s\n", options.head_name);
+	fprintf(stderr, "options.restrict_revision = %s\n", oid_to_hex(&options.restrict_revision->object.oid));
+
 	if (repo_read_index(the_repository) < 0)
 		die(_("could not read index"));
 
