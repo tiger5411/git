@@ -1521,6 +1521,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			if (fork_point < 0)
 				fork_point = 1;
 		} else {
+			if (onto_fork_point)
+				fork_point = 1;
 			options.upstream_name = argv[0];
 			argc--;
 			argv++;
