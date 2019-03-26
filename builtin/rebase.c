@@ -1625,12 +1625,21 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 
 	fprintf(stderr, "options.upstream = %s\n", options.upstream_name);
 	fprintf(stderr, "options.upstream_name = %s\n", options.upstream_name);
-	fprintf(stderr, "options.squash_onto = %s\n", oid_to_hex(options.squash_onto));
+	if (options.squash_onto)
+		fprintf(stderr, "options.squash_onto = %s\n", oid_to_hex(options.squash_onto));
+	else
+		fprintf(stderr, "options.squash_onto = %s\n", NULL);
 	fprintf(stderr, "options.onto_name = %s\n", options.onto_name);
-	fprintf(stderr, "options.onto = %s\n", oid_to_hex(&options.onto->object.oid));
+	if (options.onto)
+		fprintf(stderr, "options.onto = %s\n", oid_to_hex(&options.onto->object.oid));
+	else
+		fprintf(stderr, "options.onto = %s\n", NULL);
 	fprintf(stderr, "options.switch_to = %s\n", options.switch_to);
 	fprintf(stderr, "options.head_name = %s\n", options.head_name);
-	fprintf(stderr, "options.restrict_revision = %s\n", oid_to_hex(&options.restrict_revision->object.oid));
+	if (options.restrict_revision)
+		fprintf(stderr, "options.restrict_revision = %s\n", oid_to_hex(&options.restrict_revision->object.oid));
+	else
+		fprintf(stderr, "options.restrict_revision = %s\n", NULL);
 	exit(1);
 
 	if (repo_read_index(the_repository) < 0)
