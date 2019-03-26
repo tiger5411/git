@@ -1040,6 +1040,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	struct string_list exec = STRING_LIST_INIT_NODUP;
 	const char *rebase_merges = NULL;
 	int fork_point = -1;
+	int onto_fork_point = 0;
 	struct string_list strategy_options = STRING_LIST_INIT_NODUP;
 	struct object_id squash_onto;
 	char *squash_onto_name = NULL;
@@ -1131,6 +1132,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			PARSE_OPT_OPTARG, NULL, (intptr_t)""},
 		OPT_BOOL(0, "fork-point", &fork_point,
 			 N_("use 'merge-base --fork-point' to refine upstream")),
+		OPT_BOOL(0, "onto-fork-point", &onto_fork_point,
+			 N_("rebase onto the --fork-point")),
 		OPT_STRING('s', "strategy", &options.strategy,
 			   N_("strategy"), N_("use the given merge strategy")),
 		OPT_STRING_LIST('X', "strategy-option", &strategy_options,
@@ -1621,12 +1624,11 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 						&options.orig_head);
 		options.restrict_revision =
 			get_fork_point(options.upstream_name, head);
-	}
-
-	if (1) {
-		options.upstream_name = xstrdup(oid_to_hex(&options.restrict_revision->object.oid));
-		options.onto_name     = xstrdup(oid_to_hex(&options.restrict_revision->object.oid));
-		options.onto          = options.restrict_revision;
+		if (onto_fork_point) {
+			options.upstream_name = xstrdup(oid_to_hex(&options.restrict_revision->object.oid));
+			options.onto_name     = xstrdup(oid_to_hex(&options.restrict_revision->object.oid));
+			options.onto          = options.restrict_revision;
+		}
 	}
 
 	if (options.upstream)
