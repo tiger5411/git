@@ -1566,6 +1566,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		}
 		options.onto = lookup_commit_or_die(&merge_base,
 						    options.onto_name);
+		if (keep_base)
+			options.upstream = options.onto;
 	} else {
 		options.onto = peel_committish(options.onto_name);
 		if (!options.onto)
