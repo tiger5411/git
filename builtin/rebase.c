@@ -1515,7 +1515,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 								    NULL);
 			if (!options.upstream_name)
 				error_on_missing_default_upstream();
-			if (fork_point < 0)
+			if (fork_point < 0 && !keep_base)
 				fork_point = 1;
 		} else {
 			options.upstream_name = argv[0];
@@ -1524,9 +1524,11 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			if (!strcmp(options.upstream_name, "-"))
 				options.upstream_name = "@{-1}";
 		}
-		options.upstream = peel_committish(options.upstream_name);
-		if (!options.upstream)
-			die(_("invalid upstream '%s'"), options.upstream_name);
+		if (!keep_base) {
+			options.upstream = peel_committish(options.upstream_name);
+			if (!options.upstream)
+				die(_("invalid upstream '%s'"), options.upstream_name);
+		}
 		options.upstream_arg = options.upstream_name;
 	} else {
 		if (!options.onto_name) {
