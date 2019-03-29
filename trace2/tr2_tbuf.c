@@ -38,5 +38,5 @@ void tr2_tbuf_utc_datetime_extended(struct tr2_tbuf *tb)
 
 void tr2_tbuf_utc_datetime_for_filename(struct tr2_tbuf *tb)
 {
-	tr2_tbuf_utc_datetime_fmt(tb, "%4d%02d%02d-%02d%02d%02d-%06ld");
+	tr2_tbuf_utc_datetime_fmt(tb, "%4d%02d%02dT%02d%02d%02d.%06ldZ");
 }

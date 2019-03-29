@@ -22,11 +22,14 @@ static void tr2_sid_append_my_sid_component(void)
 	unsigned char hash[GIT_MAX_RAWSZ + 1];
 	char hex[GIT_MAX_HEXSZ + 1];
 	char hostname[HOST_NAME_MAX + 1];
+	pid_t git_pid = getpid();
+	pid_t git_pid_short = git_pid & 0xffff;
 
 	tr2_tbuf_utc_datetime_for_filename(&tb_now);
 	strbuf_addstr(&tr2sid_buf, tb_now.buf);
 	strbuf_addch(&tr2sid_buf, '-');
 
+	strbuf_addch(&tr2sid_buf, 'H');
 	if (xgethostname(hostname, sizeof(hostname))) {
 		strbuf_add(&tr2sid_buf, "00000000", 8);
 	} else {
@@ -38,7 +41,11 @@ static void tr2_sid_append_my_sid_component(void)
 	}
 
 	strbuf_addch(&tr2sid_buf, '-');
-	strbuf_addf(&tr2sid_buf, "%06"PRIuMAX, (uintmax_t)getpid());
+	strbuf_addch(&tr2sid_buf, 'P');
+	if (git_pid != git_pid_short)
+		strbuf_addf(&tr2sid_buf, "%05"PRIuMAX"W", (uintmax_t)git_pid_short);
+	else
+		strbuf_addf(&tr2sid_buf, "%05"PRIuMAX"F", (uintmax_t)git_pid_short);
 }
 
 /*
