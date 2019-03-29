@@ -27,14 +27,15 @@ static void tr2_sid_append_my_sid_component(void)
 	strbuf_addstr(&tr2sid_buf, tb_now.buf);
 	strbuf_addch(&tr2sid_buf, '-');
 
-	if (xgethostname(hostname, sizeof(hostname)))
-		xsnprintf(hostname, sizeof(hostname), "localhost");
-
-	algo->init_fn(&ctx);
-	algo->update_fn(&ctx, hostname, strlen(hostname));
-	algo->final_fn(hash, &ctx);
-	hash_to_hex_algop_r(hex, hash, algo);
-	strbuf_add(&tr2sid_buf, hex, 8);
+	if (xgethostname(hostname, sizeof(hostname))) {
+		strbuf_add(&tr2sid_buf, "00000000", 8);
+	} else {
+		algo->init_fn(&ctx);
+		algo->update_fn(&ctx, hostname, strlen(hostname));
+		algo->final_fn(hash, &ctx);
+		hash_to_hex_algop_r(hex, hash, algo);
+		strbuf_add(&tr2sid_buf, hex, 8);
+	}
 
 	strbuf_addch(&tr2sid_buf, '-');
 	strbuf_addf(&tr2sid_buf, "%06"PRIuMAX, (uintmax_t)getpid());
