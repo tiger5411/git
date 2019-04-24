@@ -45,12 +45,16 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	xpparam_t xpp;
 	xdemitconf_t xecfg;
 
-	if (!one)
-		return !regexec_buf(regexp, two->ptr, two->size,
-				    1, &regmatch, 0);
-	if (!two)
-		return !regexec_buf(regexp, one->ptr, one->size,
-				    1, &regmatch, 0);
+	if (!one || !two) {
+		mmfile_t *which = one ? one : two;
+		int ret;
+		char *string = which->ptr;
+		size_t size = which->size;
+		assert(!(!one && !two));
+		ret = !regexec_buf(regexp, string, size,
+				   1, &regmatch, 0);
+		return ret;
+	}
 
 	/*
 	 * We have both sides; need to run textual diff and see if
