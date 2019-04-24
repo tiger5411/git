@@ -17,14 +17,18 @@ typedef int (*pickaxe_fn)(mmfile_t *one, mmfile_t *two,
 struct diffgrep_cb {
 	regex_t *regexp;
 	int hit;
+	int raw_diff;
 };
 
 static void diffgrep_consume(void *priv, char *line, unsigned long len)
 {
 	struct diffgrep_cb *data = priv;
 	regmatch_t regmatch;
+	int raw_diff = data->raw_diff;
+	const char *string = raw_diff ? line : line + 1;
+	size_t size = raw_diff ? len : len - 1;
 
-	if (line[0] != '+' && line[0] != '-')
+	if (!raw_diff && line[0] != '+' && line[0] != '-')
 		return;
 	if (data->hit)
 		/*
@@ -32,7 +36,7 @@ static void diffgrep_consume(void *priv, char *line, unsigned long len)
 		 * caller early.
 		 */
 		return;
-	data->hit = !regexec_buf(data->regexp, line + 1, len - 1, 1,
+	data->hit = !regexec_buf(data->regexp, string, size, 1,
 				 &regmatch, 0);
 }
 
@@ -44,15 +48,36 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	struct diffgrep_cb ecbdata;
 	xpparam_t xpp;
 	xdemitconf_t xecfg;
+	int raw_diff = o->pickaxe_opts & DIFF_PICKAXE_G_RAW_DIFF;
+	struct strbuf sb = STRBUF_INIT;
+	char *string;
+	size_t size;
 
 	if (!one || !two) {
 		mmfile_t *which = one ? one : two;
 		int ret;
-		char *string = which->ptr;
-		size_t size = which->size;
 		assert(!(!one && !two));
+		if (raw_diff) {
+			/*
+			 * When we have created/deleted files with
+			 * --pickaxe-raw-diff we need to fake up the
+			 * "+" and "-" at the start of the lines, a
+			 * plain -G without --pickaxe-raw-diff didn't
+			 * care since it would indiscriminately search
+			 * through both added and removed lines.
+			 */
+			strbuf_add_lines(&sb, !one ? "+" : "-", which->ptr,
+					 which->size);
+			string = sb.buf;
+			size = sb.len;
+		} else {
+			string = which->ptr;
+			size = which->size;
+		}
 		ret = !regexec_buf(regexp, string, size,
 				   1, &regmatch, 0);
+		if (raw_diff)
+			strbuf_release(&sb);
 		return ret;
 	}
 
@@ -64,6 +89,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	memset(&xecfg, 0, sizeof(xecfg));
 	ecbdata.regexp = regexp;
 	ecbdata.hit = 0;
+	ecbdata.raw_diff = raw_diff;
 	xecfg.ctxlen = o->context;
 	xecfg.interhunkctxlen = o->interhunkcontext;
 	if (xdi_diff_outf(one, two, discard_hunk_line, diffgrep_consume,

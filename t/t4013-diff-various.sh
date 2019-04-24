@@ -276,6 +276,7 @@ log -SF master --max-count=1
 log -SF master --max-count=2
 log -GF master
 log -GF -p master
+log -GF -p --pickaxe-raw-diff master
 log -GF -p --pickaxe-all master
 log --decorate --all
 log --decorate=full --all

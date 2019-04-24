@@ -370,6 +370,8 @@ int git_config_rename(const char *var, const char *value);
 				 DIFF_PICKAXE_KIND_OBJFIND)
 
 #define DIFF_PICKAXE_IGNORE_CASE	32
+#define DIFF_PICKAXE_G_RAW_DIFF		64
+
 
 void diffcore_std(struct diff_options *);
 void diffcore_fix_diff_index(void);

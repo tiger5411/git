@@ -141,4 +141,49 @@ test_expect_success 'log -S looks into binary files' '
 	test_cmp log full-log
 '
 
+test_expect_success 'setup log -G --pickaxe-raw-diff' '
+	git checkout --orphan G-raw-diff &&
+	test_write_lines A B C D E F G >file &&
+	git add file &&
+	git commit --allow-empty-message file &&
+	sed -i -e "s/B/2/" file &&
+	git add file &&
+	git commit --allow-empty-message file &&
+	sed -i -e "s/D/4/" file &&
+	git add file &&
+	git commit --allow-empty-message file &&
+	git rm file &&
+	git commit --allow-empty-message &&
+	git log --oneline -1 HEAD~0 >file.fourth &&
+	git log --oneline -1 HEAD~1 >file.third &&
+	git log --oneline -1 HEAD~2 >file.second &&
+	git log --oneline -1 HEAD~3 >file.first
+'
+
+test_expect_success 'log -G --pickaxe-raw-diff skips header and range information' '
+	git log --pickaxe-raw-diff -p -G"(@@|file)" >log &&
+	test_must_be_empty log
+'
+
+test_expect_success 'log -G --pickaxe-raw-diff searching in context' '
+	git log --oneline --pickaxe-raw-diff -G"^ F" -U2 -s >log &&
+	test_cmp file.third log &&
+	git log --oneline --pickaxe-raw-diff -G"^ F" -U1 -s >log &&
+	test_must_be_empty log
+'
+
+test_expect_success 'log -G --pickaxe-raw-diff searching added / removed lines (skip create/delete)' '
+	git log --oneline --pickaxe-raw-diff -G"^-[D2]" -s HEAD~1 >log &&
+	test_cmp file.third log &&
+	git log --oneline --pickaxe-raw-diff -G"^\+[D2]" -s -1 >log &&
+	test_cmp file.second log
+'
+
+test_expect_success 'log -G --pickaxe-raw-diff searching created / deleted files' '
+	git log --oneline --pickaxe-raw-diff -G"^\+A" -s >log &&
+	test_cmp file.first log &&
+	git log --oneline --pickaxe-raw-diff -G"^\-A" -s >log &&
+	test_cmp file.fourth log
+'
+
 test_done
