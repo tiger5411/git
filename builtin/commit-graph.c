@@ -114,7 +114,9 @@ static int graph_read(int argc, const char **argv)
 	printf("header: %08x %d %d %d %d\n",
 		ntohl(*(uint32_t*)graph->data),
 		*(unsigned char*)(graph->data + 4),
-		*(unsigned char*)(graph->data + 5),
+		(getenv("STAT_ME")
+		 ? *(unsigned char*)(graph->data + 5)
+		 : (*(unsigned char*)(graph->data + 5) - 1)),
 		*(unsigned char*)(graph->data + 6),
 		*(unsigned char*)(graph->data + 7));
 
@@ -123,8 +125,20 @@ static int graph_read(int argc, const char **argv)
 		       get_be32(graph->data + 8));
 
 	printf("num_commits: %u\n", graph->num_commits);
+	if (getenv("STAT_ME")) {
+		printf(" pack num commits (st): %u\n", graph->num_commits_stat);
+		printf(" pack num commits - inferred diff (diff = duplicate (I think!)): %u\n", graph->num_commits_stat - graph->num_commits);
+		printf(" pack num objects: %u\n", graph->num_objects);
+		printf(" pack num tags: %u\n", graph->num_tags);
+		printf(" pack num trees: %u\n", graph->num_trees);
+		printf(" pack num blobs: %u\n", graph->num_blobs);
+	}
 	printf("chunks:");
 
+	if (getenv("STAT_ME")) {
+		if (graph->chunk_oid_numbers)
+			printf(" oid_numbers");
+	}
 	if (graph->chunk_oid_fanout)
 		printf(" oid_fanout");
 	if (graph->chunk_oid_lookup)

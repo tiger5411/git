@@ -18,6 +18,7 @@
 #include "progress.h"
 
 #define GRAPH_SIGNATURE 0x43475048 /* "CGPH" */
+#define GRAPH_CHUNKID_OIDNUMBERS 0x4f49444e  /* "OIDN" */
 #define GRAPH_CHUNKID_OIDFANOUT 0x4f494446 /* "OIDF" */
 #define GRAPH_CHUNKID_OIDLOOKUP 0x4f49444c /* "OIDL" */
 #define GRAPH_CHUNKID_DATA 0x43444154 /* "CDAT" */
@@ -32,6 +33,7 @@
 #define GRAPH_LAST_EDGE 0x80000000
 
 #define GRAPH_HEADER_SIZE 8
+#define GRAPH_OIDNUMBERS_SIZE (4 * 5)
 #define GRAPH_FANOUT_SIZE (4 * 256)
 #define GRAPH_CHUNKLOOKUP_WIDTH 12
 #define GRAPH_MIN_SIZE (GRAPH_HEADER_SIZE + 4 * GRAPH_CHUNKLOOKUP_WIDTH \
@@ -127,6 +129,10 @@ static int verify_commit_graph_lite(struct commit_graph *g)
 	 * over g->num_commits, or runs a checksum on the commit-graph
 	 * itself.
 	 */
+	if (!g->chunk_oid_numbers) {
+		error("commit-graph is missing the OID Numbers chunk");
+		return 1;
+	}
 	if (!g->chunk_oid_fanout) {
 		error("commit-graph is missing the OID Fanout chunk");
 		return 1;
@@ -249,6 +255,18 @@ struct commit_graph *parse_commit_graph(void *graph_map, int fd,
 		}
 
 		switch (chunk_id) {
+		case GRAPH_CHUNKID_OIDNUMBERS:
+			if (graph->chunk_oid_numbers) {
+				chunk_repeated = 1;
+			} else {
+				graph->chunk_oid_numbers = data + chunk_offset;
+				graph->num_objects = get_be32(graph->chunk_oid_numbers + 0);
+				graph->num_commits_stat = get_be32(graph->chunk_oid_numbers + 4);
+				graph->num_tags    = get_be32(graph->chunk_oid_numbers + 8);
+				graph->num_trees   = get_be32(graph->chunk_oid_numbers + 12);
+				graph->num_blobs   = get_be32(graph->chunk_oid_numbers + 16);
+			}
+			break;
 		case GRAPH_CHUNKID_OIDFANOUT:
 			if (graph->chunk_oid_fanout)
 				chunk_repeated = 1;
@@ -545,6 +563,22 @@ struct tree *get_commit_tree_in_graph(struct repository *r, const struct commit 
 	return get_commit_tree_in_graph_one(r, r->objects->commit_graph, c);
 }
 
+static void write_graph_chunk_numbers(struct hashfile *f,
+				      struct progress *progress,
+				      uint64_t *progress_cnt,
+				      uint32_t num_objects,
+				      uint32_t num_commits,
+				      uint32_t num_tags,
+				      uint32_t num_trees,
+				      uint32_t num_blobs)
+{
+	hashwrite_be32(f, num_objects);
+	hashwrite_be32(f, num_commits);
+	hashwrite_be32(f, num_tags);
+	hashwrite_be32(f, num_trees);
+	hashwrite_be32(f, num_blobs);
+}
+
 static void write_graph_chunk_fanout(struct hashfile *f,
 				     struct commit **commits,
 				     int nr_commits,
@@ -567,7 +601,6 @@ static void write_graph_chunk_fanout(struct hashfile *f,
 			count++;
 			list++;
 		}
-
 		hashwrite_be32(f, count);
 	}
 }
@@ -732,6 +765,11 @@ struct packed_oid_list {
 	int alloc;
 	struct progress *progress;
 	int progress_done;
+	uint32_t num_objects;
+	uint32_t num_commits;
+	uint32_t num_tags;
+	uint32_t num_trees;
+	uint32_t num_blobs;
 };
 
 static int add_packed_commits(const struct object_id *oid,
@@ -750,6 +788,21 @@ static int add_packed_commits(const struct object_id *oid,
 	oi.typep = &type;
 	if (packed_object_info(the_repository, pack, offset, &oi) < 0)
 		die(_("unable to get type of object %s"), oid_to_hex(oid));
+
+	/*
+	 * Aggregate object statistics
+	 */
+	list->num_objects++;
+	if (type == OBJ_COMMIT)
+		list->num_commits++;
+	else if (type == OBJ_TAG)
+		list->num_tags++;
+	else if (type == OBJ_TREE)
+		list->num_trees++;
+	else if (type == OBJ_BLOB)
+		list->num_blobs++;
+	else
+		BUG("should not encounter internal-only object_type %d value here!", type);
 
 	if (type != OBJ_COMMIT)
 		return 0;
@@ -939,6 +992,8 @@ int write_commit_graph(const char *obj_dir,
 	oids.progress = NULL;
 	oids.progress_done = 0;
 	commits.list = NULL;
+	oids.num_objects = oids.num_commits = oids.num_tags =
+		oids.num_trees = oids.num_blobs = 0;
 
 	if (append) {
 		prepare_commit_graph_one(the_repository, obj_dir);
@@ -1092,7 +1147,7 @@ int write_commit_graph(const char *obj_dir,
 
 		commits.nr++;
 	}
-	num_chunks = num_extra_edges ? 4 : 3;
+	num_chunks = num_extra_edges ? 5 : 4;
 	stop_progress(&progress);
 
 	if (commits.nr >= GRAPH_EDGE_LAST_MASK) {
@@ -1136,20 +1191,22 @@ int write_commit_graph(const char *obj_dir,
 		break;
 	}
 
-	chunk_ids[0] = GRAPH_CHUNKID_OIDFANOUT;
-	chunk_ids[1] = GRAPH_CHUNKID_OIDLOOKUP;
-	chunk_ids[2] = GRAPH_CHUNKID_DATA;
+	chunk_ids[0] = GRAPH_CHUNKID_OIDNUMBERS;
+	chunk_ids[1] = GRAPH_CHUNKID_OIDFANOUT;
+	chunk_ids[2] = GRAPH_CHUNKID_OIDLOOKUP;
+	chunk_ids[3] = GRAPH_CHUNKID_DATA;
 	if (num_extra_edges)
-		chunk_ids[3] = GRAPH_CHUNKID_EXTRAEDGES;
+		chunk_ids[4] = GRAPH_CHUNKID_EXTRAEDGES;
 	else
-		chunk_ids[3] = 0;
-	chunk_ids[4] = 0;
+		chunk_ids[4] = 0;
+	chunk_ids[5] = 0;
 
 	chunk_offsets[0] = header_size + (num_chunks + 1) * GRAPH_CHUNKLOOKUP_WIDTH;
-	chunk_offsets[1] = chunk_offsets[0] + GRAPH_FANOUT_SIZE;
-	chunk_offsets[2] = chunk_offsets[1] + hashsz * commits.nr;
-	chunk_offsets[3] = chunk_offsets[2] + (hashsz + 16) * commits.nr;
-	chunk_offsets[4] = chunk_offsets[3] + 4 * num_extra_edges;
+	chunk_offsets[1] = chunk_offsets[0] + GRAPH_OIDNUMBERS_SIZE;
+	chunk_offsets[2] = chunk_offsets[1] + GRAPH_FANOUT_SIZE;
+	chunk_offsets[3] = chunk_offsets[2] + hashsz * commits.nr;
+	chunk_offsets[4] = chunk_offsets[3] + (hashsz + 16) * commits.nr;
+	chunk_offsets[5] = chunk_offsets[4] + 4 * num_extra_edges;
 
 	for (i = 0; i <= num_chunks; i++) {
 		uint32_t chunk_write[3];
@@ -1170,6 +1227,10 @@ int write_commit_graph(const char *obj_dir,
 			progress_title.buf,
 			num_chunks * commits.nr);
 	}
+	write_graph_chunk_numbers(f, progress, &progress_cnt,
+				  oids.num_objects, oids.num_commits,
+				  oids.num_tags, oids.num_trees,
+				  oids.num_blobs);
 	write_graph_chunk_fanout(f, commits.list, commits.nr, progress, &progress_cnt);
 	write_graph_chunk_oids(f, hashsz, commits.list, commits.nr, progress, &progress_cnt);
 	write_graph_chunk_data(f, hashsz, commits.list, commits.nr, progress, &progress_cnt);

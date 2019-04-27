@@ -45,10 +45,16 @@ struct commit_graph {
 
 	unsigned char hash_len;
 	unsigned char num_chunks;
+	uint32_t num_objects;
 	uint32_t num_commits;
+	uint32_t num_commits_stat;
+	uint32_t num_tags;
+	uint32_t num_trees;
+	uint32_t num_blobs;
 	struct object_id oid;
 
 	const uint32_t *chunk_oid_fanout;
+	const unsigned char *chunk_oid_numbers;
 	const unsigned char *chunk_oid_lookup;
 	const unsigned char *chunk_commit_data;
 	const unsigned char *chunk_extra_edges;
