@@ -52,6 +52,7 @@ struct commit_graph {
 	const unsigned char *chunk_oid_lookup;
 	const unsigned char *chunk_commit_data;
 	const unsigned char *chunk_extra_edges;
+	const unsigned char *chunk_oid_numbers;
 };
 
 struct commit_graph *load_commit_graph_one_fd_st(int fd, struct stat *st);

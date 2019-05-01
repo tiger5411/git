@@ -127,6 +127,14 @@ static int graph_read(int argc, const char **argv)
 		printf(" commit_metadata");
 	if (graph->chunk_extra_edges)
 		printf(" extra_edges");
+	if (getenv("CG_DEBUG") && graph->chunk_oid_numbers)
+		printf(" oid_numbers");
+	if (getenv("CG_DEBUG") && graph->chunk_oid_numbers) {
+		int i;
+		printf("\n");
+		for (i = 0; i < 5; i++)
+			printf("  oid number #%d: %d\n", i, get_be32(graph->chunk_oid_numbers + i * 4));
+	}
 	printf("\n");
 
 	UNLEAK(graph);
