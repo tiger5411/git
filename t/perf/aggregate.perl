@@ -6,6 +6,7 @@ use warnings;
 use JSON;
 use Getopt::Long;
 use Git;
+use Cwd qw(realpath);
 
 sub get_times {
 	my $name = shift;
@@ -103,13 +104,14 @@ while (scalar @ARGV) {
 	if (! -d $arg) {
 		my $rev = Git::command_oneline(qw(rev-parse --verify), $arg);
 		$dir = "build/".$rev;
+	} elsif ($arg eq '.') {
+		$dir = '.';
 	} else {
-		$arg =~ s{/*$}{};
-		$dir = $arg;
-		$dirabbrevs{$dir} = $dir;
+		$dir = realpath($arg);
+		$dirnames{$dir} = $dir;
 	}
 	push @dirs, $dir;
-	$dirnames{$dir} = $arg;
+	$dirnames{$dir} ||= $arg;
 	my $prefix = $dir;
 	$prefix =~ tr/^a-zA-Z0-9/_/c;
 	$prefixes{$dir} = $prefix . '.';
@@ -312,9 +314,6 @@ sub print_codespeed_results {
 		$environment = $reponame;
 	} elsif (exists $ENV{GIT_PERF_REPO_NAME} and $ENV{GIT_PERF_REPO_NAME} ne "") {
 		$environment = $ENV{GIT_PERF_REPO_NAME};
-	} elsif (exists $ENV{GIT_TEST_INSTALLED} and $ENV{GIT_TEST_INSTALLED} ne "") {
-		$environment = $ENV{GIT_TEST_INSTALLED};
-		$environment =~ s|/bin-wrappers$||;
 	} else {
 		$environment = `uname -r`;
 		chomp $environment;
