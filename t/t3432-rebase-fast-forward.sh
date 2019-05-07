@@ -44,12 +44,13 @@ test_rebase_same_head_ () {
 	test_expect_$status "git rebase$flag $* with $changes is $what with $cmp HEAD" "
 		oldhead=\$(git rev-parse HEAD) &&
 		test_when_finished 'git reset --hard \$oldhead' &&
-		git rebase$flag $* >stdout &&
+		git rebase$flag $* >stdout 2>stderr &&
 		if test $what = work
 		then
 			# Must check this case first, for 'is up to
 			# date, rebase forced[...]rewinding head' cases
-			test_i18ngrep 'rewinding head' stdout
+			test_i18ngrep 'rewinding head' stdout ||
+			test_i18ngrep 'is up to date, rebase forced' stdout
 		elif test $what = noop
 		then
 			test_i18ngrep 'is up to date' stdout &&
@@ -79,6 +80,8 @@ test_rebase_same_head success noop same success noop-force same --keep-base mast
 test_rebase_same_head success noop same success noop-force same --keep-base
 test_rebase_same_head success noop same success noop-force same --no-fork-point
 test_rebase_same_head success noop same success noop-force same --keep-base --no-fork-point
+test_rebase_same_head success noop same success noop-force same --preserve-merges
+test_rebase_same_head success noop same success noop-force same --rebase-merges
 test_rebase_same_head success noop same success work same --fork-point master
 test_rebase_same_head success noop same success work diff --fork-point --onto B B
 test_rebase_same_head success noop same success work diff --fork-point --onto B... B

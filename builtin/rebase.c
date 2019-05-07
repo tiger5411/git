@@ -892,6 +892,12 @@ static void populate_merge_bases(struct commit *head, struct commit *onto,
 
 static int should_fast_forward(struct rebase_options *opts)
 {
+	if (!(opts->flags & REBASE_INTERACTIVE_EXPLICIT)) {
+		if (opts->rebase_merges)
+			return 1;
+		if (opts->type == REBASE_PRESERVE_MERGES)
+			return 1;
+	}
 	return !is_interactive(opts);
 }
 
