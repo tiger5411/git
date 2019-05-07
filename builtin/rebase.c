@@ -890,6 +890,11 @@ static void populate_merge_bases(struct commit *head, struct commit *onto,
 	oidcpy(merge_base, &merge_bases->item->object.oid);
 }
 
+static int should_fast_forward(struct rebase_options *opts)
+{
+	return !is_interactive(opts);
+}
+
 static int can_fast_forward(struct commit *head,
 			    struct commit *onto, struct commit *upstream,
 			    struct commit *restrict_revision,
@@ -1715,7 +1720,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	if (head_commit)
 		populate_merge_bases(head_commit, options.onto, merge_bases,
 				     &merge_base);
-	if (!is_interactive(&options) &&
+	if (should_fast_forward(&options) &&
 	    can_fast_forward(head_commit, options.onto, options.upstream,
 			     options.restrict_revision, &options.orig_head,
 			     merge_bases, &merge_base)) {
