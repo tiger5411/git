@@ -878,24 +878,30 @@ static int is_linear_history(struct commit *from, struct commit *to)
 	return 1;
 }
 
-static int can_fast_forward(struct commit *onto, struct commit *upstream,
-			    struct commit *restrict_revision,
-			    struct object_id *head_oid, struct object_id *merge_base)
+static void populate_merge_bases(struct commit *head, struct commit *onto,
+				 struct commit_list *merge_bases,
+				 struct object_id *merge_base)
 {
-	struct commit *head = lookup_commit(the_repository, head_oid);
-	struct commit_list *merge_bases = NULL;
+	merge_bases = get_merge_bases(onto, head);
+	if (!merge_bases || merge_bases->next) {
+		oidcpy(merge_base, &null_oid);
+		return;
+	}
+	oidcpy(merge_base, &merge_bases->item->object.oid);
+}
+
+static int can_fast_forward(struct commit *head,
+			    struct commit *onto, struct commit *upstream,
+			    struct commit *restrict_revision,
+			    struct object_id *head_oid,
+			    struct commit_list *merge_bases,
+			    struct object_id *merge_base)
+{
 	int res = 0;
 
 	if (!head)
 		goto done;
 
-	merge_bases = get_merge_bases(onto, head);
-	if (!merge_bases || merge_bases->next) {
-		oidcpy(merge_base, &null_oid);
-		goto done;
-	}
-
-	oidcpy(merge_base, &merge_bases->item->object.oid);
 	if (!oideq(merge_base, &onto->object.oid))
 		goto done;
 
@@ -1154,6 +1160,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		OPT_END(),
 	};
 	int i;
+	struct commit *head_commit;
+	struct commit_list *merge_bases = NULL;
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(builtin_rebase_usage,
@@ -1703,9 +1711,14 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	 * with new commits recreated by replaying their changes. This
 	 * optimization must not be done if this is an interactive rebase.
 	 */
-	if (can_fast_forward(options.onto, options.upstream, options.restrict_revision,
-		    &options.orig_head, &merge_base) &&
-	    !is_interactive(&options)) {
+	head_commit = lookup_commit(the_repository, &options.orig_head);
+	if (head_commit)
+		populate_merge_bases(head_commit, options.onto, merge_bases,
+				     &merge_base);
+	if (!is_interactive(&options) &&
+	    can_fast_forward(head_commit, options.onto, options.upstream,
+			     options.restrict_revision, &options.orig_head,
+			     merge_bases, &merge_base)) {
 		int flag;
 
 		if (!(options.flags & REBASE_FORCE)) {
