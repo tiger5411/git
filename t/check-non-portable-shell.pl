@@ -8,13 +8,26 @@ use warnings;
 
 my $exit_code=0;
 my %func;
+my $start_nr = 0;
+my $line = '';
 
 sub err {
 	my $msg = shift;
-	s/^\s+//;
-	s/\s+$//;
-	s/\s+/ /g;
-	print "$ARGV:$.: error: $msg: $_\n";
+	if (/\n/) {
+		$. = $start_nr;
+		my ($ws) = $_ =~ /^(\s+)/;
+		for (split /^/) {
+			s/^\Q$ws\E//;
+			print "$ARGV:$.: error: $msg: $_";
+			$.++;
+		}
+		print "\n";
+	} else {
+		s/^\s+//;
+		s/\s+$//;
+		s/\s+/ /g;
+		print "$ARGV:$.: error: $msg: $_\n";
+	}
 	$exit_code = 1;
 }
 
@@ -27,14 +40,16 @@ for my $i (@ARGV) {
 	close $f;
 }
 
-my $line = '';
 while (<>) {
 	chomp;
-	$line .= $_;
 	# stitch together incomplete lines (those ending with "\")
-	next if $line =~ s/\\$//;
-
-	local $_ = $line;
+	if (s/\\$//) {
+		$start_nr ||= $.;
+		$line .= "$_\n";
+		next;
+	} else {
+		$_ = $line . $_;
+	}
 	/\bcp\s+-a/ and err 'cp -a is not portable';
 	/\bsed\s+-[^efn]\s+/ and err 'sed option not portable (use only -n, -e, -f)';
 	/\becho\s+-[neE]/ and err 'echo with option is not portable (use printf)';
@@ -48,7 +63,11 @@ while (<>) {
 	/\bexport\s+[A-Za-z0-9_]*=/ and err '"export FOO=bar" is not portable (use FOO=bar && export FOO)';
 	/^\s*([A-Z0-9_]+=(\w+|(["']).*?\3)\s+)+(\w+)/ and exists($func{$4}) and
 		err '"FOO=bar shell_func" assignment extends beyond "shell_func"';
+
+	# No longer spanning lines
+	$start_nr = 0;
 	$line = '';
+
 	# this resets our $. for each file
 	close ARGV if eof;
 }
