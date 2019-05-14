@@ -47,6 +47,7 @@ static int prune_tags = -1; /* unspecified */
 #define PRUNE_TAGS_BY_DEFAULT 0 /* do we prune tags by default? */
 
 static int all, append, dry_run, force, keep, multiple, update_head_ok, verbosity, deepen_relative;
+static int exit_code;
 static int progress = -1;
 static int tags = TAGS_DEFAULT, unshallow, update_shallow, deepen;
 static int max_children = 1;
@@ -66,6 +67,7 @@ static struct refspec refmap = REFSPEC_INIT_FETCH;
 static struct list_objects_filter_options filter_options;
 static struct string_list server_options = STRING_LIST_INIT_DUP;
 static struct string_list negotiation_tip = STRING_LIST_INIT_NODUP;
+static int updated_refs;
 
 static int git_fetch_config(const char *k, const char *v, void *cb)
 {
@@ -133,6 +135,8 @@ static struct option builtin_fetch_options[] = {
 	{ OPTION_CALLBACK, 0, "recurse-submodules", &recurse_submodules, N_("on-demand"),
 		    N_("control recursive fetching of submodules"),
 		    PARSE_OPT_OPTARG, option_fetch_parse_recurse_submodules },
+	OPT_BOOL(0, "exit-code", &exit_code,
+		 N_("exit successfully if refs are updated")),
 	OPT_BOOL(0, "dry-run", &dry_run,
 		 N_("dry run")),
 	OPT_BOOL('k', "keep", &keep, N_("keep downloaded pack")),
@@ -522,8 +526,10 @@ static int s_update_ref(const char *action,
 	struct strbuf err = STRBUF_INIT;
 	int ret, df_conflict = 0;
 
-	if (dry_run)
+	if (dry_run) {
+		updated_refs++;
 		return 0;
+	}
 	if (!rla)
 		rla = default_rla.buf;
 	msg = xstrfmt("%s: %s", rla, action);
@@ -545,6 +551,7 @@ static int s_update_ref(const char *action,
 	ref_transaction_free(transaction);
 	strbuf_release(&err);
 	free(msg);
+	updated_refs++;
 	return 0;
 fail:
 	ref_transaction_free(transaction);
@@ -1680,5 +1687,9 @@ int cmd_fetch(int argc, const char **argv, const char *prefix)
 	run_command_v_opt(argv_gc_auto.argv, RUN_GIT_CMD);
 	argv_array_clear(&argv_gc_auto);
 
-	return result;
+	if (result)
+		return result;
+	if (exit_code)
+		return !updated_refs;
+	return 0;
 }
