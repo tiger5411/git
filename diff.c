@@ -26,6 +26,7 @@
 #include "parse-options.h"
 #include "help.h"
 #include "fetch-object.h"
+#include "progress.h"
 
 #ifdef NO_FAST_WORKING_DIRECTORY
 #define FAST_WORKING_DIRECTORY 0
@@ -977,11 +978,18 @@ static void add_lines_to_move_detection(struct diff_options *o,
 					struct hashmap *del_lines)
 {
 	struct moved_entry *prev_line = NULL;
-
+	struct progress *progress = NULL;
 	int n;
+
+	progress = start_progress(
+		_("Adding lines to moved detection"),
+		o->emitted_symbols->nr);
+
 	for (n = 0; n < o->emitted_symbols->nr; n++) {
 		struct hashmap *hm;
 		struct moved_entry *key;
+
+		display_progress(progress, n + 1);
 
 		switch (o->emitted_symbols->buf[n].s) {
 		case DIFF_SYMBOL_PLUS:
@@ -1005,6 +1013,7 @@ static void add_lines_to_move_detection(struct diff_options *o,
 		hashmap_add(hm, key);
 		prev_line = key;
 	}
+	stop_progress(&progress);
 }
 
 static void pmb_advance_or_null(struct diff_options *o,
@@ -1131,6 +1140,9 @@ static void mark_color_as_moved(struct diff_options *o,
 	int pmb_nr = 0, pmb_alloc = 0;
 	int n, flipped_block = 0, block_length = 0;
 
+	struct progress *progress = NULL;
+	progress = start_progress(
+		_("Marking moved lines"), o->emitted_symbols->nr);
 
 	for (n = 0; n < o->emitted_symbols->nr; n++) {
 		struct hashmap *hm = NULL;
@@ -1138,6 +1150,8 @@ static void mark_color_as_moved(struct diff_options *o,
 		struct moved_entry *match = NULL;
 		struct emitted_diff_symbol *l = &o->emitted_symbols->buf[n];
 		enum diff_symbol last_symbol = 0;
+
+		display_progress(progress, n + 1);
 
 		switch (l->s) {
 		case DIFF_SYMBOL_PLUS:
@@ -1192,6 +1206,7 @@ static void mark_color_as_moved(struct diff_options *o,
 				ALLOC_GROW(pmb, pmb_nr + 1, pmb_alloc);
 				if (o->color_moved_ws_handling &
 				    COLOR_MOVED_WS_ALLOW_INDENTATION_CHANGE) {
+					die("hi");
 					if (compute_ws_delta(l, match->es,
 							     &pmb[pmb_nr].wsd))
 						pmb[pmb_nr++].match = match;
@@ -1218,6 +1233,7 @@ static void mark_color_as_moved(struct diff_options *o,
 		}
 		last_symbol = l->s;
 	}
+	stop_progress(&progress);
 	adjust_last_block(o, n, block_length);
 
 	for(n = 0; n < pmb_nr; n++)
@@ -1229,7 +1245,10 @@ static void mark_color_as_moved(struct diff_options *o,
   (DIFF_SYMBOL_MOVED_LINE | DIFF_SYMBOL_MOVED_LINE_ALT)
 static void dim_moved_lines(struct diff_options *o)
 {
+	struct progress *progress = NULL;
 	int n;
+	progress = start_progress(
+		_("Coloring moved lines"), o->emitted_symbols->nr);
 	for (n = 0; n < o->emitted_symbols->nr; n++) {
 		struct emitted_diff_symbol *prev = (n != 0) ?
 				&o->emitted_symbols->buf[n - 1] : NULL;
@@ -1237,6 +1256,8 @@ static void dim_moved_lines(struct diff_options *o)
 		struct emitted_diff_symbol *next =
 				(n < o->emitted_symbols->nr - 1) ?
 				&o->emitted_symbols->buf[n + 1] : NULL;
+
+		display_progress(progress, n + 1);
 
 		/* Not a plus or minus line? */
 		if (l->s != DIFF_SYMBOL_PLUS && l->s != DIFF_SYMBOL_MINUS)
@@ -1284,6 +1305,7 @@ static void dim_moved_lines(struct diff_options *o)
 		 */
 		l->flags |= DIFF_SYMBOL_MOVED_LINE_UNINTERESTING;
 	}
+	stop_progress(&progress);
 }
 
 static void emit_line_ws_markup(struct diff_options *o,
