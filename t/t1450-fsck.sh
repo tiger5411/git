@@ -210,6 +210,20 @@ test_expect_success 'integer overflow in timestamps is reported' '
 	test_i18ngrep "error in commit $new.*integer overflow" out
 '
 
+# date is 2^63 (timestamp_t is signed)
+test_expect_success 'signed integer overflow in timestamps is reported' '
+	git cat-file commit HEAD >basis &&
+	sed "s/^\\(author .*>\\) [0-9]*/\\1 9223372036854775808/" \
+		<basis >bad-timestamp &&
+	new=$(git hash-object -t commit -w --stdin <bad-timestamp) &&
+	test_when_finished "remove_object $new" &&
+	git update-ref refs/heads/bogus "$new" &&
+	test_when_finished "git update-ref -d refs/heads/bogus" &&
+	test_must_fail git fsck 2>out &&
+	cat out &&
+	test_i18ngrep "error in commit $new.*integer overflow" out
+'
+
 test_expect_success 'commit with NUL in header' '
 	git cat-file commit HEAD >basis &&
 	sed "s/author ./author Q/" <basis | q_to_nul >commit-NUL-header &&
