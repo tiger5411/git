@@ -758,6 +758,8 @@ static int fsck_ident(const char **ident, struct object *obj, struct fsck_option
 	date = parse_timestamp(p, &end, 10);
 	if (date_overflows(date))
 		return report(options, obj, FSCK_MSG_BAD_DATE_OVERFLOW, "invalid author/committer line - date causes integer overflow");
+	if (date_with_max_tz_overflows(date))
+		return report(options, obj, FSCK_MSG_BAD_DATE_OVERFLOW, "invalid author/committer line - date is too close to integer overflow");
 	if ((end == p || *end != ' '))
 		return report(options, obj, FSCK_MSG_BAD_DATE, "invalid author/committer line - bad date");
 	p = end + 1;

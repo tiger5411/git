@@ -1333,3 +1333,16 @@ int date_overflows(timestamp_t t)
 	sys = t;
 	return t != sys || (t < 1) != (sys < 1);
 }
+
+int date_with_max_tz_overflows(timestamp_t t)
+{
+	/*
+	 * See if a timestamp_t value really close its respective MAX
+	 * value overflows. It's stupid, but we currently allow +9999
+	 * as the maximum timezone offset. Let's make sure t + <that>
+	 * doesn't overflow. See gm_time_t() for such a calculation.
+	 */
+	t += ((99 * 60 * 60) + (99 * 60));
+
+	return date_overflows(t);
+}

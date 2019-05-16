@@ -1551,6 +1551,7 @@ timestamp_t approxidate_careful(const char *, int *);
 timestamp_t approxidate_relative(const char *date, const struct timeval *now);
 void parse_date_format(const char *format, struct date_mode *mode);
 int date_overflows(timestamp_t date);
+int date_with_max_tz_overflows(timestamp_t date);
 
 #define IDENT_STRICT	       1
 #define IDENT_NO_DATE	       2

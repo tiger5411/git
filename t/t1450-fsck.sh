@@ -224,6 +224,32 @@ test_expect_success 'signed integer overflow in timestamps is reported' '
 	test_i18ngrep "error in commit $new.*integer overflow" out
 '
 
+test_expect_success 'signed integer overflow with pathological timezone in timestamps is reported' '
+	git cat-file commit HEAD >basis &&
+	sed "s/^\\(author .*>\\) [0-9]* [+-][0-9]*/\\1 9223372036854413468 +9999/" \
+		<basis >bad-timestamp &&
+	new=$(git hash-object -t commit -w --stdin <bad-timestamp) &&
+	test_when_finished "remove_object $new" &&
+	git update-ref refs/heads/bogus "$new" &&
+	test_when_finished "git update-ref -d refs/heads/bogus" &&
+	test_must_fail git fsck 2>out &&
+	cat out &&
+	test_i18ngrep "error in commit $new.*too close to integer overflow" out
+'
+
+test_expect_success 'near-signed integer overflow with pathological timezone in timestamps is OK' '
+	git cat-file commit HEAD >basis &&
+	sed "s/^\\(author .*>\\) [0-9]* [+-][0-9]*/\\1 9223372036854413467 +9999/" \
+		<basis >fishy-timestamp &&
+	new=$(git hash-object -t commit -w --stdin <fishy-timestamp) &&
+	test_when_finished "remove_object $new" &&
+	git update-ref refs/heads/bogus "$new" &&
+	test_when_finished "git update-ref -d refs/heads/bogus" &&
+	git fsck 2>out &&
+	cat out &&
+	git show
+'
+
 test_expect_success 'commit with NUL in header' '
 	git cat-file commit HEAD >basis &&
 	sed "s/author ./author Q/" <basis | q_to_nul >commit-NUL-header &&
