@@ -196,10 +196,10 @@ test_expect_success '> in name is reported' '
 	test_i18ngrep "error in commit $new" out
 '
 
-# date is 2^64 + 1
+# date is 2^64
 test_expect_success 'integer overflow in timestamps is reported' '
 	git cat-file commit HEAD >basis &&
-	sed "s/^\\(author .*>\\) [0-9]*/\\1 18446744073709551617/" \
+	sed "s/^\\(author .*>\\) [0-9]*/\\1 18446744073709551616/" \
 		<basis >bad-timestamp &&
 	new=$(git hash-object -t commit -w --stdin <bad-timestamp) &&
 	test_when_finished "remove_object $new" &&
