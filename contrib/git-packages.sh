@@ -14,7 +14,7 @@ openbsd-ports	devel/git	https://github.com/openbsd/ports.git
 netbsd-pkgsrc	devel/git-base	https://github.com/NetBSD/pkgsrc.git
 dragonflybsd-dports	devel/git	https://github.com/DragonFlyBSD/DPorts.git
 fedora	.	https://src.fedoraproject.org/rpms/git
-debian	.	https://repo.or.cz/git/debian.git
+debian	debian	https://repo.or.cz/git/debian.git
 gentoo	dev-vcs/git	https://github.com/gentoo/gentoo.git
 arch	git/trunk	https://git.archlinux.org/svntogit/packages.git
 nix	pkgs/applications/version-management/git-and-tools/git	https://github.com/NixOS/nixpkgs.git
@@ -104,5 +104,7 @@ wget $aix_url/$aix_rpm -O AIX/src.rpm
 )
 git add AIX
 git commit -m"IBM's AIX package"
+
+echo INFO: Dropped in $dir >&2
 
 #rm -rfv $dir
