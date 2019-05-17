@@ -7,7 +7,6 @@ echo INFO: Working in $dir >&2
 
 cd $dir
 
-
 cat >repositories.txt <<-EOF
 freebsd-ports	devel/git	https://github.com/freebsd/freebsd-ports.git
 openbsd-ports	devel/git	https://github.com/openbsd/ports.git
