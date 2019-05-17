@@ -1849,6 +1849,15 @@ test_expect_success 'aliases and sendemail.identity' '
 	test_i18ngrep "cloud-aliases" stderr
 '
 
+test_expect_success 'deprecated --smtp-ssl (or sendemail.smtpssl=true)' '
+	test_must_fail git -c sendemail.smtpssl=true send-email -1 2>stderr &&
+	test_i18ngrep "deprecated option.*or.*config" stderr &&
+	test_must_fail git send-email --smtp-ssl -1 &&
+	test_i18ngrep "deprecated option.*or.*config" stderr &&
+	test_must_fail git -c sendemail.identity=test -c sendemail.test.smtpssl=true send-email -1 &&
+	test_i18ngrep "deprecated option.*or.*config" stderr
+'
+
 test_sendmail_aliases () {
 	msg="$1" && shift &&
 	expect="$@" &&

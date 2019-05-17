@@ -77,7 +77,6 @@ git send-email --dump-aliases
     --smtp-user             <str>  * Username for SMTP-AUTH.
     --smtp-pass             <str>  * Password for SMTP-AUTH; not necessary.
     --smtp-encryption       <str>  * tls or ssl; anything else disables.
-    --smtp-ssl                     * Deprecated. Use '--smtp-encryption ssl'.
     --smtp-ssl-cert-path    <str>  * Path to ca-certificates (either directory or file).
                                      Pass an empty string to disable certificate
                                      verification.
@@ -236,7 +235,7 @@ my ($suppress_from, $signed_off_by_cc);
 my ($cover_cc, $cover_to);
 my ($to_cmd, $cc_cmd);
 my ($smtp_server, $smtp_server_port, @smtp_server_options);
-my ($smtp_authuser, $smtp_encryption, $smtp_ssl_cert_path);
+my ($smtp_authuser, $smtp_ssl_cert_path);
 my ($batch_size, $relogin_delay);
 my ($identity, $aliasfiletype, @alias_files, $smtp_domain, $smtp_auth);
 my ($confirm);
@@ -250,6 +249,9 @@ my $chain_reply_to = 0;
 my $use_xmailer = 1;
 my $validate = 1;
 my $target_xfer_encoding = 'auto';
+my $smtp_encryption = '';
+# Deprecated variables
+my $deprecated_smtp_ssl;
 
 my %config_bool_settings = (
     "thread" => \$thread,
@@ -266,10 +268,12 @@ my %config_bool_settings = (
 );
 
 my %config_settings = (
+    "smtpencryption" => \$smtp_encryption,
     "smtpserver" => \$smtp_server,
     "smtpserverport" => \$smtp_server_port,
     "smtpserveroption" => \@smtp_server_options,
     "smtpuser" => \$smtp_authuser,
+    "smtpssl" => \$deprecated_smtp_ssl,
     "smtppass" => \$smtp_authpass,
     "smtpdomain" => \$smtp_domain,
     "smtpauth" => \$smtp_auth,
@@ -366,18 +370,6 @@ sub read_config {
 			$$target = $v;
 		}
 	}
-
-	if (!defined $smtp_encryption) {
-		my $setting = "$prefix.smtpencryption";
-		my $enc = Git::config(@repo, $setting);
-		return unless defined $enc;
-		return if $configured->{$setting}++;
-		if (defined $enc) {
-			$smtp_encryption = $enc;
-		} elsif (Git::config_bool(@repo, "$prefix.smtpssl")) {
-			$smtp_encryption = 'ssl';
-		}
-	}
 }
 
 # sendemail.identity yields to --identity. We must parse this
@@ -426,7 +418,7 @@ $rc = GetOptions(
 		    "smtp-server-port=s" => \$smtp_server_port,
 		    "smtp-user=s" => \$smtp_authuser,
 		    "smtp-pass:s" => \$smtp_authpass,
-		    "smtp-ssl" => sub { $smtp_encryption = 'ssl' },
+		    "smtp-ssl" => sub { $deprecated_smtp_ssl = 1 },
 		    "smtp-encryption=s" => \$smtp_encryption,
 		    "smtp-ssl-cert-path=s" => \$smtp_ssl_cert_path,
 		    "smtp-debug:i" => \$debug_net_smtp,
@@ -484,8 +476,8 @@ die __("`batch-size` and `relogin` must be specified together " .
 	"(via command-line or configuration option)\n")
 	if defined $relogin_delay and not defined $batch_size;
 
-# 'default' encryption is none -- this only prevents a warning
-$smtp_encryption = '' unless (defined $smtp_encryption);
+die __("Use of deprecated option --smtp-ssl (or smtp.smtpssl config), use --smtp-encryption=ssl (or sendemail.smtpEncryption=ssl) instead\n")
+	if $deprecated_smtp_ssl;
 
 # Set CC suppressions
 my(%suppress_cc);
