@@ -18,8 +18,6 @@ arch	git/trunk	https://git.archlinux.org/svntogit/packages.git
 nix	pkgs/applications/version-management/git-and-tools/git	https://github.com/NixOS/nixpkgs.git
 alpine	main/git	https://git.alpinelinux.org/aports
 EOF
-# TODO: https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/SRPMS/git/
-# See: https://www.ibm.com/developerworks/aix/library/aix-toolbox/alpha.html
 
 git init
 while read line
@@ -51,7 +49,20 @@ done <repositories.txt >>trees.txt
 
 root=$(git mktree <trees.txt)
 git read-tree $root
-git commit -m"snap"
+git commit -m"Packages in git repositories"
 git checkout
+
+# Special snowflakes
+mkdir AIX
+aix_url='https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/SRPMS/git/'
+aix_rpm=$(w3m -dump $aix_url  | grep -o git-.*rpm | sort -Vr | head -n 1)
+wget $aix_url/$aix_rpm -O AIX/src.rpm
+(
+    cd AIX &&
+    rpm2cpio *.rpm | cpio -idmv &&
+    rm -v *.tar.gz *.tar.sign *.tar.xz *.rpm
+)
+git add AIX
+git commit -m"IBM's AIX package"
 
 #rm -rfv $dir
