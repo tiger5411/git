@@ -16,7 +16,10 @@ fedora	.	https://src.fedoraproject.org/rpms/git
 gentoo	dev-vcs/git	https://github.com/gentoo/gentoo.git
 arch	git/trunk	https://git.archlinux.org/svntogit/packages.git
 nix	pkgs/applications/version-management/git-and-tools/git	https://github.com/NixOS/nixpkgs.git
+alpine	main/git	https://git.alpinelinux.org/aports
 EOF
+# TODO: https://public.dhe.ibm.com/aix/freeSoftware/aixtoolbox/SRPMS/git/
+# See: https://www.ibm.com/developerworks/aix/library/aix-toolbox/alpha.html
 
 git init
 while read line
