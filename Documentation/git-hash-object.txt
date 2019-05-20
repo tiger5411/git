@@ -28,6 +28,12 @@ OPTIONS
 
 -w::
 	Actually write the object into the object database.
++
+No guarantees are made as to how the object is added to the database
+(e.g. whether as a loose object, or streamed to a pack), except in the
+case of the `--literally` option. How it's written may depend on
+heuristics such as the `core.bigFileThreshold` configuration variable
+(see linkgit:git-config[1]).
 
 --stdin::
 	Read the object from standard input instead of from a file.
@@ -53,10 +59,11 @@ OPTIONS
 	is always implied, unless the `--path` option is given.
 
 --literally::
-	Allow `--stdin` to hash any garbage into a loose object which might not
+	Allow for hashing arbitrary data which might not
 	otherwise pass standard object parsing or git-fsck checks. Useful for
 	stress-testing Git itself or reproducing characteristics of corrupt or
-	bogus objects encountered in the wild.
+	bogus objects encountered in the wild. When writing objects guarantees
+	that the written object will be a loose object, for ease of debugging.
 
 GIT
 ---
