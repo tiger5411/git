@@ -348,6 +348,8 @@ static void add_repack_incremental_option(void)
 
 static int need_to_gc(void)
 {
+	if (git_env_bool("GIT_TEST_GC", 0))
+		return 1;
 	/*
 	 * Setting gc.auto to 0 or negative can disable the
 	 * automatic gc.
@@ -533,7 +535,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 {
 	int aggressive = 0;
 	int auto_gc = 0;
-	int quiet = 0;
+	int quiet = -1;
 	int force = 0;
 	const char *name;
 	pid_t pid;
@@ -589,6 +591,8 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		if (aggressive_window > 0)
 			strvec_pushf(&repack, "--window=%d", aggressive_window);
 	}
+	if (quiet == -1)
+		quiet = git_env_bool("GIT_TEST_GC", 0);
 	if (quiet)
 		strvec_push(&repack, "-q");
 
@@ -607,6 +611,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		}
 		if (detach_auto) {
 			int ret = report_last_gc_error();
+
 			if (ret < 0)
 				/* an I/O error occurred, already reported */
 				exit(128);

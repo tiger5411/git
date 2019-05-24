@@ -42,7 +42,7 @@ reset_to_sane
 test_expect_success 'symbolic-ref can be deleted' '
 	git symbolic-ref NOTHEAD refs/heads/foo &&
 	git symbolic-ref -d NOTHEAD &&
-	test_path_is_file .git/refs/heads/foo &&
+	git rev-parse refs/heads/foo &&
 	test_path_is_missing .git/NOTHEAD
 '
 reset_to_sane

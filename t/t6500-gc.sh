@@ -55,7 +55,7 @@ test_expect_success 'gc -h with invalid configuration' '
 	test_i18ngrep "[Uu]sage" broken/usage
 '
 
-test_expect_success 'gc is not aborted due to a stale symref' '
+test_expect_success !GC 'gc is not aborted due to a stale symref' '
 	git init remote &&
 	(
 		cd remote &&
@@ -68,7 +68,7 @@ test_expect_success 'gc is not aborted due to a stale symref' '
 	)
 '
 
-test_expect_success 'gc --keep-largest-pack' '
+test_expect_success !GC 'gc --keep-largest-pack' '
 	test_create_repo keep-pack &&
 	(
 		cd keep-pack &&
@@ -95,7 +95,7 @@ test_expect_success 'gc --keep-largest-pack' '
 	)
 '
 
-test_expect_success 'auto gc with too many loose objects does not attempt to create bitmaps' '
+test_expect_success !GC 'auto gc with too many loose objects does not attempt to create bitmaps' '
 	test_config gc.auto 3 &&
 	test_config gc.autodetach false &&
 	test_config pack.writebitmaps true &&
@@ -119,13 +119,13 @@ test_expect_success 'auto gc with too many loose objects does not attempt to cre
 	test_line_count = 1 new # There is one new pack
 '
 
-test_expect_success 'gc --no-quiet' '
+test_expect_success !GC 'gc --no-quiet' '
 	GIT_PROGRESS_DELAY=0 git -c gc.writeCommitGraph=true gc --no-quiet >stdout 2>stderr &&
 	test_must_be_empty stdout &&
 	test_i18ngrep "Computing commit graph generation numbers" stderr
 '
 
-test_expect_success TTY 'with TTY: gc --no-quiet' '
+test_expect_success !GC,TTY 'with TTY: gc --no-quiet' '
 	test_terminal env GIT_PROGRESS_DELAY=0 \
 		git -c gc.writeCommitGraph=true gc --no-quiet >stdout 2>stderr &&
 	test_must_be_empty stdout &&
@@ -133,7 +133,7 @@ test_expect_success TTY 'with TTY: gc --no-quiet' '
 	test_i18ngrep "Computing commit graph generation numbers" stderr
 '
 
-test_expect_success 'gc --quiet' '
+test_expect_success !GC 'gc --quiet' '
 	git -c gc.writeCommitGraph=true gc --quiet >stdout 2>stderr &&
 	test_must_be_empty stdout &&
 	test_must_be_empty stderr
@@ -168,7 +168,7 @@ run_and_wait_for_auto_gc () {
 	doesnt_matter=$(git gc --auto 9>&1)
 }
 
-test_expect_success 'background auto gc does not run if gc.log is present and recent but does if it is old' '
+test_expect_success !GC 'background auto gc does not run if gc.log is present and recent but does if it is old' '
 	test_commit foo &&
 	test_commit bar &&
 	git repack &&

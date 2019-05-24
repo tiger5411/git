@@ -235,7 +235,9 @@ test_expect_success \
 test_expect_success \
     'git get-tar-commit-id' \
     'git get-tar-commit-id <b.tar >b.commitid &&
-     test_cmp .git/$(git symbolic-ref HEAD) b.commitid'
+     git symbolic-ref HEAD >HEAD.ref &&
+     git rev-parse $(cat HEAD.ref) >expected &&
+     test_cmp expected b.commitid'
 
 test_expect_success 'git archive with --output, override inferred format' '
 	git archive --format=tar --output=d4.zip HEAD &&

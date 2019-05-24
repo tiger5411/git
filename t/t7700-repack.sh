@@ -168,7 +168,7 @@ test_expect_success 'objects made unreachable by grafts only are kept' '
 	git cat-file -t $H1
 '
 
-test_expect_success 'repack --keep-pack' '
+test_expect_success !GC 'repack --keep-pack' '
 	test_create_repo keep-pack &&
 	(
 		cd keep-pack &&
