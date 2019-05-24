@@ -402,7 +402,7 @@ static int need_to_gc(void)
 }
 
 /* return NULL on success, else hostname running the gc */
-static const char *lock_repo_for_gc(int force, pid_t* ret_pid)
+static const char *lock_repo_for_gc(int force, pid_t* ret_pid, int die_on_error)
 {
 	struct lock_file lock = LOCK_INIT;
 	char my_host[HOST_NAME_MAX + 1];
@@ -412,13 +412,17 @@ static const char *lock_repo_for_gc(int force, pid_t* ret_pid)
 	FILE *fp;
 	int fd;
 	char *pidfile_path;
+	int flags = die_on_error ? LOCK_DIE_ON_ERROR : LOCK_QUIET_ON_ERROR;
 
 	if (xgethostname(my_host, sizeof(my_host)))
 		xsnprintf(my_host, sizeof(my_host), "unknown");
 
 	pidfile_path = git_pathdup("gc.pid");
-	fd = hold_lock_file_for_update(&lock, pidfile_path,
-				       LOCK_DIE_ON_ERROR);
+	fd = hold_lock_file_for_update(&lock, pidfile_path, flags);
+	if (fd < 0) {
+		assert(!die_on_error); /* should die in unable_to_lock_die() */
+		return pidfile_path;
+	}
 	if (!force) {
 		static char locking_host[HOST_NAME_MAX + 1];
 		static char *scan_fmt;
@@ -544,7 +548,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 	int auto_gc = 0;
 	int quiet = -1;
 	int force = 0;
-	const char *name;
+	const char *name = NULL;
 	pid_t pid;
 	int daemonized = 0;
 	int keep_largest_pack = -1;
@@ -609,6 +613,8 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		 */
 		if (!need_to_gc())
 			return 0;
+		if (lock_repo_for_gc(force, &pid, 0))
+			return 0;
 		if (!quiet) {
 			if (detach_auto)
 				fprintf(stderr, _("Auto packing the repository in background for optimum performance.\n"));
@@ -626,8 +632,6 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 				/* Last gc --auto failed. Skip this one. */
 				return 0;
 
-			if (lock_repo_for_gc(force, &pid))
-				return 0;
 			gc_before_repack(); /* dies on failure */
 			git_test_sleep("GIT_TEST_GC_SLEEP_PRE_FORK");
 			delete_tempfile(&pidfile);
@@ -654,7 +658,8 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		string_list_clear(&keep_pack, 0);
 	}
 
-	name = lock_repo_for_gc(force, &pid);
+	if (!pidfile)
+		name = lock_repo_for_gc(force, &pid, 1);
 	if (name) {
 		if (auto_gc)
 			return 0; /* be quiet on --auto */

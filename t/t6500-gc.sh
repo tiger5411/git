@@ -194,14 +194,14 @@ test_racy_gc_auto () {
 	"
 }
 
-test_racy_gc_auto failure false N/A N/A N/A
+test_racy_gc_auto success false N/A N/A N/A
 for fork_works in true false
 do
 	for sleep_before_fork in 0 1
 	do
 		for sleep_before_fork_no_lock in 0 1
 		do
-			test_racy_gc_auto failure true $sleep_before_fork $sleep_before_fork_no_lock $fork_works
+			test_racy_gc_auto success true $sleep_before_fork $sleep_before_fork_no_lock $fork_works
 		done
 	done
 done
@@ -223,8 +223,8 @@ test_racy_faked_gc_auto () {
 		test_line_count = 0 errors
 	"
 }
-test_racy_faked_gc_auto failure true
-test_racy_faked_gc_auto failure false
+test_racy_faked_gc_auto success true
+test_racy_faked_gc_auto success false
 
 run_and_wait_for_auto_gc () {
 	# We read stdout from gc for the side effect of waiting until the

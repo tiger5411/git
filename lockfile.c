@@ -175,7 +175,8 @@ int hold_lock_file_for_update_timeout_mode(struct lock_file *lk,
 					   long timeout_ms, int mode)
 {
 	int fd = lock_file_timeout(lk, path, flags, timeout_ms, mode);
-	if (fd < 0) {
+	if (fd < 0 &&
+	    !(flags & LOCK_QUIET_ON_ERROR)) {
 		if (flags & LOCK_DIE_ON_ERROR)
 			unable_to_lock_die(path, errno);
 		if (flags & LOCK_REPORT_ON_ERROR) {
