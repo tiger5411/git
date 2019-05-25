@@ -396,6 +396,14 @@ enabled the --quiet option is implicitly supplied (a lot "test_cmp
 stderr.{expected,actual}" tests would otherwise fail), that can be
 manually disabled with "--no-quiet".
 
+GIT_TEST_GC_AUTO_DETACH=<boolean>, when false, forces "gc --auto" to
+run concurrently (like gc.autoDetach=false). Useful in combination
+with "GIT_TEST_GC=true" to make "gc" more deterministic, since there's
+a race condition factor to concurrent GC (which is also useful to test
+for). Can also implicitly done by compiling with
+NO_POSIX_GOODIES=UnfortunatelyYes since daemonize() will fail, but
+this doesn't require recompilation.
+
 GIT_TEST_COMMIT_GRAPH=<boolean>, when true, forces the commit-graph to
 be written after every 'git commit' command, and overrides the
 'core.commitGraph' setting to true.

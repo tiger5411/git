@@ -158,6 +158,74 @@ test_expect_success 'one of gc.reflogExpire{Unreachable,}=never does not skip "e
 	grep -E "^trace: (built-in|exec|run_command): git reflog expire --" trace.out
 '
 
+test_lazy_prereq GNU_PARALLEL '
+	parallel --version | grep -q "^GNU parallel"
+'
+
+test_racy_gc_auto () {
+	result=$1
+	config=$2
+	sleep_bf=$3
+	sleep_bfnl=$4
+	fork_works=$5
+
+	test_expect_$result !GC,C_LOCALE_OUTPUT,GNU_PARALLEL "gc -c gc.autoDetach=$config --auto lock before running & messaging with sleep($sleep_bf) & sleep($sleep_bfnl) & fork($fork_works)" "
+		>out &&
+		>errors &&
+		git init gc-lock &&
+		test_when_finished 'rm -rf gc-lock' &&
+		(
+			# See 'two objects whose sha1s start with 17' comment above
+			test_commit -C gc-lock 263 &&
+			test_commit -C gc-lock 410 &&
+			test_config -C gc-lock gc.auto 3 &&
+			test_seq 1 16 | parallel --jobs=50% -k \"
+				echo {}: &&
+				GIT_TEST_GC_SLEEP_BEFORE_FORK=$sleep_bf \
+				GIT_TEST_GC_SLEEP_BEFORE_FORK_NO_LOCK=$sleep_bfnl \
+				GIT_TEST_GC_AUTO_DETACH=$fork_works \
+				git -C gc-lock -c gc.autoDetach=$config \
+					gc --auto || echo {} >>errors
+			\" >>out 2>&1 &&
+			cat out &&
+			cat errors &&
+			test_line_count = 0 errors
+		)
+	"
+}
+
+test_racy_gc_auto failure false N/A N/A N/A
+for fork_works in true false
+do
+	for sleep_before_fork in 0 1
+	do
+		for sleep_before_fork_no_lock in 0 1
+		do
+			test_racy_gc_auto failure true $sleep_before_fork $sleep_before_fork_no_lock $fork_works
+		done
+	done
+done
+
+test_racy_faked_gc_auto () {
+	result=$1
+	config=$2
+
+	test_expect_$result C_LOCALE_OUTPUT,GNU_PARALLEL "gc -c gc.autoDetach=$config gc --auto with faked need_to_gc() racyness" "
+		>out &&
+		>errors &&
+		test_seq 1 16 | parallel --jobs=50% -k \"
+			echo {}: &&
+			GIT_TEST_GC=true git -c gc.autoDetach=$config \
+				gc --auto --no-quiet || echo {} >>errors
+		\" >>out 2>&1 &&
+		cat out &&
+		cat errors &&
+		test_line_count = 0 errors
+	"
+}
+test_racy_faked_gc_auto failure true
+test_racy_faked_gc_auto failure false
+
 run_and_wait_for_auto_gc () {
 	# We read stdout from gc for the side effect of waiting until the
 	# background gc process exits, closing its fd 9.  Furthermore, the

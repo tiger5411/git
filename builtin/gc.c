@@ -531,6 +531,13 @@ static void gc_before_repack(void)
 		die(FAILED_RUN, reflog.v[0]);
 }
 
+static void git_test_sleep(const char *variable)
+{
+	uintmax_t seconds = git_env_ulong(variable, 0);
+	if (seconds)
+		sleep(seconds);
+}
+
 int cmd_gc(int argc, const char **argv, const char *prefix)
 {
 	int aggressive = 0;
@@ -622,13 +629,16 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 			if (lock_repo_for_gc(force, &pid))
 				return 0;
 			gc_before_repack(); /* dies on failure */
+			git_test_sleep("GIT_TEST_GC_SLEEP_PRE_FORK");
 			delete_tempfile(&pidfile);
+			git_test_sleep("GIT_TEST_GC_SLEEP_BEFORE_FORK_NO_LOCK");
 
 			/*
 			 * failure to daemonize is ok, we'll continue
 			 * in foreground
 			 */
-			daemonized = !daemonize();
+			if (git_env_bool("GIT_TEST_GC_AUTO_DETACH", 1))
+				daemonized = !daemonize();
 		}
 	} else {
 		struct string_list keep_pack = STRING_LIST_INIT_NODUP;
