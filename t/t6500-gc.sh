@@ -99,7 +99,7 @@ test_expect_success 'auto gc with too many loose objects does not attempt to cre
 	test_config gc.auto 3 &&
 	test_config gc.autodetach false &&
 	test_config pack.writebitmaps true &&
-	# We need to create two object whose sha1s start with 17
+	# We need to create two objects whose sha1s start with 17
 	# since this is what git gc counts.  As it happens, these
 	# two blobs will do so.
 	test_commit "$(test_oid obj1)" &&
