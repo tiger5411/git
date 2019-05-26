@@ -1155,8 +1155,10 @@ int transport_push(struct repository *r,
 		if (flags & TRANSPORT_PUSH_FOLLOW_TAGS)
 			match_flags |= MATCH_REFS_FOLLOW_TAGS;
 
+		fprintf(stderr, "trying to match\n");
 		if (match_push_refs(local_refs, &remote_refs, rs, match_flags))
 			return -1;
+		fprintf(stderr, "matched\n");
 
 		if (transport->smart_options &&
 		    transport->smart_options->cas &&

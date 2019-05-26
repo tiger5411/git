@@ -875,8 +875,11 @@ int count_refspec_match(const char *pattern,
 		char *name = refs->name;
 		int namelen = strlen(name);
 
-		if (!refname_match(pattern, name))
+		fprintf(stderr, "seeing if %s matches\n", name);
+
+		if (!refname_match_count_refspec(pattern, name))
 			continue;
+		fprintf(stderr, "got past refname match\n");
 
 		/* A match is "weak" if it is with refs outside
 		 * heads or tags, and did not specify the pattern
@@ -897,10 +900,12 @@ int count_refspec_match(const char *pattern,
 			 * strong match with zero or more weak matches
 			 * are acceptable as a unique match.
 			 */
+			fprintf(stderr, "declaring %s a weak match\n", name);
 			matched_weak = refs;
 			weak_match++;
 		}
 		else {
+			fprintf(stderr, "declaring %s a match!\n", name);
 			matched = refs;
 			match++;
 		}
@@ -966,6 +971,7 @@ static char *guess_ref(const char *name, struct ref *peer)
 
 	const char *r = resolve_ref_unsafe(peer->name, RESOLVE_REF_READING,
 					   NULL, NULL);
+	fprintf(stderr, "Trying to guess at %s resolved as %s\n", name, r);
 	if (!r)
 		return NULL;
 
@@ -1071,6 +1077,9 @@ static int match_explicit(struct ref *src, struct ref *dst,
 
 	const char *dst_value = rs->dst;
 	char *dst_guess;
+	int cnt;
+
+	fprintf(stderr, "got dst value = %s\n", dst_value);
 
 	if (rs->pattern || rs->matching)
 		return 0;
@@ -1078,6 +1087,7 @@ static int match_explicit(struct ref *src, struct ref *dst,
 	matched_src = matched_dst = NULL;
 	if (match_explicit_lhs(src, rs, &matched_src, &allocated_src) < 0)
 		return -1;
+	fprintf(stderr, "got past lhs\n");
 
 	if (!dst_value) {
 		int flag;
@@ -1092,10 +1102,13 @@ static int match_explicit(struct ref *src, struct ref *dst,
 			    matched_src->name);
 	}
 
-	switch (count_refspec_match(dst_value, dst, &matched_dst)) {
+	cnt = count_refspec_match(dst_value, dst, &matched_dst);
+	fprintf(stderr, "got cnt = %d\n", cnt);
+	switch (cnt) {
 	case 1:
 		break;
 	case 0:
+		fprintf(stderr, "matched dst = %s\n", dst_value);
 		if (starts_with(dst_value, "refs/")) {
 			matched_dst = make_linked_ref(dst_value, dst_tail);
 		} else if (is_null_oid(&matched_src->new_oid)) {
@@ -1133,8 +1146,10 @@ static int match_explicit_refs(struct ref *src, struct ref *dst,
 			       struct ref ***dst_tail, struct refspec *rs)
 {
 	int i, errs;
-	for (i = errs = 0; i < rs->nr; i++)
+	for (i = errs = 0; i < rs->nr; i++) {
 		errs += match_explicit(src, dst, dst_tail, &rs->items[i]);
+		fprintf(stderr, "up do %d errs on me()\n", errs);
+	}
 	return errs;
 }
 
@@ -1394,6 +1409,7 @@ int match_push_refs(struct ref *src, struct ref **dst,
 		char *dst_name;
 
 		dst_name = get_ref_match(rs, ref, send_mirror, FROM_SRC, &pat);
+		fprintf(stderr, "got dst name =%s\n", dst_name);
 		if (!dst_name)
 			continue;
 
