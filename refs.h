@@ -140,6 +140,7 @@ int resolve_gitlink_ref(const char *submodule, const char *refname,
  * refs.c.
  */
 int refname_match(const char *abbrev_name, const char *full_name);
+int refname_match_count_refspec(const char *abbrev_name, const char *full_name);
 
 /*
  * Given a 'prefix' expand it by the rules in 'ref_rev_parse_rules' and add

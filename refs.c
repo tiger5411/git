@@ -501,6 +501,15 @@ static const char *ref_rev_parse_rules[] = {
 
 #define NUM_REV_PARSE_RULES (ARRAY_SIZE(ref_rev_parse_rules) - 1)
 
+static const char *ref_rev_parse_rules_no_tags_or_heads[] = {
+	"%.*s",
+	"refs/remotes/%.*s",
+	"refs/remotes/%.*s/HEAD",
+	NULL
+};
+
+#define NUM_REV_PARSE_NO_TAGS_OR_HEADS_RULES (ARRAY_SIZE(ref_rev_parse_rules_no_tags_or_heads) - 1)
+
 /*
  * Is it possible that the caller meant full_name with abbrev_name?
  * If so return a non-zero value to signal "yes"; the magnitude of
@@ -508,17 +517,33 @@ static const char *ref_rev_parse_rules[] = {
  *
  * If abbrev_name cannot mean full_name, return 0.
  */
-int refname_match(const char *abbrev_name, const char *full_name)
+static int refname_match_internal(const char *abbrev_name, const char *full_name,
+				  const char **rules, int num_rules)
 {
 	const char **p;
 	const int abbrev_name_len = strlen(abbrev_name);
-	const int num_rules = NUM_REV_PARSE_RULES;
 
-	for (p = ref_rev_parse_rules; *p; p++)
-		if (!strcmp(full_name, mkpath(*p, abbrev_name_len, abbrev_name)))
-			return &ref_rev_parse_rules[num_rules] - p;
+	for (p = rules; *p; p++) {
+		const char *dst = mkpath(*p, abbrev_name_len, abbrev_name);
+		if (!strcmp(full_name, dst))
+			return &rules[num_rules] - p;
+	}
 
 	return 0;
+}
+
+int refname_match(const char *abbrev_name, const char *full_name)
+{
+	return refname_match_internal(abbrev_name, full_name,
+				      ref_rev_parse_rules,
+				      NUM_REV_PARSE_RULES);
+}
+
+int refname_match_count_refspec(const char *abbrev_name, const char *full_name)
+{
+	return refname_match_internal(abbrev_name, full_name,
+				      ref_rev_parse_rules_no_tags_or_heads,
+				      NUM_REV_PARSE_NO_TAGS_OR_HEADS_RULES);
 }
 
 /*
