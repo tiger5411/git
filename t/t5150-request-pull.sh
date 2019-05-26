@@ -212,7 +212,7 @@ test_expect_success 'pull request format' '
 		cd local &&
 		git checkout initial &&
 		git merge --ff-only master &&
-		git push origin tags/full &&
+		git push origin full:refs/tags/full &&
 		git request-pull initial "$downstream_url" tags/full >../request
 	) &&
 	<request sed -nf fuzz.sed >request.fuzzy &&

@@ -514,9 +514,15 @@ int refname_match(const char *abbrev_name, const char *full_name)
 	const int abbrev_name_len = strlen(abbrev_name);
 	const int num_rules = NUM_REV_PARSE_RULES;
 
-	for (p = ref_rev_parse_rules; *p; p++)
+	for (p = ref_rev_parse_rules; *p; p++) {
+		if (!strcmp(*p, "refs/%.*s") &&
+		    (starts_with(abbrev_name, "tags/") ||
+		     starts_with(abbrev_name, "heads/") ||
+		     starts_with(abbrev_name, "remotes/")))
+			continue;
 		if (!strcmp(full_name, mkpath(*p, abbrev_name_len, abbrev_name)))
 			return &ref_rev_parse_rules[num_rules] - p;
+	}
 
 	return 0;
 }
