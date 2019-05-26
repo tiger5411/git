@@ -5,7 +5,7 @@
 
 test_description='Gettext Shell poison'
 
-GIT_TEST_GETTEXT_POISON=YesPlease
+GIT_TEST_GETTEXT_POISON=true
 export GIT_TEST_GETTEXT_POISON
 . ./lib-gettext.sh
 

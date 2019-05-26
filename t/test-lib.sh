@@ -1443,6 +1443,10 @@ then
 	unset GIT_TEST_GETTEXT_POISON_ORIG
 fi
 
+test_lazy_prereq C_LOCALE_OUTPUT '
+	! git env--helper --mode-bool --variable=GIT_TEST_GETTEXT_POISON --default=0 --exit-code --quiet
+'
+
 # Can we rely on git's output in the C locale?
 if test -z "$GIT_TEST_GETTEXT_POISON"
 then
