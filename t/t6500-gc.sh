@@ -168,8 +168,9 @@ test_racy_gc_auto () {
 	sleep_bf=$3
 	sleep_bfnl=$4
 	fork_works=$5
+	sleep_pfpl=$6
 
-	test_expect_$result !GC,C_LOCALE_OUTPUT,GNU_PARALLEL "gc -c gc.autoDetach=$config --auto lock before running & messaging with sleep($sleep_bf) & sleep($sleep_bfnl) & fork($fork_works)" "
+	test_expect_$result !GC,C_LOCALE_OUTPUT,GNU_PARALLEL "gc -c gc.autoDetach=$config --auto lock before running & messaging with sleep($sleep_pfpl) & sleep($sleep_bf) & sleep($sleep_bfnl) & fork($fork_works)" "
 		>out &&
 		>errors &&
 		git init gc-lock &&
@@ -183,6 +184,7 @@ test_racy_gc_auto () {
 				echo {}: &&
 				GIT_TEST_GC_SLEEP_BEFORE_FORK=$sleep_bf \
 				GIT_TEST_GC_SLEEP_BEFORE_FORK_NO_LOCK=$sleep_bfnl \
+				GIT_TEST_GC_SLEEP_POST_FORK_POST_LOCK=$sleep_pfpl \
 				GIT_TEST_GC_AUTO_DETACH=$fork_works \
 				git -C gc-lock -c gc.autoDetach=$config \
 					gc --auto || echo {} >>errors
@@ -194,14 +196,17 @@ test_racy_gc_auto () {
 	"
 }
 
-test_racy_gc_auto success false N/A N/A N/A
-for fork_works in true false
+test_racy_gc_auto success false N/A N/A N/A 0
+for sleep_post_fork_post_lock in 0 1
 do
-	for sleep_before_fork in 0 1
+	for fork_works in true false
 	do
-		for sleep_before_fork_no_lock in 0 1
+		for sleep_before_fork in 0 1
 		do
-			test_racy_gc_auto success true $sleep_before_fork $sleep_before_fork_no_lock $fork_works
+			for sleep_before_fork_no_lock in 0 1
+			do
+				test_racy_gc_auto success true $sleep_before_fork $sleep_before_fork_no_lock $fork_works $sleep_post_fork_post_lock
+			done
 		done
 	done
 done
