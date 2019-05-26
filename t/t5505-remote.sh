@@ -1277,4 +1277,25 @@ test_expect_success 'refs/remotes/* <src> refspec and unqualified <dst> DWIM and
 	)
 '
 
+test_expect_success 'tags/foo and refs/tags/foo are semi-synonymous' '
+	(
+		setup_repository a-tag &&
+		cd a-tag &&
+		git tag -a -m"msg" tag-exists
+	) &&
+	git clone a-tag a-tag-client &&
+	(
+		cd a-tag-client &&
+		test_commit file2 &&
+
+		git push origin HEAD:new-branch &&
+		git ls-remote origin --heads >remote-heads &&
+		grep new-branch remote-heads &&
+
+		git push origin HEAD:tags/new-branch2 &&
+		git ls-remote origin --heads >remote-heads &&
+		grep tags/new-branch2 remote-heads 
+	)
+'
+
 test_done
