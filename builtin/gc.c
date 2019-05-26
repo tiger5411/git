@@ -553,6 +553,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 	int daemonized = 0;
 	int keep_largest_pack = -1;
 	timestamp_t dummy;
+	uintmax_t seconds;
 
 	struct option builtin_gc_options[] = {
 		OPT__QUIET(&quiet, N_("suppress progress reporting")),
@@ -675,6 +676,10 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		sigchain_push_common(process_log_file_on_signal);
 		atexit(process_log_file_at_exit);
 	}
+
+	seconds = git_env_ulong("GIT_TEST_GC_SLEEP_POST_FORK_POST_LOCK", 0);
+	if (seconds)
+		sleep(seconds);
 
 	gc_before_repack();
 
