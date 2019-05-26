@@ -875,7 +875,7 @@ int count_refspec_match(const char *pattern,
 		char *name = refs->name;
 		int namelen = strlen(name);
 
-		if (!refname_match(pattern, name))
+		if (!refname_match_count_refspec(pattern, name))
 			continue;
 
 		/* A match is "weak" if it is with refs outside
