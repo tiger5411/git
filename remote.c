@@ -1066,7 +1066,7 @@ static int match_explicit(struct ref *src, struct ref *dst,
 			  struct ref ***dst_tail,
 			  struct refspec_item *rs)
 {
-	struct ref *matched_src, *matched_dst;
+	struct ref *matched_src, *matched_dst, *tmp;
 	int allocated_src;
 
 	const char *dst_value = rs->dst;
@@ -1094,6 +1094,27 @@ static int match_explicit(struct ref *src, struct ref *dst,
 
 	switch (count_refspec_match(dst_value, dst, &matched_dst)) {
 	case 1:
+		if ((starts_with(dst_value, "tags/") ||
+		     starts_with(dst_value, "heads/") ||
+		     starts_with(dst_value, "remotes/")) &&
+		    (dst_guess = guess_ref(dst_value, matched_src))) {
+			tmp = make_linked_ref(dst_guess, dst_tail);
+			if (advice_partial_ambiguous_ref_name)
+				advise(_("The <dst> part of the refspec matched both of:\n"
+					 "\n"
+					 "	1. %1$s -> %2$s\n"
+					 "	2. %1$s -> %3$s\n"
+					 "\n"
+					 "Earlier versions of git would have picked (1) as the RHS starts\n"
+					 "with a second-level ref prefix which could be fully-qualified by\n"
+					 "adding 'refs/' in front of it. We now pick (2) which uses the prefix\n"
+					 "inferred from the <src> part of the refspec.\n"
+					 "\n"
+					 "See the \"<refspec>...\" rules  discussed in 'git help push'.\n"),
+					dst_value, matched_dst->name, tmp->name);
+			matched_dst = tmp;
+		}
+
 		break;
 	case 0:
 		if (starts_with(dst_value, "refs/")) {

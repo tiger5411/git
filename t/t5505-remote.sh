@@ -1277,4 +1277,22 @@ test_expect_success 'refs/remotes/* <src> refspec and unqualified <dst> DWIM and
 	)
 '
 
+test_expect_success 'HEAD:tags/A and HEAD:tags/B should not be different depending on if refs/tags/[AB] exists or not' '
+	git clone "file://$PWD/two" tags-match &&
+	(
+		cd tags-match &&
+		test_commit A &&
+		git rev-parse HEAD >expected &&
+
+		git push origin HEAD:tags/my-not-a-tag &&
+		git -C ../two rev-parse refs/heads/tags/my-not-a-tag >actual &&
+		test_cmp expected actual &&
+
+		git push origin HEAD:tags/my-tag 2>advice &&
+		test_i18ngrep "hint: The <dst> part of the refspec matched both of" advice &&
+		git -C ../two rev-parse refs/heads/tags/my-tag >actual &&
+		test_cmp expected actual
+	)
+'
+
 test_done

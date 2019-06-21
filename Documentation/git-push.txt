@@ -84,6 +84,19 @@ is ambiguous.
 
 * If <src> resolves to a ref starting with refs/heads/ or refs/tags/,
   then prepend that to <dst>.
++
+Versions of Git before 2.23.0 would override this rule and match
+e.g. `HEAD:tags/mark` to either `refs/tags/mark` or `refs/tags/mark`
+depending on, respectively, if `refs/tags/mark` existed or not on the
+remote.
++
+We'll now consistently pick `refs/heads/tags/mark` based on this rule
+and so that we're not so eager in guessing the <dst> on the remote
+that we'll pick a different <dst> based on what refs exist there
+already than we otherwise would have. This exception guards for cases
+where the match would be different due to a subsequent
+"refs/{tags,heads,remotes}/" matching rule". than a plain "refs/"
+prefix match.
 
 * Other ambiguity resolutions might be added in the future, but for
   now any other cases will error out with an error indicating what we

@@ -37,6 +37,13 @@ advice.*::
 		we can still suggest that the user push to either
 		refs/heads/* or refs/tags/* based on the type of the
 		source object.
+	pushPartialAmbigiousName::
+		Shown when linkgit:git-push[1] is given a refspec
+		where the <src> in earlier versions of Git would have
+		matched a <dst> on the remote based on its existence
+		over appending a prefix based on the type of the
+		<src>. See the "<refspec>..." documentation in
+		linkgit:git-push[1] for details.
 	statusHints::
 		Show directions on how to proceed from the current
 		state in the output of linkgit:git-status[1], in
