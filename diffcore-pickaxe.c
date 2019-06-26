@@ -67,7 +67,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	return ecbdata.hit;
 }
 
-static unsigned int contains(mmfile_t *mf, regex_t *regexp)
+static unsigned int contains(mmfile_t *mf, regex_t *regexp, unsigned int limit)
 {
 	unsigned int cnt;
 	unsigned long sz;
@@ -89,6 +89,8 @@ static unsigned int contains(mmfile_t *mf, regex_t *regexp)
 			sz--;
 		}
 		cnt++;
+		if (limit && cnt == limit)
+			return cnt;
 	}
 
 	return cnt;
@@ -98,9 +100,9 @@ static int has_changes(mmfile_t *one, mmfile_t *two,
 		       struct diff_options *o,
 		       regex_t *regexp)
 {
-	unsigned int one_contains = one ? contains(one, regexp) : 0;
-	unsigned int two_contains = two ? contains(two, regexp) : 0;
-	return one_contains != two_contains;
+	unsigned int c1 = one ? contains(one, regexp, 0) : 0;
+	unsigned int c2 = two ? contains(two, regexp, c1 + 1) : 0;
+	return c1 != c2;
 }
 
 static int pickaxe_match(struct diff_filepair *p, struct diff_options *o,
