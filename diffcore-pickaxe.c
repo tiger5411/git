@@ -232,21 +232,20 @@ void diffcore_pickaxe(struct diff_options *o)
 	int opts = o->pickaxe_opts;
 	regex_t regex, *regexp = NULL;
 	kwset_t kws = NULL;
+	int cflags = REG_EXTENDED | REG_NEWLINE;
 
 	if (opts & (DIFF_PICKAXE_REGEX | DIFF_PICKAXE_KIND_G)) {
-		int cflags = REG_EXTENDED | REG_NEWLINE;
+		int gcflags = cflags;
 		if (o->pickaxe_opts & DIFF_PICKAXE_IGNORE_CASE)
-			cflags |= REG_ICASE;
-		regcomp_or_die(&regex, needle, cflags);
+			gcflags |= REG_ICASE;
+		regcomp_or_die(&regex, needle, gcflags);
 		regexp = &regex;
 	} else if (opts & DIFF_PICKAXE_KIND_S) {
 		if (o->pickaxe_opts & DIFF_PICKAXE_IGNORE_CASE &&
 		    has_non_ascii(needle)) {
 			struct strbuf sb = STRBUF_INIT;
-			int cflags = REG_NEWLINE | REG_ICASE;
-
 			basic_regex_quote_buf(&sb, needle);
-			regcomp_or_die(&regex, sb.buf, cflags);
+			regcomp_or_die(&regex, sb.buf, cflags | REG_ICASE);
 			strbuf_release(&sb);
 			regexp = &regex;
 		} else {
