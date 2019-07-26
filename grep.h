@@ -21,6 +21,9 @@ typedef int pcre_extra;
 #ifdef USE_LIBPCRE2
 #define PCRE2_CODE_UNIT_WIDTH 8
 #include <pcre2.h>
+#ifndef PCRE2_MATCH_INVALID_UTF
+#define PCRE2_MATCH_INVALID_UTF 0
+#endif
 #else
 typedef int pcre2_code;
 typedef int pcre2_match_data;

@@ -74,10 +74,21 @@ test_expect_success GETTEXT_LOCALE,LIBPCRE2 'PCRE v2: grep non-ASCII from invali
 	test_cmp expected actual
 '
 
-test_expect_success GETTEXT_LOCALE,LIBPCRE2 'PCRE v2: grep non-ASCII from invalid UTF-8 data with -i' '
+test_lazy_prereq PCRE2_MATCH_INVALID_UTF '
+	test-tool pcre2-config has-PCRE2_MATCH_INVALID_UTF
+'
+
+test_expect_success GETTEXT_LOCALE,LIBPCRE2,!PCRE2_MATCH_INVALID_UTF 'PCRE v2: grep non-ASCII from invalid UTF-8 data with -i' '
 	test_might_fail git grep -hi "Æ" invalid-0x80 >actual &&
 	test_cmp expected actual &&
 	test_must_fail git grep -hi "(*NO_JIT)Æ" invalid-0x80 &&
+	test_cmp expected actual
+'
+
+test_expect_success GETTEXT_LOCALE,LIBPCRE2,PCRE2_MATCH_INVALID_UTF 'PCRE v2: grep non-ASCII from invalid UTF-8 data with -i' '
+	git grep -hi "Æ" invalid-0x80 >actual &&
+	test_cmp expected actual &&
+	git grep -hi "(*NO_JIT)Æ" invalid-0x80 &&
 	test_cmp expected actual
 '
 
