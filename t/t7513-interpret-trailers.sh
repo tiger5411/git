@@ -151,6 +151,41 @@ test_expect_success 'spelling and separators are not canonicalized with --parse 
 	test_cmp expected actual
 '
 
+# Matching currently is prefix matching, causing "This-trailer" to be normalized too
+test_expect_failure 'config option matches exact only' '
+	cat >patch <<-\EOF &&
+
+		This-trailer: a
+		 b
+		This-trailer-exact: b
+		 c
+		This-trailer-exact-plus-some: c
+		 d
+	EOF
+	cat >expected <<-\EOF &&
+		This-trailer: a b
+		THIS-TRAILER-EXACT: b c
+		This-trailer-exact-plus-some: c d
+	EOF
+	git -c "trailer.tte.key=THIS-TRAILER-EXACT" interpret-trailers --only-input --only-trailers --unfold patch >actual &&
+	test_cmp expected actual
+'
+
+# Matching currently uses the config key even if key value is different
+test_expect_failure 'config option matches exact only' '
+	cat >patch <<-\EOF &&
+
+		Ticket: 1234
+		Reference-ticket: 99
+	EOF
+	cat >expected <<-\EOF &&
+		Ticket: 1234
+		Reference-Ticket: 99
+	EOF
+	git -c "trailer.ticket.key=Reference-Ticket" interpret-trailers --only-input --only-trailers patch >actual &&
+	test_cmp expected actual
+'
+
 test_expect_success 'with only a title in the message' '
 	cat >expected <<-\EOF &&
 		area: change
