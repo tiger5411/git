@@ -19,6 +19,11 @@ struct conf_info {
 	enum trailer_if_missing if_missing;
 };
 
+struct conf_info_item {
+	struct list_head list;
+	struct conf_info conf;
+};
+
 static struct conf_info default_conf_info;
 
 struct trailer_item {
@@ -432,16 +437,16 @@ static void duplicate_conf(struct conf_info *dst, const struct conf_info *src)
 	dst->command = xstrdup_or_null(src->command);
 }
 
-static struct arg_item *get_conf_item(const char *name)
+static struct conf_info *get_conf_item(const char *name)
 {
 	struct list_head *pos;
-	struct arg_item *item;
+	struct conf_info_item *item;
 
 	/* Look up item with same name */
 	list_for_each(pos, &conf_head) {
-		item = list_entry(pos, struct arg_item, list);
+		item = list_entry(pos, struct conf_info_item, list);
 		if (!strcasecmp(item->conf.name, name))
-			return item;
+			return &item->conf;
 	}
 
 	/* Item does not already exists, create it */
@@ -451,7 +456,7 @@ static struct arg_item *get_conf_item(const char *name)
 
 	list_add_tail(&item->list, &conf_head);
 
-	return item;
+	return &item->conf;
 }
 
 enum trailer_info_type { TRAILER_KEY, TRAILER_COMMAND, TRAILER_WHERE,
@@ -502,7 +507,6 @@ static int git_trailer_default_config(const char *conf_key, const char *value, v
 static int git_trailer_config(const char *conf_key, const char *value, void *cb)
 {
 	const char *trailer_item, *variable_name;
-	struct arg_item *item;
 	struct conf_info *conf;
 	char *name = NULL;
 	enum trailer_info_type type;
@@ -527,8 +531,7 @@ static int git_trailer_config(const char *conf_key, const char *value, void *cb)
 	if (!name)
 		return 0;
 
-	item = get_conf_item(name);
-	conf = &item->conf;
+	conf = get_conf_item(name);
 	free(name);
 
 	switch (type) {
@@ -630,7 +633,7 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val,
 			 const struct conf_info **conf, const char *trailer,
 			 ssize_t separator_pos)
 {
-	struct arg_item *item;
+	struct conf_info_item *item;
 	size_t tok_len;
 	struct list_head *pos;
 
@@ -649,7 +652,7 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val,
 	if (conf)
 		*conf = &default_conf_info;
 	list_for_each(pos, &conf_head) {
-		item = list_entry(pos, struct arg_item, list);
+		item = list_entry(pos, struct conf_info_item, list);
 		if (token_matches_conf(tok->buf, &item->conf, tok_len)) {
 			char *tok_buf = strbuf_detach(tok, NULL);
 			if (conf)
@@ -693,7 +696,7 @@ static void add_arg_item(struct list_head *arg_head, char *tok, char *val,
 static void process_command_line_args(struct list_head *arg_head,
 				      struct list_head *new_trailer_head)
 {
-	struct arg_item *item;
+	struct conf_info_item *item;
 	struct strbuf tok = STRBUF_INIT;
 	struct strbuf val = STRBUF_INIT;
 	const struct conf_info *conf;
@@ -707,7 +710,7 @@ static void process_command_line_args(struct list_head *arg_head,
 
 	/* Add an arg item for each configured trailer with a command */
 	list_for_each(pos, &conf_head) {
-		item = list_entry(pos, struct arg_item, list);
+		item = list_entry(pos, struct conf_info_item, list);
 		if (item->conf.command)
 			add_arg_item(arg_head,
 				     xstrdup(token_from_conf(&item->conf, NULL)),
@@ -877,8 +880,8 @@ static size_t find_trailer_start(const char *buf, size_t len)
 			if (recognized_prefix)
 				continue;
 			list_for_each(pos, &conf_head) {
-				struct arg_item *item;
-				item = list_entry(pos, struct arg_item, list);
+				struct conf_info_item *item;
+				item = list_entry(pos, struct conf_info_item, list);
 				if (token_matches_conf(bol, &item->conf,
 						       separator_pos)) {
 					recognized_prefix = 1;
