@@ -147,22 +147,22 @@ static char last_non_space_char(const char *s)
 	return '\0';
 }
 
-static void print_tok_val(FILE *outfile, const char *tok, const char *val)
+static void print_item(FILE *outfile, const struct trailer_item *item)
 {
 	char c;
 
-	if (!tok) {
-		fprintf(outfile, "%s\n", val);
+	if (!item->token) {
+		fprintf(outfile, "%s\n", item->value);
 		return;
 	}
 
-	c = last_non_space_char(tok);
+	c = last_non_space_char(item->token);
 	if (!c)
 		return;
 	if (strchr(separators, c))
-		fprintf(outfile, "%s%s\n", tok, val);
+		fprintf(outfile, "%s%s\n", item->token, item->value);
 	else
-		fprintf(outfile, "%s%c %s\n", tok, separators[0], val);
+		fprintf(outfile, "%s%c %s\n", item->token, separators[0], item->value);
 }
 
 static void print_all(FILE *outfile, struct list_head *head,
@@ -174,7 +174,7 @@ static void print_all(FILE *outfile, struct list_head *head,
 		item = list_entry(pos, struct trailer_item, list);
 		if ((!opts->trim_empty || strlen(item->value) > 0) &&
 		    (!opts->only_trailers || item->token))
-			print_tok_val(outfile, item->token, item->value);
+			print_item(outfile, item);
 	}
 }
 
