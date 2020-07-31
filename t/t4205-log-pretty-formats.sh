@@ -676,6 +676,12 @@ test_expect_success 'pretty format %(trailers:key=foo) multiple keys' '
 	test_cmp expect actual
 '
 
+test_expect_success 'pretty format %(trailers:key=foo) alias in config' '
+	git -c trailer.ab.key=Acked-by log --no-walk --pretty="format:%(trailers:key=ab)" >actual &&
+	echo "Acked-by: A U Thor <author@example.com>" >expect &&
+	test_cmp expect actual
+'
+
 test_expect_success '%(trailers:key=nonexistent) becomes empty' '
 	git log --no-walk --pretty="x%(trailers:key=Nacked-by)x" >actual &&
 	echo "xx" >expect &&

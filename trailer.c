@@ -1148,8 +1148,11 @@ static void format_trailer_info(struct strbuf *out,
 			struct strbuf tok = STRBUF_INIT;
 			struct strbuf val = STRBUF_INIT;
 
-			parse_trailer(&tok, &val, NULL, trailer, separator_pos);
-			if (!opts->filter || opts->filter(&tok, opts->filter_data)) {
+			const struct conf_info *conf;
+
+			parse_trailer(&tok, &val, &conf, trailer, separator_pos);
+			if (!opts->filter ||
+			    opts->filter(&tok, conf ? conf->name : NULL, opts->filter_data)) {
 				if (opts->unfold)
 					unfold_value(&val);
 

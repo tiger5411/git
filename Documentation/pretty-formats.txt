@@ -256,7 +256,10 @@ endif::git-rev-list[]
 ** 'key=<K>': only show trailers with specified key. Matching is done
    case-insensitively and trailing colon is optional. If option is
    given multiple times trailer lines matching any of the keys are
-   shown. This option automatically enables the `only` option so that
+   shown. If the `trailer.<token>.key` configuration option is set,
+   '<token>' can be used as an alias for showing trailers case
+   insensitively matching the value of this configuration option. The
+   `key=` option automatically enables the `only` option so that
    non-trailer lines in the trailer block are hidden. If that is not
    desired it can be disabled with `only=false`.  E.g.,
    `%(trailers:key=Reviewed-by)` shows trailer lines with key
