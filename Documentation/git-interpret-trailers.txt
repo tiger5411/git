@@ -25,6 +25,13 @@ Otherwise, this command applies the arguments passed using the
 `--trailer` option, if any, to the commit message part of each input
 file. The result is emitted on the standard output.
 
+When there is a 'trailer.<token>.key' configuration value defined,
+this value becomes the canonical form of the <token> trailer, so when
+a trailer matching <token> is read from standard input, it is changed
+to this canonical value. This means that the key part of the trailer
+will use the exact spelling (upper case vs lower case and separator)
+defined in the configuration.
+
 Some configuration variables control the way the `--trailer` arguments
 are applied to each commit message and the way any existing trailer in
 the commit message is changed. They also make it possible to
