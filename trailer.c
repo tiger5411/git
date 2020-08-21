@@ -34,6 +34,7 @@ struct trailer_item {
 	 */
 	char *token;
 	char *value;
+	char *used_separator;
 	const struct conf_info *conf;
 };
 
@@ -125,6 +126,7 @@ static void free_trailer_item(struct trailer_item *item)
 {
 	free(item->token);
 	free(item->value);
+	free(item->used_separator);
 	free(item);
 }
 
@@ -616,18 +618,26 @@ static ssize_t find_separator(const char *line, const char *separators)
  *
  * If separator_pos is -1, interpret the whole trailer as a token.
  */
-static void parse_trailer(struct strbuf *tok, struct strbuf *val,
+static void parse_trailer(struct strbuf *tok, struct strbuf *val, struct strbuf *sep,
 			 const struct conf_info **conf, const char *trailer,
 			 ssize_t separator_pos)
 {
 	struct conf_info_item *item;
-	size_t tok_len;
 	struct list_head *pos;
 
 	if (separator_pos != -1) {
-		strbuf_add(tok, trailer, separator_pos);
-		strbuf_trim(tok);
-		strbuf_addstr(val, trailer + separator_pos + 1);
+		size_t sep_spacing_begin = separator_pos;
+		size_t sep_spacing_end = separator_pos + 1;
+
+		while (sep_spacing_begin > 0 && trailer[sep_spacing_begin - 1] == ' ')
+			sep_spacing_begin--;
+		while (trailer[sep_spacing_end] == ' ')
+			sep_spacing_end++;
+
+		strbuf_add(tok, trailer, sep_spacing_begin);
+		if (sep)
+			strbuf_add(sep, trailer + sep_spacing_begin, sep_spacing_end - sep_spacing_begin);
+		strbuf_addstr(val, trailer + sep_spacing_end);
 		strbuf_trim(val);
 	} else {
 		strbuf_addstr(tok, trailer);
@@ -635,12 +645,11 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val,
 	}
 
 	/* Lookup if the token matches something in the config */
-	tok_len = token_len_without_separator(tok->buf, tok->len);
 	if (conf)
 		*conf = &default_conf_info;
 	list_for_each(pos, &conf_head) {
 		item = list_entry(pos, struct conf_info_item, list);
-		if (token_matches_conf(tok->buf, &item->conf, tok_len)) {
+		if (token_matches_conf(tok->buf, &item->conf, tok->len)) {
 			if (conf)
 				*conf = &item->conf;
 			break;
@@ -649,11 +658,12 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val,
 }
 
 static struct trailer_item *add_trailer_item(struct list_head *head, char *tok,
-					     char *val, const struct conf_info *conf)
+					     char *val, char *separator, const struct conf_info *conf)
 {
 	struct trailer_item *new_item = xcalloc(sizeof(*new_item), 1);
 	new_item->token = tok;
 	new_item->value = val;
+	new_item->used_separator = separator;
 	new_item->conf = conf;
 	list_add_tail(&new_item->list, head);
 	return new_item;
@@ -717,7 +727,7 @@ static void process_command_line_args(struct list_head *arg_head,
 			      (int) sb.len, sb.buf);
 			strbuf_release(&sb);
 		} else {
-			parse_trailer(&tok, &val, &conf, tr->text,
+			parse_trailer(&tok, &val, NULL, &conf, tr->text,
 				      separator_pos);
 			add_arg_item(arg_head,
 				     strbuf_detach(&tok, NULL),
@@ -936,6 +946,7 @@ static size_t process_input_file(FILE *outfile,
 	struct trailer_info info;
 	struct strbuf tok = STRBUF_INIT;
 	struct strbuf val = STRBUF_INIT;
+	struct strbuf sep = STRBUF_INIT;
 	size_t i;
 
 	trailer_info_get(&info, str, opts);
@@ -955,13 +966,14 @@ static size_t process_input_file(FILE *outfile,
 		separator_pos = find_separator(trailer, separators);
 		if (separator_pos >= 1) {
 			const struct conf_info *conf;
-			parse_trailer(&tok, &val, &conf, trailer,
+			parse_trailer(&tok, &val, &sep, &conf, trailer,
 				      separator_pos);
 			if (opts->unfold)
 				unfold_value(&val);
 			add_trailer_item(head,
 					 strbuf_detach(&tok, NULL),
 					 strbuf_detach(&val, NULL),
+					 strbuf_detach(&sep, NULL),
 					 conf);
 		} else if (!opts->only_trailers) {
 			strbuf_addstr(&val, trailer);
@@ -969,6 +981,7 @@ static size_t process_input_file(FILE *outfile,
 			add_trailer_item(head,
 					 NULL,
 					 strbuf_detach(&val, NULL),
+					 NULL,
 					 NULL);
 		}
 	}
@@ -1148,7 +1161,7 @@ static void format_trailer_info(struct strbuf *out,
 
 			const struct conf_info *conf;
 
-			parse_trailer(&tok, &val, &conf, trailer, separator_pos);
+			parse_trailer(&tok, &val, NULL, &conf, trailer, separator_pos);
 			if (!opts->filter ||
 			    opts->filter(&tok, conf ? conf->name : NULL, opts->filter_data)) {
 				if (opts->unfold)
@@ -1209,7 +1222,7 @@ int trailer_iterator_advance(struct trailer_iterator *iter)
 
 		strbuf_reset(&iter->key);
 		strbuf_reset(&iter->val);
-		parse_trailer(&iter->key, &iter->val, NULL,
+		parse_trailer(&iter->key, &iter->val, NULL, NULL,
 			      trailer, separator_pos);
 		unfold_value(&iter->val);
 		return 1;
