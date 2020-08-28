@@ -574,20 +574,20 @@ static void ensure_configured(void)
 	configured = 1;
 }
 
-static const char *token_from_item(struct arg_item *item, char *tok)
+static const char *token_from_conf(const struct conf_info *conf, char *tok)
 {
-	if (item->conf.key)
-		return item->conf.key;
+	if (conf->key)
+		return conf->key;
 	if (tok)
 		return tok;
-	return item->conf.name;
+	return conf->name;
 }
 
-static int token_matches_item(const char *tok, struct arg_item *item, size_t tok_len)
+static int token_matches_conf(const char *tok, const struct conf_info *conf, size_t tok_len)
 {
-	if (!strncasecmp(tok, item->conf.name, tok_len))
+	if (!strncasecmp(tok, conf->name, tok_len))
 		return 1;
-	return item->conf.key ? !strncasecmp(tok, item->conf.key, tok_len) : 0;
+	return conf->key ? !strncasecmp(tok, conf->key, tok_len) : 0;
 }
 
 /*
@@ -650,11 +650,11 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val,
 		*conf = &default_conf_info;
 	list_for_each(pos, &conf_head) {
 		item = list_entry(pos, struct arg_item, list);
-		if (token_matches_item(tok->buf, item, tok_len)) {
+		if (token_matches_conf(tok->buf, &item->conf, tok_len)) {
 			char *tok_buf = strbuf_detach(tok, NULL);
 			if (conf)
 				*conf = &item->conf;
-			strbuf_addstr(tok, token_from_item(item, tok_buf));
+			strbuf_addstr(tok, token_from_conf(&item->conf, tok_buf));
 			free(tok_buf);
 			break;
 		}
@@ -710,7 +710,7 @@ static void process_command_line_args(struct list_head *arg_head,
 		item = list_entry(pos, struct arg_item, list);
 		if (item->conf.command)
 			add_arg_item(arg_head,
-				     xstrdup(token_from_item(item, NULL)),
+				     xstrdup(token_from_conf(&item->conf, NULL)),
 				     xstrdup(""),
 				     &item->conf, NULL);
 	}
@@ -879,7 +879,7 @@ static size_t find_trailer_start(const char *buf, size_t len)
 			list_for_each(pos, &conf_head) {
 				struct arg_item *item;
 				item = list_entry(pos, struct arg_item, list);
-				if (token_matches_item(bol, item,
+				if (token_matches_conf(bol, &item->conf,
 						       separator_pos)) {
 					recognized_prefix = 1;
 					break;
