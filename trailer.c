@@ -177,13 +177,11 @@ static void print_all(FILE *outfile, struct list_head *head,
 	}
 }
 
-static struct trailer_item *trailer_from_arg(struct arg_item *arg_tok)
+static struct trailer_item *trailer_from_arg(const struct arg_item *arg_tok)
 {
 	struct trailer_item *new_item = xcalloc(sizeof(*new_item), 1);
-	new_item->token = arg_tok->token;
-	new_item->value = arg_tok->value;
-	arg_tok->token = arg_tok->value = NULL;
-	free_arg_item(arg_tok);
+	new_item->token = xstrdup(arg_tok->token);
+	new_item->value = xstrdup(arg_tok->value);
 	return new_item;
 }
 
@@ -274,7 +272,6 @@ static void apply_arg_if_exists(struct trailer_item *in_tok,
 {
 	switch (arg_tok->conf.if_exists) {
 	case EXISTS_DO_NOTHING:
-		free_arg_item(arg_tok);
 		break;
 	case EXISTS_REPLACE:
 		apply_item_command(in_tok, arg_tok);
@@ -290,15 +287,11 @@ static void apply_arg_if_exists(struct trailer_item *in_tok,
 		apply_item_command(in_tok, arg_tok);
 		if (check_if_different(in_tok, arg_tok, 1, head))
 			add_arg_to_input_list(on_tok, arg_tok);
-		else
-			free_arg_item(arg_tok);
 		break;
 	case EXISTS_ADD_IF_DIFFERENT_NEIGHBOR:
 		apply_item_command(in_tok, arg_tok);
 		if (check_if_different(on_tok, arg_tok, 0, head))
 			add_arg_to_input_list(on_tok, arg_tok);
-		else
-			free_arg_item(arg_tok);
 		break;
 	default:
 		BUG("trailer.c: unhandled value %d",
@@ -314,7 +307,6 @@ static void apply_arg_if_missing(struct list_head *head,
 
 	switch (arg_tok->conf.if_missing) {
 	case MISSING_DO_NOTHING:
-		free_arg_item(arg_tok);
 		break;
 	case MISSING_ADD:
 		where = arg_tok->conf.where;
@@ -364,14 +356,12 @@ static int find_same_and_apply_arg(struct list_head *head,
 static void process_trailers_lists(struct list_head *head,
 				   struct list_head *arg_head)
 {
-	struct list_head *pos, *p;
+	struct list_head *pos;
 	struct arg_item *arg_tok;
 
-	list_for_each_safe(pos, p, arg_head) {
+	list_for_each(pos, arg_head) {
 		int applied = 0;
 		arg_tok = list_entry(pos, struct arg_item, list);
-
-		list_del(pos);
 
 		applied = find_same_and_apply_arg(head, arg_tok);
 
@@ -999,6 +989,15 @@ static void free_all_trailer_items(struct list_head *head)
 	}
 }
 
+static void free_all_arg_items(struct list_head *head)
+{
+	struct list_head *pos, *p;
+	list_for_each_safe(pos, p, head) {
+		list_del(pos);
+		free_arg_item(list_entry(pos, struct arg_item, list));
+	}
+}
+
 static struct tempfile *trailers_tempfile;
 
 static FILE *create_in_place_tempfile(const char *file)
@@ -1035,6 +1034,7 @@ void process_trailers(const char *file,
 		      struct list_head *new_trailer_head)
 {
 	LIST_HEAD(head);
+	LIST_HEAD(arg_head);
 	struct strbuf sb = STRBUF_INIT;
 	size_t trailer_end;
 	FILE *outfile = stdout;
@@ -1050,7 +1050,6 @@ void process_trailers(const char *file,
 	trailer_end = process_input_file(outfile, sb.buf, &head, opts);
 
 	if (!opts->only_input) {
-		LIST_HEAD(arg_head);
 		process_command_line_args(&arg_head, new_trailer_head);
 		process_trailers_lists(&head, &arg_head);
 	}
@@ -1058,6 +1057,7 @@ void process_trailers(const char *file,
 	print_all(outfile, &head, opts);
 
 	free_all_trailer_items(&head);
+	free_all_arg_items(&arg_head);
 
 	/* Print the lines after the trailers as is */
 	if (!opts->only_trailers)
