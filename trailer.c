@@ -990,7 +990,7 @@ static size_t process_input_file(FILE *outfile,
 	return info.trailer_end - str;
 }
 
-static void free_all(struct list_head *head)
+static void free_all_trailer_items(struct list_head *head)
 {
 	struct list_head *pos, *p;
 	list_for_each_safe(pos, p, head) {
@@ -1057,7 +1057,7 @@ void process_trailers(const char *file,
 
 	print_all(outfile, &head, opts);
 
-	free_all(&head);
+	free_all_trailer_items(&head);
 
 	/* Print the lines after the trailers as is */
 	if (!opts->only_trailers)
