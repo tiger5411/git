@@ -34,6 +34,7 @@ struct trailer_item {
 	 */
 	char *token;
 	char *value;
+	const struct conf_info *conf;
 };
 
 struct arg_item {
@@ -182,6 +183,7 @@ static struct trailer_item *trailer_from_arg(const struct arg_item *arg_tok)
 	struct trailer_item *new_item = xcalloc(sizeof(*new_item), 1);
 	new_item->token = xstrdup(arg_tok->token);
 	new_item->value = xstrdup(arg_tok->value);
+	new_item->conf = &arg_tok->conf;
 	return new_item;
 }
 
@@ -655,11 +657,12 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val,
 }
 
 static struct trailer_item *add_trailer_item(struct list_head *head, char *tok,
-					     char *val)
+					     char *val, const struct conf_info *conf)
 {
 	struct trailer_item *new_item = xcalloc(sizeof(*new_item), 1);
 	new_item->token = tok;
 	new_item->value = val;
+	new_item->conf = conf;
 	list_add_tail(&new_item->list, head);
 	return new_item;
 }
@@ -959,19 +962,22 @@ static size_t process_input_file(FILE *outfile,
 			continue;
 		separator_pos = find_separator(trailer, separators);
 		if (separator_pos >= 1) {
-			parse_trailer(&tok, &val, NULL, trailer,
+			const struct conf_info *conf;
+			parse_trailer(&tok, &val, &conf, trailer,
 				      separator_pos);
 			if (opts->unfold)
 				unfold_value(&val);
 			add_trailer_item(head,
 					 strbuf_detach(&tok, NULL),
-					 strbuf_detach(&val, NULL));
+					 strbuf_detach(&val, NULL),
+					 conf);
 		} else if (!opts->only_trailers) {
 			strbuf_addstr(&val, trailer);
 			strbuf_strip_suffix(&val, "\n");
 			add_trailer_item(head,
 					 NULL,
-					 strbuf_detach(&val, NULL));
+					 strbuf_detach(&val, NULL),
+					 NULL);
 		}
 	}
 
