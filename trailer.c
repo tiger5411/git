@@ -13,6 +13,7 @@
 struct conf_info {
 	char *name;
 	char *key;
+	char *nondefault_separator;
 	char *command;
 	enum trailer_where where;
 	enum trailer_if_exists if_exists;
@@ -140,32 +141,21 @@ static void free_arg_item(struct arg_item *item)
 	free(item);
 }
 
-static char last_non_space_char(const char *s)
-{
-	int i;
-	for (i = strlen(s) - 1; i >= 0; i--)
-		if (!isspace(s[i]))
-			return s[i];
-	return '\0';
-}
-
 static void print_item(FILE *outfile, const struct trailer_item *item)
 {
 	if (item->token) {
 		const char *tok = item->token;
+		const char *sep = (char []){separators[0], ' ', '\0'};
 		const struct conf_info *conf = item->conf;
-		char c;
 
-		if (conf && conf->key)
-			tok = conf->key;
+		if (conf) {
+			if (conf->key)
+				tok = conf->key;
+			if (conf->nondefault_separator)
+				sep = conf->nondefault_separator;
+		}
 
-		c = last_non_space_char(tok);
-		if (!c)
-			return;
-		if (strchr(separators, c))
-			fputs(tok, outfile);
-		else
-			fprintf(outfile, "%s%c ", tok, separators[0]);
+		fprintf(outfile, "%s%s", tok, sep);
 	}
 
 	fprintf(outfile, "%s\n", item->value);
@@ -502,6 +492,34 @@ static int git_trailer_default_config(const char *conf_key, const char *value, v
 	return 0;
 }
 
+static void git_trailer_config_key(const char *conf_key, const char *value, struct conf_info *conf)
+{
+	const char *end = value + strlen(value) - 1;
+
+	while (end > value && isspace(*end))
+		end--;
+
+	if (end == value) {
+		warning(_("Ignoring empty token for key '%s'"), conf_key);
+		return;
+	}
+
+	if (strchr(separators, *end)) {
+		const char *token_end = end - 1;
+		while (token_end > value && isspace(*token_end))
+			token_end--;
+		if (token_end == value) {
+			warning(_("Ignoring empty token for key '%s'"), conf_key);
+			return;
+		}
+
+		conf->key = xstrndup(value, token_end - value + 1);
+		conf->nondefault_separator = xstrdup(token_end + 1);
+	} else {
+		conf->key = xstrdup(value);
+	}
+}
+
 static int git_trailer_config(const char *conf_key, const char *value, void *cb)
 {
 	const char *trailer_item, *variable_name;
@@ -536,7 +554,8 @@ static int git_trailer_config(const char *conf_key, const char *value, void *cb)
 	case TRAILER_KEY:
 		if (conf->key)
 			warning(_("more than one %s"), conf_key);
-		conf->key = xstrdup(value);
+
+		git_trailer_config_key (conf_key, value, conf);
 		break;
 	case TRAILER_COMMAND:
 		if (conf->command)
