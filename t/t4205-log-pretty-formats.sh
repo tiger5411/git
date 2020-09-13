@@ -757,6 +757,18 @@ test_expect_success 'pretty format %(trailers) combining separator/key/valueonly
 	test_cmp expect actual
 '
 
+test_expect_success 'pretty format %(trailers) with nonstandard separator' '
+	git commit --allow-empty -F - <<-\EOF &&
+	Some fix
+
+	Closes #1234
+	EOF
+
+	git -c "trailer.separators=:#" log --no-walk --pretty="format:%s% (trailers:key=Closes)"  >actual &&
+	echo "Some fix Closes: 1234" >expect &&
+	test_cmp expect actual
+'
+
 test_expect_success 'trailer parsing not fooled by --- line' '
 	git commit --allow-empty -F - <<-\EOF &&
 	this is the subject
