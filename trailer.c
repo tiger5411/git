@@ -141,14 +141,18 @@ static void free_arg_item(struct arg_item *item)
 	free(item);
 }
 
-static void print_item(FILE *outfile, const struct trailer_item *item)
+static void print_item(FILE *outfile, const struct trailer_item *item,
+		       const struct process_trailer_options *opts)
 {
 	if (item->token) {
 		const char *tok = item->token;
 		const char *sep = (char []){separators[0], ' ', '\0'};
 		const struct conf_info *conf = item->conf;
 
-		if (conf) {
+		if (!opts->canonicalize && item->used_separator)
+			sep = item->used_separator;
+
+		if (opts->canonicalize && conf) {
 			if (conf->key)
 				tok = conf->key;
 			if (conf->nondefault_separator)
@@ -170,7 +174,7 @@ static void print_all(FILE *outfile, struct list_head *head,
 		item = list_entry(pos, struct trailer_item, list);
 		if ((!opts->trim_empty || strlen(item->value) > 0) &&
 		    (!opts->only_trailers || item->token))
-			print_item(outfile, item);
+			print_item(outfile, item, opts);
 	}
 }
 

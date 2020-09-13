@@ -99,6 +99,58 @@ test_expect_success 'with config option on the command line' '
 	test_cmp expected actual
 '
 
+test_expect_success 'spelling and separators are canonicalized from configs with key' '
+	cat >patch <<-\EOF &&
+		non-trailer-line
+
+		ReviEweD-bY :abc
+		ReviEwEd-bY) rst
+		ReviEweD-BY ; xyz
+		aCked-bY) only separator gets normalized
+	EOF
+	cat >expected <<-\EOF &&
+		Reviewed-By: abc
+		Reviewed-By: rst
+		Reviewed-By: xyz
+		aCked-bY: only separator gets normalized
+	EOF
+	git \
+		-c "trailer.separators=:);" \
+		-c "trailer.rb.key=Reviewed-By" \
+		-c "trailer.Acked-By.ifmissing=doNothing" \
+		interpret-trailers --only-trailers --only-input patch >actual &&
+	test_cmp expected actual
+'
+
+test_expect_success 'spelling and separators are not canonicalized with --parse or --no-canonicalize' '
+	cat >patch <<-\EOF &&
+		non-trailer-line
+
+		ReviEweD-bY :abc
+		ReviEwEd-bY) rst
+		ReviEweD-BY ; xyz
+		aCked-bY) not normalized
+	EOF
+	cat >expected <<-\EOF &&
+		ReviEweD-bY :abc
+		ReviEwEd-bY) rst
+		ReviEweD-BY ; xyz
+		aCked-bY) not normalized
+	EOF
+	git \
+		-c "trailer.separators=:);" \
+		-c "trailer.rb.key=Reviewed-By" \
+		-c "trailer.Acked-By.ifmissing=doNothing" \
+		interpret-trailers --parse patch >actual &&
+	test_cmp expected actual &&
+	git \
+		-c "trailer.separators=:);" \
+		-c "trailer.rb.key=Reviewed-By" \
+		-c "trailer.Acked-By.ifmissing=doNothing" \
+		interpret-trailers --only-trailers --only-input --no-canonicalize patch >actual &&
+	test_cmp expected actual
+'
+
 test_expect_success 'with only a title in the message' '
 	cat >expected <<-\EOF &&
 		area: change

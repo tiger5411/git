@@ -131,12 +131,15 @@ OPTIONS
 
 --parse::
 	A convenience alias for `--only-trailers --only-input
-	--unfold`.
+	--unfold --no-canonicalize`.
 
 --no-divider::
 	Do not treat `---` as the end of the commit message. Use this
 	when you know your input contains just the commit message itself
 	(and not an email or the output of `git format-patch`).
+
+--no-canonicalize::
+	Disable canonicalization of input trailers.
 
 CONFIGURATION VARIABLES
 -----------------------
