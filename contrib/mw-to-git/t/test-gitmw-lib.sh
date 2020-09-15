@@ -335,7 +335,7 @@ install_mediawiki () {
 
 	# Copy the initially generated database file into our backup
 	# folder
-	cp -R "$FILES_FOLDER_DB/" "$FILES_FOLDER_POST_INSTALL_DB/" ||
+	cp -R "$FILES_FOLDER_DB/"* "$FILES_FOLDER_POST_INSTALL_DB/" ||
 		error "Unable to copy $FILES_FOLDER_DB/* to $FILES_FOLDER_POST_INSTALL_DB/*"
 }
 
@@ -401,7 +401,7 @@ wiki_reset () {
 		error "No wiki backup database at ../$FILES_FOLDER_POST_INSTALL_DB, failed installation?"
 	fi
 	wiki_delete_db
-	cp -R "../$FILES_FOLDER_POST_INSTALL_DB/" "../$FILES_FOLDER_DB/" ||
+	cp -R "../$FILES_FOLDER_POST_INSTALL_DB/"* "../$FILES_FOLDER_DB/" ||
 		error "Can't copy ../$FILES_FOLDER_POST_INSTALL_DB/* to ../$FILES_FOLDER_DB/*"
 	echo "File $FILES_FOLDER_DB/* has been reset"
 }
