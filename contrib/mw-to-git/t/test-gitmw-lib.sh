@@ -332,6 +332,11 @@ install_mediawiki () {
 	    Git-MediaWiki-Test \
 	    "$WIKI_ADMIN" ||
 		error "Couldn't run $install_script, see errors above. Try to run ./install-wiki.sh delete first."
+	cat <<-'EOF' >>$localsettings
+# Custom settings added by test-gitmw-lib.sh
+$wgEnableUploads = true;
+$wgFileExtensions[] = 'txt';
+EOF
 
 	# Copy the initially generated database file into our backup
 	# folder
