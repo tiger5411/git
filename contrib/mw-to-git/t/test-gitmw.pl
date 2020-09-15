@@ -24,7 +24,7 @@
 
 use MediaWiki::API;
 use Getopt::Long;
-use encoding 'utf8';
+use utf8;
 use DateTime::Format::ISO8601;
 use open ':encoding(utf8)';
 use constant SLASH_REPLACEMENT => "%2F";
