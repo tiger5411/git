@@ -32,7 +32,7 @@ test_expect_success 'setup config' '
 	test_might_fail git config --global --unset remote.origin.mediaImport
 '
 
-test_expect_success 'git push can upload media (File:) files' '
+test_expect_failure 'git push can upload media (File:) files' '
 	wiki_reset &&
 	git clone mediawiki::'"$WIKI_URL"' mw_dir &&
 	(
@@ -48,7 +48,7 @@ test_expect_success 'git push can upload media (File:) files' '
 	)
 '
 
-test_expect_success 'git clone works on previously created wiki with media files' '
+test_expect_failure 'git clone works on previously created wiki with media files' '
 	test_when_finished "rm -rf mw_dir mw_dir_clone" &&
 	git clone -c remote.origin.mediaimport=true \
 		mediawiki::'"$WIKI_URL"' mw_dir_clone &&
