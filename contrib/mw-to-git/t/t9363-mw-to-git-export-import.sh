@@ -96,6 +96,7 @@ test_expect_success 'git push & pull work with locally renamed media files' '
 		git commit -m "Rename a file" &&
 		test_git_reimport &&
 		echo "A File" >expect &&
+		test_path_is_file Bar.txt &&
 		test_cmp expect Bar.txt &&
 		test_path_is_missing Foo.txt
 	)
