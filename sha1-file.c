@@ -1784,10 +1784,14 @@ int hash_object_file(const struct git_hash_algo *algo, const void *buf,
 }
 
 /* Finalize a file on disk, and close it. */
-static void close_loose_object(int fd)
+static void close_loose_object(int fd, const struct strbuf *dirname)
 {
-	if (fsync_object_files)
+	int dirfd;
+	if (fsync_object_files) {
 		fsync_or_die(fd, "loose object file");
+		dirfd = xopen(dirname->buf, O_RDONLY);
+		fsync_or_die(dirfd, "loose object directory");
+	}
 	if (close(fd) != 0)
 		die_errno(_("error when closing loose object file"));
 }
@@ -1808,12 +1812,15 @@ static inline int directory_size(const char *filename)
  * We want to avoid cross-directory filename renames, because those
  * can have problems on various filesystems (FAT, NFS, Coda).
  */
-static int create_tmpfile(struct strbuf *tmp, const char *filename)
+static int create_tmpfile(struct strbuf *tmp,
+			  const char *filename,
+			  struct strbuf *dirname)
 {
 	int fd, dirlen = directory_size(filename);
 
 	strbuf_reset(tmp);
 	strbuf_add(tmp, filename, dirlen);
+	strbuf_add(dirname, filename, dirlen);
 	strbuf_addstr(tmp, "tmp_obj_XXXXXX");
 	fd = git_mkstemp_mode(tmp->buf, 0444);
 	if (fd < 0 && dirlen && errno == ENOENT) {
@@ -1848,10 +1855,11 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	struct object_id parano_oid;
 	static struct strbuf tmp_file = STRBUF_INIT;
 	static struct strbuf filename = STRBUF_INIT;
+	static struct strbuf dirname = STRBUF_INIT;
 
 	loose_object_path(the_repository, &filename, oid);
 
-	fd = create_tmpfile(&tmp_file, filename.buf);
+	fd = create_tmpfile(&tmp_file, filename.buf, &dirname);
 	if (fd < 0) {
 		if (errno == EACCES)
 			return error(_("insufficient permission for adding an object to repository database %s"), get_object_directory());
@@ -1897,7 +1905,8 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 		die(_("confused by unstable object source data for %s"),
 		    oid_to_hex(oid));
 
-	close_loose_object(fd);
+	close_loose_object(fd, &dirname);
+	strbuf_release(&dirname);
 
 	if (mtime) {
 		struct utimbuf utb;
