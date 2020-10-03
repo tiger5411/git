@@ -829,7 +829,6 @@ static size_t find_trailer_start(const char *buf, size_t len)
 {
 	const char *s;
 	ssize_t end_of_title, l;
-	int only_spaces = 1;
 	int recognized_prefix = 0, trailer_lines = 0, non_trailer_lines = 0;
 	/*
 	 * Number of possible continuation lines encountered. This will be
@@ -858,6 +857,12 @@ static size_t find_trailer_start(const char *buf, size_t len)
 	for (l = last_line(buf, len);
 	     l >= end_of_title;
 	     l = last_line(buf, l)) {
+		if (!is_blank_line(buf + l) && buf[l] != comment_line_char)
+			break;
+	}
+	for (;
+	     l >= end_of_title;
+	     l = last_line(buf, l)) {
 		const char *bol = buf + l;
 		const char **p;
 		ssize_t separator_pos;
@@ -868,8 +873,6 @@ static size_t find_trailer_start(const char *buf, size_t len)
 			continue;
 		}
 		if (is_blank_line(bol)) {
-			if (only_spaces)
-				continue;
 			non_trailer_lines += possible_continuation_lines;
 			if (recognized_prefix &&
 			    trailer_lines * 3 >= non_trailer_lines)
@@ -878,7 +881,6 @@ static size_t find_trailer_start(const char *buf, size_t len)
 				return next_line(bol) - buf;
 			return len;
 		}
-		only_spaces = 0;
 
 		for (p = git_generated_prefixes; *p; p++) {
 			if (starts_with(bol, *p)) {
