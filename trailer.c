@@ -821,6 +821,53 @@ static size_t find_patch_start(const char *str)
 	return s - str;
 }
 
+enum trailer_classification {
+	GIT_GENERATED_PREFIX,
+	CONFIGURED_TRAILER,
+	TRAILER,
+	CONTINUATION,
+	NON_TRAILER,
+	COMMENT,
+	BLANK,
+};
+
+static enum trailer_classification classify_trailer_line(const char *line)
+{
+	const char **p;
+	ssize_t separator_pos;
+
+	if (line[0] == comment_line_char)
+		return COMMENT;
+
+	if (is_blank_line(line))
+		return BLANK;
+
+	if (isspace(line[0]))
+		return CONTINUATION;
+
+	for (p = git_generated_prefixes; *p; p++)
+		if (starts_with(line, *p))
+			return GIT_GENERATED_PREFIX;
+
+
+	separator_pos = find_separator(line, separators);
+	if (separator_pos >= 1) {
+		struct list_head *pos;
+
+		list_for_each(pos, &conf_head) {
+			struct conf_info_item *item;
+			item = list_entry(pos, struct conf_info_item, list);
+			if (token_matches_conf(line, &item->conf,
+			                       separator_pos))
+				return CONFIGURED_TRAILER;
+		}
+
+		return TRAILER;
+	}
+
+	return NON_TRAILER;
+}
+
 /*
  * Return the position of the first trailer line or len if there are no
  * trailers.
@@ -864,59 +911,37 @@ static size_t find_trailer_start(const char *buf, size_t len)
 	     l >= end_of_title;
 	     l = last_line(buf, l)) {
 		const char *bol = buf + l;
-		const char **p;
-		ssize_t separator_pos;
 
-		if (bol[0] == comment_line_char) {
-			non_trailer_lines += possible_continuation_lines;
-			possible_continuation_lines = 0;
-			continue;
-		}
-		if (is_blank_line(bol)) {
-			non_trailer_lines += possible_continuation_lines;
-			if (recognized_prefix &&
-			    trailer_lines * 3 >= non_trailer_lines)
-				return next_line(bol) - buf;
-			else if (trailer_lines && !non_trailer_lines)
-				return next_line(bol) - buf;
-			return len;
-		}
-
-		for (p = git_generated_prefixes; *p; p++) {
-			if (starts_with(bol, *p)) {
+		switch (classify_trailer_line(bol)) {
+			case GIT_GENERATED_PREFIX:
+			case CONFIGURED_TRAILER:
+				recognized_prefix = 1;
+				/* fallthrough */
+			case TRAILER:
 				trailer_lines++;
 				possible_continuation_lines = 0;
-				recognized_prefix = 1;
-				goto continue_outer_loop;
-			}
+				break;
+			case CONTINUATION:
+				possible_continuation_lines++;
+				break;
+			case NON_TRAILER:
+				non_trailer_lines++;
+				non_trailer_lines += possible_continuation_lines;
+				possible_continuation_lines = 0;
+				break;
+			case COMMENT:
+				non_trailer_lines += possible_continuation_lines;
+				possible_continuation_lines = 0;
+				break;
+			case BLANK:
+				non_trailer_lines += possible_continuation_lines;
+				if (recognized_prefix &&
+					trailer_lines * 3 >= non_trailer_lines)
+					return next_line(bol) - buf;
+				else if (trailer_lines && !non_trailer_lines)
+					return next_line(bol) - buf;
+				return len;
 		}
-
-		separator_pos = find_separator(bol, separators);
-		if (separator_pos >= 1 && !isspace(bol[0])) {
-			struct list_head *pos;
-
-			trailer_lines++;
-			possible_continuation_lines = 0;
-			if (recognized_prefix)
-				continue;
-			list_for_each(pos, &conf_head) {
-				struct conf_info_item *item;
-				item = list_entry(pos, struct conf_info_item, list);
-				if (token_matches_conf(bol, &item->conf,
-						       separator_pos)) {
-					recognized_prefix = 1;
-					break;
-				}
-			}
-		} else if (isspace(bol[0]))
-			possible_continuation_lines++;
-		else {
-			non_trailer_lines++;
-			non_trailer_lines += possible_continuation_lines;
-			possible_continuation_lines = 0;
-		}
-continue_outer_loop:
-		;
 	}
 
 	return len;
