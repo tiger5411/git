@@ -239,12 +239,7 @@ test_expect_success 'with non-trailer lines mixed with a configured trailer' '
 	test_cmp expected actual
 '
 
-# This fails because "c:/windows/tmp/stuff/temp.txt" is classified as
-# a trailer line because "c" is a prefix of "Confirmed-By". Therefore
-# the new trailer is appended to that (non-trailer) block rather than
-# creating a new block. It also canonicalize the "trailer" to
-# "Confirmed-By: /windows/tmp/stuff/temp.txt"
-test_expect_failure 'with non-trailer lines mixed with prefix of configured trailer' '
+test_expect_success 'with non-trailer lines mixed with prefix of configured trailer' '
 	cat >patch <<-\EOF &&
 		some subject
 

@@ -831,10 +831,20 @@ enum trailer_classification {
 	BLANK,
 };
 
+static int starts_with_separator(const char *buf)
+{
+	while (*buf == ' ' || *buf == '\t')
+		buf++;
+	if (!*buf)
+		return 0;
+	return !!strchr(separators, *buf);
+}
+
 static enum trailer_classification classify_trailer_line(const char *line)
 {
 	const char **p;
 	ssize_t separator_pos;
+	struct list_head *pos;
 
 	if (line[0] == comment_line_char)
 		return COMMENT;
@@ -849,19 +859,17 @@ static enum trailer_classification classify_trailer_line(const char *line)
 		if (starts_with(line, *p))
 			return GIT_GENERATED_PREFIX;
 
+	list_for_each(pos, &conf_head) {
+		struct conf_info_item *item = list_entry(pos, struct conf_info_item, list);
+		const char *conftrailer = item->conf.key ? item->conf.key : item->conf.name;
+		if (istarts_with(line, conftrailer)) {
+			if (starts_with_separator (line + strlen (conftrailer)))
+				return CONFIGURED_TRAILER;
+		}
+	}
 
 	separator_pos = find_separator(line, separators);
 	if (separator_pos >= 1) {
-		struct list_head *pos;
-
-		list_for_each(pos, &conf_head) {
-			struct conf_info_item *item;
-			item = list_entry(pos, struct conf_info_item, list);
-			if (token_matches_conf(line, &item->conf,
-			                       separator_pos))
-				return CONFIGURED_TRAILER;
-		}
-
 		return TRAILER;
 	}
 
