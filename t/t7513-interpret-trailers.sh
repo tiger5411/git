@@ -239,6 +239,35 @@ test_expect_success 'with non-trailer lines mixed with a configured trailer' '
 	test_cmp expected actual
 '
 
+# This fails because "c:/windows/tmp/stuff/temp.txt" is classified as
+# a trailer line because "c" is a prefix of "Confirmed-By". Therefore
+# the new trailer is appended to that (non-trailer) block rather than
+# creating a new block. It also canonicalize the "trailer" to
+# "Confirmed-By: /windows/tmp/stuff/temp.txt"
+test_expect_failure 'with non-trailer lines mixed with prefix of configured trailer' '
+	cat >patch <<-\EOF &&
+		some subject
+
+		This is clearly not a trailer line. But
+		on next line there is a a windows path
+		c:/windows/tmp/stuff/temp.txt but that
+		should not make this classify as a trailer block
+	EOF
+	cat >expected <<-\EOF &&
+		some subject
+
+		This is clearly not a trailer line. But
+		on next line there is a a windows path
+		c:/windows/tmp/stuff/temp.txt but that
+		should not make this classify as a trailer block
+
+		t: v
+	EOF
+	test_config trailer.confirmedby.key "Confirmed-By" &&
+	git interpret-trailers --trailer "t: v" patch >actual &&
+	test_cmp expected actual
+'
+
 test_expect_success 'with non-trailer lines mixed with a non-configured trailer' '
 	cat >patch <<-\EOF &&
 
