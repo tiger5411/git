@@ -605,6 +605,20 @@ static int token_matches_conf(const char *tok, const struct conf_info *conf, siz
 	return conf->key ? !strncasecmp(tok, conf->key, tok_len) : 0;
 }
 
+static const struct conf_info *lookup_conf_for_tok(const struct strbuf *tok)
+{
+	struct conf_info_item *item;
+	struct list_head *pos;
+
+	list_for_each(pos, &conf_head) {
+		item = list_entry(pos, struct conf_info_item, list);
+		if (token_matches_conf(tok->buf, &item->conf, tok->len)) {
+			return &item->conf;
+		}
+	}
+	return &default_conf_info;
+}
+
 /*
  * If the given line is of the form
  * "<token><optional whitespace><separator>..." or "<separator>...", return the
@@ -645,9 +659,6 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val, struct strbuf 
 			 const struct conf_info **conf, const char *trailer,
 			 ssize_t separator_pos)
 {
-	struct conf_info_item *item;
-	struct list_head *pos;
-
 	if (separator_pos != -1) {
 		size_t sep_spacing_begin = separator_pos;
 		size_t sep_spacing_end = separator_pos + 1;
@@ -667,17 +678,8 @@ static void parse_trailer(struct strbuf *tok, struct strbuf *val, struct strbuf 
 		strbuf_trim(tok);
 	}
 
-	/* Lookup if the token matches something in the config */
 	if (conf)
-		*conf = &default_conf_info;
-	list_for_each(pos, &conf_head) {
-		item = list_entry(pos, struct conf_info_item, list);
-		if (token_matches_conf(tok->buf, &item->conf, tok->len)) {
-			if (conf)
-				*conf = &item->conf;
-			break;
-		}
-	}
+		*conf = lookup_conf_for_tok (tok);
 }
 
 static struct trailer_item *add_trailer_item(struct list_head *head, char *tok,
