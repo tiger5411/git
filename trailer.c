@@ -605,14 +605,18 @@ static int token_matches_conf(const char *tok, const struct conf_info *conf, siz
 	return conf->key ? !strncasecmp(tok, conf->key, tok_len) : 0;
 }
 
-static const struct conf_info *lookup_conf_for_tok(const struct strbuf *tok)
+static const struct conf_info *lookup_conf_for_tok(const struct strbuf *tok, int strict)
 {
 	struct conf_info_item *item;
 	struct list_head *pos;
 
 	list_for_each(pos, &conf_head) {
 		item = list_entry(pos, struct conf_info_item, list);
-		if (token_matches_conf(tok->buf, &item->conf, tok->len)) {
+		if (strict) {
+			const char *match = item->conf.key ? item->conf.key : item->conf.name;
+			if (!strcasecmp(match, tok->buf))
+				return &item->conf;
+		} else if (token_matches_conf(tok->buf, &item->conf, tok->len)) {
 			return &item->conf;
 		}
 	}
@@ -750,7 +754,7 @@ static void process_command_line_args(struct list_head *arg_head,
 		} else {
 			parse_trailer(&tok, &val, NULL, tr->text,
 				      separator_pos);
-			conf = lookup_conf_for_tok(&tok);
+			conf = lookup_conf_for_tok(&tok, 0);
 			add_arg_item(arg_head,
 				     strbuf_detach(&tok, NULL),
 				     strbuf_detach(&val, NULL),
@@ -1025,7 +1029,7 @@ static size_t process_input_file(FILE *outfile,
 			const struct conf_info *conf;
 			parse_trailer(&tok, &val, &sep, trailer,
 				      separator_pos);
-			conf = lookup_conf_for_tok(&tok);
+			conf = lookup_conf_for_tok(&tok, 1);
 			if (opts->unfold)
 				unfold_value(&val);
 			add_trailer_item(head,
@@ -1220,7 +1224,7 @@ static void format_trailer_info(struct strbuf *out,
 			const struct conf_info *conf;
 
 			parse_trailer(&tok, &val, NULL, trailer, separator_pos);
-			conf = lookup_conf_for_tok(&tok);
+			conf = lookup_conf_for_tok(&tok, 1);
 			if (!opts->filter ||
 			    opts->filter(&tok, conf ? conf->name : NULL, opts->filter_data)) {
 				if (opts->unfold)

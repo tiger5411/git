@@ -151,8 +151,7 @@ test_expect_success 'spelling and separators are not canonicalized with --parse 
 	test_cmp expected actual
 '
 
-# Matching currently is prefix matching, causing "This-trailer" to be normalized too
-test_expect_failure 'config option matches exact only' '
+test_expect_success 'config option matches exact only' '
 	cat >patch <<-\EOF &&
 
 		This-trailer: a
@@ -171,8 +170,7 @@ test_expect_failure 'config option matches exact only' '
 	test_cmp expected actual
 '
 
-# Matching currently uses the config key even if key value is different
-test_expect_failure 'config option matches exact only' '
+test_expect_success 'config option matches exact only' '
 	cat >patch <<-\EOF &&
 
 		Ticket: 1234
@@ -549,6 +547,17 @@ test_expect_success 'with config setup' '
 	git interpret-trailers --trim-empty --trailer "Acked-by :Peff" empty >actual &&
 	test_cmp expected actual
 '
+
+test_expect_success 'trailer on commandline can be prefix of configured' '
+	cat >expected <<-\EOF &&
+
+		Acked-by: 10
+	EOF
+	git interpret-trailers --trailer "A=10" empty >actual &&
+	test_cmp expected actual
+'
+
+
 
 test_expect_success 'with config setup and ":=" as separators' '
 	git config trailer.separators ":=" &&
