@@ -197,6 +197,20 @@ static void run_hooks_opt_clear(struct run_hooks_opt *options)
 	strvec_clear(&options->args);
 }
 
+static int nr_hook_jobs(struct run_hooks_opt *options)
+{
+	static int jobs;
+
+	if (!options->parallel)
+		return 1;
+	if (jobs)
+		return jobs;
+	if (git_config_get_int("hook.jobs", &jobs))
+		jobs = online_cpus();
+
+	return jobs;
+}
+
 int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 {
 	struct list_head *hooks = list_hooks(hook_name);
@@ -207,7 +221,7 @@ int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 		.hook_name = hook_name,
 		.options = options,
 	};
-	int jobs = 1;
+	int jobs = nr_hook_jobs(options);
 	int ret = 0;
 
 	if (!options)
@@ -252,16 +266,42 @@ int run_hooks(const char *hook_name)
 	return run_hooks_opt(hook_name, &opt);
 }
 
+static int run_hooks_opt_v(const char *hook_name, struct run_hooks_opt *options,
+			   va_list ap)
+{
+	const char *arg;
+	va_list cp;
+
+	va_copy(cp, ap);
+	while ((arg = va_arg(ap, const char *)))
+		strvec_push(&options->args, arg);
+	va_end(cp);
+
+	return run_hooks_opt(hook_name, options);
+}
+
 int run_hooks_l(const char *hook_name, ...)
 {
 	struct run_hooks_opt opt = RUN_HOOKS_OPT_INIT;
 	va_list ap;
-	const char *arg;
+	int ret;
 
 	va_start(ap, hook_name);
-	while ((arg = va_arg(ap, const char *)))
-		strvec_push(&opt.args, arg);
+	ret = run_hooks_opt_v(hook_name, &opt, ap);
 	va_end(ap);
 
-	return run_hooks_opt(hook_name, &opt);
+	return ret;
+}
+
+int par_hooks_l(const char *hook_name, ...)
+{
+	struct run_hooks_opt opt = RUN_HOOKS_OPT_INIT_PARALLEL;
+	va_list ap;
+	int ret;
+
+	va_start(ap, hook_name);
+	ret = run_hooks_opt_v(hook_name, &opt, ap);
+	va_end(ap);
+
+	return ret;
 }

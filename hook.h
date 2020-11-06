@@ -15,6 +15,9 @@ struct run_hooks_opt
 	/* Emit an error if the hook is missing */
 	unsigned int error_if_missing:1;
 
+	/* Is this hook safe to run in parallel? */
+	unsigned int parallel:1;
+
 	/**
 	 * An optional initial working directory for the hook,
 	 * translates to "struct child_process"'s "dir" member.
@@ -61,6 +64,12 @@ struct run_hooks_opt
 };
 
 #define RUN_HOOKS_OPT_INIT { \
+	.env = STRVEC_INIT, \
+	.args = STRVEC_INIT, \
+}
+
+#define RUN_HOOKS_OPT_INIT_PARALLEL { \
+	.parallel = 1, \
 	.env = STRVEC_INIT, \
 	.args = STRVEC_INIT, \
 }
@@ -124,6 +133,12 @@ int run_hooks(const char *hook_name);
  * hook. This function behaves like the old run_hook_le() API.
  */
 int run_hooks_l(const char *hook_name, ...);
+
+/**
+ * Like run_hooks_l(), but will run in parallel using the
+ * "RUN_HOOKS_OPT_INIT_PARALLEL" macro.
+ */
+int par_hooks_l(const char *hook_name, ...);
 
 /**
  * To specify a 'struct string_list', set 'run_hooks_opt.feed_pipe_ctx' to the
