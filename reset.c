@@ -128,7 +128,7 @@ reset_head_refs:
 					    reflog_head);
 	}
 	if (run_hook)
-		run_hooks_l("post-checkout",
+		par_hooks_l("post-checkout",
 			    oid_to_hex(orig ? orig : null_oid()),
 			    oid_to_hex(oid), "1", NULL);
 

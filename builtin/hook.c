@@ -25,11 +25,14 @@ static int run(int argc, const char **argv, const char *prefix)
 	struct run_hooks_opt opt = RUN_HOOKS_OPT_INIT;
 	int ignore_missing = 0;
 	const char *hook_name;
+	int parallel = 0;
 	struct option run_options[] = {
 		OPT_BOOL(0, "ignore-missing", &ignore_missing,
 			 N_("silently ignore missing requested <hook-name>")),
 		OPT_STRING(0, "to-stdin", &opt.path_to_stdin, N_("path"),
 			   N_("file to read into hooks' stdin")),
+		OPT_INTEGER('p', "parallel", &parallel,
+			    N_("run hooks in parallel (with jobs per 'hooks.jobs' config)")),
 		OPT_END(),
 	};
 	int ret;
@@ -59,6 +62,8 @@ static int run(int argc, const char **argv, const char *prefix)
 	hook_name = argv[0];
 	if (!ignore_missing)
 		opt.error_if_missing = 1;
+	if (parallel)
+		opt.parallel = 1;
 	ret = run_hooks_opt(hook_name, &opt);
 	if (ret < 0) /* error() return */
 		ret = 1;
