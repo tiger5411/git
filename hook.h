@@ -43,6 +43,11 @@ struct run_hooks_opt
 	/* Args to be passed to each hook */
 	struct strvec args;
 
+	/*
+	 * Number of run-command.c jobs to invoke in parallel.
+	 */
+	int jobs;
+
 	/* Resolve and run the "absolute_path(hook)" instead of
 	 * "hook". Used for "git worktree" hooks
 	 */
@@ -86,6 +91,12 @@ struct run_hooks_opt
 };
 
 #define RUN_HOOKS_OPT_INIT { \
+	.env = STRVEC_INIT, \
+	.args = STRVEC_INIT, \
+}
+
+#define RUN_HOOKS_OPT_INIT_SYNC { \
+	.jobs = 1, \
 	.env = STRVEC_INIT, \
 	.args = STRVEC_INIT, \
 }
