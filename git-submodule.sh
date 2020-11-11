@@ -413,6 +413,13 @@ is_tip_reachable () (
 	test -z "$rev"
 )
 
+get_default_remote () {
+	curr_branch=$(git symbolic-ref -q HEAD)
+	curr_branch="${curr_branch#refs/heads/}"
+	origin=$(git config --get "branch.$curr_branch.remote")
+	echo ${origin:-origin}
+}
+
 fetch_in_submodule () (
 	sanitize_submodule_env &&
 	cd "$1" &&
