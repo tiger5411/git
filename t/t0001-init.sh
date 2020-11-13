@@ -562,7 +562,7 @@ test_expect_success 'overridden default main branch name (env)' '
 	test_config_global init.defaultBranch nmb &&
 	GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=env git init main-branch-env &&
 	git -C main-branch-env symbolic-ref HEAD >actual &&
-	grep env actual
+	grep nmb actual
 '
 
 test_expect_success 'invalid default branch name' '

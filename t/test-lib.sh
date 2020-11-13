@@ -1382,6 +1382,26 @@ HOME="$TRASH_DIRECTORY"
 GNUPGHOME="$HOME/gnupg-home-not-used"
 export HOME GNUPGHOME
 
+# Check if we're doing tests with the main branch != master, and if
+# we'd like to override that for known-broken tests.
+GIT_TEST_MAIN=$(test-tool default-branch-name)
+if test "$GIT_TEST_MAIN" = "master"
+then
+	test_set_prereq MAIN_BRANCH_IS_MASTER
+else
+	if test -z "$GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME_HARDER" &&
+	   grep -q $TEST_NAME "$TEST_DIRECTORY/tests-that-need-master.txt"
+	then
+		echo overriding
+		GIT_TEST_MAIN=master
+		GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=master
+		test_set_prereq MAIN_BRANCH_IS_MASTER
+	fi
+fi
+export GIT_TEST_MAIN
+export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
+
+# Initialize the repository after we know the main branch name.
 if test -z "$TEST_NO_CREATE_REPO"
 then
 	test_create_repo "$TRASH_DIRECTORY"
@@ -1710,11 +1730,4 @@ test_lazy_prereq SHA1 '
 
 test_lazy_prereq REBASE_P '
 	test -z "$GIT_TEST_SKIP_REBASE_P"
-'
-# Special-purpose prereq for transitioning to a new default branch name:
-# Some tests need more than just a mindless (case-preserving) s/master/main/g
-# replacement. The non-trivial adjustments are guarded behind this
-# prerequisite, acting kind of as a feature flag
-test_lazy_prereq PREPARE_FOR_MAIN_BRANCH '
-	test "$GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME" = main
 '
