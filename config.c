@@ -1706,6 +1706,17 @@ unsigned long git_env_ulong(const char *k, unsigned long val)
 	return val;
 }
 
+/*
+ * Parse environment variable 'k' as a char *; if missing or empty,
+ * use the default value 'def'.
+ */
+const char* git_env_string(const char *k, const char *def)
+{
+	const char *v = getenv(k);
+	return v && strlen(v) ? v : def;
+}
+
+
 int git_config_system(void)
 {
 	return !git_env_bool("GIT_CONFIG_NOSYSTEM", 0);
