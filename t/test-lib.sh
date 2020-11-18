@@ -257,7 +257,7 @@ case "$TRASH_DIRECTORY" in
 esac
 
 case "$TEST_NUMBER" in
-3404|4013|5310|5526|6300|7064|7817|9902)
+3404|4013|5310|6300|7064|7817|9902)
 	# Avoid conflicts with patch series that are cooking at the same time
 	# as the patch series changing the default of `init.defaultBranch`.
 	GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=master
@@ -1725,12 +1725,9 @@ test_lazy_prereq REBASE_P '
 	test -z "$GIT_TEST_SKIP_REBASE_P"
 '
 
-# Special-purpose prereq for transitioning to a new default branch name:
-# Some tests need more than just a mindless (case-preserving) s/master/main/g
-# replacement. The non-trivial adjustments are guarded behind this
-# prerequisite, acting kind of as a feature flag
+# Obsolete, do not use, removed soon!
 test_lazy_prereq PREPARE_FOR_MAIN_BRANCH '
-	test "$GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME" = main
+	test "$TEST_NAME" = "t5526-fetch-submodules"
 '
 
 # Ensure that no test accidentally triggers a Git command
