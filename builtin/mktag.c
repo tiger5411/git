@@ -5,13 +5,15 @@
 
 /*
  * A signature file has a very simple fixed format: four lines
- * of "object <sha1>" + "type <typename>" + "tag <tagname>" +
+ * of "object <sha>" + "type <typename>" + "tag <tagname>" +
  * "tagger <committer>", followed by a blank line, a free-form tag
  * message and a signature block that git itself doesn't care about,
  * but that can be verified with gpg or similar.
  *
- * The first four lines are guaranteed to be at least 83 bytes:
- * "object <sha1>\n" is 48 bytes, "type tag\n" at 9 bytes is the
+ * The first four lines are guaranteed to be either 83 or 107 bytes;
+ * depending on whether we're referencing a SHA-1 or SHA-256 tag.
+ *
+ * "object <sha1>\n" is 48 or a 72 bytes, "type tag\n" at 9 bytes is the
  * shortest possible type-line, "tag .\n" at 6 bytes is the shortest
  * single-character-tag line, and "tagger . <> 0 +0000\n" at 20 bytes is
  * the shortest possible tagger-line.
@@ -46,9 +48,17 @@ static int verify_tag(char *buffer, unsigned long size)
 	struct object_id oid;
 	const char *object, *type_line, *tag_line, *tagger_line, *lb, *rb, *p;
 	size_t len;
+	int minimum_size =
+		/* Minimum possible input, see t/t3800-mktag.sh */
+		strlen("object ") + the_hash_algo->hexsz + strlen("\n") +
+		strlen("type tag\n") +
+		strlen("tag x\n") +
+		strlen("tagger . <> 0 +0000\n") +
+		strlen("\n");
 
-	if (size < 84)
-		return error("wanna fool me ? you obviously got the size wrong !");
+	if (size < minimum_size)
+		return error("got %"PRIuMAX" bytes of input, need at least %d bytes",
+			     size, minimum_size);
 
 	buffer[size] = 0;
 
@@ -58,7 +68,7 @@ static int verify_tag(char *buffer, unsigned long size)
 		return error("char%d: does not start with \"object \"", 0);
 
 	if (parse_oid_hex(object + 7, &oid, &p))
-		return error("char%d: could not get SHA1 hash", 7);
+		return error("char%d: expected object ID, got garbage", 7);
 
 	/* Verify type line */
 	type_line = p + 1;
@@ -166,7 +176,7 @@ int cmd_mktag(int argc, const char **argv, const char *prefix)
 	}
 
 	/* Verify it for some basic sanity: it needs to start with
-	   "object <sha1>\ntype\ntagger " */
+	   "object <sha>\ntype\ntagger " */
 	if (verify_tag(buf.buf, buf.len) < 0)
 		die("invalid tag signature file");
 

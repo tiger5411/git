@@ -26,24 +26,42 @@ test_expect_success 'setup' '
 	echo Hello >A &&
 	git update-index --add A &&
 	git commit -m "Initial commit" &&
-	head=$(git rev-parse --verify HEAD)
+	head=$(git rev-parse --verify HEAD) &&
+
+	git tag -m"some tag" annotated &&
+	annotated=$(git rev-parse --verify annotated)
 '
 
 ############################################################
 #  1. length check
+for objType in t ta tag
+do
+	cat >tag.sig <<-EOF
+	object $annotated
+	type $objType
+	tag x
+	tagger . <> 0 +0000
 
-cat >tag.sig <<EOF
-too short for a tag
-EOF
+	EOF
+	len=$(wc -c tag.sig)
 
-check_verify_failure 'Tag object length check' \
-	'^error: .*size wrong.*$'
+	if test $objType = "tag"
+	then
+		test_expect_success "Tag object length check $len passed" '
+			git mktag <tag.sig >.git/refs/tags/x 2>message &&
+			git rev-parse refs/tags/x
+		'
+	else
+		check_verify_failure "Tag object length check on length $len" \
+			'^error: got .* bytes of input, need at least'
+	fi
+done
 
 ############################################################
 #  2. object line label check
 
 cat >tag.sig <<EOF
-xxxxxx 139e9b33986b1c2670fff52c5067603117b3e895
+xxxxxx $head
 type tag
 tag mytag
 tagger . <> 0 +0000
@@ -53,17 +71,18 @@ EOF
 check_verify_failure '"object" line label check' '^error: char0: .*"object "$'
 
 ############################################################
-#  3. object line SHA1 check
+#  3. object line SHA check
 
+invalid_sha=$(echo $head | tr A-Za-z N-ZA-Mn-za-m)
 cat >tag.sig <<EOF
-object zz9e9b33986b1c2670fff52c5067603117b3e895
+object $invalid_sha
 type tag
 tag mytag
 tagger . <> 0 +0000
 
 EOF
 
-check_verify_failure '"object" line SHA1 check' '^error: char7: .*SHA1 hash$'
+check_verify_failure '"object" line object check' '^error: char7: .*expected object ID, got garbage'
 
 ############################################################
 #  4. type line label check
@@ -125,7 +144,7 @@ check_verify_failure '"type" line type-name length check' \
 	'^error: char.*: type too long$'
 
 ############################################################
-#  9. verify object (SHA1/type) check
+#  9. verify object (SHA/type) check
 
 cat >tag.sig <<EOF
 object $(test_oid deadbeef)
@@ -135,7 +154,7 @@ tagger . <> 0 +0000
 
 EOF
 
-check_verify_failure 'verify object (SHA1/type) check' \
+check_verify_failure 'verify object (SHA/type) check' \
 	'^error: char7: could not verify object.*$'
 
 ############################################################
