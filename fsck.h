@@ -6,6 +6,7 @@
 #define FSCK_ERROR 1
 #define FSCK_WARN 2
 #define FSCK_IGNORE 3
+#define FSCK_EXTRA 4
 
 struct fsck_options;
 struct object;
@@ -40,6 +41,7 @@ struct fsck_options {
 	unsigned strict:1;
 	int *msg_type;
 	struct oidset skiplist;
+	unsigned extra:1;
 	kh_oid_map_t *object_names;
 };
 

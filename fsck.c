@@ -80,7 +80,10 @@ static struct oidset gitmodules_done = OIDSET_INIT;
 	/* infos (reported as warnings, but ignored by default) */ \
 	FUNC(GITMODULES_PARSE, INFO) \
 	FUNC(BAD_TAG_NAME, INFO) \
-	FUNC(MISSING_TAGGER_ENTRY, INFO)
+	FUNC(MISSING_TAGGER_ENTRY, INFO) \
+	/* extra (only reported when requested) */ \
+	FUNC(EXTRA_HEADER_ENTRY, EXTRA) \
+	FUNC(EXTRA_HEADER_BODY_NEWLINE, EXTRA)
 
 #define MSG_ID(id, msg_type) FSCK_MSG_##id,
 enum fsck_msg_id {
@@ -974,6 +977,33 @@ static int fsck_tag(const struct object_id *oid, const char *buffer,
 	}
 	else
 		ret = fsck_ident(&buffer, oid, OBJ_TAG, options);
+
+	if (options->extra && *buffer) {
+		if (!starts_with(buffer, "\n")) {
+			/*
+			 * The verify_headers() check will allow
+			 * e.g. "[...]tagger <tagger>\nsome
+			 * garbage\n\nmessage" to pass, thinking "some
+			 * garbage" could be a custom
+			 * header. E.g. "mktag" doesn't want any
+			 * unknown headers.
+			 */
+			ret = report(options, oid, OBJ_TAG, FSCK_MSG_EXTRA_HEADER_ENTRY, "invalid format - extra header(s) after 'tagger'");
+			if (ret)
+				goto done;
+		}
+		if (starts_with(buffer, "\n\n")) {
+			/*
+			 * Some callers such as "mktag" want to
+			 * disallow "[...]tagger
+			 * <tagger>\n\n\nmessage", only allowing a
+			 * single newline for separation.
+			 */
+			ret = report(options, oid, OBJ_TAG, FSCK_MSG_EXTRA_HEADER_BODY_NEWLINE, "invalid format - headers separated body by more than one newline");
+			if (ret)
+				goto done;
+		}
+	}
 
 done:
 	strbuf_release(&sb);
