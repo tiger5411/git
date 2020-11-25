@@ -2,6 +2,7 @@
 #include "tag.h"
 #include "replace-object.h"
 #include "object-store.h"
+#include "fsck.h"
 
 /*
  * A signature file has a very simple fixed format: four lines
@@ -46,6 +47,9 @@ static int verify_tag(char *buffer, unsigned long size)
 	struct object_id oid;
 	const char *object, *type_line, *tag_line, *tagger_line, *lb, *rb, *p;
 	size_t len;
+
+	/* verify_tag() will be removed in the next commit */
+	return 0;
 
 	if (size < 84)
 		return error("wanna fool me ? you obviously got the size wrong !");
@@ -153,10 +157,34 @@ static int verify_tag(char *buffer, unsigned long size)
 	return 0;
 }
 
+static int mktag_fsck_error_func(struct fsck_options *o,
+				 const struct object_id *oid,
+				 enum object_type object_type,
+				 int msg_type, const char *message)
+{
+	switch (msg_type) {
+	case FSCK_WARN:
+	case FSCK_ERROR:
+	case FSCK_EXTRA:
+		/*
+		 * We treat both warnings and errors as errors, things
+		 * like missing "tagger" lines are "only" warnings
+		 * under fsck, we've always considered them an error.
+		 */
+		fprintf_ln(stderr, "error: %s", message);
+		return 1;
+	default:
+		BUG("%d (FSCK_IGNORE?) should never trigger this callback",
+		    msg_type);
+	}
+}
+
 int cmd_mktag(int argc, const char **argv, const char *prefix)
 {
+	struct object obj;
 	struct strbuf buf = STRBUF_INIT;
 	struct object_id result;
+	struct fsck_options fsck_options = FSCK_OPTIONS_STRICT;
 
 	if (argc != 1)
 		usage("git mktag");
@@ -164,10 +192,19 @@ int cmd_mktag(int argc, const char **argv, const char *prefix)
 	if (strbuf_read(&buf, 0, 0) < 0)
 		die_errno("could not read from stdin");
 
-	/* Verify it for some basic sanity: it needs to start with
-	   "object <sha1>\ntype\ntagger " */
-	if (verify_tag(buf.buf, buf.len) < 0)
-		die("invalid tag signature file");
+	/* verify_tag() will be removed in the next commit */
+	verify_tag("", 0);
+
+	/*
+	 * Fake up an object for fsck_object()
+	 */
+	obj.parsed = 1;
+	obj.type = OBJ_TAG;
+
+	fsck_options.extra = 1;
+	fsck_options.error_func = mktag_fsck_error_func;
+	if (fsck_object(&obj, buf.buf, buf.len, &fsck_options))
+		die("tag on stdin did not pass our strict fsck check");
 
 	if (write_object_file(buf.buf, buf.len, tag_type, &result) < 0)
 		die("unable to write annotated tag object");
