@@ -171,7 +171,7 @@ int cmd_mktag(int argc, const char **argv, const char *prefix)
 		die("invalid tag signature file");
 
 	if (write_object_file(buf.buf, buf.len, tag_type, &result) < 0)
-		die("unable to write tag file");
+		die("unable to write annotated tag object");
 
 	strbuf_release(&buf);
 	printf("%s\n", oid_to_hex(&result));
