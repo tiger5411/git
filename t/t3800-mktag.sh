@@ -137,7 +137,7 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (SHA1/type) check' \
-	'^error: char7: could not verify object.*$'
+	'^fatal: tag on stdin did not refer to a valid object'
 
 cat >tag.sig <<EOF
 object $head
@@ -148,7 +148,7 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (SHA1/type) check' \
-	'^fatal: invalid object type'
+	'^error: badType:'
 
 cat >tag.sig <<EOF
 object $(test_oid deadbeef)
