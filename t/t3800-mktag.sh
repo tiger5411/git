@@ -125,7 +125,29 @@ check_verify_failure '"type" line type-name length check' \
 	'^error: char.*: type too long$'
 
 ############################################################
-#  9. verify object (SHA1/type) check
+#  9. verify object (hash/type) check
+
+cat >tag.sig <<EOF
+object $(test_oid deadbeef)
+type tag
+tag mytag
+tagger . <> 0 +0000
+
+EOF
+
+check_verify_failure 'verify object (hash/type) check -- correct type, nonexisting object' \
+	'^error: char7: could not verify object.*$'
+
+cat >tag.sig <<EOF
+object $head
+type tagggg
+tag mytag
+tagger . <> 0 +0000
+
+EOF
+
+check_verify_failure 'verify object (hash/type) check -- made-up type, nonexisting object' \
+	'^fatal: invalid object type'
 
 cat >tag.sig <<EOF
 object $(test_oid deadbeef)
@@ -135,8 +157,19 @@ tagger . <> 0 +0000
 
 EOF
 
-check_verify_failure 'verify object (SHA1/type) check' \
+check_verify_failure 'verify object (hash/type) check -- incorrect type, valid object' \
 	'^error: char7: could not verify object.*$'
+
+cat >tag.sig <<EOF
+object $head
+type tree
+tag mytag
+tagger . <> 0 +0000
+
+EOF
+
+check_verify_failure 'verify object (hash/type) check -- incorrect type, valid object' \
+	'^error: char7: could not verify object'
 
 ############################################################
 # 10. verify tag-name check
