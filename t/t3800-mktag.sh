@@ -130,6 +130,28 @@ check_verify_failure '"type" line type-name length check' \
 
 cat >tag.sig <<EOF
 object $(test_oid deadbeef)
+type tag
+tag mytag
+tagger . <> 0 +0000
+
+EOF
+
+check_verify_failure 'verify object (SHA1/type) check' \
+	'^error: char7: could not verify object.*$'
+
+cat >tag.sig <<EOF
+object $head
+type tagggg
+tag mytag
+tagger . <> 0 +0000
+
+EOF
+
+check_verify_failure 'verify object (SHA1/type) check' \
+	'^fatal: invalid object type'
+
+cat >tag.sig <<EOF
+object $(test_oid deadbeef)
 type tagggg
 tag mytag
 tagger . <> 0 +0000
