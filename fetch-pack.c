@@ -1661,9 +1661,9 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 
 		if (memcmp(packfile_uris.items[i].string, packname,
 			   the_hash_algo->hexsz))
-			die("fetch-pack: pack downloaded from %s does not match expected hash %.*s",
-			    uri, (int) the_hash_algo->hexsz,
-			    packfile_uris.items[i].string);
+			warning("fetch-pack: pack downloaded from %s does not match expected hash %.*s",
+				uri, (int) the_hash_algo->hexsz,
+				packfile_uris.items[i].string);
 
 		string_list_append_nodup(pack_lockfiles,
 					 xstrfmt("%s/pack/pack-%s.keep",

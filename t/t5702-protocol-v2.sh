@@ -798,9 +798,13 @@ test_expect_success 'when server does not send "ready", expect FLUSH' '
 configure_exclusion () {
 	git -C "$1" hash-object "$2" >objh &&
 	git -C "$1" pack-objects "$HTTPD_DOCUMENT_ROOT_PATH/mypack" <objh >packh &&
+	fake_sha=$(git hash-object --stdin <packh) &&
+	mv \
+		"$HTTPD_DOCUMENT_ROOT_PATH/mypack-$(cat packh).pack" \
+		"$HTTPD_DOCUMENT_ROOT_PATH/mypack-$fake_sha.pack"
 	git -C "$1" config --add \
 		"uploadpack.blobpackfileuri" \
-		"$(cat objh) $(cat packh) $HTTPD_URL/dumb/mypack-$(cat packh).pack" &&
+		"$(cat objh) $fake_sha $HTTPD_URL/dumb/mypack-$fake_sha.pack" &&
 	cat objh
 }
 
@@ -852,7 +856,7 @@ test_expect_success 'part of packfile response provided as URI' '
 	test_line_count = 6 filelist
 '
 
-test_expect_success 'fetching with valid packfile URI but invalid hash fails' '
+-test_expect_success 'fetching with valid packfile URI but invalid hash warns' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
 	rm -rf "$P" http_child log &&
 
@@ -870,13 +874,12 @@ test_expect_success 'fetching with valid packfile URI but invalid hash fails' '
 	# the hash of the packfile, since the hash does not matter for this
 	# test as long as it is not the hash of the pack, and it is of the
 	# expected length.
-	git -C "$P" hash-object other-blob >objh &&
 	git -C "$P" pack-objects "$HTTPD_DOCUMENT_ROOT_PATH/mypack" <objh >packh &&
 	git -C "$P" config --add \
 		"uploadpack.blobpackfileuri" \
 		"$(cat objh) $(cat objh) $HTTPD_URL/dumb/mypack-$(cat packh).pack" &&
 
-	test_must_fail env GIT_TEST_SIDEBAND_ALL=1 \
+	env GIT_TEST_SIDEBAND_ALL=1 \
 		git -c protocol.version=2 \
 		-c fetch.uriprotocols=http,https \
 		clone "$HTTPD_URL/smart/http_parent" http_child 2>err &&
