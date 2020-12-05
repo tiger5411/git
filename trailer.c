@@ -1206,8 +1206,7 @@ static void format_trailer_info(struct strbuf *out,
 	size_t origlen = out->len;
 	size_t i;
 
-	/* If we want the whole block untouched, we can take the fast path. */
-	if (!opts->only_trailers && !opts->unfold && !opts->filter && !opts->separator) {
+	if (!opts->have_options) {
 		strbuf_add(out, info->trailer_start,
 			   info->trailer_end - info->trailer_start);
 		return;

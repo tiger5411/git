@@ -65,6 +65,7 @@ struct new_trailer_item {
 };
 
 struct process_trailer_options {
+	int have_options;
 	int in_place;
 	int trim_empty;
 	int only_trailers;

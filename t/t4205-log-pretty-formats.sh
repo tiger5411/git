@@ -737,6 +737,17 @@ test_expect_success '%(trailers:key=foo,valueonly) shows only value' '
 	test_cmp expect actual
 '
 
+test_expect_success '%(trailers:valueonly) shows only values' '
+	git log --no-walk --pretty="format:%(trailers:valueonly)" >actual &&
+	test_write_lines \
+		"A U Thor <author@example.com>" \
+		"A U Thor <author@example.com>" \
+		"[ v2 updated patch description ]" \
+		"A U Thor" \
+		"  <author@example.com>" >expect &&
+	test_cmp expect actual
+'
+
 test_expect_success '%(trailers:key=foo,keyonly,valueonly) shows nothing' '
 	git log --no-walk --pretty="format:%(trailers:key=Acked-by,keyonly,valueonly)" >actual &&
 	echo >expect &&

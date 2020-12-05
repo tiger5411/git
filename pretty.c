@@ -1426,6 +1426,8 @@ static size_t format_commit_one(struct strbuf *sb, /* in UTF-8 */
 		opts.no_divider = 1;
 
 		if (*arg == ':') {
+			/* over-matches on %(trailers:), but that's OK */
+			opts.have_options = 1;
 			arg++;
 			for (;;) {
 				const char *argval;
