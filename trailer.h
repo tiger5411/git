@@ -71,9 +71,11 @@ struct process_trailer_options {
 	int only_input;
 	int unfold;
 	int no_divider;
+	int key_only;
 	int value_only;
 	int canonicalize;
 	const struct strbuf *separator;
+	const struct strbuf *key_value_separator;
 	int (*filter)(const struct strbuf *, const char *alias, void *);
 	void *filter_data;
 };

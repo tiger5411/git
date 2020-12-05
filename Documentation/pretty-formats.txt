@@ -284,8 +284,8 @@ multiple times the last occurance wins.
 ** 'unfold[=bool]': make it behave as if interpret-trailer's `--unfold`
    option was given. E.g.,
    `%(trailers:only,unfold=true)` unfolds and shows all trailer lines.
-** 'valueonly[=bool]': skip over the key part of the trailer line and only
-   show the value part.
+** 'keyonly[=bool]': only show the key part of the trailer.
+** 'valueonly[=bool]': only show the value part of the trailer.
 
 NOTE: Some placeholders may depend on other options given to the
 revision traversal engine. For example, the `%g*` reflog options will

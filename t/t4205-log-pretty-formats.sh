@@ -715,9 +715,31 @@ test_expect_success '%(trailers:key) without value is error' '
 	test_cmp expect actual
 '
 
+test_expect_success '%(trailers:key=foo,keyonly) shows only keys' '
+	git log --no-walk --pretty="format:%(trailers:keyonly)" >actual &&
+	test_write_lines \
+		"Signed-off-by" \
+		"Acked-by" \
+		"[ v2 updated patch description ]" \
+		"Signed-off-by" >expect &&
+	test_cmp expect actual
+'
+
+test_expect_success '%(trailers:key=foo,keyonly) shows only key' '
+	git log --no-walk --pretty="format:%(trailers:key=Acked-by,keyonly)" >actual &&
+	echo "Acked-by" >expect &&
+	test_cmp expect actual
+'
+
 test_expect_success '%(trailers:key=foo,valueonly) shows only value' '
 	git log --no-walk --pretty="format:%(trailers:key=Acked-by,valueonly)" >actual &&
 	echo "A U Thor <author@example.com>" >expect &&
+	test_cmp expect actual
+'
+
+test_expect_success '%(trailers:key=foo,keyonly,valueonly) shows nothing' '
+	git log --no-walk --pretty="format:%(trailers:key=Acked-by,keyonly,valueonly)" >actual &&
+	echo >expect &&
 	test_cmp expect actual
 '
 
@@ -732,7 +754,7 @@ test_expect_success 'pretty format %(trailers:separator) changes separator' '
 	test_cmp expect actual
 '
 
-test_expect_success 'pretty format %(trailers) combining separator/key/valueonly' '
+test_expect_success 'pretty format %(trailers) combining separator/key/keyonly/valueonly' '
 	git commit --allow-empty -F - <<-\EOF &&
 	Important fix
 
@@ -759,6 +781,13 @@ test_expect_success 'pretty format %(trailers) combining separator/key/valueonly
 		"Does not close any tickets" \
 		"Another fix #567, #890" \
 		"Important fix #1234" >expect &&
+	test_cmp expect actual &&
+
+	git log --pretty="%s% (trailers:separator=%x2c%x20,key=Closes,keyonly)" HEAD~3.. >actual &&
+	test_write_lines \
+		"Does not close any tickets" \
+		"Another fix Closes, Closes" \
+		"Important fix Closes" >expect &&
 	test_cmp expect actual
 '
 
