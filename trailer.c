@@ -1233,8 +1233,12 @@ static void format_trailer_info(struct strbuf *out,
 					strbuf_addbuf(out, opts->separator);
 				if (!opts->value_only)
 					strbuf_addstr(out, tok.buf);
-				if (!opts->key_only && !opts->value_only)
-					strbuf_addstr(out, ": ");
+				if (!opts->key_only && !opts->value_only) {
+					if (opts->key_value_separator)
+						strbuf_addbuf(out, opts->key_value_separator);
+					else
+						strbuf_addstr(out, ": ");
+				}
 				if (!opts->key_only)
 					strbuf_addbuf(out, &val);
 				if (!opts->separator)
