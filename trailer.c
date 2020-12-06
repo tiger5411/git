@@ -1130,13 +1130,6 @@ static void format_trailer_info(struct strbuf *out,
 	size_t origlen = out->len;
 	size_t i;
 
-	/* If we want the whole block untouched, we can take the fast path. */
-	if (!opts->only_trailers && !opts->unfold && !opts->filter && !opts->separator) {
-		strbuf_add(out, info->trailer_start,
-			   info->trailer_end - info->trailer_start);
-		return;
-	}
-
 	for (i = 0; i < info->trailer_nr; i++) {
 		char *trailer = info->trailers[i];
 		ssize_t separator_pos = find_separator(trailer, separators);
