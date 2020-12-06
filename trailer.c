@@ -1125,8 +1125,11 @@ void trailer_info_get(struct trailer_info *info, const char *str,
 void trailer_info_release(struct trailer_info *info)
 {
 	size_t i;
-	for (i = 0; i < info->trailer_nr; i++)
+	for (i = 0; i < info->trailer_nr; i++){
 		free(info->trailers[i]);
+
+	}
+	free(info->trailers_separator_pos);
 	free(info->trailers);
 }
 
