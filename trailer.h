@@ -47,6 +47,7 @@ struct trailer_info {
 	 * Array of trailers found.
 	 */
 	char **trailers;
+	ssize_t *trailers_separator_pos;
 	size_t trailer_nr;
 };
 

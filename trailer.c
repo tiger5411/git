@@ -1073,7 +1073,10 @@ void trailer_info_get(struct trailer_info *info, const char *str,
 	int patch_start, trailer_end, trailer_start;
 	struct strbuf **trailer_lines, **ptr;
 	char **trailer_strings = NULL;
+	ssize_t *trailer_separator_pos = NULL;
+	ssize_t pos;
 	size_t nr = 0, alloc = 0;
+	size_t nr2 = 0, alloc2 = 0;
 	char **last = NULL;
 
 	ensure_configured();
@@ -1100,7 +1103,10 @@ void trailer_info_get(struct trailer_info *info, const char *str,
 		}
 		ALLOC_GROW(trailer_strings, nr + 1, alloc);
 		trailer_strings[nr] = strbuf_detach(*ptr, NULL);
-		last = find_separator(trailer_strings[nr], separators) >= 1
+		ALLOC_GROW(trailer_separator_pos, nr2 + 1, alloc2);
+		pos = find_separator(trailer_strings[nr], separators);;
+		trailer_separator_pos[nr] = pos;
+		last = trailer_separator_pos[nr] >= 1
 			? &trailer_strings[nr]
 			: NULL;
 		nr++;
@@ -1112,6 +1118,7 @@ void trailer_info_get(struct trailer_info *info, const char *str,
 	info->trailer_start = str + trailer_start;
 	info->trailer_end = str + trailer_end;
 	info->trailers = trailer_strings;
+	info->trailers_separator_pos = trailer_separator_pos;
 	info->trailer_nr = nr;
 }
 
@@ -1132,7 +1139,7 @@ static void format_trailer_info(struct strbuf *out,
 
 	for (i = 0; i < info->trailer_nr; i++) {
 		char *trailer = info->trailers[i];
-		ssize_t separator_pos = find_separator(trailer, separators);
+		ssize_t separator_pos = info->trailers_separator_pos[i];
 
 		if (separator_pos >= 1) {
 			struct strbuf tok = STRBUF_INIT;
