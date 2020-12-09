@@ -1107,6 +1107,7 @@ void http_init(struct remote *remote, const char *url, int proactive_auth)
 	char *low_speed_time;
 	char *normalized_url;
 	struct urlmatch_config config = { STRING_LIST_INIT_DUP };
+	struct config_options opts = { 0, .respect_includes = 1 };
 
 	config.section = "http";
 	config.key = NULL;
@@ -1117,7 +1118,7 @@ void http_init(struct remote *remote, const char *url, int proactive_auth)
 	http_is_verbose = 0;
 	normalized_url = url_normalize(url, &config.url);
 
-	git_config(urlmatch_config_entry, &config);
+	config_with_options(urlmatch_config_entry, &config, NULL, &opts);
 	free(normalized_url);
 	string_list_clear(&config.vars, 1);
 

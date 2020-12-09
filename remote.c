@@ -445,6 +445,8 @@ static void read_config(void)
 {
 	static int loaded;
 	int flag;
+	struct config_options opts = { 0 };
+	opts.respect_includes = 1;
 
 	if (loaded)
 		return;
@@ -458,7 +460,7 @@ static void read_config(void)
 			current_branch = make_branch(head_ref, strlen(head_ref));
 		}
 	}
-	git_config(handle_config, NULL);
+	config_with_options(handle_config, NULL, NULL, &opts);
 	alias_all_urls();
 }
 
