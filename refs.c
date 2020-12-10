@@ -649,12 +649,19 @@ static int is_main_pseudoref_syntax(const char *refname)
 		is_pseudoref_syntax(refname);
 }
 
+static int is_any_pseudoref_syntax(const char *refname)
+{
+	return is_main_pseudoref_syntax(refname) ||
+		is_pseudoref_syntax(refname);
+}
+
 int expand_ref(struct repository *repo, const char *str, int len,
 	       struct object_id *oid, char **ref)
 {
 	const char **p, *r;
 	int refs_found = 0;
 	struct strbuf fullref = STRBUF_INIT;
+	static int warned_on_non_pseudo_ref;
 
 	*ref = NULL;
 	for (p = ref_rev_parse_rules; *p; p++) {
@@ -669,6 +676,19 @@ int expand_ref(struct repository *repo, const char *str, int len,
 					    fullref.buf, RESOLVE_REF_READING,
 					    this_result, &flag);
 		if (r) {
+			if (warn_non_pseudo_refs &&
+			    !starts_with(fullref.buf, "refs/") &&
+			    !starts_with(r, "refs/") &&
+			    !strchr(r, '/') &&
+			    !is_any_pseudoref_syntax(r) &&
+			    !warned_on_non_pseudo_ref++) {
+				/*
+				 * TRANSLATORS: The 1st argument is
+				 * e.g. "master", and the 2nd can be
+				 * e.g. "master~10".
+				 */
+				warning(_("matched ref name .git/%s doesn't look like a pseudoref"), r);
+			}
 			if (!refs_found++)
 				*ref = xstrdup(r);
 			if (!warn_ambiguous_refs)

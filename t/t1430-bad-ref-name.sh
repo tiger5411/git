@@ -374,4 +374,45 @@ test_expect_success 'branch -m can rename refs/heads/-dash' '
 	git show-ref refs/heads/dash
 '
 
+test_expect_success 'warn on non-pseudoref syntax refs in .git/' '
+	test_when_finished "
+		rm -f .git/mybranch &&
+		rm -rf .git/a-dir &&
+		rm -rf .git/MY-BRANCH_NAME &&
+		rm -rf .git/MY-branch_NAME
+	" &&
+
+	# Setup
+	git rev-parse master >expect &&
+
+	# We ignore anything with slashes
+	mkdir .git/a-dir &&
+	cp expect .git/a-dir/mybranch &&
+	git rev-parse a-dir/mybranch >hash 2>err &&
+	test_must_be_empty err &&
+	test_cmp expect hash &&
+
+	# We ignore upper-case
+	cp expect .git/MY-BRANCH_NAME &&
+	git rev-parse a-dir/mybranch >hash 2>err &&
+	test_must_be_empty err &&
+	test_cmp expect hash &&
+
+	# We ignore mixed-case
+	cp expect .git/MY-branch_NAME &&
+	git rev-parse a-dir/mybranch >hash 2>err &&
+	test_must_be_empty err &&
+	test_cmp expect hash &&
+
+	# We do not ignore lower-case
+	cp expect .git/mybranch &&
+	git rev-parse mybranch >hash 2>err &&
+	test_cmp expect hash &&
+	GIT_TEST_GETTEXT_POISON=false grep "like a pseudoref" err &&
+	git -c core.warnNonPseudoRefs=false rev-parse mybranch >hash 2>err &&
+	test_cmp expect hash &&
+	test_must_be_empty err &&
+	rm .git/mybranch
+'
+
 test_done

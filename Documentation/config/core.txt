@@ -355,6 +355,17 @@ core.warnAmbiguousRefs::
 	If true, Git will warn you if the ref name you passed it is ambiguous
 	and might match multiple refs in the repository. True by default.
 
+core.warnNonPseudoRefs::
+	If true, Git will warn you if the `<ref>` you passed
+	unexpectedly resolves to a top-level ref stored in
+	`.git/<file>` but doesn't look like a pseudoref such as
+	`HEAD`, `MERGE_HEAD` etc. True by default.
++
+These references are ignored by linkgit:for-each-ref[1], but resolved
+by linkgit:git-show[1], linkgit:git-rev-parse[1] etc. So it can be
+confusing to have e.g. an errant `.git/master` being confused with
+`.git/refs/heads/master`.
+
 core.compression::
 	An integer -1..9, indicating a default compression level.
 	-1 is the zlib default. 0 means no compression,
