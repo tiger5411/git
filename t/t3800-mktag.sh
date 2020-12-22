@@ -372,6 +372,54 @@ EOF
 check_verify_failure 'detect invalid header entry' \
 	'^error: char.*: trailing garbage in tag header$'
 
+cat >tag.sig <<EOF
+object $head
+type commit
+tag mytag
+tagger T A Gger <tagger@example.com> 1206478233 -0500
+
+
+this line comes after an extra newline
+EOF
+
+test_expect_success 'allow extra newlines at start of body' '
+	git mktag <tag.sig
+'
+
+cat >tag.sig <<EOF
+object $head
+type commit
+tag mytag
+tagger T A Gger <tagger@example.com> 1206478233 -0500
+
+EOF
+
+test_expect_success 'allow extra newlines at end of headers' '
+	git mktag <tag.sig
+'
+
+space=' '
+cat >tag.sig <<EOF
+object $head
+type commit
+tag mytag
+tagger T A Gger <tagger@example.com> 1206478233 -0500$space
+
+EOF
+
+check_verify_failure 'extra whitespace at end of headers' \
+	'^error: char.*: malformed tag timezone$'
+
+cat >tag.sig <<EOF
+object $head
+type commit
+tag mytag
+tagger T A Gger <tagger@example.com> 1206478233 -0500
+EOF
+
+check_verify_failure 'disallow no header / body newline separator' \
+	'^error: char.*: trailing garbage in tag header$'
+
 ############################################################
 # 24. create valid tag
 
