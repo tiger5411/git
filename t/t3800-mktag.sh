@@ -432,8 +432,9 @@ tag mytag
 tagger T A Gger <tagger@example.com> 1206478233 -0500
 EOF
 
-check_verify_failure 'disallow no header / body newline separator' \
-	'^error:.* extraHeaderEntry:'
+test_expect_success 'allow no header / body newline separator' '
+	git mktag <tag.sig
+'
 
 ############################################################
 # 24. create valid tag
@@ -443,7 +444,6 @@ object $head
 type commit
 tag mytag
 tagger T A Gger <tagger@example.com> 1206478233 -0500
-
 EOF
 
 test_expect_mktag_success 'create valid tag object'
