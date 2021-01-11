@@ -284,23 +284,27 @@ Perl:
 Testing marked strings
 ----------------------
 
-Even if you've correctly marked porcelain strings for translation
-something in the test suite might still depend on the US English
-version of the strings, e.g. to grep some error message or other
-output.
+Git's tests are run under LANG=C LC_ALL=C. So the tests do not need be
+changed to account for translations as they're added.
 
-To smoke out issues like these, Git tested with a translation mode that
-emits gibberish on every call to gettext. To use it run the test suite
-with it, e.g.:
+Testing whether marked strings are used by plumbing
+---------------------------------------------------
 
-    cd t && GIT_TEST_GETTEXT_POISON=true prove -j 9 ./t[0-9]*.sh
+It may be useful to use the test suite to smoke out any strings that
+shouldn't be translated, because they are used by plumbing or
+otherwise part of machine-readable output.
 
-If tests break with it you should inspect them manually and see if
-what you're translating is sane, i.e. that you're not translating
+This is most useful in cases where e.g. library function might return
+a string like _("tree"), and the developer marking strings for
+translation wishes to check that they're not inadvertently translating
 plumbing output.
 
-If not you should replace calls to grep with test_i18ngrep, or
-test_cmp calls with test_i18ncmp. If that's not enough you can skip
-the whole test by making it depend on the C_LOCALE_OUTPUT
-prerequisite. See existing test files with this prerequisite for
-examples.
+There used to be a GIT_TEST_GETTEXT_POISON=true test mode to replace
+translated strings with gibberish to facilitate this. Maintaining it
+and annotating tests appropriately was considered too high of a burden
+for its usefulness.
+
+It's still possible to do a one-off test of where a string might be
+used in the tests by simply replacing the "some hardcoded string" with
+something like "POISON ME" locally and running the tests, before
+finally converting it to _("some hardcoded string").
