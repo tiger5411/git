@@ -993,7 +993,7 @@ test_expect_success '--no-show-forced-updates' '
 	(
 		cd no-forced-update-clone &&
 		git fetch --no-show-forced-updates origin 2>output &&
-		test_i18ngrep ! "(forced update)" output
+		! grep "(forced update)" output
 	)
 '
 

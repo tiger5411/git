@@ -178,7 +178,7 @@ test_expect_success '--skip after failed fixup cleans commit message' '
 
 	(test_set_editor "$PWD/copy-editor.sh" && git rebase --skip) &&
 	git show HEAD >out &&
-	test_i18ngrep ! "# This is a combination" out &&
+	! grep "# This is a combination" out &&
 
 	: Final squash failed, but there was still a squash &&
 	test_i18ngrep "# This is a combination of 2 commits" .git/copy.txt &&

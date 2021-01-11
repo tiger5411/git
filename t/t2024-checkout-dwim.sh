@@ -118,7 +118,7 @@ test_expect_success PERL 'checkout -p with multiple remotes does not print advic
 	test_might_fail git branch -D foo &&
 
 	git checkout -p foo 2>stderr &&
-	test_i18ngrep ! "^hint: " stderr &&
+	! grep "^hint: " stderr &&
 	status_uno_is_clean
 '
 

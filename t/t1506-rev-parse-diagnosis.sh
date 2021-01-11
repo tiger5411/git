@@ -167,7 +167,7 @@ test_expect_success 'relative path when cwd is outside worktree' '
 
 test_expect_success '<commit>:file correctly diagnosed after a pathname' '
 	test_must_fail git rev-parse file.txt HEAD:file.txt 1>actual 2>error &&
-	test_i18ngrep ! "exists on disk" error &&
+	! grep "exists on disk" error &&
 	test_i18ngrep "no such path in the working tree" error &&
 	cat >expect <<-\EOF &&
 	file.txt

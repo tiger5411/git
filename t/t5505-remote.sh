@@ -1341,7 +1341,7 @@ test_expect_success 'unqualified <dst> refspec DWIM and advice' '
 			test_must_fail git -c advice.pushUnqualifiedRefName=false \
 				push origin $oid:dst 2>err &&
 			test_i18ngrep "error: The destination you" err &&
-			test_i18ngrep ! "hint: Did you mean" err ||
+			! grep "hint: Did you mean" err ||
 			exit_with=false
 		done &&
 		$exit_with

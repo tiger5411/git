@@ -202,7 +202,7 @@ test_expect_success 'exit when p4 fails to produce marshaled output' '
 		export PATH &&
 		test_expect_code 1 git p4 clone --dest="$git" //depot >errs 2>&1
 	) &&
-	test_i18ngrep ! Traceback errs
+	! grep Traceback errs
 '
 
 # Hide a file from p4d, make sure we catch its complaint.  This won't fail in

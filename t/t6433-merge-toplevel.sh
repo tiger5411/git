@@ -148,7 +148,7 @@ test_expect_success 'refuse two-project merge by default, quit before --autostas
 	echo change >>one.t &&
 	git diff >expect &&
 	test_must_fail git merge --autostash five 2>err &&
-	test_i18ngrep ! "stash" err &&
+	! grep "stash" err &&
 	git diff >actual &&
 	test_cmp expect actual
 '

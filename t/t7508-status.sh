@@ -1547,7 +1547,7 @@ test_expect_success 'git commit will commit a staged but ignored submodule' '
 	export GIT_EDITOR &&
 	git commit -uno &&
 	git status -s --ignore-submodules=dirty >output &&
-	test_i18ngrep ! "^M. sm" output
+	! grep "^M. sm" output
 '
 
 test_expect_success 'git commit --dry-run will show a staged but ignored submodule' '
@@ -1579,7 +1579,7 @@ EOF
 test_expect_success 'git commit -m will commit a staged but ignored submodule' '
 	git commit -uno -m message &&
 	git status -s --ignore-submodules=dirty >output &&
-	test_i18ngrep ! "^M. sm" output &&
+	! grep "^M. sm" output &&
 	git config --remove-section submodule.subname &&
 	git config -f .gitmodules  --remove-section submodule.subname
 '
@@ -1626,7 +1626,7 @@ test_expect_success '"No commits yet" should not be noted in status output' '
 	git checkout --orphan empty-branch-2 &&
 	test_commit test-commit-1 &&
 	git status >output &&
-	test_i18ngrep ! "No commits yet" output
+	! grep "No commits yet" output
 '
 
 test_expect_success '"Initial commit" should be noted in commit template' '
@@ -1643,7 +1643,7 @@ test_expect_success '"Initial commit" should not be noted in commit template' '
 	touch to_be_committed_2 &&
 	git add to_be_committed_2 &&
 	git commit --dry-run >output &&
-	test_i18ngrep ! "Initial commit" output
+	! grep "Initial commit" output
 '
 
 test_expect_success '--no-optional-locks prevents index update' '

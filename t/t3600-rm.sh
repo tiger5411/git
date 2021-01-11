@@ -264,7 +264,7 @@ test_expect_success 'Resolving by removal is not a warning-worthy event' '
 		echo "100644 $blob $stage	blob"
 	done | git update-index --index-info &&
 	git rm blob >msg 2>&1 &&
-	test_i18ngrep ! "needs merge" msg &&
+	! grep "needs merge" msg &&
 	test_must_fail git ls-files -s --error-unmatch blob
 '
 

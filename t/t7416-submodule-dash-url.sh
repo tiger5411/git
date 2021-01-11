@@ -57,7 +57,7 @@ test_expect_success 'trailing backslash is handled correctly' '
 	mv .new .gitmodules &&
 	git commit -am "Add testmodule" &&
 	test_must_fail git clone --verbose --recurse-submodules . dolly 2>err &&
-	test_i18ngrep ! "unknown option" err
+	! grep "unknown option" err
 '
 
 test_expect_success 'fsck rejects missing URL scheme' '

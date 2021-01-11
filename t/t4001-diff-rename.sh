@@ -145,7 +145,7 @@ test_expect_success 'test diff.renames=true for git status' '
 
 test_expect_success 'test diff.renames=false for git status' '
 	git -c diff.renames=false status >out &&
-	test_i18ngrep ! "renamed: .*path1 -> subdir/path1" out &&
+	! grep "renamed: .*path1 -> subdir/path1" out &&
 	test_i18ngrep "new file: .*subdir/path1" out &&
 	test_i18ngrep "deleted: .*[^/]path1" out
 '

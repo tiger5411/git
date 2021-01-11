@@ -187,7 +187,7 @@ test_expect_success 'fsck detects corrupt .gitmodules' '
 
 		git fsck 2>output &&
 		test_i18ngrep gitmodulesParse output &&
-		test_i18ngrep ! "bad config" output
+		! grep "bad config" output
 	)
 '
 

@@ -321,7 +321,7 @@ test_expect_success TTY 'push --no-progress silences progress but not status' '
 	test_commit no-progress &&
 	test_terminal git push --no-progress >output 2>&1 &&
 	test_i18ngrep "^To http" output &&
-	test_i18ngrep ! "^Writing objects" output
+	! grep "^Writing objects" output
 '
 
 test_expect_success 'push --progress shows progress to non-tty' '
@@ -503,7 +503,7 @@ test_expect_success 'colorize errors/hints' '
 	test_i18ngrep "<RED>.*rejected.*<RESET>" decoded &&
 	test_i18ngrep "<RED>error: failed to push some refs" decoded &&
 	test_i18ngrep "<YELLOW>hint: " decoded &&
-	test_i18ngrep ! "^hint: " decoded
+	! grep "^hint: " decoded
 '
 
 test_done

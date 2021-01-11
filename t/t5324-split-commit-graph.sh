@@ -342,7 +342,7 @@ test_expect_success 'add octopus merge' '
 	git commit-graph write --reachable --split &&
 	git commit-graph verify --progress 2>err &&
 	test_line_count = 3 err &&
-	test_i18ngrep ! warning err &&
+	! grep warning err &&
 	test_line_count = 3 $graphdir/commit-graph-chain
 '
 
