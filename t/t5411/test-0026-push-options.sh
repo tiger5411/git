@@ -18,8 +18,7 @@ test_expect_success "proc-receive: not support push options ($PROTOCOL)" '
 		HEAD:refs/for/main/topic \
 		>out 2>&1 &&
 	make_user_friendly_and_stable_output <out >actual &&
-	test_i18ngrep "fatal: the receiving end does not support push options" \
-		actual &&
+	grep "fatal: the receiving end does not support push options" actual &&
 	git -C "$upstream" show-ref >out &&
 	make_user_friendly_and_stable_output <out >actual &&
 	cat >expect <<-EOF &&
