@@ -16,7 +16,7 @@ get_actual_commits () {
 	test-tool pkt-line unpack-sideband <out >o.pack &&
 	git index-pack o.pack &&
 	git verify-pack -v o.idx >objs &&
-	grep commit objs | cut -d" " -f1 | sort >actual_commits
+	test_might_fail ok=sigpipe grep commit objs | cut -d" " -f1 | sort >actual_commits
 }
 
 check_output () {
