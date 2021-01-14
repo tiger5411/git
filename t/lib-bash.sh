@@ -2,7 +2,9 @@
 # to run under Bash; primarily intended for tests of the completion
 # script.
 
-if test -n "$BASH" && test -z "$POSIXLY_CORRECT"
+. ./lib-bash-detection.sh
+
+if test -n "$TEST_SH_IS_BIN_BASH"
 then
 	# we are in full-on bash mode
 	true
