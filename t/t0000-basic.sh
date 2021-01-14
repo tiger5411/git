@@ -1331,4 +1331,17 @@ test_expect_success 'test_might_fail is like test_must_fail ok=success' '
 	test_might_fail git version
 '
 
+test_expect_success 'test_might_fail supports an ok=* option like test_must_fail' '
+	! test_must_fail git version &&
+	test_might_fail ok=success git version
+'
+
+test_expect_success 'test_might_fail always adds an implicit "success" to ok=*' '
+	! test_must_fail ok=sigpipe git version &&
+	test_must_fail ok=success git version &&
+
+	test_might_fail ok=sigpipe git version &&
+	test_might_fail ok= git version
+'
+
 test_done
