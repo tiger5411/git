@@ -918,7 +918,17 @@ test_must_fail () {
 # Accepts the same options as test_must_fail.
 
 test_might_fail () {
-	test_must_fail ok=success "$@" 2>&7
+	case "$1" in
+	ok=*)
+		_test_ok=success,${1#ok=}
+		shift
+		;;
+	*)
+		_test_ok=success
+		;;
+	esac
+
+	test_must_fail ok=$_test_ok "$@" 2>&7
 } 7>&2 2>&4
 
 # Similar to test_must_fail and test_might_fail, but check that a
