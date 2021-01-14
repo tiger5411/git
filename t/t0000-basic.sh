@@ -1326,4 +1326,10 @@ test_expect_success 'test_must_fail rejects a non-git command with env' '
 	grep -F "test_must_fail: only '"'"'git'"'"' is allowed" err
 '
 
+test_expect_success 'test_might_fail is like test_must_fail ok=' '
+	! test_must_fail git version &&
+	! test_must_fail ok= git version &&
+	test_might_fail git version
+'
+
 test_done
