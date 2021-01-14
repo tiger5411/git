@@ -7,6 +7,11 @@ test_description='test bash completion'
 
 . ./lib-bash.sh
 
+if test -n "$GIT_TEST_PIPEFAIL_TRUE"
+then
+	set +o pipefail
+fi
+
 complete ()
 {
 	# do nothing

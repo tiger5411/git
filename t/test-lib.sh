@@ -36,6 +36,31 @@ then
 fi
 GIT_BUILD_DIR="$TEST_DIRECTORY"/..
 
+# Does "set -o pipefail" on this bash version handle SIGPIPE? Use it!
+. "$TEST_DIRECTORY/lib-bash-detection.sh"
+GIT_TEST_PIPEFAIL_TRUE=
+GIT_TEST_PIPEFAIL_DEFAULT=false
+if test -n "$TEST_SH_IS_BIN_BASH" &&
+       $BASH -c 'set -eo pipefail; yes | head -n 1 >/dev/null'
+then
+	GIT_TEST_PIPEFAIL_DEFAULT=true
+fi
+# We're too early for test_bool_env
+if git env--helper --type=bool --default="$GIT_TEST_PIPEFAIL_DEFAULT" \
+       --exit-code GIT_TEST_PIPEFAIL
+then
+	set -o pipefail
+
+	# Only "set -o pipefail" in the main test scripts, not any
+	# sub-programs we spawn.
+	GIT_TEST_PIPEFAIL=
+	export GIT_TEST_PIPEFAIL
+
+	# For the convenience of the prereq for it.
+	GIT_TEST_PIPEFAIL_TRUE=true
+	export GIT_TEST_PIPEFAIL_TRUE
+fi
+
 # If we were built with ASAN, it may complain about leaks
 # of program-lifetime variables. Disable it by default to lower
 # the noise level. This needs to happen at the start of the script,
@@ -1550,6 +1575,10 @@ test_lazy_prereq PIPE '
 	# test whether the filesystem supports FIFOs
 	test_have_prereq !MINGW,!CYGWIN &&
 	rm -f testfifo && mkfifo testfifo
+'
+
+test_lazy_prereq BASH_SET_O_PIPEFAIL '
+	test -n "$GIT_TEST_PIPEFAIL_TRUE"
 '
 
 test_lazy_prereq SYMLINKS '

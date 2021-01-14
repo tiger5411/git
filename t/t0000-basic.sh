@@ -1350,4 +1350,18 @@ test_expect_success 'test_{must,might}_fail accept non-git on "sigpipe"' '
 	test_cmp badobjects out
 '
 
+test_expect_failure BASH_SET_O_PIPEFAIL 'test_{must,might}_fail ok=sigpipe under bash "set -o pipefail"' '
+	grep string </dev/null | true
+'
+
+test_expect_failure BASH_SET_O_PIPEFAIL 'test_{must,might}_fail ok=sigpipe under bash "set -o pipefail"' '
+	test_must_fail grep string </dev/null | true &&
+	test_might_fail grep string </dev/null | true
+'
+
+test_expect_success BASH_SET_O_PIPEFAIL 'test_{must,might}_fail ok=sigpipe under bash "set -o pipefail"' '
+	test_must_fail ok=sigpipe grep string </dev/null | true &&
+	test_might_fail ok=sigpipe grep string </dev/null | true
+'
+
 test_done
