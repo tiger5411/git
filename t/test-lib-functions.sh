@@ -828,6 +828,7 @@ test_must_fail_acceptable () {
 		return 0
 		;;
 	*)
+		list_contains "$_test_ok" sigpipe && return 0
 		return 1
 		;;
 	esac
@@ -863,6 +864,17 @@ test_must_fail_acceptable () {
 # Instead use '!':
 #
 #    ! grep pattern output
+#
+# An exception to this is if ok=* contains "sigpipe". Then you might
+# want to use this in a test to ignore e.g. "grep" failing due to not
+# finding anything in a multi-pipe command:
+#
+#    test_must_fail ok=success,sigpipe grep [...] | [...]
+#
+# Or, more succinctly with the test_might_fail wrapper function:
+#
+#    test_might_fail ok=sigpipe grep [...] | [...]
+#
 
 test_must_fail () {
 	case "$1" in

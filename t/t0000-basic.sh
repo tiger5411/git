@@ -1337,4 +1337,17 @@ test_expect_success 'test_might_fail supports an ok=* option like test_must_fail
 	test_might_fail ok=success git version
 '
 
+test_expect_success 'test_{must,might}_fail accept non-git on "sigpipe"' '
+	! test_must_fail grep blob <badobjects 2>err &&
+	grep "only.*git.*is allowed" err &&
+	! test_might_fail grep blob <badobjects &&
+	grep "only.*git.*is allowed" err &&
+
+	! test_must_fail ok=sigpipe grep . badobjects 2>err &&
+	test_must_be_empty err &&
+	test_might_fail ok=sigpipe grep . badobjects >out 2>err &&
+	test_must_be_empty err &&
+	test_cmp badobjects out
+'
+
 test_done
