@@ -2,7 +2,9 @@
 # to run under Bash; primarily intended for tests of the completion
 # script.
 
-if test -n "$BASH"
+. ./lib-bash-detection.sh
+
+if test -n "$TEST_SH_IS_BIN_BASH"
 then
 	# we are in full-on bash mode
 	true
@@ -17,7 +19,7 @@ fi
 . ./test-lib.sh
 
 posix_blurb=
-if test -n "$POSIXLY_CORRECT"
+if test -n "$TEST_SH_IS_BIN_BASH_POSIXLY_CORRECT"
 then
 	posix_blurb=" in POSIXLY_CORRECT mode"
 fi
