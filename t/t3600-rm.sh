@@ -251,7 +251,10 @@ test_expect_success 'choking "git rm" should not let it die with cruft' '
 		i=$(( $i + 1 ))
 	done | git update-index --index-info &&
 	OUT=$( ((trap "" PIPE; git rm -n "some-file-*"; echo $? 1>&3) | :) 3>&1 ) &&
-	test_match_signal 13 "$OUT" &&
+	if ! test_have_prereq BASH_SET_O_PIPEFAIL
+	then
+		test_match_signal 13 "$OUT"
+	fi &&
 	test_path_is_missing .git/index.lock
 '
 
