@@ -18,20 +18,16 @@ cmp_cache_tree () {
 # correct.
 generate_expected_cache_tree_rec () {
 	dir="$1${1:+/}" &&
-	# ls-files might have foo/bar, foo/bar/baz, and foo/bar/quux
-	# We want to count only foo because it's the only direct child
-	git ls-files >files &&
-	subtrees=$(grep / files|cut -d / -f 1|uniq) &&
-	subtree_count=$(echo "$subtrees"|awk -v c=0 '$1 != "" {++c} END {print c}') &&
-	entries=$(wc -l <files) &&
-	printf "SHA $dir (%d entries, %d subtrees)\n" "$entries" "$subtree_count" &&
-	for subtree in $subtrees
+	git ls-tree --name-only HEAD >files &&
+	git ls-tree --name-only -d HEAD >subtrees &&
+	printf "SHA %s (%d entries, %d subtrees)\n" "$dir" $(wc -l <files) $(wc -l <subtrees) &&
+	while read subtree
 	do
 		(
 			cd "$subtree"
-			generate_expected_cache_tree_rec "$dir$subtree" || return 1
+			generate_expected_cache_tree_rec "$subtree" || return 1
 		)
-	done
+	done <subtrees
 }
 
 test_cache_tree () {
