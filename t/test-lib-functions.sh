@@ -828,6 +828,7 @@ test_must_fail_acceptable () {
 		return 0
 		;;
 	*)
+		list_contains "$_test_ok" sigpipe && return 0
 		return 1
 		;;
 	esac
@@ -853,6 +854,9 @@ test_must_fail_acceptable () {
 #     Currently recognized signal names are: sigpipe, success.
 #     (Don't use 'success', use 'test_might_fail' instead.)
 #
+#   nongit=1
+#     Override the "nothing but git" check, see below.
+#
 # Do not use this to run anything but "git" and other specific testable
 # commands (see test_must_fail_acceptable()).  We are not in the
 # business of vetting system supplied commands -- in other words, this
@@ -863,11 +867,24 @@ test_must_fail_acceptable () {
 # Instead use '!':
 #
 #    ! grep pattern output
+#
+# However, as a convenience you might want to use this in the middle
+# of a pipe to OK the failure of a command like "grep":
+#
+#    some_command | grep output | head -n 1 >can_be_empty
+#
+# For that use:
+#
+#    some_command | test_must_fail nongit=1 grep output | head -n 1 >can_be_empty
 
 test_must_fail () {
 	case "$1" in
 	ok=*)
 		_test_ok=${1#ok=}
+		shift
+		;;
+	nongit=*)
+		_acceptable=${1#nongit=}
 		shift
 		;;
 	*)

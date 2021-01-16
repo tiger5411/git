@@ -1344,4 +1344,18 @@ test_expect_success 'test_might_fail always adds an implicit "success" to ok=*' 
 	test_might_fail ok= git version
 '
 
+
+test_expect_success 'test_{must,might}_fail accepts "grep"' '
+	! test_must_fail grep blob <badobjects 2>err &&
+	grep "only.*git.*is allowed" err &&
+	! test_might_fail grep blob <badobjects &&
+	grep "only.*git.*is allowed" err &&
+
+	! test_must_fail grep . badobjects 2>err &&
+	test_must_be_empty err &&
+	test_might_fail grep . badobjects >out 2>err &&
+	test_must_be_empty err &&
+	test_cmp badobjects out
+'
+
 test_done
