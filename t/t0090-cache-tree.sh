@@ -27,20 +27,15 @@ generate_expected_cache_tree_rec () {
 	printf "SHA $dir (%d entries, %d subtrees)\n" "$entries" "$subtree_count" &&
 	for subtree in $subtrees
 	do
-		cd "$subtree"
-		generate_expected_cache_tree_rec "$dir$subtree" || return 1
-		cd ..
+		(
+			cd "$subtree"
+			generate_expected_cache_tree_rec "$dir$subtree" || return 1
+		)
 	done
 }
 
-generate_expected_cache_tree () {
-	(
-		generate_expected_cache_tree_rec
-	)
-}
-
 test_cache_tree () {
-	generate_expected_cache_tree >expect &&
+	generate_expected_cache_tree_rec >expect &&
 	cmp_cache_tree expect
 }
 
