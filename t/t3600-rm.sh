@@ -250,8 +250,8 @@ test_expect_success 'choking "git rm" should not let it die with cruft' '
 		echo "100644 $hash 0	some-file-$i"
 		i=$(( $i + 1 ))
 	done | git update-index --index-info &&
-	# git command is intentionally placed upstream of pipe to induce SIGPIPE
-	git rm -n "some-file-*" | : &&
+	OUT=$( ((trap "" PIPE; git rm -n "some-file-*"; echo $? 1>&3) | :) 3>&1 ) &&
+	test_match_signal 13 "$OUT" &&
 	test_path_is_missing .git/index.lock
 '
 
