@@ -1325,9 +1325,13 @@ test_expect_success 'test_must_fail rejects a non-git command with env' '
 	! test_must_fail env var1=a var2=b grep ^$ notafile 2>err &&
 	grep -F "test_must_fail: only '"'"'git'"'"' is allowed" err
 '
-
+pipe () {
+	code=$?
+	echo >>/tmp/log.log "FATAL: Unexpected exit with code $code"
+}
 test_expect_success BASH_SET_O_PIPEFAIL 'our bash under "set -o pipefail" mode ignores SIGPIPE failures' '
-	yes | head -n 1 | true
+	trap pipe SIGPIPE &&
+	(echo hi; echo there; echo you) | head -n 1 | true
 '
 
 test_done

@@ -36,31 +36,6 @@ then
 fi
 GIT_BUILD_DIR="$TEST_DIRECTORY"/..
 
-# Does "set -o pipefail" on this bash version handle SIGPIPE? Use it!
-. "$TEST_DIRECTORY/lib-bash-detection.sh"
-GIT_TEST_PIPEFAIL_TRUE=
-GIT_TEST_PIPEFAIL_DEFAULT=false
-if test -n "$TEST_SH_IS_BIN_BASH" &&
-       $BASH -c 'set -eo pipefail; yes | head -n 1 >/dev/null'
-then
-	GIT_TEST_PIPEFAIL_DEFAULT=true
-fi
-# We're too early for test_bool_env
-if git env--helper --type=bool --default="$GIT_TEST_PIPEFAIL_DEFAULT" \
-       --exit-code GIT_TEST_PIPEFAIL
-then
-	set -o pipefail
-
-	# Only "set -o pipefail" in the main test scripts, not any
-	# sub-programs we spawn.
-	GIT_TEST_PIPEFAIL=
-	export GIT_TEST_PIPEFAIL
-
-	# For the convenience of the prereq for it.
-	GIT_TEST_PIPEFAIL_TRUE=true
-	export GIT_TEST_PIPEFAIL_TRUE
-fi
-
 # If we were built with ASAN, it may complain about leaks
 # of program-lifetime variables. Disable it by default to lower
 # the noise level. This needs to happen at the start of the script,
@@ -1464,7 +1439,7 @@ _z40=$ZERO_OID
 # wasting cycles when the downstream stops reading, so do not be
 # tempted to turn it into an infinite loop. cf. 6129c930 ("test-lib:
 # limit the output of the yes utility", 2016-02-02)
-yes () {
+myyes () {
 	if test $# = 0
 	then
 		y=y
@@ -1479,6 +1454,39 @@ yes () {
 		i=$(($i+1))
 	done
 }
+
+# Does "set -o pipefail" on this bash version handle SIGPIPE? Use it!
+. "$TEST_DIRECTORY/lib-bash-detection.sh"
+GIT_TEST_PIPEFAIL_TRUE=
+GIT_TEST_PIPEFAIL_DEFAULT=false
+if test -n "$TEST_SH_IS_BIN_BASH"
+then
+	if $BASH -c 'set -eo pipefail; yes | head -n 1 >/dev/null'
+	then
+		GIT_TEST_PIPEFAIL_DEFAULT=true
+	else
+		pipe () {
+			code=$?
+			echo >&5 "FATAL: Unexpected exit with code $code"
+		}
+		trap 'pipe' PIPE
+	fi
+fi
+# We're too early for test_bool_env
+if git env--helper --type=bool --default="$GIT_TEST_PIPEFAIL_DEFAULT" \
+       --exit-code GIT_TEST_PIPEFAIL
+then
+	set -o pipefail
+
+	# Only "set -o pipefail" in the main test scripts, not any
+	# sub-programs we spawn.
+	GIT_TEST_PIPEFAIL=
+	export GIT_TEST_PIPEFAIL
+
+	# For the convenience of the prereq for it.
+	GIT_TEST_PIPEFAIL_TRUE=true
+	export GIT_TEST_PIPEFAIL_TRUE
+fi
 
 # The GIT_TEST_FAIL_PREREQS code hooks into test_set_prereq(), and
 # thus needs to be set up really early, and set an internal variable
