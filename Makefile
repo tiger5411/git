@@ -2788,8 +2788,9 @@ GIT-PYTHON-VARS: FORCE
 endif
 
 test_bindir_programs := $(patsubst %,bin-wrappers/%,$(BINDIR_PROGRAMS_NEED_X) $(BINDIR_PROGRAMS_NO_X) $(TEST_PROGRAMS_NEED_X))
+TEST_TOOLS = $(TEST_PROGRAMS) $(test_bindir_programs)
 
-all:: $(TEST_PROGRAMS) $(test_bindir_programs)
+all:: $(TEST_TOOLS)
 
 bin-wrappers/%: wrap-for-bin.sh
 	@mkdir -p bin-wrappers
