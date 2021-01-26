@@ -338,6 +338,10 @@ all::
 # when hardlinking a file to another name and unlinking the original file right
 # away (some NTFS drivers seem to zero the contents in that scenario).
 #
+# Define NO_SCRIPT_FALLBACKS if you'd like to not generate and install
+# the fallback scripts which defining NO_PERL and NO_PYTHON would
+# normally produce. See also NO_INSTALL_SCRIPT_FALLBACKS.
+#
 # Define INSTALL_SYMLINKS if you prefer to have everything that can be
 # symlinked between bin/ and libexec/ to use relative symlinks between
 # the two. This option overrides NO_CROSS_DIRECTORY_HARDLINKS and
@@ -350,6 +354,11 @@ all::
 #
 # Define NO_INSTALL_HARDLINKS if you prefer to use either symbolic links or
 # copies to install built-in git commands e.g. git-cat-file.
+#
+# Define NO_INSTALL_SCRIPT_FALLBACKS to skip the installation of
+# script fallbacks you didn't generate due to also setting
+# NO_SCRIPT_FALLBACKS. Using this without also defining
+# NO_SCRIPT_FALLBACKS is not supported.
 #
 # Define SKIP_DASHED_BUILT_INS if you do not need the dashed versions of the
 # built-ins to be linked/copied at all.
@@ -603,6 +612,19 @@ THIRD_PARTY_SOURCES =
 # interactive shell sessions without exporting it.
 unexport CDPATH
 
+# Sanity check options
+ifdef NO_INSTALL_SCRIPT_FALLBACKS
+ifndef NO_SCRIPT_FALLBACKS
+$(error Setting NO_INSTALL_SCRIPT_FALLBACKS is only supported if NO_SCRIPT_FALLBACKS is also set!)
+endif
+endif
+
+ifdef NO_SCRIPT_FALLBACKS
+ifeq (,$(NO_PERL)$(NO_PYTHON)$(NO_TCLTK))
+$(error You should set some of NO_{PERL,PYTHON,TCLTK} when using NO_SCRIPT_FALLBACKS)
+endif
+endif
+
 SCRIPT_SH += git-bisect.sh
 SCRIPT_SH += git-difftool--helper.sh
 SCRIPT_SH += git-filter-branch.sh
@@ -659,10 +681,12 @@ clean-perl-script:
 clean-python-script:
 	$(RM) $(SCRIPT_PYTHON_GEN)
 
-SCRIPTS  = $(SCRIPT_SH_GEN)
+SCRIPTS = $(SCRIPT_SH_GEN)
+ifndef NO_SCRIPT_FALLBACKS
 SCRIPTS += $(SCRIPT_PERL_GEN)
 SCRIPTS += $(SCRIPT_PYTHON_GEN)
 SCRIPTS += git-instaweb
+endif
 
 ETAGS_TARGET = TAGS
 
@@ -804,7 +828,9 @@ BINDIR_PROGRAMS_NEED_X += git-shell
 BINDIR_PROGRAMS_NEED_X += git-upload-archive
 BINDIR_PROGRAMS_NEED_X += git-upload-pack
 
+ifndef NO_INSTALL_SCRIPT_FALLBACKS
 BINDIR_PROGRAMS_NO_X += git-cvsserver
+endif
 
 # Set paths to tools early so that they can be used for version tests.
 ifndef SHELL_PATH
@@ -2322,6 +2348,7 @@ git-instaweb: git-instaweb.sh GIT-SCRIPT-DEFINES
 	chmod +x $@+ && \
 	mv $@+ $@
 else # NO_PERL
+ifndef NO_SCRIPT_FALLBACKS
 $(SCRIPT_PERL_GEN) git-instaweb: % : unimplemented.sh
 	$(QUIET_GEN)$(RM) $@ $@+ && \
 	sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
@@ -2329,6 +2356,7 @@ $(SCRIPT_PERL_GEN) git-instaweb: % : unimplemented.sh
 	    unimplemented.sh >$@+ && \
 	chmod +x $@+ && \
 	mv $@+ $@
+endif # NO_SCRIPT_FALLBACKS
 endif # NO_PERL
 
 # This makes sure we depend on the NO_PYTHON setting itself.
@@ -2343,6 +2371,7 @@ $(SCRIPT_PYTHON_GEN): % : %.py
 	chmod +x $@+ && \
 	mv $@+ $@
 else # NO_PYTHON
+ifndef NO_SCRIPT_FALLBACKS
 $(SCRIPT_PYTHON_GEN): % : unimplemented.sh
 	$(QUIET_GEN)$(RM) $@ $@+ && \
 	sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
@@ -2350,6 +2379,7 @@ $(SCRIPT_PYTHON_GEN): % : unimplemented.sh
 	    unimplemented.sh >$@+ && \
 	chmod +x $@+ && \
 	mv $@+ $@
+endif # NO_SCRIPT_FALLBACKS
 endif # NO_PYTHON
 
 CONFIGURE_RECIPE = $(RM) configure configure.ac+ && \
@@ -2735,6 +2765,7 @@ GIT-BUILD-OPTIONS: FORCE
 	@echo NO_PERL=\''$(subst ','\'',$(subst ','\'',$(NO_PERL)))'\' >>$@+
 	@echo NO_PTHREADS=\''$(subst ','\'',$(subst ','\'',$(NO_PTHREADS)))'\' >>$@+
 	@echo NO_PYTHON=\''$(subst ','\'',$(subst ','\'',$(NO_PYTHON)))'\' >>$@+
+	@echo NO_SCRIPT_FALLBACKS=\''$(subst ','\'',$(subst ','\'',$(NO_SCRIPT_FALLBACKS)))'\' >>$@+
 	@echo NO_TEST_TOOLS=\''$(subst ','\'',$(subst ','\'',$(NO_TEST_TOOLS)))'\' >>$@+
 	@echo NO_UNIX_SOCKETS=\''$(subst ','\'',$(subst ','\'',$(NO_UNIX_SOCKETS)))'\' >>$@+
 	@echo PAGER_ENV=\''$(subst ','\'',$(subst ','\'',$(PAGER_ENV)))'\' >>$@+
