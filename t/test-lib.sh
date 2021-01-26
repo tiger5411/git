@@ -55,6 +55,11 @@ then
 	exit 1
 fi
 . "$GIT_BUILD_DIR"/GIT-BUILD-OPTIONS
+if test -n "$NO_TEST_TOOLS"
+then
+	echo >&2 'error: NO_TEST_TOOLS=$NO_TEST_TOOLS set in GIT-BUILD-OPTIONS, cannot run tests!.'
+	exit 1
+fi
 export PERL_PATH SHELL_PATH
 
 # Disallow the use of abbreviated options in the test suite by default

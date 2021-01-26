@@ -309,6 +309,9 @@ all::
 #
 # Define NO_TCLTK if you do not want Tcl/Tk GUI.
 #
+# Define NO_TEST_TOOLS if you'd like to skip building the assets
+# required to run the tests. 
+#
 # Define SANE_TEXT_GREP to "-a" if you use recent versions of GNU grep
 # and egrep that are pickier when their input contains non-ASCII data.
 #
@@ -2732,6 +2735,7 @@ GIT-BUILD-OPTIONS: FORCE
 	@echo NO_PERL=\''$(subst ','\'',$(subst ','\'',$(NO_PERL)))'\' >>$@+
 	@echo NO_PTHREADS=\''$(subst ','\'',$(subst ','\'',$(NO_PTHREADS)))'\' >>$@+
 	@echo NO_PYTHON=\''$(subst ','\'',$(subst ','\'',$(NO_PYTHON)))'\' >>$@+
+	@echo NO_TEST_TOOLS=\''$(subst ','\'',$(subst ','\'',$(NO_TEST_TOOLS)))'\' >>$@+
 	@echo NO_UNIX_SOCKETS=\''$(subst ','\'',$(subst ','\'',$(NO_UNIX_SOCKETS)))'\' >>$@+
 	@echo PAGER_ENV=\''$(subst ','\'',$(subst ','\'',$(PAGER_ENV)))'\' >>$@+
 	@echo DC_SHA1=\''$(subst ','\'',$(subst ','\'',$(DC_SHA1)))'\' >>$@+
@@ -2787,8 +2791,10 @@ GIT-PYTHON-VARS: FORCE
             fi
 endif
 
+ifndef NO_TEST_TOOLS
 test_bindir_programs := $(patsubst %,bin-wrappers/%,$(BINDIR_PROGRAMS_NEED_X) $(BINDIR_PROGRAMS_NO_X) $(TEST_PROGRAMS_NEED_X))
 TEST_TOOLS = $(TEST_PROGRAMS) $(test_bindir_programs)
+endif
 
 all:: $(TEST_TOOLS)
 
