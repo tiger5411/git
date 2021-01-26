@@ -656,10 +656,10 @@ clean-perl-script:
 clean-python-script:
 	$(RM) $(SCRIPT_PYTHON_GEN)
 
-SCRIPTS = $(SCRIPT_SH_GEN) \
-	  $(SCRIPT_PERL_GEN) \
-	  $(SCRIPT_PYTHON_GEN) \
-	  git-instaweb
+SCRIPTS  = $(SCRIPT_SH_GEN)
+SCRIPTS += $(SCRIPT_PERL_GEN)
+SCRIPTS += $(SCRIPT_PYTHON_GEN)
+SCRIPTS += git-instaweb
 
 ETAGS_TARGET = TAGS
 
