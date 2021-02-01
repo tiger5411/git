@@ -656,31 +656,74 @@ test_expect_success TTY 'git tag with auto-columns ' '
 	test_cmp expect actual
 '
 
-test_expect_success TTY,!MINGW 'git returns SIGPIPE on early pager exit' '
+test_expect_success TTY 'git returns SIGPIPE on early pager exit' '
 	test_when_finished "rm pager-used" &&
 	test_config core.pager ">pager-used; head -n 1; exit 0" &&
+	GIT_TRACE2="$(pwd)/trace.normal" &&
+	export GIT_TRACE2 &&
+	test_when_finished "unset GIT_TRACE2" &&
 
-	OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
-	test_match_signal 13 "$OUT" &&
+	if test_have_prereq !MINGW
+	then
+		OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+		test_match_signal 13 "$OUT"
+	else
+		test_terminal git log
+	fi &&
+	grep "child_exit.* code:0 " trace.normal &&
 	test_path_is_file pager-used
 '
 
-test_expect_success TTY,!MINGW 'git returns SIGPIPE on early pager non-zero exit' '
+test_expect_success TTY 'git returns SIGPIPE on early pager non-zero exit' '
 	test_when_finished "rm pager-used" &&
 	test_config core.pager ">pager-used; head -n 1; exit 1" &&
+	GIT_TRACE2="$(pwd)/trace.normal" &&
+	export GIT_TRACE2 &&
+	test_when_finished "unset GIT_TRACE2" &&
 
-	OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
-	test_match_signal 13 "$OUT" &&
+	if test_have_prereq !MINGW
+	then
+		OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+		test_match_signal 13 "$OUT"
+	else
+		test_terminal git log
+	fi &&
+	grep "child_exit.* code:1 " trace.normal &&
 	test_path_is_file pager-used
 '
 
-test_expect_success TTY,!MINGW 'git discards pager non-zero exit' '
+test_expect_success TTY 'git discards pager non-zero exit' '
 	test_when_finished "rm pager-used" &&
 	test_config core.pager "wc >pager-used; exit 1" &&
+	GIT_TRACE2="$(pwd)/trace.normal" &&
+	export GIT_TRACE2 &&
+	test_when_finished "unset GIT_TRACE2" &&
 
-	OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
-	test "$OUT" -eq 0 &&
+	if test_have_prereq !MINGW
+	then
+		OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+		test "$OUT" -eq 0
+	else
+		test_terminal git log
+	fi &&
+	grep "child_exit.* code:1 " trace.normal &&
 	test_path_is_file pager-used
+'
+
+test_expect_success TTY 'git logs nonexisting pager invocation' '
+	test_config core.pager "does-not-exist" &&
+	GIT_TRACE2="$(pwd)/trace.normal" &&
+	export GIT_TRACE2 &&
+	test_when_finished "unset GIT_TRACE2" &&
+
+	if test_have_prereq !MINGW
+	then
+		OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+		test_match_signal 13 "$OUT"
+	else
+		test_terminal git log
+	fi &&
+	grep "child_exit.* code:-1 " trace.normal
 '
 
 test_done

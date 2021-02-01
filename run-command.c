@@ -551,8 +551,12 @@ static int wait_or_whine(pid_t pid, const char *argv0, int in_signal)
 
 	while ((waiting = waitpid(pid, &status, 0)) < 0 && errno == EINTR)
 		;	/* nothing */
-	if (in_signal)
-		return 0;
+	if (in_signal && WIFEXITED(status))
+		return WEXITSTATUS(status);
+	if (in_signal) {
+		BUG("was not expecting waitpid() status %d", status);
+		return -1;
+	}
 
 	if (waiting < 0) {
 		failed_errno = errno;
