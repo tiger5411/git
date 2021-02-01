@@ -656,4 +656,31 @@ test_expect_success TTY 'git tag with auto-columns ' '
 	test_cmp expect actual
 '
 
+test_expect_success TTY,!MINGW 'git returns SIGPIPE on early pager exit' '
+	test_when_finished "rm pager-used" &&
+	test_config core.pager ">pager-used; head -n 1; exit 0" &&
+
+	OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+	test_match_signal 13 "$OUT" &&
+	test_path_is_file pager-used
+'
+
+test_expect_success TTY,!MINGW 'git returns SIGPIPE on early pager non-zero exit' '
+	test_when_finished "rm pager-used" &&
+	test_config core.pager ">pager-used; head -n 1; exit 1" &&
+
+	OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+	test_match_signal 13 "$OUT" &&
+	test_path_is_file pager-used
+'
+
+test_expect_success TTY,!MINGW 'git discards pager non-zero exit' '
+	test_when_finished "rm pager-used" &&
+	test_config core.pager "wc >pager-used; exit 1" &&
+
+	OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
+	test "$OUT" -eq 0 &&
+	test_path_is_file pager-used
+'
+
 test_done
