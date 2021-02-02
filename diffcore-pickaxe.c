@@ -28,8 +28,14 @@ static int diffgrep_consume(void *priv, char *line, unsigned long len)
 
 	if (line[0] != '+' && line[0] != '-')
 		return 0;
+	if (data->hit)
+		/*
+		 * NEEDSWORK: we should have a way to terminate the
+		 * caller early.
+		 */
+		return 0;
 	data->hit = patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0);
-	return data->hit ? -1 : 0;
+	return 0;
 }
 
 static int diff_grep(mmfile_t *one, mmfile_t *two,

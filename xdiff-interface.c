@@ -31,36 +31,29 @@ static int xdiff_out_hunk(void *priv_,
 	return 0;
 }
 
-static int consume_one(void *priv_, char *s, unsigned long size)
+static void consume_one(void *priv_, char *s, unsigned long size)
 {
 	struct xdiff_emit_state *priv = priv_;
 	char *ep;
-	int stop = 0;
 	while (size) {
 		unsigned long this_size;
 		ep = memchr(s, '\n', size);
 		this_size = (ep == NULL) ? size : (ep - s + 1);
-		stop = priv->line_fn(priv->consume_callback_data, s, this_size);
-		if (stop)
-			return stop;
+		priv->line_fn(priv->consume_callback_data, s, this_size);
 		size -= this_size;
 		s += this_size;
 	}
-	return 0;
 }
 
 static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
 {
 	struct xdiff_emit_state *priv = priv_;
 	int i;
-	int stop = 0;
 
 	if (!priv->line_fn)
 		return 0;
 
 	for (i = 0; i < nbuf; i++) {
-		if (stop)
-			break;
 		if (mb[i].ptr[mb[i].size-1] != '\n') {
 			/* Incomplete line */
 			strbuf_add(&priv->remainder, mb[i].ptr, mb[i].size);
@@ -69,18 +62,18 @@ static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
 
 		/* we have a complete line */
 		if (!priv->remainder.len) {
-			stop = consume_one(priv, mb[i].ptr, mb[i].size);
+			consume_one(priv, mb[i].ptr, mb[i].size);
 			continue;
 		}
 		strbuf_add(&priv->remainder, mb[i].ptr, mb[i].size);
-		stop = consume_one(priv, priv->remainder.buf, priv->remainder.len);
+		consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
 	}
 	if (priv->remainder.len) {
 		consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
 	}
-	return stop;
+	return 0;
 }
 
 /*
