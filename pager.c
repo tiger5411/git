@@ -20,18 +20,24 @@ static void close_pager_fds(void)
 
 static void wait_for_pager_atexit(void)
 {
+	int code;
 	fflush(stdout);
 	fflush(stderr);
 	close_pager_fds();
-	finish_command(&pager_process);
+	code = finish_command(&pager_process);
+	if (code)
+		exit(code);
 }
 
 static void wait_for_pager_signal(int signo)
 {
+	int code;
 	close_pager_fds();
-	finish_command_in_signal(&pager_process);
+	code = finish_command_in_signal(&pager_process);
 	sigchain_pop(signo);
 	raise(signo);
+	if (signo == SIGPIPE)
+		exit(code);
 }
 
 static int core_pager_config(const char *var, const char *value, void *data)

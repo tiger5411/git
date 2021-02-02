@@ -703,7 +703,7 @@ test_expect_success TTY 'git returns SIGPIPE on early pager non-zero exit' '
 	test_path_is_file pager-used
 '
 
-test_expect_success TTY 'git discards pager non-zero exit without SIGPIPE' '
+test_expect_success TTY 'git respects pager non-zero exit without SIGPIPE' '
 	test_when_finished "rm pager-used trace.normal" &&
 	test_config core.pager "wc >pager-used; exit 1" &&
 	GIT_TRACE2="$(pwd)/trace.normal" &&
@@ -713,7 +713,7 @@ test_expect_success TTY 'git discards pager non-zero exit without SIGPIPE' '
 	if test_have_prereq !MINGW
 	then
 		OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
-		test "$OUT" -eq 0
+		test "$OUT" -eq 1
 	else
 		test_terminal git log
 	fi &&
@@ -724,7 +724,7 @@ test_expect_success TTY 'git discards pager non-zero exit without SIGPIPE' '
 	test_path_is_file pager-used
 '
 
-test_expect_success TTY 'git discards nonexisting pager without SIGPIPE' '
+test_expect_success TTY 'git respects nonexisting pager without SIGPIPE' '
 	test_when_finished "rm pager-used trace.normal" &&
 	test_config core.pager "wc >pager-used; does-not-exist" &&
 	GIT_TRACE2="$(pwd)/trace.normal" &&
@@ -734,7 +734,7 @@ test_expect_success TTY 'git discards nonexisting pager without SIGPIPE' '
 	if test_have_prereq !MINGW
 	then
 		OUT=$( ((test_terminal git log; echo $? 1>&3) | :) 3>&1 ) &&
-		test "$OUT" -eq 0
+		test "$OUT" -eq 127
 	else
 		test_terminal git log
 	fi &&
