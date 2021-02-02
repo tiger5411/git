@@ -247,6 +247,9 @@ void grep_source_load_driver(struct grep_source *gs,
 
 
 int grep_source(struct grep_opt *opt, struct grep_source *gs);
+int patmatch(struct grep_pat *p,
+	     const char *line, const char *eol,
+	     regmatch_t *match, int eflags);
 
 struct grep_opt *grep_opt_dup(const struct grep_opt *opt);
 
