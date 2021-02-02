@@ -28,13 +28,12 @@ static int diffgrep_consume(void *priv, char *line, unsigned long len)
 
 	if (line[0] != '+' && line[0] != '-')
 		return 0;
+	/* XXX: Why did we get called again? */
 	if (data->hit)
-		/*
-		 * NEEDSWORK: we should have a way to terminate the
-		 * caller early.
-		 */
-		return 0;
+		return -1;
 	data->hit = patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0);
+	if (data->hit)
+		return -1;
 	return 0;
 }
 
