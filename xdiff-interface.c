@@ -35,16 +35,16 @@ static int consume_one(void *priv_, char *s, unsigned long size)
 {
 	struct xdiff_emit_state *priv = priv_;
 	char *ep;
-	int stop = 0;
 	while (size) {
 		unsigned long this_size;
 		ep = memchr(s, '\n', size);
 		this_size = (ep == NULL) ? size : (ep - s + 1);
-		stop = priv->line_fn(priv->consume_callback_data, s, this_size);
+		if (priv->line_fn(priv->consume_callback_data, s, this_size))
+			return -1;
 		size -= this_size;
 		s += this_size;
 	}
-	return stop ? 0 : 0;
+	return 0;
 }
 
 static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
