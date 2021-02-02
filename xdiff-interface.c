@@ -77,9 +77,9 @@ static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
 	if (priv->remainder.len) {
 		stop = consume_one(priv, priv->remainder.buf, priv->remainder.len);
 		strbuf_reset(&priv->remainder);
-		if (stop)
-			return -1;
 	}
+	if (i != nbuf && stop)
+		return stop;
 	return 0; /* return stop fails tests! */
 }
 
