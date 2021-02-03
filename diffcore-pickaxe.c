@@ -63,7 +63,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	memset(&xecfg, 0, sizeof(xecfg));
 	ecbdata.grep_filter = grep_filter;
 	ecbdata.hit = 0;
-	xecfg.ctxlen = 0;
+	xecfg.ctxlen = o->context;
 	xecfg.interhunkctxlen = o->interhunkcontext;
 	ret = xdi_diff_outf(one, two, discard_hunk_line, diffgrep_consume,
 			    &ecbdata, &xpp, &xecfg);
