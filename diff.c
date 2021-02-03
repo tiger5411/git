@@ -4889,6 +4889,9 @@ static int diff_opt_diff_filter(const struct option *option,
 
 static void enable_patch_output(int *fmt)
 {
+	if (*fmt & DIFF_FORMAT_NO_OUTPUT &&
+	    *fmt & DIFF_FORMAT_STAT)
+		return;
 	*fmt &= ~DIFF_FORMAT_NO_OUTPUT;
 	*fmt |= DIFF_FORMAT_PATCH;
 }

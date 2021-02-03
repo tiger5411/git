@@ -94,6 +94,11 @@ typedef struct strbuf *(*diff_prefix_fn_t)(struct diff_options *opt, void *data)
 #define DIFF_FORMAT_SHORTSTAT	0x0020
 #define DIFF_FORMAT_DIRSTAT	0x0040
 
+#define DIFF_FORMAT_STAT	(DIFF_FORMAT_DIFFSTAT | \
+				 DIFF_FORMAT_NUMSTAT | \
+				 DIFF_FORMAT_SHORTSTAT | \
+				 DIFF_FORMAT_DIRSTAT)
+
 /* These override all above */
 #define DIFF_FORMAT_NAME	0x0100
 #define DIFF_FORMAT_NAME_STATUS	0x0200
