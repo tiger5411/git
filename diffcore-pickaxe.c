@@ -26,18 +26,12 @@ static int diffgrep_consume(void *priv, char *line, unsigned long len)
 	struct grep_opt *grep_filter = data->grep_filter;
 	struct grep_pat *grep_pat = grep_filter->pattern_list;
 
-	fprintf(stderr, "Processing diff: <%s>", line);
 	if (line[0] != '+' && line[0] != '-')
 		return 0;
-	/* XXX: Why did we get called again? */
-	if (data->hit) {
-		fprintf(stderr, "Called with hit = 1 at <%s>\n", line);
-		BUG("noes");
-		return -1;
-	}
-	data->hit = patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0);
-	if (data->hit) {
-		fprintf(stderr, "Setting hit = 1 on <%s>\n", line);
+	if (data->hit)
+		BUG("Already matched in diffgrep_consume! Broken xdiff_emit_line_fn?");
+	if (patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0)) {
+		data->hit = 1;
 		return -1;
 	}
 	return 0;
