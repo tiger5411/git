@@ -121,6 +121,17 @@ test_expect_success 'log -G trims diff new/old [-+]' '
 	test_cmp log full-log
 '
 
+test_expect_success 'log -S<pat> is not a regex, but -S<pat> --pickaxe-regex is' '
+	git -C GS-plain log -S"a" >log &&
+	test_cmp log full-log &&
+
+	git -C GS-plain log -S"[a]" >log &&
+	test_must_be_empty log &&
+
+	git -C GS-plain log -S"[a]" --pickaxe-regex >log &&
+	test_cmp log full-log
+'
+
 test_expect_success 'setup log -[GS] binary & --text' '
 	test_create_repo GS-bin-txt &&
 	test_commit -C GS-bin-txt --append A data.bin "a\na\0a\n" &&
