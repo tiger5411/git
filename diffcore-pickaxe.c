@@ -70,7 +70,8 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	return ecbdata.hit;
 }
 
-static unsigned int contains(mmfile_t *mf, struct grep_opt *grep_filter)
+static unsigned int contains(mmfile_t *mf, struct grep_opt *grep_filter,
+			     unsigned int limit)
 {
 
 	unsigned int cnt = 0;
@@ -89,6 +90,8 @@ static unsigned int contains(mmfile_t *mf, struct grep_opt *grep_filter)
 			sz--;
 		}
 		cnt++;
+		if (limit && cnt == limit)
+			return cnt;
 	}
 	return cnt;
 }
@@ -97,8 +100,8 @@ static int has_changes(mmfile_t *one, mmfile_t *two,
 		       struct diff_options *o,
 		       struct grep_opt *grep_filter)
 {
-	unsigned int c1 = one ? contains(one, grep_filter) : 0;
-	unsigned int c2 = two ? contains(two, grep_filter) : 0;
+	unsigned int c1 = one ? contains(one, grep_filter, 0) : 0;
+	unsigned int c2 = two ? contains(two, grep_filter, c1 + 1) : 0;
 	return c1 != c2;
 }
 
