@@ -29,12 +29,11 @@ static int diffgrep_consume(void *priv, char *line, unsigned long len)
 	if (line[0] != '+' && line[0] != '-')
 		return 0;
 	if (data->hit)
-		/*
-		 * NEEDSWORK: we should have a way to terminate the
-		 * caller early.
-		 */
-		return 0;
-	data->hit = patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0);
+		BUG("Already matched in diffgrep_consume! Broken xdiff_emit_line_fn?");
+	if (patmatch(grep_pat, line + 1, line + len + 1, &regmatch, 0)) {
+		data->hit = 1;
+		return -1;
+	}
 	return 0;
 }
 
@@ -47,6 +46,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	xdemitconf_t xecfg;
 	regmatch_t regmatch;
 	struct grep_pat *grep_pat = grep_filter->pattern_list;
+	int ret;
 
 	if (!one)
 		return patmatch(grep_pat, two->ptr, two->ptr + two->size,
@@ -65,10 +65,19 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	ecbdata.hit = 0;
 	xecfg.ctxlen = 0;
 	xecfg.interhunkctxlen = o->interhunkcontext;
-	if (xdi_diff_outf(one, two, discard_hunk_line, diffgrep_consume,
-			  &ecbdata, &xpp, &xecfg))
-		return 0;
-	return ecbdata.hit;
+
+	/*
+	 * An xdiff error might be our "data->hit" from above. See the
+	 * comment for xdiff_emit_{line,hunk}_fn in xdiff-interface.h
+	 * for why.
+	 */
+	ret = xdi_diff_outf(one, two, discard_hunk_line, diffgrep_consume,
+			    &ecbdata, &xpp, &xecfg);
+	if (ecbdata.hit)
+		return 1;
+	if (ret)
+		return ret;
+	return 0;
 }
 
 static unsigned int contains(mmfile_t *mf, struct grep_opt *grep_filter,
