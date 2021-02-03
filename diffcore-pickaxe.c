@@ -44,16 +44,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 	struct diffgrep_cb ecbdata;
 	xpparam_t xpp;
 	xdemitconf_t xecfg;
-	regmatch_t regmatch;
-	struct grep_pat *grep_pat = grep_filter->pattern_list;
 	int ret;
-
-	if (!one)
-		return patmatch(grep_pat, two->ptr, two->ptr + two->size,
-				&regmatch, 0);
-	if (!two)
-		return patmatch(grep_pat, one->ptr, one->ptr + one->size,
-				&regmatch, 0);
 
 	/*
 	 * We have both sides; need to run textual diff and see if
@@ -161,9 +152,7 @@ static int pickaxe_match(struct diff_filepair *p, struct diff_options *o,
 	mf1.size = fill_textconv(o->repo, textconv_one, p->one, &mf1.ptr);
 	mf2.size = fill_textconv(o->repo, textconv_two, p->two, &mf2.ptr);
 
-	ret = fn(DIFF_FILE_VALID(p->one) ? &mf1 : NULL,
-		 DIFF_FILE_VALID(p->two) ? &mf2 : NULL,
-		 o, grep_filter);
+	ret = fn(&mf1, &mf2, o, grep_filter);
 
 	if (textconv_one)
 		free(mf1.ptr);
