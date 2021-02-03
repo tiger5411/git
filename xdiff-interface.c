@@ -58,7 +58,7 @@ static int xdiff_outf(void *priv_, mmbuffer_t *mb, int nbuf)
 
 	for (i = 0; i < nbuf; i++) {
 		if (stop)
-			BUG("hi");
+			return -1;
 		if (mb[i].ptr[mb[i].size-1] != '\n') {
 			/* Incomplete line */
 			strbuf_add(&priv->remainder, mb[i].ptr, mb[i].size);
