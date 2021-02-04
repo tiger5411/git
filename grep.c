@@ -430,7 +430,7 @@ static void compile_fixed_regexp(struct grep_pat *p, struct grep_opt *opt)
 static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
 	int err;
-	int regflags = 0; //REG_NEWLINE;
+	int regflags = 0;
 
 	if (opt->pattern_type_option == GREP_PATTERN_TYPE_UNSPECIFIED)
 		opt->pattern_type_option = (opt->extended_regexp_option
