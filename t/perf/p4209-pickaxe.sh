@@ -42,7 +42,8 @@ do
 		'(void|NULL)' \
 		'if *\([^ ]+ & ' \
 		'^\s*int \S+ = ' \
-		'(echo|printf).*[æð]'
+		'(echo|printf).*[æð]' \
+		'[àáâãäåæñøùúûüýþ]'
 	do
 		for opts in \
 			'--pickaxe-regex -S'
@@ -58,7 +59,8 @@ do
 		'(void|NULL)' \
 		'if *\([^ ]+ & ' \
 		'^\s*int \S+ = ' \
-		'(echo|printf).*[æð]'
+		'(echo|printf).*[æð]' \
+		'[àáâãäåæñøùúûüýþ]'
 	do
 		for opts in \
 			'-G' \
