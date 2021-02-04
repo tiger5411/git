@@ -72,7 +72,7 @@ static int diff_grep(mmfile_t *one, mmfile_t *two,
 }
 
 static unsigned int contains(mmfile_t *mf, struct grep_opt *grep_filter,
-			     unsigned int limit)
+			     unsigned int off, unsigned int limit)
 {
 
 	unsigned int cnt = 0;
@@ -82,7 +82,7 @@ static unsigned int contains(mmfile_t *mf, struct grep_opt *grep_filter,
 	int flags = 0;
 	struct grep_pat *grep_pat = grep_filter->pattern_list;
 
-	while (patmatch(grep_pat, data, data + sz, &regmatch, flags)) {
+	while (patmatch(grep_pat, data + off, data + sz, &regmatch, flags)) {
 		flags |= REG_NOTBOL;
 		data += regmatch.rm_eo;
 		sz -= regmatch.rm_eo;
@@ -101,8 +101,21 @@ static int has_changes(mmfile_t *one, mmfile_t *two,
 		       struct diff_options *o,
 		       struct grep_opt *grep_filter)
 {
-	unsigned int c1 = one ? contains(one, grep_filter, 0) : 0;
-	unsigned int c2 = two ? contains(two, grep_filter, c1 + 1) : 0;
+	unsigned long off = 0;
+	char *p1 = one->ptr, *p2 = two->ptr;
+	unsigned int c1, c2;
+
+	if (one && two) {
+		while (p1[off] && p2[off] &&
+		       p1[off] == p2[off])
+			off++;
+	}
+
+	c1 = one ? contains(one, grep_filter, off, 0) : 0;
+	c2 = two ? contains(two, grep_filter, off, c1 + 1) : 0;
+
+
+
 	return c1 != c2;
 }
 
