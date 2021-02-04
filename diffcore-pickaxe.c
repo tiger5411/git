@@ -105,18 +105,24 @@ static int has_changes(mmfile_t *one, mmfile_t *two,
 	unsigned long so = 0, eo = 0;
 	char *p1 = one->ptr, *p2 = two->ptr;
 	unsigned int c1, c2;
+	unsigned long z1, z2;
 
 	if (one && two) {
-		unsigned long z1 = one->size - 1;
-		unsigned long z2 = two->size - 1;
+		z1 = one->size - 1;
+		z2 = two->size - 1;
 		while (p1[so] && p2[so] &&
 		       p1[so] == p2[so])
 			so++;
-		while (eo <= z1 && eo <= z2 &&
+		while (eo < z1 && eo < z2 &&
 		       p1[z1 - eo] == p2[z2 - eo]) {
 			eo++;
 		}
 	}
+123xxx
+12xxxx
+
+	fprintf(stderr, "one|two %lu|%lu so %lu eo %lu (+%lu) clen %lu|%lu\n",
+		one->size, two->size, so, eo, so + eo, one->size - so - eo + 1, two->size - so - eo + 1);
 
 	c1 = one ? contains(one, grep_filter, so, eo, 0) : 0;
 	c2 = two ? contains(two, grep_filter, so, eo, c1 + 1) : 0;
