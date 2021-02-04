@@ -37,7 +37,7 @@ do
 
 	# -S (regex)
 	for pattern in  \
-		'(void|NULL)' \
+		'(int|void|null)' \
 		'if *\([^ ]+ & ' \
 		'[àáâãäåæñøùúûüýþ]'
 	do
@@ -52,7 +52,7 @@ do
 
 	# -G
 	for pattern in  \
-		'(void|NULL)' \
+		'(int|void|null)' \
 		'if *\([^ ]+ & ' \
 		'[àáâãäåæñøùúûüýþ]'
 	do
