@@ -23,9 +23,10 @@ for icase in \
 do
 	# -S (no regex)
 	for pattern in \
-		'a' \
-		'uncommon'\
-		'ö'
+		'void' \
+		'int main' \
+		'uncommon' \
+		'echo "æ"'
 	do
 		for opts in \
 			'-S'
@@ -38,7 +39,10 @@ do
 
 	# -S (regex)
 	for pattern in  \
-		'[þæö]'
+		'(void|NULL)' \
+		'if *\([^ ]+ & ' \
+		'^\s*int \S+ = ' \
+		'(echo|printf).*[æð]'
 	do
 		for opts in \
 			'--pickaxe-regex -S'
@@ -51,9 +55,10 @@ do
 
 	# -G
 	for pattern in  \
-		'a' \
-		'uncommon' \
-		'[þæö]'
+		'(void|NULL)' \
+		'if *\([^ ]+ & ' \
+		'^\s*int \S+ = ' \
+		'(echo|printf).*[æð]'
 	do
 		for opts in \
 			'-G' \
