@@ -57,22 +57,9 @@ do
 		'[àáâãäåæñøùúûüýþ]'
 	do
 		for opts in \
-			'-G' \
-			'--pickaxe-regex -S'
+			'-G'
 		do
 			test_perf "git log $icase$opts'$pattern'$from_rev_desc" "
-				git log --pretty=format:%H $icase$opts'$pattern'$from_rev
-			"
-		done
-
-		# -G extra
-		for opts in \
-			'--text -G' \
-			'--text --pickaxe-all -G' \
-			'--pickaxe-all -G' \
-			'--pickaxe-all --pickaxe-regex -S'
-		do
-			test_perf PERF_EXTRA "git log $icase$opts'$pattern'$from_rev_desc" "
 				git log --pretty=format:%H $icase$opts'$pattern'$from_rev
 			"
 		done
