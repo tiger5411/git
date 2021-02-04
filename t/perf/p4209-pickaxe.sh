@@ -23,10 +23,8 @@ for icase in \
 do
 	# -S (no regex)
 	for pattern in \
-		'void' \
 		'int main' \
-		'uncommon' \
-		'echo "æ"'
+		'æ'
 	do
 		for opts in \
 			'-S'
@@ -41,8 +39,6 @@ do
 	for pattern in  \
 		'(void|NULL)' \
 		'if *\([^ ]+ & ' \
-		'^\s*int \S+ = ' \
-		'(echo|printf).*[æð]' \
 		'[àáâãäåæñøùúûüýþ]'
 	do
 		for opts in \
@@ -58,8 +54,6 @@ do
 	for pattern in  \
 		'(void|NULL)' \
 		'if *\([^ ]+ & ' \
-		'^\s*int \S+ = ' \
-		'(echo|printf).*[æð]' \
 		'[àáâãäåæñøùúûüýþ]'
 	do
 		for opts in \
