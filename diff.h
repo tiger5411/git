@@ -244,6 +244,7 @@ struct diff_options {
 	 * postimage of the diff_queue.
 	 */
 	const char *pickaxe;
+	unsigned pickaxe_opts;
 
 	/* -I<regex> */
 	regex_t **ignore_regex;
@@ -282,8 +283,6 @@ struct diff_options {
 
 	/* The output format used when `diff_flush()` is run. */
 	int output_format;
-
-	unsigned pickaxe_opts;
 
 	/* Affects the way detection logic for complete rewrites, renames and
 	 * copies.
