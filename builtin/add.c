@@ -282,7 +282,7 @@ static int edit_patch(int argc, const char **argv, const char *prefix)
 	if (out < 0)
 		die(_("Could not open '%s' for writing."), file);
 	rev.diffopt.file = xfdopen(out, "w");
-	rev.diffopt.close_file = 1;
+	rev.diffopt.fclose_file = 1;
 	if (run_diff_files(&rev, 0))
 		die(_("Could not write patch"));
 

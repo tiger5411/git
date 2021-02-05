@@ -1315,7 +1315,7 @@ static void write_commit_patch(const struct am_state *state, struct commit *comm
 	rev_info.diffopt.flags.full_index = 1;
 	rev_info.diffopt.use_color = 0;
 	rev_info.diffopt.file = fp;
-	rev_info.diffopt.close_file = 1;
+	rev_info.diffopt.fclose_file = 1; /* log_tree_commit() sets .no_free=1 */
 	add_pending_object(&rev_info, &commit->object, "");
 	diff_setup_done(&rev_info.diffopt);
 	log_tree_commit(&rev_info, commit);
@@ -1347,10 +1347,12 @@ static void write_index_patch(const struct am_state *state)
 	rev_info.diffopt.output_format = DIFF_FORMAT_PATCH;
 	rev_info.diffopt.use_color = 0;
 	rev_info.diffopt.file = fp;
-	rev_info.diffopt.close_file = 1;
+	rev_info.diffopt.fclose_file = 1;
+	rev_info.diffopt.no_free = 1;
 	add_pending_object(&rev_info, &tree->object, "");
 	diff_setup_done(&rev_info.diffopt);
 	run_diff_index(&rev_info, 1);
+	diff_free(&rev_info.diffopt);
 }
 
 /**

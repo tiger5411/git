@@ -1052,7 +1052,7 @@ static void wt_longstatus_print_verbose(struct wt_status *s)
 	rev.diffopt.rename_limit = s->rename_limit >= 0 ? s->rename_limit : rev.diffopt.rename_limit;
 	rev.diffopt.rename_score = s->rename_score >= 0 ? s->rename_score : rev.diffopt.rename_score;
 	rev.diffopt.file = s->fp;
-	rev.diffopt.close_file = 0;
+	rev.diffopt.fclose_file = 0; /* wt_status owns the s->fp */
 	/*
 	 * If we're not going to stdout, then we definitely don't
 	 * want color, since we are going to the commit message

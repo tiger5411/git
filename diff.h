@@ -49,7 +49,16 @@
  * - Once you finish feeding the pairs of files, call `diffcore_std()`.
  * This will tell the diffcore library to go ahead and do its work.
  *
+ * - The `diff_opt_parse()` etc. functions might allocate memory in
+ *  `struct diff_options`. When running the API `N > 1` set `.no_free
+ *  = 1` to make the `diff_free()` invoked by `diff_flush()` below a
+ *  noop.
+ *
  * - Calling `diff_flush()` will produce the output.
+ *
+ * - If you set `.no_free = 1` before set it to `0` and call
+ *   `diff_free()` again. If `.no_free = 1` was not set there's no
+ *   need to call `diff_free()`, `diff_flush()` will call it.
  */
 
 struct combine_diff_path;
@@ -328,7 +337,7 @@ struct diff_options {
 	void (*set_default)(struct diff_options *);
 
 	FILE *file;
-	int close_file;
+	int fclose_file;
 
 #define OUTPUT_INDICATOR_NEW 0
 #define OUTPUT_INDICATOR_OLD 1
@@ -365,6 +374,8 @@ struct diff_options {
 
 	struct repository *repo;
 	struct option *parseopts;
+
+	int no_free;
 };
 
 unsigned diff_filter_bit(char status);
@@ -559,6 +570,7 @@ void diffcore_fix_diff_index(void);
 
 int diff_queue_is_empty(void);
 void diff_flush(struct diff_options*);
+void diff_free(struct diff_options*);
 void diff_warn_rename_limit(const char *varname, int needed, int degraded_cc);
 
 /* diff-raw status letters */

@@ -5187,7 +5187,7 @@ static enum parse_opt_result diff_opt_output(struct parse_opt_ctx_t *ctx,
 	BUG_ON_OPT_NEG(unset);
 	path = prefix_filename(ctx->prefix, arg);
 	options->file = xfopen(path, "w");
-	options->close_file = 1;
+	options->fclose_file = 1;
 	if (options->use_color != GIT_COLOR_ALWAYS)
 		options->use_color = GIT_COLOR_NEVER;
 	free(path);
@@ -6399,10 +6399,10 @@ void diff_flush(struct diff_options *options)
 		 * options->file to /dev/null should be safe, because we
 		 * aren't supposed to produce any output anyway.
 		 */
-		if (options->close_file)
+		if (options->fclose_file)
 			fclose(options->file);
 		options->file = xfopen("/dev/null", "w");
-		options->close_file = 1;
+		options->fclose_file = 1;
 		options->color_moved = 0;
 		for (i = 0; i < q->nr; i++) {
 			struct diff_filepair *p = q->queue[i];
@@ -6433,8 +6433,7 @@ void diff_flush(struct diff_options *options)
 free_queue:
 	free(q->queue);
 	DIFF_QUEUE_CLEAR(q);
-	if (options->close_file)
-		fclose(options->file);
+	diff_free(options);
 
 	/*
 	 * Report the content-level differences with HAS_CHANGES;
@@ -6448,6 +6447,15 @@ free_queue:
 			options->flags.has_changes = 0;
 	}
 }
+
+void diff_free(struct diff_options *options)
+{
+	if (options->no_free)
+		return;
+	if (options->fclose_file)
+		fclose(options->file);
+}
+	
 
 static int match_filter(const struct diff_options *options, const struct diff_filepair *p)
 {
