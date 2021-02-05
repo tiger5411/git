@@ -6450,10 +6450,17 @@ free_queue:
 
 void diff_free(struct diff_options *options)
 {
+	int i;
 	if (options->no_free)
 		return;
 	if (options->fclose_file)
 		fclose(options->file);
+
+	for (i = 0; i < options->ignore_regex_nr; i++) {
+		regfree(options->ignore_regex[i]);
+		free(options->ignore_regex[i]);
+	}
+	free(options->ignore_regex);
 }
 	
 
