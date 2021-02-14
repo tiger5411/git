@@ -1,3 +1,4 @@
+t4018 header: enum class RIGHT{
 enum class RIGHT{
 	// Left
 	// a comment

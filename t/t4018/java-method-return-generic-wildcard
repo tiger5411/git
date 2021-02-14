@@ -1,3 +1,4 @@
+t4018 header: public List<? extends Comparable> foo(String[] RIGHT) {
 class MyExample {
     public List<? extends Comparable> foo(String[] RIGHT) {
         someMethodCall();

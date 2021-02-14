@@ -1,3 +1,4 @@
+t4018 header: private static class RIGHT {
 class MyExample {
     private static class RIGHT {
         // change an inner class field

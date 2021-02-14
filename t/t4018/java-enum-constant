@@ -1,3 +1,4 @@
+t4018 header: private enum RIGHT {
 private enum RIGHT {
     ONE,
     TWO,
