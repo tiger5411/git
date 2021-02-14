@@ -80,11 +80,12 @@ test_expect_success 'setup hunk header tests' '
 '
 
 # check each individual file
-for i in $(git ls-files)
+for i in $(git ls-files -- ':!*.ctx')
 do
 	test_expect_success "hunk header: $i" "
-		git diff -U1 $i >actual &&
-		grep '@@ .* @@.*RIGHT' actual
+		git diff -U1 $i >diff &&
+		sed -n -e 's/^.*@@$//p' -e 's/^.*@@ //p' <diff >ctx &&
+		test_cmp $i.ctx ctx
 	"
 done
 

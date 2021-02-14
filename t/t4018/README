@@ -1,15 +1,15 @@
-How to write RIGHT test cases
-=============================
+How to write test cases
+=======================
+
+Create test cases called "LANG-whatever" in this directory, where
+"LANG" is e.g. the userdiff driver name, where "whatever" is a brief
+description of the test.
 
 Insert the word "ChangeMe" (exactly this form) at a distance of
 at least two lines from the line that must appear in the hunk header.
 
-The text that must appear in the hunk header must contain the word
-"right", but in all upper-case, like in the title above.
-
-This text is a bit twisted and out of order, but it is itself a
-test case for the default hunk header pattern. Know what you are doing
-if you change it.
-
-BTW, this tests that the head line goes to the hunk header, not the line
-of equal signs.
+The text that must appear in the hunk header must contains the word
+"RIGHT" by convention. The "LANG-whatever.ctx" file contains what we
+expect to appear in the hunk header. We munged away the starting "@@
+[...] @@" part of the line for ease of not having to hardcode the line
+numbers and offsets.
