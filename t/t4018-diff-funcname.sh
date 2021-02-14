@@ -47,6 +47,17 @@ test_expect_success 'last regexp must not be negated' '
 	test_i18ngrep ": Last expression must not be negated:" msg
 '
 
+do_change_me () {
+	file=$1
+	sed -e "s/ChangeMe/IWasChanged/" <"$file" >tmp &&
+	mv tmp "$file"
+}
+
+last_diff_context_line () {
+	file=$1
+	sed -n -e "s/^.*@@\( \|$\)//p" <$file
+}
+
 test_diff_funcname () {
 	desc=$1
 	cat <&8 >arg.header &&
@@ -57,13 +68,12 @@ test_diff_funcname () {
 		cp arg.test "$what" &&
 		cp arg.header expected &&
 		git add "$what" &&
-		sed -e "s/ChangeMe/IWasChanged/" <"$what" >tmp &&
-		mv tmp "$what"
+		do_change_me "$what"
 	' &&
 
 	test_expect_success "$desc" '
 		git diff -U1 "$what" >diff &&
-		sed -n -e "s/^.*@@\( \|$\)//p" <diff >actual &&
+		last_diff_context_line diff >actual &&
 		test_cmp expected actual
 	'
 }
