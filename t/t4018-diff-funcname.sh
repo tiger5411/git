@@ -61,33 +61,42 @@ test_expect_success 'last regexp must not be negated' '
 	test_i18ngrep ": Last expression must not be negated:" msg
 '
 
-test_expect_success 'setup hunk header tests' '
-	for i in $diffpatterns
-	do
-		echo "$i-* diff=$i"
-	done > .gitattributes &&
+test_diff_funcname () {
+	desc=$1
+	cat <&8 >arg.header &&
+	cat <&9 >arg.test &&
+	what=$(cat arg.what) &&
 
-	# add all test files to the index
-	(
-		cd "$TEST_DIRECTORY"/t4018 &&
-		git --git-dir="$TRASH_DIRECTORY/.git" add .
-	) &&
+	test_expect_success "setup: $desc" '
+		cp arg.test "$what" &&
+		cp arg.header expected &&
+		git add "$what" &&
+		sed -e "s/ChangeMe/IWasChanged/" <"$what" >tmp &&
+		mv tmp "$what"
+	' &&
 
-	# place modified files in the worktree
-	for i in $(git ls-files)
-	do
-		sed -e "s/ChangeMe/IWasChanged/" <"$TEST_DIRECTORY/t4018/$i" >"$i" || return 1
-	done
-'
+	test_expect_success "$desc" '
+		git diff -U1 "$what" >diff &&
+		sed -n -e "s/^.*@@\( \|$\)//p" <diff >actual &&
+		test_cmp expected actual
+	'
+}
 
-# check each individual file
-for i in $(git ls-files -- ':!*.ctx')
+for what in $diffpatterns
 do
-	test_expect_success "hunk header: $i" "
-		git diff -U1 $i >diff &&
-		sed -n -e 's/^.*@@\( \|$\)//p' <diff >ctx &&
-		test_cmp $i.ctx ctx
-	"
+	test="$TEST_DIRECTORY/t4018/$what.sh"
+	if ! test -e "$test"
+	then
+		test_expect_failure "$what: no tests" 'false'
+		continue
+	fi &&
+
+	test_expect_success "setup: hunk header for $what" '
+		echo "$what diff=$what" >.gitattributes &&
+		echo "$what" >arg.what
+	' &&
+
+	. "$test"
 done
 
 test_done
