@@ -11,18 +11,6 @@ test_expect_success 'setup' '
 	builtin_drivers=$(test-tool userdiff list-builtin-drivers) &&
 	test -n "$builtin_drivers" &&
 
-	# a non-trivial custom pattern
-	git config diff.custom1.funcname "!static
-!String
-[^ 	].*s.*" &&
-
-	# a custom pattern which matches to end of line
-	git config diff.custom2.funcname "......Beer\$" &&
-
-	# alternation in pattern
-	git config diff.custom3.funcname "Beer$" &&
-	git config diff.custom3.xfuncname "^[ 	]*((public|static).*)$" &&
-
 	# for regexp compilation tests
 	echo A >A.java &&
 	echo B >B.java
@@ -30,9 +18,7 @@ test_expect_success 'setup' '
 
 diffpatterns="
 	$builtin_drivers
-	custom1
-	custom2
-	custom3
+	custom
 "
 
 for p in $diffpatterns
