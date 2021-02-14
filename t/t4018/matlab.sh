@@ -31,6 +31,7 @@ EOF_HUNK
 %%% RIGHT section
 # this is octave script
 ChangeMe = 1;
+
 EOF_TEST
 
 test_diff_funcname 'matlab: octave section 2' \
@@ -40,6 +41,7 @@ EOF_HUNK
 ## RIGHT section
 # this is octave script
 ChangeMe = 1;
+
 EOF_TEST
 
 test_diff_funcname 'matlab: section' \
@@ -49,4 +51,5 @@ EOF_HUNK
 %% RIGHT section
 % this is understood by both matlab and octave
 ChangeMe = 1;
+
 EOF_TEST

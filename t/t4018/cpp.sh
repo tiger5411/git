@@ -206,6 +206,7 @@ void wrong()
 struct RIGHT_iterator_tag {};
 
 int ChangeMe;
+
 EOF_TEST
 
 test_diff_funcname 'cpp: template function definition' \
