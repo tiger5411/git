@@ -63,6 +63,7 @@ test_diff_funcname () {
 	cat <&8 >arg.header &&
 	cat <&9 >arg.test &&
 	what=$(cat arg.what) &&
+	arg_diff_U0=$2 &&
 
 	test_expect_success "setup: $desc" '
 		cp arg.test "$what" &&
@@ -82,6 +83,18 @@ test_diff_funcname () {
 		git diff -U1 "$what" >diff &&
 		last_diff_context_line diff >actual &&
 		test_cmp expected actual
+	' &&
+
+	test_expect_success "$desc -U0" '
+		git diff -U0 "$what" >diff &&
+		last_diff_context_line diff >actual &&
+		if test -n "$arg_diff_U0"
+		then
+			echo "$arg_diff_U0" >new-expected &&
+			test_cmp new-expected actual
+		else
+			test_cmp expected actual
+		fi
 	' &&
 
 	test_expect_success "$desc (accumulated)" '
