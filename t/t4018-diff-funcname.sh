@@ -65,9 +65,23 @@ test_diff_funcname () {
 		do_change_me "$what"
 	' &&
 
+	test_expect_success "setup: $desc (accumulated)" '
+		cat arg.test >>arg.tests &&
+		cp arg.tests "$what".acc &&
+		git add "$what".acc &&
+		do_change_me "$what".acc
+	' &&
+
 	test_expect_success "$desc" '
 		git diff -U1 "$what" >diff &&
 		last_diff_context_line diff >actual &&
+		test_cmp expected actual
+	' &&
+
+	test_expect_success "$desc (accumulated)" '
+		git diff -U1 "$what".acc >diff &&
+		last_diff_context_line diff >actual.lines &&
+		tail -n 1 actual.lines >actual &&
 		test_cmp expected actual
 	' &&
 
@@ -91,6 +105,11 @@ do
 	test_expect_success "setup: hunk header for $what" '
 		echo "$what diff=$what" >.gitattributes &&
 		echo "$what" >arg.what
+	' &&
+
+	test_expect_success "setup: hunk header for $what (accumulated)" '
+		>arg.tests &&
+		echo "$what.acc diff=$what" >>.gitattributes
 	' &&
 
 	. "$test"
