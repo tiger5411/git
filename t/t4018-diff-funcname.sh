@@ -78,6 +78,13 @@ test_diff_funcname () {
 		git diff -U1 "$what" >diff &&
 		sed -n -e "s/^.*@@$//p" -e "s/^.*@@ //p" <diff >actual &&
 		test_cmp expected actual
+	' &&
+
+	test_expect_success "teardown: $desc" '
+		# In case any custom config was set immediately before
+		# the test itself in the test file
+		test_unconfig "diff.$what.funcname" &&
+		test_unconfig "diff.$what.xfuncname"
 	'
 }
 
