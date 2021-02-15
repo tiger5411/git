@@ -20,12 +20,7 @@ test_expect_success 'setup' '
 	echo B >B.java
 '
 
-diffpatterns="
-	$(cat builtin-drivers)
-	custom
-"
-
-for p in $diffpatterns
+for p in $(cat builtin-drivers)
 do
 	test_expect_success "builtin $p pattern compiles" '
 		echo "*.java diff=$p" >.gitattributes &&
@@ -49,6 +44,11 @@ test_expect_success 'last regexp must not be negated' '
 	test_expect_code 128 git diff --no-index A.java B.java 2>msg &&
 	test_i18ngrep ": Last expression must not be negated:" msg
 '
+
+diffpatterns="
+	$(cat builtin-drivers)
+	custom
+"
 
 test_expect_success 'setup hunk header tests' '
 	for i in $diffpatterns
