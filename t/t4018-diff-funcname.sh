@@ -132,6 +132,13 @@ test_diff_funcname () {
 		last_diff_context_line diff >actual &&
 		test_cmp expected actual
 	'
+
+	test_expect_success "teardown: $desc" '
+		# In case any custom config was set immediately before
+		# the test itself in the test file
+		test_unconfig "diff.$what.funcname" &&
+		test_unconfig "diff.$what.xfuncname"
+	'
 }
 
 for what in $diffpatterns
