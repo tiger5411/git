@@ -334,13 +334,11 @@ int cmd_commit_graph(int argc, const char **argv, const char *prefix)
 
 	save_commit_buffer = 0;
 
-	if (argc > 0) {
-		if (!strcmp(argv[0], "verify"))
-			return graph_verify(argc, argv);
-		if (!strcmp(argv[0], "write"))
-			return graph_write(argc, argv);
-	}
-
-	usage_with_options(builtin_commit_graph_usage,
-			   builtin_commit_graph_options);
+	if (argc && !strcmp(argv[0], "verify"))
+		return graph_verify(argc, argv);
+	else if (argc && !strcmp(argv[0], "write"))
+		return graph_write(argc, argv);
+	else
+		usage_with_options(builtin_commit_graph_usage,
+				   builtin_commit_graph_options);
 }
