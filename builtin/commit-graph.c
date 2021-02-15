@@ -44,6 +44,21 @@ static struct opts_commit_graph {
 	int enable_changed_paths;
 } opts;
 
+static struct option *add_common_options(struct option *prevopts)
+{
+	struct option options[] = {
+		OPT_STRING(0, "object-dir", &opts.obj_dir,
+			   N_("dir"),
+			   N_("the object directory to store the graph")),
+		OPT_BOOL(0, "progress", &opts.progress,
+			 N_("force progress reporting")),
+		OPT_END()
+	};
+	struct option *newopts = parse_options_concat(options, prevopts);
+	free(prevopts);
+	return newopts;
+}
+
 static struct object_directory *find_odb(struct repository *r,
 					 const char *obj_dir)
 {
@@ -77,20 +92,18 @@ static int graph_verify(int argc, const char **argv)
 	int flags = 0;
 
 	static struct option builtin_commit_graph_verify_options[] = {
-		OPT_STRING(0, "object-dir", &opts.obj_dir,
-			   N_("dir"),
-			   N_("the object directory to store the graph")),
 		OPT_BOOL(0, "shallow", &opts.shallow,
 			 N_("if the commit-graph is split, only verify the tip file")),
-		OPT_BOOL(0, "progress", &opts.progress, N_("force progress reporting")),
 		OPT_END(),
 	};
+	struct option *options = parse_options_dup(builtin_commit_graph_verify_options);
+	options = add_common_options(options);
 
 	trace2_cmd_mode("verify");
 
 	opts.progress = isatty(2);
 	argc = parse_options(argc, argv, NULL,
-			     builtin_commit_graph_verify_options,
+			     options,
 			     builtin_commit_graph_verify_usage, 0);
 
 	if (!opts.obj_dir)
@@ -207,9 +220,6 @@ static int graph_write(int argc, const char **argv)
 	struct progress *progress = NULL;
 
 	static struct option builtin_commit_graph_write_options[] = {
-		OPT_STRING(0, "object-dir", &opts.obj_dir,
-			N_("dir"),
-			N_("the object directory to store the graph")),
 		OPT_BOOL(0, "reachable", &opts.reachable,
 			N_("start walk at all refs")),
 		OPT_BOOL(0, "stdin-packs", &opts.stdin_packs,
@@ -220,7 +230,6 @@ static int graph_write(int argc, const char **argv)
 			N_("include all commits already in the commit-graph file")),
 		OPT_BOOL(0, "changed-paths", &opts.enable_changed_paths,
 			N_("enable computation for changed paths")),
-		OPT_BOOL(0, "progress", &opts.progress, N_("force progress reporting")),
 		OPT_CALLBACK_F(0, "split", &write_opts.split_flags, NULL,
 			N_("allow writing an incremental commit-graph file"),
 			PARSE_OPT_OPTARG | PARSE_OPT_NONEG,
@@ -236,6 +245,8 @@ static int graph_write(int argc, const char **argv)
 			0, write_option_max_new_filters),
 		OPT_END(),
 	};
+	struct option *options = parse_options_dup(builtin_commit_graph_write_options);
+	options = add_common_options(options);
 
 	opts.progress = isatty(2);
 	opts.enable_changed_paths = -1;
@@ -249,7 +260,7 @@ static int graph_write(int argc, const char **argv)
 	git_config(git_commit_graph_write_config, &opts);
 
 	argc = parse_options(argc, argv, NULL,
-			     builtin_commit_graph_write_options,
+			     options,
 			     builtin_commit_graph_write_usage, 0);
 
 	if (opts.reachable + opts.stdin_packs + opts.stdin_commits > 1)
@@ -312,12 +323,8 @@ cleanup:
 
 int cmd_commit_graph(int argc, const char **argv, const char *prefix)
 {
-	static struct option builtin_commit_graph_options[] = {
-		OPT_STRING(0, "object-dir", &opts.obj_dir,
-			N_("dir"),
-			N_("the object directory to store the graph")),
-		OPT_END(),
-	};
+	struct option *no_options = parse_options_dup(NULL);
+	struct option *builtin_commit_graph_options = add_common_options(no_options);
 
 	git_config(git_default_config, NULL);
 	argc = parse_options(argc, argv, prefix,
