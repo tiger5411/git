@@ -91,6 +91,13 @@ test_diff_funcname () {
 		fi
 	' &&
 
+	test_expect_success "$desc -W" '
+		git diff -U0 -W "$what" >W-U0-diff &&
+		echo >W-U0-expected &&
+		last_diff_context_line W-U0-diff >W-U0-actual &&
+		test_cmp W-U0-expected W-U0-actual
+	' &&
+
 	test_expect_success "$desc (accumulated)" '
 		git diff -U1 "$what".acc >diff &&
 		last_diff_context_line diff >actual.lines &&
