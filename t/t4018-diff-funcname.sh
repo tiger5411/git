@@ -23,7 +23,6 @@ test_expect_success 'setup' '
 	html
 	objc
 	pascal
-	ruby
 	tex
 	EOF
 
