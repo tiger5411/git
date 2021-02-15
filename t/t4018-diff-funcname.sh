@@ -18,7 +18,6 @@ test_expect_success 'setup' '
 	# Do not add anything to this list. New built-in drivers should have
 	# tests
 	cat >drivers-no-tests <<-\EOF &&
-	ada
 	bibtex
 	csharp
 	html
