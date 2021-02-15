@@ -16,12 +16,7 @@ test_expect_success 'setup' '
 	echo B >B.java
 '
 
-diffpatterns="
-	$builtin_drivers
-	custom
-"
-
-for p in $diffpatterns
+for p in $builtin_drivers
 do
 	test_expect_success "builtin $p pattern compiles" '
 		echo "*.java diff=$p" >.gitattributes &&
@@ -74,7 +69,7 @@ test_diff_funcname () {
 	'
 }
 
-for what in $diffpatterns
+for what in $builtin_drivers custom
 do
 	test="$TEST_DIRECTORY/t4018/$what.sh"
 	if ! test -e "$test"
