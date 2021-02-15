@@ -98,6 +98,11 @@ test_diff_funcname () {
 		test_cmp W-U0-expected W-U0-actual
 	' &&
 
+	test_expect_success "$desc -W interaction with -U<n>" '
+		git diff -U9001 "$what" >W-U9001-diff &&
+		grep "^@@ -1," W-U9001-diff
+	' &&
+
 	test_expect_success "$desc (accumulated)" '
 		git diff -U1 "$what".acc >diff &&
 		last_diff_context_line diff >actual.lines &&
