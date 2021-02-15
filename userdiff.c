@@ -124,6 +124,8 @@ IPATTERN("fortran",
 IPATTERN("fountain", "^((\\.[^.]|(int|ext|est|int\\.?/ext|i/e)[. ]).*)$",
 	 "[^ \t-]+"),
 PATTERNS("golang",
+	 /* Packages */
+	 "^[ \t]*(package[ \t]*(.*))\n"
 	 /* Functions */
 	 "^[ \t]*(func[ \t]*.*(\\{[ \t]*)?)\n"
 	 /* Structs and interfaces */
