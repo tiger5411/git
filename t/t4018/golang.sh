@@ -3,6 +3,16 @@
 # See ../t4018-diff-funcname.sh's test_diff_funcname()
 #
 
+test_diff_funcname 'golang: package' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+package main
+EOF_HUNK
+package main
+
+import "fmt"
+// ChangeMe
+EOF_TEST
+
 test_diff_funcname 'golang: complex function' \
 	8<<\EOF_HUNK 9<<\EOF_TEST
 func (t *Test) RIGHT(a Type) (Type, error) {

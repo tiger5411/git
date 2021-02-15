@@ -128,6 +128,8 @@ IPATTERN("fountain",
 	 /* -- */
 	 "[^ \t-]+"),
 PATTERNS("golang",
+	 /* Packages */
+	 "^[ \t]*(package[ \t]*(.*))\n"
 	 /* Functions */
 	 "^[ \t]*(func[ \t]*.*(\\{[ \t]*)?)\n"
 	 /* Structs and interfaces */
