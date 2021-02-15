@@ -122,3 +122,38 @@ test_expect_success 'custom: teardown' '
 	test_unconfig diff.custom.funcname &&
 	test_unconfig diff.custom.xfuncname
 '
+
+test_expect_success 'custom: negation syntax, ! is magic' '
+	git config diff.custom.xfuncname "!negation
+line"
+'
+
+test_diff_funcname 'custom: config precedence' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+line
+EOF_HUNK
+line
+!negation
+
+ChangeMe
+
+baz
+EOF_TEST
+
+test_expect_success 'custom: negation syntax, use [!] to override ! magic' '
+	git config diff.custom.xfuncname "[!]negation
+line"
+'
+
+test_diff_funcname 'custom: config precedence' \
+	8<<\EOF_HUNK 9<<\EOF_TEST
+!negation
+EOF_HUNK
+line
+!negation
+
+ChangeMe
+
+baz
+EOF_TEST
+

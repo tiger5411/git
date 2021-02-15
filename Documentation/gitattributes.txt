@@ -794,6 +794,23 @@ backslashes; the pattern above picks a line that begins with a
 backslash, and zero or more occurrences of `sub` followed by
 `section` followed by open brace, to the end of line.
 
+Multiple patterns can be supplied by seperating them with
+newlines. They will be matched one at a time and are compiled as
+separate patterns, and thus the first capture in each such pattern is
+`$1`, see further discussion of captures below.
+
+Patterns that begin with "!" are negated (to match a literal "!" at
+the start of a line use e.g. "[!]"). A matching negated pattern will
+cause the matching line to be skipped. Use it to blacklist otherwise
+matching non-negated patterns. The last pattern must not be negated,
+we'll error out if that's the case.
+
+If the pattern contains a `$1` capture it will be used instead of the
+entire matching line (`$0`) to display the hunk header. This can be
+used e.g. to strip whitespace from the beginning of the line, or to
+only display the function name as part of a longer function
+definition.
+
 There are built-in patterns shipped as part of git itself. A more
 advanced version of the `tex` pattern discussed above is one of them.
 
