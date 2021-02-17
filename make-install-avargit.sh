@@ -19,10 +19,17 @@ git merge \
     avar/commit-graph-usage \
     avar/diff-W-context
 
-time make -j $(parallel --number-of-cores) \
-     USE_LIBPCRE=Y \
-     LIBPCREDIR=$HOME/g/pcre2/inst \
-     CFLAGS="-O0 -g" \
-     DEVELOPER=1 \
-     prefix=/home/avar/local \
-     all man install install-man
+make_it() {
+	time make -j $(parallel --number-of-cores) \
+		USE_LIBPCRE=Y \
+                LIBPCREDIR=$HOME/g/pcre2/inst \
+                CFLAGS="-O0 -g" \
+                DEVELOPER=1 \
+                prefix=/home/avar/local \
+                $@
+}
+
+git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
+make_it all man
+(cd t && prove -j $(parallel --number-of-cores) $(cat /tmp/git.build-tests))
+make_it install install-man
