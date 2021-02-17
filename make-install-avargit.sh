@@ -35,3 +35,5 @@ git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh 
 make_it all man
 (cd t && prove -j $(parallel --number-of-cores) $(cat /tmp/git.build-tests))
 make_it install install-man
+(cd t && prove -j $(parallel --number-of-cores) t[0-9]*.sh)
+git --no-pager shortlog @{u}..
