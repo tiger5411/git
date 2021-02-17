@@ -8,10 +8,11 @@ git reset --hard @{u}
 
 git merge \
     --no-edit \
-    avar/test-lib-misc-fixes-2 \
-    avar/log-pager-exit-status \
     avar/makefile-objs-targets-2 \
+    avar/log-pager-exit-status \
+    avar/post-rm-gettext-poison \
     avar/diff-free-2 \
+    avar/test-lib-misc-fixes-2 \
     avar/fsck-h-interface \
     avar/t4018-diff-hunk-header-regex-tests-2 \
     gitster/jk/rev-list-disk-usage \
