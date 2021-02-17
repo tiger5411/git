@@ -3,13 +3,14 @@ set -e
 set -x
 
 cd ~/g/git.build
-git checkout master
+git checkout build-master || git checkout -b build-master -t origin/master
 git reset --hard @{u}
 
 git merge \
     --no-edit \
     avar/test-lib-misc-fixes-2 \
     avar/log-pager-exit-status \
+    avar/makefile-objs-targets-2 \
     avar/diff-free-2 \
     avar/fsck-h-interface \
     avar/t4018-diff-hunk-header-regex-tests-2 \
