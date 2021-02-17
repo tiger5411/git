@@ -18,7 +18,8 @@ git merge \
     gitster/jk/rev-list-disk-usage \
     avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-master \
     avar/commit-graph-usage \
-    avar/diff-W-context
+    avar/diff-W-context \
+    avar/pcre2-memory-allocation-fixes-2
 
 make_it() {
 	time make -j $(parallel --number-of-cores) \
