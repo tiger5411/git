@@ -4,6 +4,7 @@ set -x
 
 cd ~/g/git.build
 git checkout build-master || git checkout -b build-master -t origin/master
+git merge --abort || :
 git reset --hard @{u}
 
 git merge \
