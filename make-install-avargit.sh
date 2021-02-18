@@ -20,7 +20,8 @@ git merge \
     avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-master \
     avar/commit-graph-usage \
     avar/diff-W-context \
-    avar/pcre2-memory-allocation-fixes-2
+    avar/pcre2-memory-allocation-fixes-2 \
+    avar/worktree-add-orphan
 
 make_it() {
 	time make -j $(parallel --number-of-cores) \
