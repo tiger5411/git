@@ -9,7 +9,7 @@ git reset --hard @{u}
 
 git merge \
     --no-edit \
-    avar/makefile-objs-targets-2 \
+    avar/makefile-objs-targets-3 \
     avar/post-rm-gettext-poison \
     avar/fsck-h-interface \
     avar/t4018-diff-hunk-header-regex-tests-2 \
