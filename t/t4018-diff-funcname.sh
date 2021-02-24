@@ -15,6 +15,19 @@ test_expect_success 'setup' '
 	sort <builtin-drivers >builtin-drivers.sorted &&
 	test_cmp builtin-drivers.sorted builtin-drivers &&
 
+	# Do not add anything to this list. New built-in drivers should have
+	# tests
+	cat >drivers-no-tests <<-\EOF &&
+	ada
+	bibtex
+	csharp
+	html
+	objc
+	pascal
+	ruby
+	tex
+	EOF
+
 	# for regexp compilation tests
 	echo A >A.java &&
 	echo B >B.java
@@ -22,7 +35,12 @@ test_expect_success 'setup' '
 
 for p in $(cat builtin-drivers)
 do
-	test_expect_success "builtin $p pattern compiles" '
+	P=$(echo $p | tr 'a-z' 'A-Z')
+	if grep -q $p drivers-no-tests
+	then
+		test_set_prereq NO_TEST_FOR_DRIVER_$P
+	fi
+	test_expect_success NO_TEST_FOR_DRIVER_$P "builtin $p pattern compiles" '
 		echo "*.java diff=$p" >.gitattributes &&
 		test_expect_code 1 git diff --no-index \
 			A.java B.java 2>msg &&
@@ -119,11 +137,17 @@ test_diff_funcname () {
 	'
 }
 
+>drivers-had-no-tests
 for what in $diffpatterns
 do
 	test="$TEST_DIRECTORY/t4018/$what.sh"
 	if ! test -e "$test"
 	then
+		git -C t4018 ls-files ':!*.sh' "$what*" >other-tests &&
+		if ! test -s other-tests
+		then
+			echo $what >>drivers-had-no-tests
+		fi
 		continue
 	fi &&
 
@@ -134,5 +158,9 @@ do
 
 	. "$test"
 done
+
+test_expect_success 'we should not have new built-in drivers without tests' '
+	test_cmp drivers-no-tests drivers-had-no-tests
+'
 
 test_done
