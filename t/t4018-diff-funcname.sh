@@ -104,7 +104,7 @@ do
 	"
 
 	test_expect_success "hunk header: $i" "
-		git diff -U1 $i >diff &&
+		git diff -U0 $i >diff &&
 		last_diff_context_line diff >ctx &&
 		test_cmp t4018/$i.header ctx
 	"
@@ -112,6 +112,7 @@ done
 
 test_diff_funcname () {
 	desc=$1
+	diff_opts=${2:--U0} &&
 	cat <&8 >arg.header &&
 	cat <&9 >arg.test &&
 	what=$(cat arg.what) &&
@@ -124,7 +125,7 @@ test_diff_funcname () {
 	' &&
 
 	test_expect_success "$desc" '
-		git diff -U1 "$what" >diff &&
+		git diff $diff_opts "$what" >diff &&
 		last_diff_context_line diff >actual &&
 		test_cmp expected actual
 	' &&
