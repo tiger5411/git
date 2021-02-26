@@ -22,7 +22,7 @@ git merge \
     avar/use-tagOpt-not-tagopt
 
 make_it() {
-	time make -j $(parallel --number-of-cores) \
+	time make -j $(nproc) \
 		USE_LIBPCRE=Y \
                 LIBPCREDIR=$HOME/g/pcre2/inst \
                 CFLAGS="-O0 -g" \
@@ -33,7 +33,7 @@ make_it() {
 
 git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
 make_it all man
-(cd t && prove -j $(parallel --number-of-cores) $(cat /tmp/git.build-tests))
+(cd t && prove -j $(nproc) $(cat /tmp/git.build-tests))
 make_it install install-man
-(cd t && prove -j $(parallel --number-of-cores) t[0-9]*.sh)
+(cd t && prove -j $(nproc) t[0-9]*.sh)
 git --no-pager shortlog @{u}..
