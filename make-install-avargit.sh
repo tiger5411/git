@@ -3,10 +3,17 @@ set -e
 set -x
 
 cd ~/g/git.build
-git checkout build-master || git checkout -b build-master -t origin/master
-git merge --abort || :
-git reset --hard @{u}
 
+reset_it() {
+        git reset --hard @{u}
+        git merge --abort || :
+}
+
+reset_it
+git checkout build-master || git checkout -b build-master -t origin/master
+
+# If we've got a previous resolution, the merge --continue will
+# continue the merge. TODO: make it support --no-edit
 git merge \
     --no-edit \
     avar/makefile-objs-targets-3 \
@@ -19,7 +26,9 @@ git merge \
     avar/commit-graph-usage \
     avar/pcre2-memory-allocation-fixes-2 \
     avar/worktree-add-orphan \
-    avar/use-tagOpt-not-tagopt
+    avar/use-tagOpt-not-tagopt \
+    avar/describe-test-refactoring \
+    || EDITOR=cat git merge --continue
 
 make_it() {
 	time make -j $(nproc) \
