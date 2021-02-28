@@ -12,6 +12,9 @@ reset_it() {
 reset_it
 git checkout build-master || git checkout -b build-master -t origin/master
 
+# TODO:
+#   make-dot-not-HEAD-warn-3
+#
 # If we've got a previous resolution, the merge --continue will
 # continue the merge. TODO: make it support --no-edit
 git merge \
