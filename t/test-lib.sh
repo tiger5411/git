@@ -545,6 +545,7 @@ then
 	say_color_skip=$(tput setaf 4) # blue
 	say_color_warn=$(tput setaf 3) # brown/yellow
 	say_color_pass=$(tput setaf 2) # green
+	say_color_pass_all=$(tput bold; tput setaf 2) # bold green
 	say_color_info=$(tput setaf 6) # cyan
 	say_color_reset=$(tput sgr0)
 	say_color_="" # no formatting for normal text
@@ -673,7 +674,7 @@ test_ok_ () {
 		write_junit_xml_testcase "$*"
 	fi
 	test_success=$(($test_success + 1))
-	say_color_tap "" "ok $test_count - $@"
+	say_color_tap "${verbose:+pass}" "ok $test_count - $@"
 }
 
 test_failure_ () {
