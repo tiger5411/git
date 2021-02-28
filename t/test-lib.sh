@@ -146,9 +146,11 @@ parse_option () {
 	--no-chain-lint)
 		GIT_TEST_CHAIN_LINT=0 ;;
 	-x)
-		trace=t ;;
+		trace=t
+		verbose=t
+		;;
 	-V|--verbose-log)
-		verbose_log=t
+		verbose=t
 		tee=t
 		;;
 	--write-junit-xml)
@@ -233,7 +235,7 @@ then
 	test -z "$verbose" && verbose_only="$valgrind_only"
 elif test -n "$valgrind"
 then
-	test -z "$verbose_log" && verbose=t
+	verbose=t
 fi
 
 if test -n "$stress"
@@ -364,9 +366,22 @@ then
 	(
 		GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1
 		echo $? >"$TEST_RESULTS_BASE.exit"
-	) | tee -a "$GIT_TEST_TEE_OUTPUT_FILE"
+	) | "$GIT_BUILD_DIR"/t/helper/test-tool tee \
+		--tap --prefix="GIT_TEST_TEE_STARTED " \
+		--escape-stdout ${HARNESS_ACTIVE+--escape-file} \
+		"$GIT_TEST_TEE_OUTPUT_FILE"
 	test "$(cat "$TEST_RESULTS_BASE.exit")" = 0
 	exit
+elif test -n "$verbose" -a -n "$HARNESS_ACTIVE"
+then
+	ret=
+	(
+		GIT_TEST_TEE_STARTED=done ${TEST_SHELL_PATH} "$0" "$@" 2>&1
+		ret=$?
+	) | "$GIT_BUILD_DIR"/t/helper/test-tool tee \
+		--tap --prefix="GIT_TEST_TEE_STARTED " \
+		--escape-stdout
+	exit $ret
 fi
 
 if test -n "$trace" && test -n "$test_untraceable"
@@ -391,10 +406,6 @@ then
 		echo >&2 "warning: ignoring -x; '$0' is untraceable without BASH_XTRACEFD"
 		trace=
 	fi
-fi
-if test -n "$trace" && test -z "$verbose_log"
-then
-	verbose=t
 fi
 
 # For repeatability, reset the environment to known value.
@@ -569,7 +580,7 @@ say_color_tap() {
 	test "$#" = 2 ||
 	BUG "not 2 parameters to say_color_tap"
 
-	say_color "$1" "$2"
+	say_color "$1" "${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }$2"
 }
 
 TERM=dumb
@@ -589,16 +600,6 @@ BUG () {
 say () {
 	say_color info "$*"
 }
-
-if test -n "$HARNESS_ACTIVE"
-then
-	if test "$verbose" = t || test -n "$verbose_only"
-	then
-		printf 'Bail out! %s\n' \
-		 'verbose mode forbidden under TAP harness; try --verbose-log'
-		exit 1
-	fi
-fi
 
 test "${test_description}" != "" ||
 error "Test script did not set test_description."
@@ -887,9 +888,7 @@ maybe_setup_valgrind () {
 
 trace_level_=0
 want_trace () {
-	test "$trace" = t && {
-		test "$verbose" = t || test "$verbose_log" = t
-	}
+	test "$trace" = t && test "$verbose" = t
 }
 
 # This is a separate function because some tests use

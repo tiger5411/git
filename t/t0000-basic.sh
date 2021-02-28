@@ -76,6 +76,14 @@ _run_sub_test_lib_test_common () {
 		# this variable, so we need a stable setting under which to run
 		# the sub-test.
 		sane_unset HARNESS_ACTIVE &&
+
+		# When under --tee pretend we're not as far as
+		# emitting the "GIT_TEST_TEE_STARTED " TAP sanity
+		# prefix goes. This means we promise not to emit
+		# invalid TAP, least this test fails under --tee under
+		# prove(1).
+		sane_unset GIT_TEST_TEE_STARTED &&
+
 		cd "$name" &&
 		write_script "$name.sh" "$TEST_SHELL_PATH" <<-EOF &&
 		test_description='$descr (run in sub test-lib)
