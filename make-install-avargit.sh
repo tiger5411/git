@@ -16,6 +16,7 @@ git checkout build-master || git checkout -b build-master -t origin/master
 # continue the merge. TODO: make it support --no-edit
 git merge \
     --no-edit \
+    avar/fsck-doc \
     avar/makefile-objs-targets-3 \
     avar/post-rm-gettext-poison \
     avar/fsck-h-interface \
