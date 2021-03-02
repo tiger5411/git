@@ -1195,11 +1195,20 @@ PTHREAD_CFLAGS =
 SPARSE_FLAGS ?=
 SP_EXTRA_FLAGS = -Wno-universal-initializer
 
-# For the 'coccicheck' target; setting SPATCH_BATCH_SIZE higher will
-# usually result in less CPU usage at the cost of higher peak memory.
-# Setting it to 0 will feed all files in a single spatch invocation.
-SPATCH_FLAGS = --all-includes --patch .
-SPATCH_BATCH_SIZE = 1
+SPATCH_FLAGS = --no-includes --patch .
+# For the 'coccicheck' target; Tweaking SPATCH_XARGS_FLAGS is
+# generally not neccesary with a top-level -jN.
+#
+# To get concurrency when targeting a single
+# contrib/coccinelle/%.patch use e.g. "-P" if your xargs(1) supports
+# it:
+#
+#    make contrib/coccinelle/strbuf.cocci.patch SPATCH_XARGS_FLAGS="-P 8 -n 64"
+#
+# Or a combination of the two:
+#
+#    make -j4 coccicheck SPATCH_XARGS_FLAGS="-P 2 -n 64"
+SPATCH_XARGS_FLAGS =
 
 include config.mak.uname
 -include config.mak.autogen
@@ -2852,24 +2861,18 @@ check: config-list.h command-list.h
 		exit 1; \
 	fi
 
-FOUND_C_SOURCES = $(filter %.c,$(shell $(FIND_SOURCE_FILES)))
+FOUND_C_SOURCES = $(filter %.c %.h,$(shell $(FIND_SOURCE_FILES)))
 COCCI_SOURCES = $(filter-out $(THIRD_PARTY_SOURCES),$(FOUND_C_SOURCES))
 
 %.cocci.patch: %.cocci $(COCCI_SOURCES)
 	$(QUIET_SPATCH) \
-	if test $(SPATCH_BATCH_SIZE) = 0; then \
-		limit=; \
-	else \
-		limit='-n $(SPATCH_BATCH_SIZE)'; \
-	fi; \
-	if ! echo $(COCCI_SOURCES) | xargs $$limit \
-		$(SPATCH) --sp-file $< $(SPATCH_FLAGS) \
-		>$@+ 2>$@.log; \
-	then \
-		cat $@.log; \
-		exit 1; \
-	fi; \
-	mv $@+ $@; \
+	$(RM) $@+ $@.log && \
+	echo $(COCCI_SOURCES) | \
+		xargs \
+			-n 32 $(SPATCH_XARGS_FLAGS) \
+			$(SPATCH) --sp-file $< $(SPATCH_FLAGS) \
+		>>$@+ 2>>$@.log && \
+	mv $@+ $@ && \
 	if test -s $@; \
 	then \
 		echo '    ' SPATCH result: $@; \
