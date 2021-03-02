@@ -33,6 +33,7 @@ git merge \
     avar/use-tagOpt-not-tagopt \
     avar/describe-test-refactoring \
     avar/support-test-verbose-under-prove \
+    avar/fix-coccicheck \
     || EDITOR=cat git merge --continue
 
 make_it() {
