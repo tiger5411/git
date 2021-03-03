@@ -45,7 +45,7 @@ struct tree_desc {
 static inline const struct object_id *tree_entry_extract(struct tree_desc *desc, const char **pathp, unsigned short *modep)
 {
 	*pathp = desc->entry.path;
-	*modep = desc->entry.mode;
+	*modep = canon_mode(desc->entry.mode);
 	return &desc->entry.oid;
 }
 
