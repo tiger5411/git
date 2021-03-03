@@ -413,11 +413,6 @@ static int fsck_walk_tree(struct tree *tree, void *data, struct fsck_options *op
 						     name, entry.path);
 			result = options->walk(obj, OBJ_BLOB, data, options);
 		}
-		else {
-			result = error("in tree %s: entry %s has bad mode %.6o",
-				       fsck_describe_object(options, &tree->object.oid),
-				       entry.path, entry.mode);
-		}
 		if (result < 0)
 			return result;
 		if (!res)
