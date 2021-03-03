@@ -45,12 +45,15 @@ struct fsck_options {
 
 #define FSCK_OPTIONS_COMMON \
 	.walk = NULL, \
-	.error_func = fsck_error_function, \
 	.msg_type = NULL, \
 	.skiplist = OIDSET_INIT, \
 	.object_names = NULL,
-#define FSCK_OPTIONS_DEFAULT	{ .strict = 0, FSCK_OPTIONS_COMMON }
-#define FSCK_OPTIONS_STRICT	{ .strict = 1, FSCK_OPTIONS_COMMON }
+#define FSCK_OPTIONS_COMMON_ERROR_FUNC \
+	FSCK_OPTIONS_COMMON \
+	.error_func = fsck_error_function
+
+#define FSCK_OPTIONS_DEFAULT	{ .strict = 0, FSCK_OPTIONS_COMMON_ERROR_FUNC }
+#define FSCK_OPTIONS_STRICT	{ .strict = 1, FSCK_OPTIONS_COMMON_ERROR_FUNC }
 
 /* descend in all linked child objects
  * the return value is:
