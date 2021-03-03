@@ -723,6 +723,7 @@ static int fsck_tree(const struct object_id *oid,
 		case S_IFLNK:
 		case S_IFDIR:
 		case S_IFGITLINK:
+			fprintf(stderr, "mode = %d\n", mode);
 			break;
 		/*
 		 * This is nonstandard, but we had a few of these
@@ -730,6 +731,7 @@ static int fsck_tree(const struct object_id *oid,
 		 * bits..
 		 */
 		case S_IFREG | 0664:
+			fprintf(stderr, "mode = %d\n", mode);
 			if (!options->strict)
 				break;
 			/* fallthrough */

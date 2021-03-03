@@ -517,6 +517,20 @@ dot-backslash-case .\\\\.GIT\\\\foobar
 dotgit-case-backslash .git\\\\foobar
 EOF
 
+test_expect_success 'fsck notices bad file modes in trees' '
+	(
+		git init bad-mode &&
+		blob=$(echo foo | git -C bad-mode hash-object -w --stdin) &&
+		tab=$(printf "\\t") &&
+		printf "123456 tree $blob\tfile" >tree &&
+		git -C bad-mode mktree <tree &&
+		git fsck 2>err &&
+		cat err &&
+		grep "warning.*\\.git" err
+	)
+'
+
+
 test_expect_success 'fsck allows .Ňit' '
 	(
 		git init not-dotgit &&
