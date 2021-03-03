@@ -409,7 +409,7 @@ static int fsck_obj(struct object *obj, void *buffer, unsigned long size)
 			   describe_object(&obj->oid));
 
 	if (fsck_walk(obj, NULL, &fsck_obj_options))
-		objerror(obj, _("broken links"));
+		objerror(obj, _("walk aborted"));
 	err = fsck_object(obj, buffer, size, &fsck_obj_options);
 	if (err)
 		goto out;
