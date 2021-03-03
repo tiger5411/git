@@ -43,8 +43,22 @@ struct fsck_options {
 	kh_oid_map_t *object_names;
 };
 
-#define FSCK_OPTIONS_DEFAULT { NULL, fsck_error_function, 0, NULL, OIDSET_INIT, NULL }
-#define FSCK_OPTIONS_STRICT { NULL, fsck_error_function, 1, NULL, OIDSET_INIT, NULL }
+#define FSCK_OPTIONS_DEFAULT { \
+	.walk = NULL, \
+	.error_func = fsck_error_function, \
+	.strict = 0, \
+	.msg_type = NULL, \
+	.skiplist = OIDSET_INIT, \
+	.object_names = NULL, \
+}
+#define FSCK_OPTIONS_STRICT { \
+	.walk = NULL, \
+	.error_func = fsck_error_function, \
+	.strict = 1, \
+	.msg_type = NULL, \
+	.skiplist = OIDSET_INIT, \
+	.object_names = NULL, \
+}
 
 /* descend in all linked child objects
  * the return value is:
