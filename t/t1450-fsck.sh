@@ -517,6 +517,27 @@ dot-backslash-case .\\\\.GIT\\\\foobar
 dotgit-case-backslash .git\\\\foobar
 EOF
 
+while read mode
+do
+	test_expect_success 'fsck notices bad file modes in trees' '
+		test_when_finished "rm -rf bad-mode" &&
+		git init bad-mode &&
+		hex_sha1=$(echo foo | git -C bad-mode hash-object --stdin -w) &&
+		bin_sha1=$(echo $hex_sha1 | hex2oct) &&
+		printf "$mode foo\0$bin_sha1" >broken-tree &&
+		tree=$(git -C bad-mode hash-object -w --literally -t tree ../broken-tree) &&
+		test_must_fail git -C bad-mode fsck 2>err &&
+		grep "^warning in tree $tree: badFilemode:" err &&
+		git -C bad-mode cat-file -p $tree >cat-file &&
+		grep "^$mode blob " cat-file
+	'
+done <<--EOF
+1
+2
+1234567
+EOF
+
+
 test_expect_success 'fsck allows .Ňit' '
 	(
 		git init not-dotgit &&
