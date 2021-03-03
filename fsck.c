@@ -1214,11 +1214,6 @@ int fsck_error_function(struct fsck_options *o,
 	return 1;
 }
 
-void register_found_gitmodules(struct fsck_options *options, const struct object_id *oid)
-{
-	oidset_insert(&options->gitmodules_found, oid);
-}
-
 int fsck_finish(struct fsck_options *options)
 {
 	int ret = 0;
