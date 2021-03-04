@@ -754,7 +754,7 @@ static void traverse_tree_submodules(struct repository *r,
 		else
 			tree_path = xstrdup(name_entry->path);
 
-		if (S_ISGITLINK(name_entry->mode) &&
+		if (name_entry->object_type == OBJ_COMMIT &&
 		    is_tree_submodule_active(r, root_tree, tree_path)) {
 			st_entry = xmalloc(sizeof(*st_entry));
 			st_entry->name_entry = xmalloc(sizeof(*st_entry->name_entry));
@@ -769,7 +769,7 @@ static void traverse_tree_submodules(struct repository *r,
 			ALLOC_GROW(out->entries, out->entry_nr + 1,
 				   out->entry_alloc);
 			out->entries[out->entry_nr++] = *st_entry;
-		} else if (S_ISDIR(name_entry->mode))
+		} else if (name_entry->object_type == OBJ_TREE)
 			traverse_tree_submodules(r, root_tree, tree_path,
 						 &name_entry->oid, out);
 		free(tree_path);
