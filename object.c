@@ -35,7 +35,7 @@ const char *type_name(unsigned int type)
 	return object_type_strings[type];
 }
 
-int type_from_string_gently(const char *str, ssize_t len, int gentle)
+enum object_type type_from_string_gently(const char *str, ssize_t len, int gentle)
 {
 	int i;
 
@@ -48,7 +48,7 @@ int type_from_string_gently(const char *str, ssize_t len, int gentle)
 			return i;
 
 	if (gentle)
-		return -1;
+		return OBJ_BAD;
 
 	die(_("invalid object type \"%s\""), str);
 }

@@ -918,7 +918,7 @@ static int fsck_tag(const struct object_id *oid, const char *buffer,
 		    unsigned long size, struct fsck_options *options)
 {
 	struct object_id tagged_oid;
-	int tagged_type;
+	enum object_type tagged_type;
 	return fsck_tag_standalone(oid, buffer, size, options, &tagged_oid,
 				   &tagged_type);
 }
@@ -926,7 +926,7 @@ static int fsck_tag(const struct object_id *oid, const char *buffer,
 int fsck_tag_standalone(const struct object_id *oid, const char *buffer,
 			unsigned long size, struct fsck_options *options,
 			struct object_id *tagged_oid,
-			int *tagged_type)
+			enum object_type *tagged_type)
 {
 	int ret = 0;
 	char *eol;

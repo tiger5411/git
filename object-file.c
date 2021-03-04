@@ -1299,7 +1299,8 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 {
 	const char *type_buf = hdr;
 	unsigned long size;
-	int type, type_len = 0;
+	enum object_type type;
+	int type_len = 0;
 
 	/*
 	 * The type can be of any size but is followed by
@@ -1323,8 +1324,8 @@ static int parse_loose_header_extended(const char *hdr, struct object_info *oi,
 	 * option.
 	 */
 	if ((flags & OBJECT_INFO_ALLOW_UNKNOWN_TYPE) && (type < 0))
-		type = 0;
-	else if (type < 0)
+		type = OBJ_NONE;
+	else if (type == OBJ_BAD)
 		die(_("invalid object type"));
 	if (oi->typep)
 		*oi->typep = type;
