@@ -3122,9 +3122,9 @@ static void print_ls(int mode, const unsigned char *hash, const char *path)
 
 	/* See show_tree(). */
 	const char *type =
-		S_ISGITLINK(mode) ? commit_type :
-		S_ISDIR(mode) ? tree_type :
-		blob_type;
+		S_ISGITLINK(mode) ? type_name(OBJ_COMMIT) :
+		S_ISDIR(mode) ? type_name(OBJ_TREE) :
+		type_name(OBJ_BLOB);
 
 	if (!mode) {
 		/* missing SP path LF */
