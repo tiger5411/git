@@ -1003,7 +1003,7 @@ int check_object_signature(struct repository *r, const struct object_id *oid,
 	int hdrlen;
 
 	if (map) {
-		hash_object_file(r->hash_algo, map, size, type, &real_oid);
+		hash_object_file(r->hash_algo, map, size, object_type, &real_oid);
 		return !oideq(oid, &real_oid) ? -1 : 0;
 	}
 
@@ -1610,7 +1610,7 @@ int pretend_object_file(void *buf, unsigned long len, enum object_type type,
 {
 	struct cached_object *co;
 
-	hash_object_file(the_hash_algo, buf, len, type_name(type), oid);
+	hash_object_file(the_hash_algo, buf, len, type, oid);
 	if (has_object_file_with_flags(oid, OBJECT_INFO_QUICK | OBJECT_INFO_SKIP_FETCH_OBJECT) ||
 	    find_cached_object(oid))
 		return 0;
@@ -1784,12 +1784,12 @@ static int write_buffer(int fd, const void *buf, size_t len)
 }
 
 int hash_object_file(const struct git_hash_algo *algo, const void *buf,
-		     unsigned long len, const char *type,
+		     unsigned long len, enum object_type object_type,
 		     struct object_id *oid)
 {
 	char hdr[MAX_HEADER_LEN];
 	int hdrlen = sizeof(hdr);
-	write_object_file_prepare(algo, buf, len, type, oid, hdr, &hdrlen);
+	write_object_file_prepare(algo, buf, len, object_type, oid, hdr, &hdrlen);
 	return 0;
 }
 

@@ -206,7 +206,7 @@ static inline void *repo_read_object_file(struct repository *r,
 int oid_object_info(struct repository *r, const struct object_id *, unsigned long *);
 
 int hash_object_file(const struct git_hash_algo *algo, const void *buf,
-		     unsigned long len, const char *type,
+		     unsigned long len, enum object_type object_type,
 		     struct object_id *oid);
 
 int write_object_file(const void *buf, unsigned long len,
