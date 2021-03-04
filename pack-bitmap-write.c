@@ -361,7 +361,7 @@ static int fill_bitmap_tree(struct bitmap *bitmap,
 	init_tree_desc(&desc, tree->buffer, tree->size);
 
 	while (tree_entry(&desc, &entry)) {
-		switch (object_type(entry.mode)) {
+		switch (entry.object_type) {
 		case OBJ_TREE:
 			if (fill_bitmap_tree(bitmap,
 					     lookup_tree(the_repository, &entry.oid)) < 0)
@@ -373,9 +373,11 @@ static int fill_bitmap_tree(struct bitmap *bitmap,
 				return -1;
 			bitmap_set(bitmap, pos);
 			break;
-		default:
-			/* Gitlink, etc; not reachable */
+		case OBJ_COMMIT:
+			/* submodule commit - not in this repository */
 			break;
+		default:
+			BUG("unreachable");
 		}
 	}
 
