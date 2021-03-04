@@ -1948,7 +1948,7 @@ int write_object_file(const void *buf, unsigned long len, enum object_type objec
 	/* Normally if we have it in the pack then we do not bother writing
 	 * it out into .git/objects/??/?{38} file.
 	 */
-	write_object_file_prepare(the_hash_algo, buf, len, type, oid, hdr,
+	write_object_file_prepare(the_hash_algo, buf, len, object_type, oid, hdr,
 				  &hdrlen);
 	if (freshen_packed_object(oid) || freshen_loose_object(oid))
 		return 0;
@@ -1965,7 +1965,7 @@ int hash_object_file_literally(const void *buf, unsigned long len,
 	/* type string, SP, %lu of the length plus NUL must fit this */
 	hdrlen = strlen(type) + MAX_HEADER_LEN;
 	header = xmalloc(hdrlen);
-	write_object_file_prepare(the_hash_algo, buf, len, type, oid, header,
+	write_object_file_prepare(the_hash_algo, buf, len, object_type, oid, header,
 				  &hdrlen);
 
 	if (!(flags & HASH_WRITE_OBJECT))
