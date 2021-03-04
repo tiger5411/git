@@ -1283,7 +1283,7 @@ int unpack_loose_header(git_zstream *stream, unsigned char *map, unsigned long m
 int parse_loose_header(const char *hdr, unsigned long *sizep);
 
 int check_object_signature(struct repository *r, const struct object_id *oid,
-			   void *buf, unsigned long size, const char *type);
+			   void *buf, unsigned long size, enum object_type object_type);
 
 int finalize_object_file(const char *tmpfile, const char *filename);
 
