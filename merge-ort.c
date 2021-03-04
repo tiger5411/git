@@ -903,6 +903,8 @@ static void add_pair(struct merge_options *opt,
 	struct diff_filespec *one, *two;
 	struct rename_info *renames = &opt->priv->renames;
 	int names_idx = is_add ? side : 0;
+	const struct object_id *oid = &names[names_idx].oid;
+	unsigned int mode = names[names_idx].mode;
 
 	if (is_add) {
 		assert(match_mask == 0 || match_mask == 6);
@@ -953,8 +955,7 @@ static void add_pair(struct merge_options *opt,
 
 	one = pool_alloc_filespec(&opt->priv->pool, pathname);
 	two = pool_alloc_filespec(&opt->priv->pool, pathname);
-	fill_filespec(is_add ? two : one,
-		      &names[names_idx].oid, 1, names[names_idx].mode);
+	fill_filespec(is_add ? two : one, oid, 1, mode);
 	pool_diff_queue(&opt->priv->pool, &renames->pairs[side], one, two);
 }
 
