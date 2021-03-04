@@ -1718,10 +1718,11 @@ void *read_object_with_reference(struct repository *r,
 
 static void write_object_file_prepare(const struct git_hash_algo *algo,
 				      const void *buf, unsigned long len,
-				      const char *type, struct object_id *oid,
+				      enum object_type object_type, struct object_id *oid,
 				      char *hdr, int *hdrlen)
 {
 	git_hash_ctx c;
+	const char *type = type_name(object_type);
 
 	/* Generate the header */
 	*hdrlen = xsnprintf(hdr, *hdrlen, "%s %"PRIuMAX , type, (uintmax_t)len)+1;
@@ -1938,7 +1939,7 @@ static int freshen_packed_object(const struct object_id *oid)
 	return 1;
 }
 
-int write_object_file(const void *buf, unsigned long len, const char *type,
+int write_object_file(const void *buf, unsigned long len, enum object_type object_type,
 		      struct object_id *oid)
 {
 	char hdr[MAX_HEADER_LEN];
@@ -2085,7 +2086,7 @@ static int index_mem(struct index_state *istate,
 	}
 
 	if (write_object)
-		ret = write_object_file(buf, size, type_name(type), oid);
+		ret = write_object_file(buf, size, type, oid);
 	else
 		ret = hash_object_file(the_hash_algo, buf, size,
 				       type_name(type), oid);
@@ -2111,7 +2112,7 @@ static int index_stream_convert_blob(struct index_state *istate,
 				 get_conv_flags(flags));
 
 	if (write_object)
-		ret = write_object_file(sbuf.buf, sbuf.len, type_name(OBJ_BLOB),
+		ret = write_object_file(sbuf.buf, sbuf.len, OBJ_BLOB,
 					oid);
 	else
 		ret = hash_object_file(the_hash_algo, sbuf.buf, sbuf.len,
@@ -2234,8 +2235,8 @@ int index_path(struct index_state *istate, struct object_id *oid,
 			return error_errno("readlink(\"%s\")", path);
 		if (!(flags & HASH_WRITE_OBJECT))
 			hash_object_file(the_hash_algo, sb.buf, sb.len,
-					 blob_type, oid);
-		else if (write_object_file(sb.buf, sb.len, blob_type, oid))
+					 OBJ_BLOB, oid);
+		else if (write_object_file(sb.buf, sb.len, OBJ_BLOB, oid))
 			rc = error(_("%s: failed to insert into database"), path);
 		strbuf_release(&sb);
 		break;

@@ -416,8 +416,8 @@ static int update_one(struct cache_tree *it,
 			to_invalidate = 1;
 	} else if (dryrun) {
 		hash_object_file(the_hash_algo, buffer.buf, buffer.len,
-				 tree_type, &it->oid);
-	} else if (write_object_file(buffer.buf, buffer.len, tree_type,
+				 OBJ_TREE, &it->oid);
+	} else if (write_object_file(buffer.buf, buffer.len, OBJ_TREE,
 				     &it->oid)) {
 		strbuf_release(&buffer);
 		return -1;
