@@ -16,11 +16,13 @@
 static int compare_paths(const struct combine_diff_path *one,
 			  const struct diff_filespec *two)
 {
-	if (!S_ISDIR(one->mode) && !S_ISDIR(two->mode))
+	int isdir_one = S_ISDIR(one->mode);
+	int isdir_two = S_ISDIR(two->mode);
+	if (!isdir_one && !isdir_two)
 		return strcmp(one->path, two->path);
 
-	return base_name_compare(one->path, strlen(one->path), one->mode,
-				 two->path, strlen(two->path), two->mode);
+	return base_name_compare(one->path, strlen(one->path), isdir_one,
+				 two->path, strlen(two->path), isdir_two);
 }
 
 static int filename_changed(char status)
