@@ -668,14 +668,15 @@ static void wt_status_collect_changes_index(struct wt_status *s)
 
 static int add_file_to_list(const struct object_id *oid,
 			    struct strbuf *base, const char *path,
-			    unsigned int mode, void *context)
+			    enum object_type type, unsigned int mode,
+			    void *context)
 {
 	struct string_list_item *it;
 	struct wt_status_change_data *d;
 	struct wt_status *s = context;
 	struct strbuf full_name = STRBUF_INIT;
 
-	if (S_ISDIR(mode))
+	if (type == OBJ_TREE)
 		return READ_TREE_RECURSIVE;
 
 	strbuf_add(&full_name, base->buf, base->len);
