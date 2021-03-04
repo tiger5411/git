@@ -2089,7 +2089,7 @@ static int index_mem(struct index_state *istate,
 		ret = write_object_file(buf, size, type, oid);
 	else
 		ret = hash_object_file(the_hash_algo, buf, size,
-				       type_name(type), oid);
+				       type, oid);
 	if (re_allocated)
 		free(buf);
 	return ret;
@@ -2116,7 +2116,7 @@ static int index_stream_convert_blob(struct index_state *istate,
 					oid);
 	else
 		ret = hash_object_file(the_hash_algo, sbuf.buf, sbuf.len,
-				       type_name(OBJ_BLOB), oid);
+				       OBJ_BLOB, oid);
 	strbuf_release(&sbuf);
 	return ret;
 }
