@@ -80,7 +80,7 @@ int cmd_mktag(int argc, const char **argv, const char *prefix)
 	};
 	struct strbuf buf = STRBUF_INIT;
 	struct object_id tagged_oid;
-	int tagged_type;
+	enum object_type tagged_type;
 	struct object_id result;
 
 	argc = parse_options(argc, argv, NULL,
