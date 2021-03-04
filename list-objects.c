@@ -128,6 +128,9 @@ static void process_tree_contents(struct traversal_context *ctx,
 	init_tree_desc(&desc, tree->buffer, tree->size);
 
 	while (tree_entry(&desc, &entry)) {
+		struct tree *t;
+		struct blob *b;
+
 		if (match != all_entries_interesting) {
 			match = tree_entry_interesting(ctx->revs->repo->index,
 						       &entry, base, 0,
@@ -138,8 +141,9 @@ static void process_tree_contents(struct traversal_context *ctx,
 				continue;
 		}
 
-		if (S_ISDIR(entry.mode)) {
-			struct tree *t = lookup_tree(ctx->revs->repo, &entry.oid);
+		switch (entry.object_type) {
+		case OBJ_TREE:
+			t = lookup_tree(ctx->revs->repo, &entry.oid);
 			if (!t) {
 				die(_("entry '%s' in tree %s has tree mode, "
 				      "but is not a tree"),
@@ -147,12 +151,13 @@ static void process_tree_contents(struct traversal_context *ctx,
 			}
 			t->object.flags |= NOT_USER_GIVEN;
 			process_tree(ctx, t, base, entry.path);
-		}
-		else if (S_ISGITLINK(entry.mode))
+			break;
+		case OBJ_COMMIT:
 			process_gitlink(ctx, entry.oid.hash,
 					base, entry.path);
-		else {
-			struct blob *b = lookup_blob(ctx->revs->repo, &entry.oid);
+			break;
+		case OBJ_BLOB:
+			b = lookup_blob(ctx->revs->repo, &entry.oid);
 			if (!b) {
 				die(_("entry '%s' in tree %s has blob mode, "
 				      "but is not a blob"),
@@ -160,6 +165,9 @@ static void process_tree_contents(struct traversal_context *ctx,
 			}
 			b->object.flags |= NOT_USER_GIVEN;
 			process_blob(ctx, b, base, entry.path);
+			break;
+		default:
+			BUG("unreachable");
 		}
 	}
 }
