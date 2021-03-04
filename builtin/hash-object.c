@@ -41,8 +41,7 @@ static void hash_fd(int fd, enum object_type type, const char *path,
 	if (fstat(fd, &st) < 0 ||
 	    (literally
 	     ? hash_literally(&oid, fd, type, flags)
-	     : index_fd(the_repository->index, &oid, fd, &st,
-			type_from_string(type), path, flags)))
+	     : index_fd(the_repository->index, &oid, fd, &st, type, path, flags)))
 		die((flags & HASH_WRITE_OBJECT)
 		    ? "Unable to add %s to database"
 		    : "Unable to hash %s", path);
