@@ -101,11 +101,11 @@ static void verify_working_tree_path(struct repository *r,
 	for (parents = work_tree->parents; parents; parents = parents->next) {
 		const struct object_id *commit_oid = &parents->item->object.oid;
 		struct object_id blob_oid;
-		unsigned short mode;
-		int ret = get_tree_entry_mode(r, commit_oid, path, &blob_oid,
-					      &mode);
+		enum object_type object_type;
+		int ret = get_tree_entry_type(r, commit_oid, path, &blob_oid,
+					      &object_type);
 
-		if (!ret && oid_object_info(r, &blob_oid, NULL) == OBJ_BLOB)
+		if (!ret && object_type == OBJ_BLOB)
 			return;
 	}
 
