@@ -134,6 +134,22 @@ int parse_opt_object_name(const struct option *opt, const char *arg, int unset)
 	return 0;
 }
 
+int parse_opt_object_type(const struct option *opt, const char *arg, int unset)
+{
+	enum object_type *target = opt->value;
+
+	if (unset) {
+		*target = OBJ_NONE;
+		return 0;
+	}
+	if (!arg)
+		return -1;
+	*target = type_from_string_gently(arg, -1, 1);
+	if (*target == OBJ_BAD)
+		return error(_("malformed object type '%s'"), arg);
+	return 0;
+}
+
 int parse_opt_object_id(const struct option *opt, const char *arg, int unset)
 {
 	struct object_id oid;

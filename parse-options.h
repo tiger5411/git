@@ -177,6 +177,8 @@ struct option {
 #define OPT_STRING_LIST(s, l, v, a, h) \
 				    { OPTION_CALLBACK, (s), (l), (v), (a), \
 				      (h), 0, &parse_opt_string_list }
+#define OPT_OBJECT_TYPE(s, l, v, a, h) { OPTION_CALLBACK, (s), (l), (v), (a), \
+					(h), PARSE_OPT_NONEG, parse_opt_object_type, 0 }
 #define OPT_UYN(s, l, v, h)         { OPTION_CALLBACK, (s), (l), (v), NULL, \
 				      (h), PARSE_OPT_NOARG, &parse_opt_tertiary }
 #define OPT_EXPIRY_DATE(s, l, v, h) \
@@ -292,6 +294,8 @@ int parse_opt_verbosity_cb(const struct option *, const char *, int);
 int parse_opt_object_name(const struct option *, const char *, int);
 /* value is struct object_id* */
 int parse_opt_object_id(const struct option *, const char *, int);
+/* value is enum object_type* */
+int parse_opt_object_type(const struct option *, const char *, int);
 int parse_opt_commits(const struct option *, const char *, int);
 int parse_opt_commit(const struct option *, const char *, int);
 int parse_opt_tertiary(const struct option *, const char *, int);
