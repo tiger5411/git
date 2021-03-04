@@ -168,13 +168,13 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 	type[nl - bufptr] = '\0';
 	bufptr = nl + 1;
 
-	if (!strcmp(type, blob_type)) {
+	if (!strcmp(type, type_name(OBJ_BLOB))) {
 		item->tagged = (struct object *)lookup_blob(r, &oid);
-	} else if (!strcmp(type, tree_type)) {
+	} else if (!strcmp(type, type_name(OBJ_TREE))) {
 		item->tagged = (struct object *)lookup_tree(r, &oid);
-	} else if (!strcmp(type, commit_type)) {
+	} else if (!strcmp(type, type_name(OBJ_COMMIT))) {
 		item->tagged = (struct object *)lookup_commit(r, &oid);
-	} else if (!strcmp(type, tag_type)) {
+	} else if (!strcmp(type, type_name(OBJ_TAG))) {
 		item->tagged = (struct object *)lookup_tag(r, &oid);
 	} else {
 		return error("unknown tag type '%s' in %s",
