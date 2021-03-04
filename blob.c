@@ -3,8 +3,6 @@
 #include "repository.h"
 #include "alloc.h"
 
-const char *blob_type = "blob";
-
 struct blob *lookup_blob(struct repository *r, const struct object_id *oid)
 {
 	struct object *obj = lookup_object(r, oid);

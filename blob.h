@@ -3,8 +3,6 @@
 
 #include "object.h"
 
-extern const char *blob_type;
-
 struct blob {
 	struct object object;
 };

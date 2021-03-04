@@ -3,8 +3,6 @@
 
 #include "object.h"
 
-extern const char *tag_type;
-
 struct tag {
 	struct object object;
 	struct object *tagged;

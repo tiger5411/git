@@ -26,8 +26,6 @@ static struct commit_extra_header *read_commit_extra_header_lines(const char *bu
 
 int save_commit_buffer = 1;
 
-const char *commit_type = "commit";
-
 struct commit *lookup_commit_reference_gently(struct repository *r,
 		const struct object_id *oid, int quiet)
 {

@@ -9,8 +9,6 @@
 #include "tree-walk.h"
 #include "repository.h"
 
-const char *tree_type = "tree";
-
 static int read_one_entry_opt(struct index_state *istate,
 			      const struct object_id *oid,
 			      const char *base, int baselen,

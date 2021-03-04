@@ -8,8 +8,6 @@
 #include "gpg-interface.h"
 #include "packfile.h"
 
-const char *tag_type = "tag";
-
 static int run_gpg_verify(const char *buf, unsigned long size, unsigned flags)
 {
 	struct signature_check sigc;

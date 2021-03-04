@@ -41,7 +41,6 @@ struct commit {
 };
 
 extern int save_commit_buffer;
-extern const char *commit_type;
 
 /* While we can decorate any object with a name, it's only used for commits.. */
 struct name_decoration {
