@@ -22,7 +22,7 @@ git merge \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
     avar/post-rm-gettext-poison \
-    avar/fsck-h-interface \
+    avar/fsck-h-interface-2 \
     avar/t4018-diff-hunk-header-regex-tests-3 \
     avar/diff-W-context-2 \
     gitster/jk/rev-list-disk-usage \
@@ -33,7 +33,11 @@ git merge \
     avar/use-tagOpt-not-tagopt \
     avar/describe-test-refactoring \
     avar/support-test-verbose-under-prove \
-    avar/fix-coccicheck \
+    avar/fix-coccicheck-2 \
+    avar/object-api-fsck-misc \
+    avar/fix-tree-mode-fsck \
+    avar/object-api-to-no-string-argument \
+    avar/tree-walk-api-refactor \
     || EDITOR=cat git merge --continue
 
 make_it() {
