@@ -172,11 +172,11 @@ struct traverse_info {
  * You always need a pointer to an appropriate variable to fill in
  * (NULL won't do!). That variable is:
  *
- * get_tree_entry(): unsigned short mode
+ * get_tree_entry_mode(): unsigned short mode
  */
-int get_tree_entry(struct repository *, const struct object_id *, const char *,
-		   struct object_id *,
-		   unsigned short *);
+int get_tree_entry_mode(struct repository *, const struct object_id *, const char *,
+			struct object_id *,
+			unsigned short *);
 
 /**
  * Generate the full pathname of a tree entry based from the root of the
