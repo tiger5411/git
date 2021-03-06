@@ -1,5 +1,4 @@
 #include "cache.h"
-#include "cache-tree.h"
 #include "tree.h"
 #include "object-store.h"
 #include "blob.h"
@@ -94,16 +93,6 @@ int read_tree_recursive(struct repository *r,
 	ret = read_tree_1(r, tree, &sb, stage, pathspec, fn, context);
 	strbuf_release(&sb);
 	return ret;
-}
-
-int cmp_cache_name_compare(const void *a_, const void *b_)
-{
-	const struct cache_entry *ce1, *ce2;
-
-	ce1 = *((const struct cache_entry **)a_);
-	ce2 = *((const struct cache_entry **)b_);
-	return cache_name_stage_compare(ce1->name, ce1->ce_namelen, ce_stage(ce1),
-				  ce2->name, ce2->ce_namelen, ce_stage(ce2));
 }
 
 struct tree *lookup_tree(struct repository *r, const struct object_id *oid)
