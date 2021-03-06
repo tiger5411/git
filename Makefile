@@ -1199,7 +1199,7 @@ SPARSE_FLAGS ?=
 SP_EXTRA_FLAGS = -Wno-universal-initializer
 
 # For the 'coccicheck' target
-SPATCH_FLAGS = --no-includes --patch .
+SPATCH_FLAGS = --all-includes --include-headers-for-types --patch .
 
 # For the 'coccicheck' target; setting SPATCH_BATCH_SIZE higher will
 # usually result in less CPU usage at the cost of higher peak memory.
