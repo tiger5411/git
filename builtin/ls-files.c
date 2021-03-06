@@ -421,14 +421,12 @@ static int get_common_prefix_len(const char *common_prefix)
 }
 
 static int read_one_entry_quick(const struct object_id *oid,
-				struct strbuf *basebuf,
+				struct strbuf *base,
 				const char *pathname,
 				unsigned mode,
 				int stage, void *context)
 {
 	struct index_state *istate = context;
-	const char *base = basebuf->buf;
-	const int baselen = basebuf->len;
 	int len;
 	struct cache_entry *ce;
 
@@ -436,13 +434,13 @@ static int read_one_entry_quick(const struct object_id *oid,
 		return READ_TREE_RECURSIVE;
 
 	len = strlen(pathname);
-	ce = make_empty_cache_entry(istate, baselen + len);
+	ce = make_empty_cache_entry(istate, base->len + len);
 
 	ce->ce_mode = create_ce_mode(mode);
 	ce->ce_flags = create_ce_flags(stage);
-	ce->ce_namelen = baselen + len;
-	memcpy(ce->name, base, baselen);
-	memcpy(ce->name + baselen, pathname, len+1);
+	ce->ce_namelen = base->len + len;
+	memcpy(ce->name, base->buf, base->len);
+	memcpy(ce->name + base->len, pathname, len+1);
 	oidcpy(&ce->oid, oid);
 	return add_index_entry(istate, ce, ADD_CACHE_JUST_APPEND);
 }
