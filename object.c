@@ -162,11 +162,34 @@ void *create_object(struct repository *r, const struct object_id *oid, void *o)
 	return obj;
 }
 
+static const char *object_type_mismatch_msg = N_("object %s is a %s, not a %s");
+
+void oid_is_type_or_die(const struct object_id *oid,
+			const enum object_type got,
+			const enum object_type want)
+{
+	if (got == want)
+		return;
+	die(_(object_type_mismatch_msg), oid_to_hex(oid),
+	    type_name(got), type_name(want));
+}
+
+int oid_is_type_or_error(const struct object_id *oid,
+			 const enum object_type got,
+			 const enum object_type want)
+{
+	if (got == want)
+		return 0;
+	return error(_(object_type_mismatch_msg),
+		     oid_to_hex(oid), type_name(got),
+		     type_name(want));
+}
+
 void *object_as_type(struct object *obj, enum object_type type, int quiet)
 {
-	if (obj->type == type)
+	if (obj->type == type) {
 		return obj;
-	else if (obj->type == OBJ_NONE) {
+	} else if (obj->type == OBJ_NONE) {
 		if (type == OBJ_COMMIT)
 			init_commit_node((struct commit *) obj);
 		else
@@ -175,7 +198,7 @@ void *object_as_type(struct object *obj, enum object_type type, int quiet)
 	}
 	else {
 		if (!quiet)
-			error(_("object %s is a %s, not a %s"),
+			error(_(object_type_mismatch_msg),
 			      oid_to_hex(&obj->oid),
 			      type_name(obj->type), type_name(type));
 		return NULL;
