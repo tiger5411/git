@@ -483,7 +483,7 @@ void overlay_tree_on_index(struct index_state *istate,
 			       PATHSPEC_PREFER_CWD, prefix, matchbuf);
 	} else
 		memset(&pathspec, 0, sizeof(pathspec));
-	if (read_tree_recursive(the_repository, tree, "", 0, 1,
+	if (read_tree_recursive(the_repository, tree, 1,
 				&pathspec, read_one_entry_quick, istate))
 		die("unable to read tree entries %s", tree_name);
 
