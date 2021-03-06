@@ -29,11 +29,11 @@ void free_tree_buffer(struct tree *tree);
 struct tree *parse_tree_indirect(const struct object_id *oid);
 
 #define READ_TREE_RECURSIVE 1
-typedef int (*read_tree_fn_t)(const struct object_id *, struct strbuf *, const char *, unsigned int, int, void *);
+typedef int (*read_tree_fn_t)(const struct object_id *, struct strbuf *, const char *, unsigned int, void *);
 
 int read_tree_recursive(struct repository *r,
 			struct tree *tree,
-			int stage, const struct pathspec *pathspec,
+			const struct pathspec *pathspec,
 			read_tree_fn_t fn, void *context);
 
 #endif /* TREE_H */

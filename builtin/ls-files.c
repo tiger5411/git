@@ -424,7 +424,7 @@ static int read_one_entry_quick(const struct object_id *oid,
 				struct strbuf *base,
 				const char *pathname,
 				unsigned mode,
-				int stage, void *context)
+				void *context)
 {
 	struct index_state *istate = context;
 	int len;
@@ -437,7 +437,7 @@ static int read_one_entry_quick(const struct object_id *oid,
 	ce = make_empty_cache_entry(istate, base->len + len);
 
 	ce->ce_mode = create_ce_mode(mode);
-	ce->ce_flags = create_ce_flags(stage);
+	ce->ce_flags = create_ce_flags(1);
 	ce->ce_namelen = base->len + len;
 	memcpy(ce->name, base->buf, base->len);
 	memcpy(ce->name + base->len, pathname, len+1);
@@ -483,7 +483,7 @@ void overlay_tree_on_index(struct index_state *istate,
 			       PATHSPEC_PREFER_CWD, prefix, matchbuf);
 	} else
 		memset(&pathspec, 0, sizeof(pathspec));
-	if (read_tree_recursive(the_repository, tree, 1,
+	if (read_tree_recursive(the_repository, tree,
 				&pathspec, read_one_entry_quick, istate))
 		die("unable to read tree entries %s", tree_name);
 
