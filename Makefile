@@ -2166,8 +2166,9 @@ git.sp git.s git.o: EXTRA_CPPFLAGS = \
 	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
 
 git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
-		$(filter %.o,$^) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) \
+		$(filter %.o,$^) $(LIBS) && \
+	mv $@+ $@
 
 help.sp help.s help.o: command-list.h
 
@@ -2245,7 +2246,8 @@ git.res: git.rc GIT-VERSION-FILE GIT-PREFIX
 	$(QUIET_RC)$(RC) \
 	  $(join -DMAJOR= -DMINOR= -DMICRO= -DPATCHLEVEL=, $(wordlist 1, 4, \
 	    $(shell echo $(GIT_VERSION) 0 0 0 0 | tr '.a-zA-Z-' ' '))) \
-	  -DGIT_VERSION="\\\"$(GIT_VERSION)\\\"" -i $< -o $@
+	  -DGIT_VERSION="\\\"$(GIT_VERSION)\\\"" -i $< -o $@+ && \
+	mv $@+ $@
 
 # This makes sure we depend on the NO_PERL setting itself.
 $(SCRIPT_PERL_GEN): GIT-BUILD-OPTIONS
@@ -2292,7 +2294,8 @@ GIT-PERL-DEFINES: FORCE
 	@FLAGS='$(PERL_DEFINES)'; \
 	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
 		echo >&2 "    * new perl-specific parameters"; \
-		echo "$$FLAGS" >$@; \
+		echo "$$FLAGS" >$@+; \
+		mv $@+ $@; \
 	    fi
 
 GIT-PERL-HEADER: $(PERL_HEADER_TEMPLATE) GIT-PERL-DEFINES Makefile
@@ -2454,7 +2457,8 @@ $(ASM_OBJ): %.o: %.S GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
 	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 
 %.s: %.c GIT-CFLAGS FORCE
-	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+	$(QUIET_CC)$(CC) -o $@+ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $< && \
+	mv $@+ $@
 
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
 # Take advantage of gcc's on-the-fly dependency generation
@@ -2477,9 +2481,8 @@ endif
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
 all:: compile_commands.json
 compile_commands.json:
-	@$(RM) $@
-	$(QUIET_GEN)sed -e '1s/^/[/' -e '$$s/,$$/]/' $(compdb_dir)/*.o.json > $@+
-	@if test -s $@+; then mv $@+ $@; else $(RM) $@+; fi
+	$(QUIET_GEN)sed -e '1s/^/[/' -e '$$s/,$$/]/' $(compdb_dir)/*.o.json >$@+ && \
+	mv $@+ $@
 endif
 
 exec-cmd.sp exec-cmd.s exec-cmd.o: GIT-PREFIX
@@ -2526,18 +2529,22 @@ compat/nedmalloc/nedmalloc.sp: SP_EXTRA_FLAGS += -Wno-non-pointer-null
 endif
 
 git-%$X: %.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) $(LIBS) && \
+	mv $@+ $@
 
 git-imap-send$X: imap-send.o $(IMAP_SEND_BUILDDEPS) GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(IMAP_SEND_LDFLAGS) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(IMAP_SEND_LDFLAGS) $(LIBS) && \
+	mv $@+ $@
 
 git-http-fetch$X: http.o http-walker.o http-fetch.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(CURL_LIBCURL) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(CURL_LIBCURL) $(LIBS) && \
+	mv $@+ $@
 git-http-push$X: http.o http-push.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS) && \
+	mv $@+ $@
 
 $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 	$(QUIET_LNCP)$(RM) $@ && \
@@ -2546,14 +2553,17 @@ $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 	cp $< $@
 
 $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
-		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) \
+		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS) && \
+	mv $@+ $@
 
 $(LIB_FILE): $(LIB_OBJS)
-	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
+	$(QUIET_AR)$(AR) $(ARFLAGS) $@+ $^ && \
+	mv $@+ $@
 
 $(XDIFF_LIB): $(XDIFF_OBJS)
-	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
+	$(QUIET_AR)$(AR) $(ARFLAGS) $@+ $^&& \
+	mv $@+ $@
 
 export DEFAULT_EDITOR DEFAULT_PAGER
 
@@ -2665,11 +2675,13 @@ perl/build/lib/%.pm: perl/%.pm
 	$(QUIET_GEN)mkdir -p $(dir $@) && \
 	sed -e 's|@@LOCALEDIR@@|$(perl_localedir_SQ)|g' \
 	    -e 's|@@NO_PERL_CPAN_FALLBACKS@@|$(NO_PERL_CPAN_FALLBACKS_SQ)|g' \
-	< $< > $@
+	< $< >$@+ && \
+	mv $@+ $@
 
 perl/build/man/man3/Git.3pm: perl/Git.pm
 	$(QUIET_GEN)mkdir -p $(dir $@) && \
-	pod2man $< $@
+	pod2man $< $@+ && \
+	mv $@+ $@
 
 FIND_SOURCE_FILES = ( \
 	git ls-files \
@@ -2797,7 +2809,8 @@ GIT-PYTHON-VARS: FORCE
 	@VARS='$(TRACK_PYTHON)'; \
 	    if test x"$$VARS" != x"`cat $@ 2>/dev/null`" ; then \
 		echo >&2 "    * new Python interpreter location"; \
-		echo "$$VARS" >$@; \
+		echo "$$VARS" >$@+; \
+		mv $@+ $@; \
             fi
 endif
 
@@ -2809,8 +2822,9 @@ bin-wrappers/%: wrap-for-bin.sh
 	@mkdir -p bin-wrappers
 	$(QUIET_GEN)sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
 	     -e 's|@@BUILD_DIR@@|$(shell pwd)|' \
-	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%$(X),$(@F))$(patsubst git%,$(X),$(filter $(@F),$(BINDIR_PROGRAMS_NEED_X)))|' < $< > $@ && \
-	chmod +x $@
+	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%$(X),$(@F))$(patsubst git%,$(X),$(filter $(@F),$(BINDIR_PROGRAMS_NEED_X)))|' < $< >$@+ && \
+	chmod +x $@+ && \
+	mv $@+ $@
 
 # GNU make supports exporting all variables by "export" without parameters.
 # However, the environment gets quite big, and some programs have problems
@@ -2834,7 +2848,8 @@ perf: all
 t/helper/test-tool$X: $(patsubst %,t/helper/%,$(TEST_BUILTINS_OBJS))
 
 t/helper/test-%$X: t/helper/test-%.o GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) $(filter %.a,$^) $(LIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@+ $(ALL_LDFLAGS) $(filter %.o,$^) $(filter %.a,$^) $(LIBS) && \
+	mv $@+ $@
 
 check-sha1:: t/helper/test-tool$X
 	t/helper/test-sha1.sh
@@ -2857,8 +2872,9 @@ HCO = $(patsubst %.h,%.hco,$(CHK_HDRS))
 HCC = $(HCO:hco=hcc)
 
 %.hcc: %.h
-	@echo '#include "git-compat-util.h"' >$@
-	@echo '#include "$<"' >>$@
+	@echo '#include "git-compat-util.h"' >$@+ && \
+	@echo '#include "$<"' >>$@+ && \
+	mv $@+ $@
 
 $(HCO): %.hco: %.hcc FORCE
 	$(QUIET_HDR)$(CC) $(ALL_CFLAGS) -o /dev/null -c -xc $<
@@ -3333,6 +3349,7 @@ FUZZ_CXXFLAGS ?= $(CFLAGS)
 
 $(FUZZ_PROGRAMS): all
 	$(QUIET_LINK)$(CXX) $(FUZZ_CXXFLAGS) $(LIB_OBJS) $(BUILTIN_OBJS) \
-		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@
+		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@+ && \
+	mv $@+ $@
 
 fuzz-all: $(FUZZ_PROGRAMS)
