@@ -71,12 +71,25 @@ struct commit *create_commit(struct repository *r, const struct object_id *oid)
 	return create_object(r, oid, alloc_commit_node(r));
 }
 
-struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
+struct commit *lookup_commit_type(struct repository *r,
+				  const struct object_id *oid,
+				  enum object_type type)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
 		return create_commit(r, oid);
+	if (type != OBJ_NONE && obj->type != OBJ_NONE) {
+		if (oid_is_type_or_error(oid, OBJ_COMMIT, obj->type)) {
+			obj->type = OBJ_COMMIT;
+			return NULL;
+		}
+	}
 	return object_as_type(obj, OBJ_COMMIT);
+}
+
+struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
+{
+	return lookup_commit_type(r, oid, OBJ_NONE);
 }
 
 struct commit *lookup_commit_reference_by_name(const char *name)
