@@ -14,6 +14,10 @@ git checkout build-master || git checkout -b build-master -t origin/master
 
 # TODO:
 #   make-dot-not-HEAD-warn-3
+#   avar/object-api-to-no-string-argument (TODO: handle -t "some garbage" case)
+#   avar/support-test-verbose-under-prove (TODO: handle the perl tests)
+# Ejected:
+#   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
 # If we've got a previous resolution, the merge --continue will
 # continue the merge. TODO: make it support --no-edit
@@ -22,7 +26,7 @@ git merge \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
     avar/post-rm-gettext-poison \
-    avar/fsck-h-interface-2 \
+    avar/fsck-h-interface-3 \
     avar/t4018-diff-hunk-header-regex-tests-3 \
     avar/diff-W-context-2 \
     gitster/jk/rev-list-disk-usage \
@@ -32,12 +36,13 @@ git merge \
     avar/worktree-add-orphan \
     avar/use-tagOpt-not-tagopt \
     avar/describe-test-refactoring \
-    avar/support-test-verbose-under-prove \
     avar/fix-coccicheck-2 \
-    avar/object-api-fsck-misc \
-    avar/fix-tree-mode-fsck \
-    avar/object-api-to-no-string-argument \
+    avar/object-is-type-error-refactor \
+    avar/nuke-read-tree-api-2 \
     avar/tree-walk-api-refactor \
+    pr-git-973/newren/ort-remainder-v1 \
+    avar/makefile-rename-git-binary-not-in-place \
+    avar/mktag-broken-and-chain-typo \
     || EDITOR=cat git merge --continue
 
 make_it() {
