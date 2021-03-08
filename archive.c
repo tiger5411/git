@@ -107,7 +107,6 @@ struct directory {
 	struct object_id oid;
 	int baselen, len;
 	unsigned mode;
-	int stage;
 	char path[FLEX_ARRAY];
 };
 
@@ -140,7 +139,6 @@ static int check_attr_export_subst(const struct attr_check *check)
 static int write_archive_entry(const struct object_id *oid, const char *base,
 			       int baselen, const char *filename,
 			       unsigned mode,
-			       int stage,
 			       void *context)
 {
 	static struct strbuf path = STRBUF_INIT;
@@ -200,7 +198,6 @@ static int write_archive_entry(const struct object_id *oid, const char *base,
 static void queue_directory(const unsigned char *sha1,
 			    struct strbuf *base, const char *filename,
 			    unsigned mode,
-			    int stage,
 			    struct archiver_context *c)
 {
 	struct directory *d;
@@ -209,7 +206,6 @@ static void queue_directory(const unsigned char *sha1,
 	d->up	   = c->bottom;
 	d->baselen = base->len;
 	d->mode	   = mode;
-	d->stage   = stage;
 	c->bottom  = d;
 	d->len = xsnprintf(d->path, len, "%.*s%s/", (int)base->len, base->buf, filename);
 	hashcpy(d->oid.hash, sha1);
@@ -229,7 +225,6 @@ static int write_directory(struct archiver_context *c)
 		write_archive_entry(&d->oid, d->path, d->baselen,
 				    d->path + d->baselen,
 				    d->mode,
-				    d->stage,
 				    c) != READ_TREE_RECURSIVE;
 	free(d);
 	return ret ? -1 : 0;
@@ -241,7 +236,6 @@ static int queue_or_write_archive_entry(const struct object_id *oid,
 					void *context)
 {
 	struct archiver_context *c = context;
-	int stage = 0;
 
 	while (c->bottom &&
 	       !(base->len >= c->bottom->len &&
@@ -265,7 +259,6 @@ static int queue_or_write_archive_entry(const struct object_id *oid,
 			return 0;
 		queue_directory(oid->hash, base, filename,
 				mode,
-				stage,
 				c);
 		return READ_TREE_RECURSIVE;
 	}
@@ -274,7 +267,6 @@ static int queue_or_write_archive_entry(const struct object_id *oid,
 		return -1;
 	return write_archive_entry(oid, base->buf, base->len, filename,
 				   mode,
-				   stage,
 				   context);
 }
 
