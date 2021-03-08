@@ -21,8 +21,7 @@ git checkout build-master || git checkout -b build-master -t origin/master
 #
 # If we've got a previous resolution, the merge --continue will
 # continue the merge. TODO: make it support --no-edit
-git merge \
-    --no-edit \
+for series in \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
     avar/post-rm-gettext-poison \
@@ -42,8 +41,10 @@ git merge \
     avar/tree-walk-api-refactor \
     pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
-    avar/mktag-broken-and-chain-typo \
-    || EDITOR=cat git merge --continue
+    avar/mktag-broken-and-chain-typo
+do
+	git merge --no-edit $series || EDITOR=cat git merge --continue
+done
 
 make_it() {
 	time make -j $(nproc) \
@@ -61,3 +62,4 @@ make_it all man
 make_it install install-man
 (cd t && prove -j $(nproc) t[0-9]*.sh)
 git --no-pager shortlog @{u}..
+git push avar HEAD:private -f
