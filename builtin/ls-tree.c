@@ -25,7 +25,7 @@ static int chomp_prefix;
 static const char *ls_tree_prefix;
 static const char *format;
 struct show_tree_data {
-	unsigned mode;
+	unsigned raw_mode;
 	enum object_type type;
 	const struct object_id *oid;
 	const char *pathname;
@@ -84,7 +84,7 @@ static size_t expand_show_tree(struct strbuf *sb, const char *start,
 
 	len = end - start + 1;
 	if (skip_prefix(start, "(objectmode)", &p)) {
-		strbuf_addf(sb, "%06o", data->mode);
+		strbuf_addf(sb, "%06o", data->raw_mode);
 	} else if (skip_prefix(start, "(objecttype)", &p)) {
 		strbuf_addstr(sb, type_name(data->type));
 	} else if (skip_prefix(start, "(objectsize:padded)", &p)) {
@@ -143,14 +143,14 @@ static int show_recursive(const char *base, size_t baselen, const char *pathname
 
 static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
 			 const char *pathname, enum object_type type,
-			 unsigned mode, void *context)
+			 unsigned raw_mode, void *context)
 {
 	size_t baselen;
 	int recurse = 0;
 	struct strbuf sb = STRBUF_INIT;
 
 	struct show_tree_data data = {
-		.mode = mode,
+		.raw_mode = raw_mode,
 		.type = type,
 		.oid = oid,
 		.pathname = pathname,
@@ -175,13 +175,13 @@ static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
 
 static int show_tree_common(struct show_tree_data *data, int *recurse,
 			    const struct object_id *oid, struct strbuf *base,
-			    const char *pathname, unsigned mode)
+			    const char *pathname, unsigned raw_mode)
 {
-	enum object_type type = object_type(mode);
+	enum object_type type = object_type(raw_mode);
 	int ret = -1;
 
 	*recurse = 0;
-	data->mode = mode;
+	data->raw_mode = raw_mode;
 	data->type = type;
 	data->oid = oid;
 	data->pathname = pathname;
@@ -213,24 +213,24 @@ static void show_tree_common_default_long(struct strbuf *base,
 
 static int show_tree_default(const struct object_id *oid, struct strbuf *base,
 			     const char *pathname, enum object_type type,
-			     unsigned mode, void *context)
+			     unsigned raw_mode, void *context)
 {
 	int early;
 	int recurse;
 	struct show_tree_data data = { 0 };
 
-	early = show_tree_common(&data, &recurse, oid, base, pathname, mode);
+	early = show_tree_common(&data, &recurse, oid, base, pathname, raw_mode);
 	if (early >= 0)
 		return early;
 
-	printf("%06o %s %s\t", data.mode, type_name(data.type),
+	printf("%06o %s %s\t", data.raw_mode, type_name(data.type),
 	       find_unique_abbrev(data.oid, abbrev));
 	show_tree_common_default_long(base, pathname, data.base->len);
 	return recurse;
 }
 
 static int show_tree_long(const struct object_id *oid, struct strbuf *base,
-			  const char *pathname, enum object_type type, unsigned mode,
+			  const char *pathname, enum object_type type, unsigned raw_mode,
 			  void *context)
 {
 	int early;
@@ -238,7 +238,7 @@ static int show_tree_long(const struct object_id *oid, struct strbuf *base,
 	struct show_tree_data data = { 0 };
 	char size_text[24];
 
-	early = show_tree_common(&data, &recurse, oid, base, pathname, mode);
+	early = show_tree_common(&data, &recurse, oid, base, pathname, raw_mode);
 	if (early >= 0)
 		return early;
 
@@ -253,7 +253,7 @@ static int show_tree_long(const struct object_id *oid, struct strbuf *base,
 		xsnprintf(size_text, sizeof(size_text), "-");
 	}
 
-	printf("%06o %s %s %7s\t", data.mode, type_name(data.type),
+	printf("%06o %s %s %7s\t", data.raw_mode, type_name(data.type),
 	       find_unique_abbrev(data.oid, abbrev), size_text);
 	show_tree_common_default_long(base, pathname, data.base->len);
 	return recurse;
@@ -261,14 +261,14 @@ static int show_tree_long(const struct object_id *oid, struct strbuf *base,
 
 static int show_tree_name_only(const struct object_id *oid, struct strbuf *base,
 			       const char *pathname, enum object_type type,
-			       unsigned mode, void *context)
+			       unsigned raw_mode, void *context)
 {
 	int early;
 	int recurse;
 	const size_t baselen = base->len;
 	struct show_tree_data data = { 0 };
 
-	early = show_tree_common(&data, &recurse, oid, base, pathname, mode);
+	early = show_tree_common(&data, &recurse, oid, base, pathname, raw_mode);
 	if (early >= 0)
 		return early;
 
@@ -282,13 +282,13 @@ static int show_tree_name_only(const struct object_id *oid, struct strbuf *base,
 
 static int show_tree_object(const struct object_id *oid, struct strbuf *base,
 			    const char *pathname, enum object_type type,
-			    unsigned mode, void *context)
+			    unsigned raw_mode, void *context)
 {
 	int early;
 	int recurse;
 	struct show_tree_data data = { 0 };
 
-	early = show_tree_common(&data, &recurse, oid, base, pathname, mode);
+	early = show_tree_common(&data, &recurse, oid, base, pathname, raw_mode);
 	if (early >= 0)
 		return early;
 
@@ -297,29 +297,29 @@ static int show_tree_object(const struct object_id *oid, struct strbuf *base,
 }
 
 struct ls_tree_cmdmode_to_fmt {
-	enum ls_tree_cmdmode mode;
+	enum ls_tree_cmdmode raw_mode;
 	const char *const fmt;
 	read_tree_fn_t fn;
 };
 
 static struct ls_tree_cmdmode_to_fmt ls_tree_cmdmode_format[] = {
 	{
-		.mode = MODE_DEFAULT,
+		.raw_mode = MODE_DEFAULT,
 		.fmt = "%(objectmode) %(objecttype) %(objectname)%x09%(path)",
 		.fn = show_tree_default,
 	},
 	{
-		.mode = MODE_LONG,
+		.raw_mode = MODE_LONG,
 		.fmt = "%(objectmode) %(objecttype) %(objectname) %(objectsize:padded)%x09%(path)",
 		.fn = show_tree_long,
 	},
 	{
-		.mode = MODE_NAME_ONLY, /* And MODE_NAME_STATUS */
+		.raw_mode = MODE_NAME_ONLY, /* And MODE_NAME_STATUS */
 		.fmt = "%(path)",
 		.fn = show_tree_name_only,
 	},
 	{
-		.mode = MODE_OBJECT_ONLY,
+		.raw_mode = MODE_OBJECT_ONLY,
 		.fmt = "%(objectname)",
 		.fn = show_tree_object
 	},
@@ -422,9 +422,9 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		if (!m2f->fmt) {
 			fn = format ? show_tree_fmt : show_tree_default;
 		} else if (format && !strcmp(format, m2f->fmt)) {
-			cmdmode = m2f->mode;
+			cmdmode = m2f->raw_mode;
 			fn = m2f->fn;
-		} else if (!format && cmdmode == m2f->mode) {
+		} else if (!format && cmdmode == m2f->raw_mode) {
 			fn = m2f->fn;
 		} else {
 			m2f++;
