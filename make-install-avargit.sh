@@ -24,7 +24,6 @@ git checkout build-master || git checkout -b build-master -t origin/master
 for series in \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
-    avar/post-rm-gettext-poison \
     avar/fsck-h-interface-3 \
     avar/t4018-diff-hunk-header-regex-tests-3 \
     avar/diff-W-context-2 \
@@ -36,7 +35,7 @@ for series in \
     avar/use-tagOpt-not-tagopt \
     avar/describe-test-refactoring \
     avar/fix-coccicheck-2 \
-    avar/object-is-type-error-refactor \
+    avar/object-is-type-error-refactor-2 \
     avar/nuke-read-tree-api-2 \
     avar/tree-walk-api-refactor \
     pr-git-973/newren/ort-remainder-v1 \
