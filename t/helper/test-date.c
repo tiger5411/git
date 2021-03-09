@@ -8,7 +8,6 @@ static const char *usage_msg = "\n"
 "  test-tool date parse [date]...\n"
 "  test-tool date approxidate [date]...\n"
 "  test-tool date timestamp [date]...\n"
-"  test-tool date getnanos [start-nanos]\n"
 "  test-tool date is64bit\n"
 "  test-tool date time_t-is64bit\n";
 
@@ -92,15 +91,6 @@ static void parse_approx_timestamp(const char **argv)
 	}
 }
 
-static void getnanos(const char **argv)
-{
-	double seconds = getnanotime() / 1.0e9;
-
-	if (*argv)
-		seconds -= strtod(*argv, NULL);
-	printf("%lf\n", seconds);
-}
-
 int cmd__date(int argc, const char **argv)
 {
 	const char *x;
@@ -120,8 +110,6 @@ int cmd__date(int argc, const char **argv)
 		parse_approxidate(argv+1);
 	else if (!strcmp(*argv, "timestamp"))
 		parse_approx_timestamp(argv+1);
-	else if (!strcmp(*argv, "getnanos"))
-		getnanos(argv+1);
 	else if (!strcmp(*argv, "is64bit"))
 		return sizeof(timestamp_t) == 8 ? 0 : 1;
 	else if (!strcmp(*argv, "time_t-is64bit"))

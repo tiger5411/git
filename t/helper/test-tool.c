@@ -73,7 +73,6 @@ static struct test_cmd cmds[] = {
 	{ "tee", cmd__tee },
 	{ "trace2", cmd__trace2 },
 	{ "urlmatch-normalization", cmd__urlmatch_normalization },
-	{ "xml-encode", cmd__xml_encode },
 	{ "wildmatch", cmd__wildmatch },
 #ifdef GIT_WINDOWS_NATIVE
 	{ "windows-named-pipe", cmd__windows_named_pipe },
