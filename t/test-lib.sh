@@ -700,8 +700,6 @@ test_success=0
 
 test_missing_prereq=
 
-test_external_has_tap=0
-
 die () {
 	code=$?
 	# This is responsible for running the atexit commands even when a
@@ -1237,26 +1235,23 @@ test_done () {
 	fi
 	case "$test_failure" in
 	0)
-		if test $test_external_has_tap -eq 0
+		if test $test_remaining -gt 0
 		then
-			if test $test_remaining -gt 0
-			then
-				say_color pass "# passed all $msg"
-			fi
-
-			# Maybe print SKIP message
-			test -z "$skip_all" || skip_all="# SKIP $skip_all"
-			case "$test_count" in
-			0)
-				say "1..$test_count${skip_all:+ $skip_all}"
-				;;
-			*)
-				test -z "$skip_all" ||
-				say_color warn "$skip_all"
-				say "1..$test_count"
-				;;
-			esac
+			say_color pass "# passed all $msg"
 		fi
+
+		# Maybe print SKIP message
+		test -z "$skip_all" || skip_all="# SKIP $skip_all"
+		case "$test_count" in
+		0)
+			say "1..$test_count${skip_all:+ $skip_all}"
+			;;
+		*)
+			test -z "$skip_all" ||
+			say_color warn "$skip_all"
+			say "1..$test_count"
+			;;
+		esac
 
 		if test -z "$debug" && test -n "$remove_trash"
 		then
@@ -1276,11 +1271,8 @@ test_done () {
 		exit 0 ;;
 
 	*)
-		if test $test_external_has_tap -eq 0
-		then
-			say_color berror "# failed $test_failure among $msg"
-			say "1..$test_count"
-		fi
+		say_color berror "# failed $test_failure among $msg"
+		say "1..$test_count"
 
 		exit 1 ;;
 
