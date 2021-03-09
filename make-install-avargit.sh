@@ -15,7 +15,6 @@ git checkout build-master || git checkout -b build-master -t origin/master
 # TODO:
 #   make-dot-not-HEAD-warn-3
 #   avar/object-api-to-no-string-argument (TODO: handle -t "some garbage" case)
-#   avar/support-test-verbose-under-prove (TODO: handle the perl tests)
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
@@ -33,14 +32,15 @@ for series in \
     avar/pcre2-memory-allocation-fixes-2 \
     avar/worktree-add-orphan \
     avar/use-tagOpt-not-tagopt \
-    avar/describe-test-refactoring \
+    avar/describe-test-refactoring-2 \
     avar/fix-coccicheck-2 \
     avar/object-is-type-error-refactor-2 \
     avar/nuke-read-tree-api-2 \
     avar/tree-walk-api-refactor \
     pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
-    avar/mktag-broken-and-chain-typo
+    avar/mktag-broken-and-chain-typo \
+    avar/support-test-verbose-under-prove
 do
 	git merge --no-edit $series || EDITOR=cat git merge --continue
 done
