@@ -7,6 +7,7 @@ cd ~/g/git.build
 reset_it() {
         git reset --hard @{u}
         git merge --abort || :
+        git reset --hard @{u}
 }
 
 reset_it
