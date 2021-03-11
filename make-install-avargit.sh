@@ -40,7 +40,8 @@ for series in \
     pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
     avar/mktag-broken-and-chain-typo \
-    avar/support-test-verbose-under-prove
+    avar/support-test-verbose-under-prove-2 \
+    avar/sh-remove-sha1-variables
 do
 	git merge --no-edit $series || EDITOR=cat git merge --continue
 done
