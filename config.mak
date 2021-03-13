@@ -1,10 +1,17 @@
-USE_LIBPCRE=Y
-LIBPCREDIR=$(HOME)/g/pcre2/inst
+# Core flags
 CFLAGS=-O0 -g
 DEVELOPER=1
-
-prefix=/tmp/git
 #DEVOPTS=no-error
+
+# Can safely test 'make install'
+prefix=/tmp/git
+
+# Dashed built-ins make 'make all' verbose
+SKIP_DASHED_BUILT_INS=Y
+
+# PCRE
+USE_LIBPCRE=Y
+LIBPCREDIR=$(HOME)/g/pcre2/inst
 
 # t/Makefile
 id_u := $(shell id -u)
