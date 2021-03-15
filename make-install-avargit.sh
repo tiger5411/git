@@ -69,7 +69,7 @@ for series in \
     avar/describe-test-refactoring-2 \
     avar/fix-coccicheck-2 \
     avar/object-is-type-error-refactor-2 \
-    avar/nuke-read-tree-api-2 \
+    avar/nuke-read-tree-api-3 \
     avar/tree-walk-api-refactor \
     pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
