@@ -57,11 +57,10 @@ git checkout build-master || git checkout -b build-master -t origin/master
 for series in \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
-    avar/fsck-h-interface-3 \
+    avar/fsck-h-interface-4 \
     avar/t4018-diff-hunk-header-regex-tests-3 \
     avar/diff-W-context-2 \
-    gitster/jk/rev-list-disk-usage \
-    avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-master \
+    avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/commit-graph-usage \
     avar/pcre2-memory-allocation-fixes-2 \
     avar/worktree-add-orphan \
@@ -76,6 +75,7 @@ for series in \
     avar/makefile-rename-git-binary-not-in-place \
     avar/mktag-broken-and-chain-typo \
     avar/support-test-verbose-under-prove-2 \
+    avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
     avar/test-lib-bail-out-on-accidental-prove-invocation
 do
