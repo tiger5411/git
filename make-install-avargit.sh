@@ -66,10 +66,10 @@ for series in \
     avar/worktree-add-orphan \
     avar/use-tagOpt-not-tagopt \
     avar/describe-test-refactoring-2 \
-    avar/fix-coccicheck-2 \
+    avar/fix-coccicheck-4 \
     avar/object-is-type-error-refactor-2 \
-    avar/nuke-read-tree-api-3 \
-    avar/tree-walk-api-refactor-2 \
+    avar/nuke-read-tree-api-4 \
+    avar/tree-walk-api-refactor-3 \
     avar/tree-walk-api-canon-mode-switch \
     pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
