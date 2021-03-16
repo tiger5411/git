@@ -103,8 +103,7 @@ static void verify_working_tree_path(struct repository *r,
 		struct object_id blob_oid;
 		unsigned short mode;
 
-		if (!get_tree_entry(r, commit_oid, path, &blob_oid, &mode) &&
-		    oid_object_info(r, &blob_oid, NULL) == OBJ_BLOB)
+		if (!get_tree_entry(r, commit_oid, path, &blob_oid, &mode))
 			return;
 	}
 
