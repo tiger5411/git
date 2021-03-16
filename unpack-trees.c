@@ -938,7 +938,7 @@ static int traverse_trees_recursive(int n, unsigned long dirmask,
 static int do_compare_entry_piecewise(const struct cache_entry *ce,
 				      const struct traverse_info *info,
 				      const char *name, size_t namelen,
-				      unsigned mode)
+				      unsigned istree)
 {
 	int pathlen, ce_len;
 	const char *ce_name;
@@ -946,7 +946,7 @@ static int do_compare_entry_piecewise(const struct cache_entry *ce,
 	if (info->prev) {
 		int cmp = do_compare_entry_piecewise(ce, info->prev,
 						     info->name, info->namelen,
-						     info->mode);
+						     S_ISDIR(info->mode));
 		if (cmp)
 			return cmp;
 	}
@@ -960,18 +960,17 @@ static int do_compare_entry_piecewise(const struct cache_entry *ce,
 	ce_len -= pathlen;
 	ce_name = ce->name + pathlen;
 
-	return df_name_compare(ce_name, ce_len, S_IFREG, name, namelen, mode);
+	return df_name_compare(ce_name, ce_len, 0, name, namelen, istree);
 }
 
 static int do_compare_entry(const struct cache_entry *ce,
 			    const struct traverse_info *info,
 			    const char *name, size_t namelen,
-			    unsigned mode)
+			    unsigned istree)
 {
 	int pathlen, ce_len;
 	const char *ce_name;
 	int cmp;
-	unsigned ce_mode;
 
 	/*
 	 * If we have not precomputed the traverse path, it is quicker
@@ -979,7 +978,7 @@ static int do_compare_entry(const struct cache_entry *ce,
 	 * it is quicker to use the precomputed version.
 	 */
 	if (!info->traverse_path)
-		return do_compare_entry_piecewise(ce, info, name, namelen, mode);
+		return do_compare_entry_piecewise(ce, info, name, namelen, istree);
 
 	cmp = strncmp(ce->name, info->traverse_path, info->pathlen);
 	if (cmp)
@@ -994,13 +993,14 @@ static int do_compare_entry(const struct cache_entry *ce,
 	ce_len -= pathlen;
 	ce_name = ce->name + pathlen;
 
-	ce_mode = S_ISSPARSEDIR(ce->ce_mode) ? S_IFDIR : S_IFREG;
-	return df_name_compare(ce_name, ce_len, ce_mode, name, namelen, mode);
+	return df_name_compare(ce_name, ce_len, S_ISSPARSEDIR(ce->ce_mode),
+			       name, namelen, istree);
 }
 
 static int compare_entry(const struct cache_entry *ce, const struct traverse_info *info, const struct name_entry *n)
 {
-	int cmp = do_compare_entry(ce, info, n->path, n->pathlen, n->mode);
+	int istree = S_ISDIR(n->mode);
+	int cmp = do_compare_entry(ce, info, n->path, n->pathlen, istree);
 	if (cmp)
 		return cmp;
 
