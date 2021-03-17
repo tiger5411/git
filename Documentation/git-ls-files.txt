@@ -71,6 +71,10 @@ OPTIONS
 --unmerged::
 	Show unmerged files in the output (forces --stage)
 
+--sparse::
+	Show sparse directories in the output instead of expanding
+	them (forces --stage)
+
 -k::
 --killed::
 	Show files on the filesystem that need to be removed due

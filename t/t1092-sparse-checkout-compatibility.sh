@@ -136,48 +136,67 @@ test_sparse_match () {
 	test_cmp sparse-checkout-err sparse-index-err
 }
 
+test_index_entry_like () {
+	dir=$1
+	shift
+	fmt=$1
+	shift
+	rev=$1
+	shift
+	entry=$1
+	shift
+	file=$1
+	shift
+	hash=$(git -C "$dir" rev-parse "$rev") &&
+	printf "$fmt\n" "$hash" "$entry" >expected &&
+	if grep "$entry" "$file" >line
+	then
+		test_cmp expected line
+	else
+		cat cache &&
+		false
+	fi
+}
+
 test_expect_success 'sparse-index contents' '
 	init_repos &&
 
-	test-tool -C sparse-index read-cache --table >cache &&
+	git -C sparse-index ls-files --sparse >cache &&
 	for dir in folder1 folder2 x
 	do
-		TREE=$(git -C sparse-index rev-parse HEAD:$dir) &&
-		grep "040000 tree $TREE	$dir/" cache \
-			|| return 1
+		test_index_entry_like sparse-index "040000 %s 0\t%s" "HEAD:$dir" "$dir/" cache || return 1
 	done &&
 
 	git -C sparse-index sparse-checkout set folder1 &&
 
-	test-tool -C sparse-index read-cache --table >cache &&
+	git -C sparse-index ls-files --sparse >cache &&
 	for dir in deep folder2 x
 	do
-		TREE=$(git -C sparse-index rev-parse HEAD:$dir) &&
-		grep "040000 tree $TREE	$dir/" cache \
-			|| return 1
+		test_index_entry_like sparse-index "040000 %s 0\t%s" "HEAD:$dir" "$dir/" cache || return 1
 	done &&
 
 	git -C sparse-index sparse-checkout set deep/deeper1 &&
 
-	test-tool -C sparse-index read-cache --table >cache &&
+	git -C sparse-index ls-files --sparse >cache &&
 	for dir in deep/deeper2 folder1 folder2 x
 	do
-		TREE=$(git -C sparse-index rev-parse HEAD:$dir) &&
-		grep "040000 tree $TREE	$dir/" cache \
-			|| return 1
+		test_index_entry_like sparse-index "040000 %s 0\t%s" "HEAD:$dir" "$dir/" cache || return 1
 	done &&
+
+	grep 040000 cache >lines &&
+	test_line_count = 4 lines &&
 
 	# Disabling the sparse-index removes tree entries with full ones
 	git -C sparse-index sparse-checkout init --no-sparse-index &&
 
-	test-tool -C sparse-index read-cache --table >cache &&
-	! grep "040000 tree" cache &&
-	test_sparse_match test-tool read-cache --table
+	git -C sparse-index ls-files --sparse >cache &&
+	! grep "^040000 " cache >lines &&
+	test_sparse_match git ls-tree -r HEAD
 '
 
 test_expect_success 'expanded in-memory index matches full index' '
 	init_repos &&
-	test_sparse_match test-tool read-cache --expand --table
+	test_sparse_match git ls-tree -r HEAD
 '
 
 test_expect_success 'status with options' '
@@ -394,9 +413,9 @@ test_expect_success 'submodule handling' '
 	test_all_match git commit -m "add submodule" &&
 
 	# having a submodule prevents "modules" from collapse
-	test-tool -C sparse-index read-cache --table >cache &&
-	grep "100644 blob .*	modules/a" cache &&
-	grep "160000 commit $(git -C initial-repo rev-parse HEAD)	modules/sub" cache
+	git -C sparse-index ls-files --sparse >cache &&
+	test_index_entry_like sparse-index "100644 %s 0\t%s" "HEAD:modules/a" "modules/a" cache &&
+	test_index_entry_like sparse-index "160000 %s 0\t%s" "HEAD:modules/sub" "modules/sub" cache
 '
 
 test_expect_success 'sparse-index is expanded and converted back' '

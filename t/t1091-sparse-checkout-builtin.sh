@@ -208,12 +208,13 @@ test_expect_success 'sparse-checkout disable' '
 test_expect_success 'sparse-index enabled and disabled' '
 	git -C repo sparse-checkout init --cone --sparse-index &&
 	test_cmp_config -C repo true extensions.sparseIndex &&
-	test-tool -C repo read-cache --table >cache &&
-	grep " tree " cache &&
+	git -C repo ls-files --sparse >cache &&
+	grep "^040000 " cache >lines &&
+	test_line_count = 3 lines &&
 
 	git -C repo sparse-checkout disable &&
-	test-tool -C repo read-cache --table >cache &&
-	! grep " tree " cache &&
+	git -C repo ls-files --sparse >cache &&
+	! grep "^040000 " cache &&
 	git -C repo config --list >config &&
 	! grep extensions.sparseindex config
 '

@@ -26,6 +26,7 @@ static int show_deleted;
 static int show_cached;
 static int show_others;
 static int show_stage;
+static int show_sparse;
 static int show_unmerged;
 static int show_resolve_undo;
 static int show_modified;
@@ -639,6 +640,8 @@ int cmd_ls_files(int argc, const char **argv, const char *cmd_prefix)
 			DIR_SHOW_IGNORED),
 		OPT_BOOL('s', "stage", &show_stage,
 			N_("show staged contents' object name in the output")),
+		OPT_BOOL(0, "sparse", &show_sparse,
+			N_("show unexpanded sparse directories in the output")),
 		OPT_BOOL('k', "killed", &show_killed,
 			N_("show files on the filesystem that need to be removed")),
 		OPT_BIT(0, "directory", &dir.flags,
@@ -705,12 +708,17 @@ int cmd_ls_files(int argc, const char **argv, const char *cmd_prefix)
 		tag_skip_worktree = "S ";
 		tag_resolve_undo = "U ";
 	}
+	if (show_sparse) {
+		prepare_repo_settings(the_repository);
+		the_repository->settings.command_requires_full_index = 0;
+	}
 	if (show_modified || show_others || show_deleted || (dir.flags & DIR_SHOW_IGNORED) || show_killed)
 		require_work_tree = 1;
-	if (show_unmerged)
+	if (show_unmerged || show_sparse)
 		/*
 		 * There's no point in showing unmerged unless
 		 * you also show the stage information.
+		 * The same goes for the --sparse option.
 		 */
 		show_stage = 1;
 	if (show_tag || show_stage)
