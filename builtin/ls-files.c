@@ -242,9 +242,17 @@ static void show_ce(struct repository *repo, struct dir_struct *dir,
 		if (!show_stage) {
 			fputs(tag, stdout);
 		} else {
+			unsigned int mode = ce->ce_mode;
+			if (show_sparse && S_ISSPARSEDIR(mode))
+				/*
+				 * We could just do & 0177777 all the
+				 * time, just make it clear this is
+				 * for --stage-sparse.
+				 */
+				mode &= 0177777;
 			printf("%s%06o %s %d\t",
 			       tag,
-			       ce->ce_mode,
+			       mode,
 			       find_unique_abbrev(&ce->oid, abbrev),
 			       ce_stage(ce));
 		}
