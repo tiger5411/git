@@ -57,7 +57,7 @@ git checkout build-master || git checkout -b build-master -t origin/master
 for series in \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
-    avar/fsck-h-interface-4 \
+    avar/fsck-h-interface-5 \
     avar/t4018-diff-hunk-header-regex-tests-3 \
     avar/diff-W-context-2 \
     avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
