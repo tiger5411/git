@@ -68,8 +68,8 @@ for series in \
     avar/describe-test-refactoring-2 \
     avar/fix-coccicheck-4 \
     avar/object-is-type-error-refactor-2 \
-    avar/nuke-read-tree-api-4 \
-    avar/tree-walk-api-refactor-3 \
+    avar/nuke-read-tree-api-5 \
+    avar/tree-walk-api-refactor-4 \
     avar/tree-walk-api-canon-mode-switch \
     pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
@@ -119,3 +119,6 @@ git --no-pager shortlog @{u}..
 
 git push avar HEAD:private -f
 git push avar $new_tag:refs/built-tags/$new_tagname
+
+echo "Check out the CI result at:"
+echo "  https://github.com/avar/git/commit/$new_version"
