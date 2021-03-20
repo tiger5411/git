@@ -99,8 +99,8 @@ git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh 
 make_it all man
 
 # Run all tests
-(cd t && prove -j $(nproc) $(cat /tmp/git.build-tests))
-(cd t && GIT_TEST_DEFAULT_HASH=sha256 prove -j $(nproc) t[0-9]*.sh)
+(cd t && prove --exec /bin/sh -j $(nproc) $(cat /tmp/git.build-tests))
+(cd t && GIT_TEST_DEFAULT_HASH=sha256 prove --exec /bin/bash -j $(nproc) t[0-9]*.sh)
 
 # Install it
 new_version=$(git rev-parse HEAD)
