@@ -49,6 +49,7 @@ git checkout build-master || git checkout -b build-master -t origin/master
 #   make-dot-not-HEAD-warn-3
 #   avar/object-api-to-no-string-argument (TODO: handle -t "some garbage" case)
 #   unconditional-abbrev-redo-2021-rebase
+#   avar/no-templates
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
