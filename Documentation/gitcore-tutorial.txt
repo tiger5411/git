@@ -1322,13 +1322,6 @@ your login shell is 'bash', only `.bashrc` is read and not
 `.bash_profile`. As a workaround, make sure `.bashrc` sets up
 `$PATH` so that you can run 'git-receive-pack' program.
 
-[NOTE]
-If you plan to publish this repository to be accessed over http,
-you should do `mv my-git.git/hooks/post-update.sample
-my-git.git/hooks/post-update` at this point.
-This makes sure that every time you push into this
-repository, `git update-server-info` is run.
-
 Your "public repository" is now ready to accept your changes.
 Come back to the machine you have your private repository. From
 there, run this command:
@@ -1444,12 +1437,7 @@ A recommended workflow for a "project lead" goes like this:
 +
 If other people are pulling from your repository over dumb
 transport protocols (HTTP), you need to keep this repository
-'dumb transport friendly'.  After `git init`,
-`$GIT_DIR/hooks/post-update.sample` copied from the standard templates
-would contain a call to 'git update-server-info'
-but you need to manually enable the hook with
-`mv post-update.sample post-update`.  This makes sure
-'git update-server-info' keeps the necessary files up to date.
+'dumb transport friendly'.
 
 3. Push into the public repository from your primary
    repository.
