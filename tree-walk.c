@@ -47,6 +47,13 @@ static int decode_tree_entry(struct tree_desc *desc, const char *buf, unsigned l
 
 	/* Initialize the descriptor entry */
 	desc->entry.path = path;
+<<<<<<< Updated upstream
+=======
+	if (mode != canon_mode(mode))
+		fprintf(stderr, "turning %o into %o\n", mode, canon_mode(mode));
+		
+	mode = canon_mode(mode);
+>>>>>>> Stashed changes
 	desc->entry.mode = mode;
 	desc->entry.pathlen = len - 1;
 	hashcpy(desc->entry.oid.hash, (const unsigned char *)path + len);
