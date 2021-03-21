@@ -77,7 +77,8 @@ for series in \
     avar/support-test-verbose-under-prove-2 \
     avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
-    avar/test-lib-bail-out-on-accidental-prove-invocation
+    avar/test-lib-bail-out-on-accidental-prove-invocation \
+    avar/diff-no-index-tests
 do
 	git merge --no-edit $series || EDITOR=cat git merge --continue
 done
