@@ -51,6 +51,7 @@ static int option_local = -1, option_no_hardlinks, option_shared;
 static int option_no_tags;
 static int option_shallow_submodules;
 static int deepen;
+static int option_no_template;
 static char *option_template, *option_depth, *option_since;
 static char *option_origin = NULL;
 static char *remote_name = NULL;
@@ -109,8 +110,11 @@ static struct option builtin_clone_options[] = {
 	OPT_ALIAS(0, "recursive", "recurse-submodules"),
 	OPT_INTEGER('j', "jobs", &max_jobs,
 		    N_("number of submodules cloned in parallel")),
-	OPT_STRING(0, "template", &option_template, N_("template-directory"),
-		   N_("directory from which templates will be used")),
+	OPT_BOOL_F(0, "no-template", &option_no_template, "",
+		   PARSE_OPT_NONEG | PARSE_OPT_HIDDEN),
+	OPT_STRING_F(0, "template", &option_template, N_("template-directory"),
+		     N_("directory from which templates will be used"),
+		     PARSE_OPT_NONEG),
 	OPT_STRING_LIST(0, "reference", &option_required_reference, N_("repo"),
 			N_("reference repository")),
 	OPT_STRING_LIST(0, "reference-if-able", &option_optional_reference,
@@ -1013,6 +1017,12 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 			die(_("--bare and --separate-git-dir are incompatible."));
 		option_no_checkout = 1;
 	}
+
+	if (option_no_template && option_template)
+		die(_("--no-template and --template are incompatible."));
+
+	if (option_no_template)
+		option_template = "";
 
 	repo_name = argv[0];
 

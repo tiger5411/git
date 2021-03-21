@@ -543,14 +543,18 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	const char *git_dir;
 	const char *real_git_dir = NULL;
 	const char *work_tree;
+	int no_template_dir = 0;
 	const char *template_dir = NULL;
 	unsigned int flags = 0;
 	const char *object_format = NULL;
 	const char *initial_branch = NULL;
 	int hash_algo = GIT_HASH_UNKNOWN;
 	const struct option init_db_options[] = {
-		OPT_STRING(0, "template", &template_dir, N_("template-directory"),
-				N_("directory from which templates will be used")),
+		OPT_BOOL_F(0, "no-template", &no_template_dir, "",
+			   PARSE_OPT_NONEG),
+		OPT_STRING_F(0, "template", &template_dir, N_("template-directory"),
+				N_("directory from which templates will be used"),
+			     PARSE_OPT_NONEG),
 		OPT_SET_INT(0, "bare", &is_bare_repository_cfg,
 				N_("create a bare repository"), 1),
 		{ OPTION_CALLBACK, 0, "shared", &init_shared_repository,
@@ -575,8 +579,14 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	if (real_git_dir && !is_absolute_path(real_git_dir))
 		real_git_dir = real_pathdup(real_git_dir, 1);
 
+	if (no_template_dir && template_dir)
+		die(_("--no-template and --template are incompatible."));
+
 	if (template_dir && *template_dir && !is_absolute_path(template_dir))
 		template_dir = absolute_pathdup(template_dir);
+
+	if (no_template_dir)
+		template_dir = "";
 
 	if (argc == 1) {
 		int mkdir_tried = 0;
