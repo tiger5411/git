@@ -55,9 +55,6 @@ be used to normalize the message into some project standard
 format. It can also be used to refuse the commit after inspecting
 the message file.
 
-The default 'applypatch-msg' hook, when enabled, runs the
-'commit-msg' hook, if the latter is enabled.
-
 pre-applypatch
 ~~~~~~~~~~~~~~
 
@@ -69,9 +66,6 @@ committed after applying the patch.
 
 It can be used to inspect the current working tree and refuse to
 make a commit if it does not pass certain test.
-
-The default 'pre-applypatch' hook, when enabled, runs the
-'pre-commit' hook, if the latter is enabled.
 
 post-applypatch
 ~~~~~~~~~~~~~~~
@@ -91,17 +85,9 @@ invoked before obtaining the proposed commit log message and
 making a commit.  Exiting with a non-zero status from this script
 causes the `git commit` command to abort before creating a commit.
 
-The default 'pre-commit' hook, when enabled, catches introduction
-of lines with trailing whitespaces and aborts the commit when
-such a line is found.
-
 All the `git commit` hooks are invoked with the environment
 variable `GIT_EDITOR=:` if the command will not bring up an editor
 to modify the commit message.
-
-The default 'pre-commit' hook, when enabled--and with the
-`hooks.allownonascii` config option unset or set to false--prevents
-the use of non-ASCII filenames.
 
 pre-merge-commit
 ~~~~~~~~~~~~~~~~
@@ -146,9 +132,6 @@ The purpose of the hook is to edit the message file in place, and
 it is not suppressed by the `--no-verify` option.  A non-zero exit
 means a failure of the hook and aborts the commit.  It should not
 be used as replacement for pre-commit hook.
-
-The sample `prepare-commit-msg` hook that comes with Git removes the
-help message found in the commented portion of the commit template.
 
 commit-msg
 ~~~~~~~~~~
@@ -331,10 +314,6 @@ Both standard output and standard error output are forwarded to
 `git send-pack` on the other end, so you can simply `echo` messages
 for the user.
 
-The default 'update' hook, when enabled--and with
-`hooks.allowunannotated` config option unset or set to false--prevents
-unannotated tags to be pushed.
-
 [[proc-receive]]
 proc-receive
 ~~~~~~~~~~~~
@@ -422,11 +401,6 @@ Both standard output and standard error output are forwarded to
 `git send-pack` on the other end, so you can simply `echo` messages
 for the user.
 
-The default 'post-receive' hook is empty, but there is
-a sample script `post-receive-email` provided in the `contrib/hooks`
-directory in Git distribution, which implements sending commit
-emails.
-
 The number of push options given on the command line of
 `git push --push-option=...` can be read from the environment
 variable `GIT_PUSH_OPTION_COUNT`, and the options themselves are
@@ -457,12 +431,6 @@ so it is a poor place to do log old..new. The
 <<post-receive,'post-receive'>> hook does get both original and
 updated values of the refs. You might consider it instead if you need
 them.
-
-When enabled, the default 'post-update' hook runs
-`git update-server-info` to keep the information used by dumb
-transports (e.g., HTTP) up to date.  If you are publishing
-a Git repository that is accessible via HTTP, you should
-probably enable this hook.
 
 Both standard output and standard error output are forwarded to
 `git send-pack` on the other end, so you can simply `echo` messages
