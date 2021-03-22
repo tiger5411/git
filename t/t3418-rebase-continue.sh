@@ -283,6 +283,7 @@ test_expect_success '--reschedule-failed-exec' '
 '
 
 test_expect_success 'rebase.rescheduleFailedExec only affects `rebase -i`' '
+	test_when_finished "test_unconfig rebase.rescheduleFailedExec" &&
 	test_config rebase.rescheduleFailedExec true &&
 	test_must_fail git rebase -x false HEAD^ &&
 	grep "^exec false" .git/rebase-merge/git-rebase-todo &&
