@@ -98,7 +98,8 @@ do
 	then
 		echo Have $branch and avar/$branch at two different commits:
 		cat $series_list.tmp
-		exit 1
+		# Die if I need to force push, will manually sort it out.
+		git push avar $branch:$branch
 	fi
 done <$series_list
 set -x
