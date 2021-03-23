@@ -45,6 +45,7 @@ show_built_from
 reset_it
 git checkout build-master || git checkout -b build-master -t origin/master
 
+series_list=$(mktemp /tmp/avargit-series-XXXXX)
 # TODO:
 #   make-dot-not-HEAD-warn-3
 #   avar/object-api-to-no-string-argument (TODO: handle -t "some garbage" case)
@@ -55,6 +56,7 @@ git checkout build-master || git checkout -b build-master -t origin/master
 #
 # If we've got a previous resolution, the merge --continue will
 # continue the merge. TODO: make it support --no-edit
+set +x
 for series in \
     avar/fsck-doc \
     avar/makefile-objs-targets-3 \
@@ -72,7 +74,7 @@ for series in \
     avar/nuke-read-tree-api-5 \
     avar/tree-walk-api-refactor-4 \
     avar/tree-walk-api-canon-mode-switch \
-    pr-git-973/newren/ort-remainder-v1 \
+    avar/pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
     avar/mktag-broken-and-chain-typo \
     avar/support-test-verbose-under-prove-2 \
@@ -84,8 +86,28 @@ for series in \
     avar/remove-rebase-usebuiltin-warning \
     avar/format-patch-prettier-message-id
 do
-	git merge --no-edit $series || EDITOR=cat git merge --continue
+	echo $series >>$series_list
 done
+
+# Sanity check that this is all pushed out
+while read -r branch
+do
+	git rev-parse $branch avar/$branch >$series_list.tmp
+	num_sha=$(uniq $series_list.tmp | wc -l)
+	if test $num_sha -ne 1
+	then
+		echo Have $branch and avar/$branch at two different commits:
+		cat $series_list.tmp
+		exit 1
+	fi
+done <$series_list
+set -x
+
+# Merge it all together
+while read -r branch
+do
+	git merge --no-edit $branch || EDITOR=cat git merge --continue
+done <$series_list
 
 make_it() {
 	time make -j $(nproc) \
@@ -127,3 +149,6 @@ git push avar $new_tag:refs/built-tags/$new_tagname
 
 echo "Check out the CI result at:"
 echo "  https://github.com/avar/git/commit/$new_version"
+
+# Cleanup
+rm -rf /tmp/avargit-*
