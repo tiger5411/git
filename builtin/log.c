@@ -1080,13 +1080,44 @@ struct subject_prefix_opt_callback_data {
 		 rfc : 1;
 };
 
-static void gen_message_id(struct rev_info *info, char *base)
+static void gen_message_id(struct subject_prefix_opt_callback_data *cb_data,
+			   const char *what,
+			   int nr,
+			   int total,
+			   const struct object_id *oid)
 {
+	struct rev_info *rev = cb_data->rev;
 	struct strbuf buf = STRBUF_INIT;
-	strbuf_addf(&buf, "%s.%"PRItime".git.%s", base,
-		    (timestamp_t) time(NULL),
+	struct strbuf fmt = STRBUF_INIT;
+	struct strbuf tmp = STRBUF_INIT;
+	struct tm tm;
+	time_t now = time(NULL);
+
+	/* Figure out the right format width for START/END */
+	strbuf_addf(&tmp, "%d", total);
+	strbuf_addf(&fmt, "%%s%%s%%s-%%0%lud.%%0%lud-%%s-%%s-%%s",
+		    (unsigned long)tmp.len, (unsigned long)tmp.len);
+	strbuf_reset(&tmp);
+
+	/* Have a pretty timestamp in the Message-Id */
+	strbuf_addftime(&tmp, "%Y%m%dT%H%M%SZ", gmtime_r(&now, &tm), 0, 0);
+
+	/* Create it! */
+	strbuf_addf(&buf, fmt.buf,
+		    cb_data->rfc ? "RFC-" : "",
+		    what,
+		    cb_data->reroll_count_int > -1 ? xstrfmt("-v%d", cb_data->reroll_count_int) : "",
+		    nr, total,
+		    /*
+		     * Short OID in Message-ID, cover letters get the
+		     * null_oid (for width consistency of all
+		     * Message-ID's in the series.
+		     */
+		    find_unique_abbrev(oid, DEFAULT_ABBREV),
+		    tmp.buf,
 		    git_committer_info(IDENT_NO_NAME|IDENT_NO_DATE|IDENT_STRICT));
-	info->message_id = strbuf_detach(&buf, NULL);
+	rev->message_id = strbuf_detach(&buf, NULL);
+	strbuf_release(&fmt);
 }
 
 static void print_signature(FILE *file)
@@ -2277,10 +2308,10 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 	rev.numbered_files = just_numbers;
 	rev.patch_suffix = fmt_patch_suffix;
 	if (cover_letter) {
-		total++;
+		int old_total = total++;
 		start_number--;
 		if (thread)
-			gen_message_id(&rev, "cover");
+			gen_message_id(&subject_prefix_cb, "cover", 0, old_total, null_oid());
 		make_cover_letter(&rev, !!output_directory,
 				  origin, nr, list, branch_name, quiet);
 		print_bases(&bases, rev.diffopt.file);
@@ -2294,6 +2325,7 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 	if (show_progress)
 		progress = start_delayed_progress(_("Generating patches"), total);
 	while (0 <= --nr) {
+		int msgid_total = cover_letter ? total - 1 : total;
 		int shown;
 		display_progress(progress, total - nr);
 		commit = list[nr];
@@ -2331,7 +2363,7 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 					string_list_append(rev.ref_message_ids,
 							   rev.message_id);
 			}
-			gen_message_id(&rev, oid_to_hex(&commit->object.oid));
+			gen_message_id(&subject_prefix_cb, "patch", rev.nr, msgid_total, &commit->object.oid);
 		}
 
 		if (output_directory &&

@@ -552,10 +552,23 @@ test_expect_success 'reroll (-v) count with a non-pathname character' '
 	EOF
 '
 
+check_message_id () {
+	cat >expect &&
+	git format-patch --stdout "$@" >patch &&
+	perl -ne '
+		if (/^(message-id)/i) {
+			s/(<(?:patch|cover)-.*?-)[0-9a-f]{7,}-[0-9]{8}T[0-9]{6}Z-/$1-OID-YYYYMMDDTHHMMSSZ-/g;
+			print;
+		}
+	' <patch >actual &&
+	test_cmp expect actual
+}
+
 check_threading () {
 	expect="$1" &&
 	shift &&
 	git format-patch --stdout "$@" >patch &&
+
 	# Prints everything between the Message-ID and In-Reply-To,
 	# and replaces all Message-ID-lookalikes by a sequence number
 	perl -ne '
@@ -2455,6 +2468,51 @@ test_expect_success 'interdiff: solo-patch' '
 	test_i18ngrep "^Interdiff:$" 0001-fleep.patch &&
 	sed "1,/^  @@ /d; /^$/q" 0001-fleep.patch >actual &&
 	test_cmp expect actual
+'
+
+test_expect_success 'format-patch Message-ID format, one patch' '
+	check_message_id --thread=shallow HEAD~.. <<-EOF
+	Message-Id: <patch-1.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+'
+
+test_expect_success 'format-patch Message-ID format, two patch series' '
+	check_message_id --thread=shallow HEAD~2.. <<-EOF
+	Message-Id: <patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+'
+
+test_expect_success 'format-patch Message-ID format, one patch with cover letter' '
+	check_message_id --thread=shallow --cover-letter HEAD~.. <<-EOF
+	Message-Id: <cover-0.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-1.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+'
+
+test_expect_success 'format-patch Message-ID format, two patch series with cover letter' '
+	check_message_id --thread=shallow --cover-letter HEAD~2.. <<-EOF
+	Message-Id: <cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+'
+
+test_expect_success 'format-patch Message-ID format, padded numbers' '
+	check_message_id --thread=shallow --cover-letter side~11..side <<-EOF
+	Message-Id: <cover-00.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-01.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-02.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-03.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-04.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-05.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-06.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-07.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-08.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-09.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-10.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-11.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
 '
 
 test_done
