@@ -109,6 +109,11 @@ do
 	git merge --no-edit $branch || EDITOR=cat git merge --continue
 done <$series_list
 
+if test $1 = "--check"
+then
+    exit
+fi
+
 make_it() {
 	time make -j $(nproc) \
 		USE_LIBPCRE=Y \
