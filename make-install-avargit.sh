@@ -77,6 +77,7 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   avar/object-api-to-no-string-argument (TODO: handle -t "some garbage" case)
 #   unconditional-abbrev-redo-2021-rebase
 #   avar/no-templates
+#   avar/test-lib-add-GIT_TEST_TIMEOUT-2
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
@@ -110,7 +111,8 @@ for series in \
     avar/diff-no-index-tests-3 \
     avar/fix-rebase-no-reschedule-failed-exec-with-config \
     avar/remove-rebase-usebuiltin-warning \
-    avar/format-patch-prettier-message-id
+    avar/format-patch-prettier-message-id \
+    avar/robertfoss/send-email-fix
 do
 	echo $series >>$series_list
 done
