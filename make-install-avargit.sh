@@ -2,6 +2,32 @@
 set -e
 set -x
 
+only_merge=
+only_compile=
+only_basic_test=
+only_test=
+while test $# != 0
+do
+	case "$1" in
+	--only-merge)
+		only_merge=yes
+		;;
+	--only-compile)
+		only_compile=yes
+		;;
+	--only-basic-test)
+		only_basic_test=yes
+		;;
+	--only-test)
+		only_test=yes
+		;;
+	*)
+		break
+		;;
+	esac
+	shift
+done
+
 meta_dir="$(pwd)"
 cd ~/g/git.build
 
@@ -92,14 +118,20 @@ done
 # Sanity check that this is all pushed out
 while read -r branch
 do
-	git rev-parse $branch avar/$branch >$series_list.tmp
-	num_sha=$(uniq $series_list.tmp | wc -l)
-	if test $num_sha -ne 1
+	if ! git rev-parse refs/remotes/avar/$branch >/dev/null 2>&1
 	then
-		echo Have $branch and avar/$branch at two different commits:
-		cat $series_list.tmp
-		# Die if I need to force push, will manually sort it out.
+		echo Pushing missing $branch to avar remote
 		git push avar $branch:$branch
+	else
+		git rev-parse $branch refs/remotes/avar/$branch >$series_list.tmp
+		num_sha=$(uniq $series_list.tmp | wc -l)
+		if test $num_sha -ne 1
+		then
+			echo Have $branch and avar/$branch at two different commits:
+			cat $series_list.tmp
+			# Die if I need to force push, will manually sort it out.
+			git push avar $branch:$branch
+		fi
 	fi
 done <$series_list
 set -x
@@ -109,38 +141,37 @@ while read -r branch
 do
 	git merge --no-edit $branch || EDITOR=cat git merge --continue
 done <$series_list
+test -n "$only_merge" && exit
 
-if test $1 = "--check"
-then
-    exit
-fi
+# Configure
+~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
-make_it() {
-	time make -j $(nproc) \
-		USE_LIBPCRE=Y \
-                LIBPCREDIR=$HOME/g/pcre2/inst \
-                CFLAGS="-O0 -g" \
-                DEVELOPER=1 \
-                prefix=/home/avar/local \
-                $@
-}
+# Compile
+make -j $(nproc) all man
+test -n "$only_compile" && exit
 
 # First run a smaller subset of tests, likelier to have failures:
 git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
-
-# Compile
-make_it all man
+tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
+(
+	cd t &&
+	GIT_TEST_HTTPD=1 make GIT_PROVE_OPTS="--jobs=$(nproc) --timer" T="$(cat /tmp/git.build-tests.tr)"
+)
+test -n "$only_basic_test" && exit
 
 # Run all tests
-(cd t && prove --exec /bin/sh -j $(nproc) $(cat /tmp/git.build-tests))
-(cd t && GIT_TEST_DEFAULT_HASH=sha256 prove --exec /bin/bash -j $(nproc) t[0-9]*.sh)
+(
+	cd t &&
+	GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="--exec /bin/bash --jobs=$(nproc) --timer --state=failed,slow,save"
+)
+test -n "$only_test" && exit
 
 # Install it
 new_version=$(git rev-parse HEAD)
 new_tagname=$(tag_name)
 new_tag=$(tag_it "$new_version" "$new_tagname")
 last_version=$(git rev-parse avar/private)
-make_it install install-man
+make -j $(nproc) install install-man
 show_built_from
 
 # Post-install & report
