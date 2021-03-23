@@ -107,7 +107,7 @@ for series in \
     avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
     avar/test-lib-bail-out-on-accidental-prove-invocation \
-    avar/diff-no-index-tests-2 \
+    avar/diff-no-index-tests-3 \
     avar/fix-rebase-no-reschedule-failed-exec-with-config \
     avar/remove-rebase-usebuiltin-warning \
     avar/format-patch-prettier-message-id
