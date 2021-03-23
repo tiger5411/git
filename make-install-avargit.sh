@@ -2,6 +2,7 @@
 set -e
 set -x
 
+only_range_diff=
 only_merge=
 only_compile=
 only_basic_test=
@@ -9,6 +10,9 @@ only_test=
 while test $# != 0
 do
 	case "$1" in
+	--only-range-diff)
+		only_range_diff=yes
+		;;
 	--only-merge)
 		only_merge=yes
 		;;
@@ -92,9 +96,7 @@ for series in \
     avar/diff-W-context-2 \
     avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/commit-graph-usage \
-    avar/pcre2-memory-allocation-fixes-2 \
     avar/worktree-add-orphan \
-    avar/use-tagOpt-not-tagopt \
     avar/describe-test-refactoring-2 \
     avar/fix-coccicheck-4 \
     avar/object-is-type-error-refactor-2 \
@@ -136,9 +138,24 @@ do
 		fi
 	fi
 done <$series_list
-set -x
+
+# Check what's already merged
+while read -r branch
+do
+	git --no-pager range-diff --right-only origin/master...$branch >$series_list.range-diff
+	grep -v -- " ----------- >" $series_list.range-diff >$series_list.range-diff.no-new || :
+	if test -s $series_list.range-diff.no-new
+	then
+		echo "Have partial merge in rangediff of origin/master...$branch, rebase!:"
+		cat $series_list.range-diff
+	else
+		echo "Have $(wc -l $series_list.range-diff | cut -d ' ' -f1) unmerged in range-diff of origin/master...$branch"
+	fi
+done <$series_list
+test -n "$only_range_diff" && exit
 
 # Merge it all together
+set -x
 while read -r branch
 do
 	git merge --no-edit $branch || EDITOR=cat git merge --continue
