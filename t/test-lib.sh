@@ -1026,7 +1026,7 @@ test_skip () {
 		fi
 		skipped_reason="missing $missing_prereq${of_prereq}"
 	fi
-	if test -z "$GIT_TEST_TIMEOUT_EXCEEDED" -a -n "$GIT_TEST_TIMEOUT"
+	if test "$TEST_NAME" != "t0000-basic" -a -z "$GIT_TEST_TIMEOUT_EXCEEDED" -a -n "$GIT_TEST_TIMEOUT"
 	then
 		local now=$(date +%s)
 		local runtime=$(($now - $TEST_STARTUP_TIME))
