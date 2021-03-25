@@ -220,6 +220,8 @@ include::templates/configuration-include-heading.txt[]
 
 include::config/diff.txt[]
 
+include::config/color/diff.txt[]
+
 SEE ALSO
 --------
 diff(1),
