@@ -82,6 +82,7 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   unconditional-abbrev-redo-2021-rebase
 #   avar/no-templates
 #   avar/test-lib-add-GIT_TEST_TIMEOUT-2
+#   more-gc-detach-under-lock
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
@@ -106,7 +107,7 @@ for series in \
     avar/tree-walk-api-canon-mode-switch \
     avar/pr-git-973/newren/ort-remainder-v1 \
     avar/makefile-rename-git-binary-not-in-place \
-    avar/mktag-broken-and-chain-typo \
+    avar/mktag-broken-and-chain-typo-2 \
     avar/support-test-verbose-under-prove-2 \
     avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
@@ -115,7 +116,10 @@ for series in \
     avar/fix-rebase-no-reschedule-failed-exec-with-config \
     avar/remove-rebase-usebuiltin-warning \
     avar/format-patch-prettier-message-id \
-    avar/robertfoss/send-email-fix
+    avar/robertfoss/send-email-fix \
+    avar/kill-git-test-gettext-poison-finally \
+    avar/bundle-uri-design-doc \
+    avar/pack-objects-doc
 do
 	echo $series >>$series_list
 done
