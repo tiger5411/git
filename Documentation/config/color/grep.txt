@@ -1,0 +1,70 @@
+color.diff::
+	Whether to use ANSI escape sequences to add color to patches.
+	If this is set to `always`, linkgit:git-diff[1],
+	linkgit:git-log[1], and linkgit:git-show[1] will use color
+	for all patches.  If it is set to `true` or `auto`, those
+	commands will only use color when output is to the terminal.
+	If unset, then the value of `color.ui` is used (`auto` by
+	default).
++
+This does not affect linkgit:git-format-patch[1] or the
+'git-diff-{asterisk}' plumbing commands.  Can be overridden on the
+command line with the `--color[=<when>]` option.
+
+color.diff.<slot>::
+	Use customized color for diff colorization.  `<slot>` specifies
+	which part of the patch to use the specified color, and is one
+	of `context` (context text - `plain` is a historical synonym),
+	`meta` (metainformation), `frag`
+	(hunk header), 'func' (function in hunk header), `old` (removed lines),
+	`new` (added lines), `commit` (commit headers), `whitespace`
+	(highlighting whitespace errors), `oldMoved` (deleted lines),
+	`newMoved` (added lines), `oldMovedDimmed`, `oldMovedAlternative`,
+	`oldMovedAlternativeDimmed`, `newMovedDimmed`, `newMovedAlternative`
+	`newMovedAlternativeDimmed` (See the '<mode>'
+	setting of '--color-moved' in linkgit:git-diff[1] for details),
+	`contextDimmed`, `oldDimmed`, `newDimmed`, `contextBold`,
+	`oldBold`, and `newBold` (see linkgit:git-range-diff[1] for details).
+
+color.decorate.<slot>::
+	Use customized color for 'git log --decorate' output.  `<slot>` is one
+	of `branch`, `remoteBranch`, `tag`, `stash` or `HEAD` for local
+	branches, remote-tracking branches, tags, stash and HEAD, respectively
+	and `grafted` for grafted commits.
+
+color.grep::
+	When set to `always`, always highlight matches.  When `false` (or
+	`never`), never.  When set to `true` or `auto`, use color only
+	when the output is written to the terminal.  If unset, then the
+	value of `color.ui` is used (`auto` by default).
+
+color.grep.<slot>::
+	Use customized color for grep colorization.  `<slot>` specifies which
+	part of the line to use the specified color, and is one of
++
+--
+`context`;;
+	non-matching text in context lines (when using `-A`, `-B`, or `-C`)
+`filename`;;
+	filename prefix (when not using `-h`)
+`function`;;
+	function name lines (when using `-p`)
+`lineNumber`;;
+	line number prefix (when using `-n`)
+`column`;;
+	column number prefix (when using `--column`)
+`match`;;
+	matching text (same as setting `matchContext` and `matchSelected`)
+`matchContext`;;
+	matching text in context lines
+`matchSelected`;;
+	matching text in selected lines. Also, used to customize the following
+	linkgit:git-log[1] subcommands: `--grep`, `--author` and `--committer`.
+`selected`;;
+	non-matching text in selected lines. Also, used to customize the
+	following linkgit:git-log[1] subcommands: `--grep`, `--author` and
+	`--committer`.
+`separator`;;
+	separators between fields on a line (`:`, `-`, and `=`)
+	and between hunks (`--`)
+--
