@@ -288,6 +288,7 @@ DOC_DEPS = $(wildcard *.txt)
 DOC_DEPS += $(wildcard config/*.txt)
 DOC_DEPS += $(wildcard config/*/*.txt)
 DOC_DEPS += $(wildcard includes/*.txt)
+DOC_DEPS += $(wildcard templates/*.txt)
 
 doc.dep : $(docdep_prereqs) $(DOC_DEPS)  build-docdep.perl
 	$(QUIET_GEN)$(RM) $@+ $@ && \
