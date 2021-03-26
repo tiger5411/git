@@ -490,6 +490,8 @@ lint-docs::
 		--section=5 $(MAN5_TXT) \
 		--section=7 $(MAN7_TXT)	\
 		--to-lint $(ALL_TXT)
+	$(QUIET_LINT)$(PERL_PATH) lint-man-txt.perl \
+		$(MAN1_TXT) $(MAN5_TXT) $(MAN7_TXT)
 
 ifeq ($(wildcard po/Makefile),po/Makefile)
 doc-l10n install-l10n::
