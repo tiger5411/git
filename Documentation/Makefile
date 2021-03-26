@@ -4,6 +4,7 @@ MAN5_TXT =
 MAN7_TXT =
 HOWTO_TXT =
 INCLUDE_TARGETS_TXT =
+ALL_TXT =
 TECH_DOCS =
 ARTICLES =
 SP_ARTICLES =
@@ -48,6 +49,13 @@ HOWTO_TXT += $(wildcard howto/*.txt)
 
 INCLUDE_TARGETS_TXT += $(wildcard *.txt)
 INCLUDE_TARGETS_TXT += $(wildcard config/*.txt)
+
+# For linting
+ALL_TXT += $(MAN1_TXT)
+ALL_TXT += $(MAN5_TXT)
+ALL_TXT += $(MAN7_TXT)
+ALL_TXT += $(HOWTO_TXT)
+ALL_TXT += $(INCLUDE_TARGETS_TXT)
 
 ifdef MAN_FILTER
 MAN_TXT = $(filter $(MAN_FILTER),$(MAN1_TXT) $(MAN5_TXT) $(MAN7_TXT))
@@ -477,7 +485,11 @@ print-man1:
 	@for i in $(MAN1_TXT); do echo $$i; done
 
 lint-docs::
-	$(QUIET_LINT)$(PERL_PATH) lint-gitlink.perl
+	$(QUIET_LINT)$(PERL_PATH) lint-gitlink.perl \
+		--section=1 $(MAN1_TXT) \
+		--section=5 $(MAN5_TXT) \
+		--section=7 $(MAN7_TXT)	\
+		--to-lint $(ALL_TXT)
 
 ifeq ($(wildcard po/Makefile),po/Makefile)
 doc-l10n install-l10n::
