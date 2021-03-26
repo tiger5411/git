@@ -3,6 +3,7 @@ MAN1_TXT =
 MAN5_TXT =
 MAN7_TXT =
 HOWTO_TXT =
+INCLUDE_TARGETS_TXT =
 TECH_DOCS =
 ARTICLES =
 SP_ARTICLES =
@@ -44,6 +45,9 @@ MAN7_TXT += gittutorial.txt
 MAN7_TXT += gitworkflows.txt
 
 HOWTO_TXT += $(wildcard howto/*.txt)
+
+INCLUDE_TARGETS_TXT += $(wildcard *.txt)
+INCLUDE_TARGETS_TXT += $(wildcard config/*.txt)
 
 ifdef MAN_FILTER
 MAN_TXT = $(filter $(MAN_FILTER),$(MAN1_TXT) $(MAN5_TXT) $(MAN7_TXT))
@@ -287,7 +291,7 @@ docdep_prereqs = \
 	mergetools-list.made $(mergetools_txt) \
 	cmd-list.made $(cmds_txt)
 
-doc.dep : $(docdep_prereqs) $(wildcard *.txt) $(wildcard config/*.txt) build-docdep.perl
+doc.dep : $(docdep_prereqs) $(INCLUDE_TARGETS_TXT) build-docdep.perl
 	$(QUIET_GEN)$(RM) $@+ $@ && \
 	$(PERL_PATH) ./build-docdep.perl >$@+ $(QUIET_STDERR) && \
 	mv $@+ $@
