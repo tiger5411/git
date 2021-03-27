@@ -2,6 +2,7 @@
 set -e
 set -x
 
+no_range_diff=
 only_range_diff=
 only_merge=
 only_compile=
@@ -10,6 +11,9 @@ only_test=
 while test $# != 0
 do
 	case "$1" in
+	--no-range-diff)
+		no_range_diff=yes
+		;;
 	--only-range-diff)
 		only_range_diff=yes
 		;;
@@ -148,6 +152,10 @@ done <$series_list
 # Check what's already merged
 while read -r branch
 do
+	if test -n "$no_range_diff"
+	then
+		continue
+	fi
 	git --no-pager range-diff --right-only origin/master...$branch >$series_list.range-diff
 	grep -v -- " ----------- >" $series_list.range-diff >$series_list.range-diff.no-new || :
 	if test -s $series_list.range-diff.no-new
