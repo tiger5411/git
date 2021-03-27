@@ -211,6 +211,12 @@ int trace2_cmd_exit_fl(const char *file, int line, int code)
 
 	code &= 0xff;
 
+	if (bug_called_must_BUG) {
+		/* BUG_vfl() calls exit(), which calls us again */
+		bug_called_must_BUG = 0;
+		BUG("had bug() output above, in addition missed BUG_if_bug() call");
+	}
+
 	if (!trace2_enabled)
 		return code;
 
