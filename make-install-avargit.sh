@@ -119,7 +119,8 @@ for series in \
     avar/robertfoss/send-email-fix \
     avar/kill-git-test-gettext-poison-finally \
     avar/bundle-uri-design-doc \
-    avar/pack-objects-doc
+    avar/doc-make-lint-fixes \
+    avar/doc-config-includes
 do
 	echo $series >>$series_list
 done
