@@ -87,6 +87,7 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   avar/no-templates
 #   avar/test-lib-add-GIT_TEST_TIMEOUT-2
 #   more-gc-detach-under-lock
+#   avar/makefile-do-not-build-fuzz-under-all (just drop it?)
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
@@ -95,7 +96,7 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 set +x
 for series in \
     avar/fsck-doc \
-    avar/makefile-objs-targets-3 \
+    avar/makefile-do-not-build-fuzz-under-all \
     avar/fsck-h-interface-5 \
     avar/t4018-diff-hunk-header-regex-tests-4-beginning \
     avar/t4018-diff-hunk-header-regex-tests-4 \
@@ -124,7 +125,9 @@ for series in \
     avar/kill-git-test-gettext-poison-finally \
     avar/bundle-uri-design-doc \
     avar/doc-make-lint-fixes \
-    avar/doc-config-includes
+    avar/doc-config-includes \
+    avar/usage-api-add-bug \
+    avar/fsck-error-on-completely-invalid
 do
 	echo $series >>$series_list
 done
