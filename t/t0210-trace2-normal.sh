@@ -168,6 +168,58 @@ test_expect_success 'BUG messages are written to trace2' '
 	test_cmp expect actual
 '
 
+test_expect_success 'bug messages with BUG_if_bug() are written to trace2' '
+	test_when_finished "rm trace.normal actual expect" &&
+	test_expect_code 99 env GIT_TRACE2="$(pwd)/trace.normal" \
+		test-tool trace2 008bug 2>err &&
+	cat >expect <<-\EOF &&
+	a bug message
+	another bug message
+	see bug() output above
+	EOF
+	sed "s/^.*: //" <err >actual &&
+	test_cmp expect actual &&
+
+	perl "$TEST_DIRECTORY/t0210/scrub_normal.perl" <trace.normal >actual &&
+	cat >expect <<-EOF &&
+		version $V
+		start _EXE_ trace2 008bug
+		cmd_name trace2 (trace2)
+		error a bug message
+		error another bug message
+		error see bug() output above
+		exit elapsed:_TIME_ code:99
+		atexit elapsed:_TIME_ code:99
+	EOF
+	test_cmp expect actual
+'
+
+test_expect_success 'bug messages without BUG_if_bug() are written to trace2' '
+	test_when_finished "rm trace.normal actual expect" &&
+	test_expect_code 99 env GIT_TRACE2="$(pwd)/trace.normal" \
+		test-tool trace2 009bug_BUG 2>err &&
+	cat >expect <<-\EOF &&
+	a bug message
+	another bug message
+	had bug() output above, in addition missed BUG_if_bug() call
+	EOF
+	sed "s/^.*: //" <err >actual &&
+	test_cmp expect actual &&
+
+	perl "$TEST_DIRECTORY/t0210/scrub_normal.perl" <trace.normal >actual &&
+	cat >expect <<-EOF &&
+		version $V
+		start _EXE_ trace2 009bug_BUG
+		cmd_name trace2 (trace2)
+		error a bug message
+		error another bug message
+		error had bug() output above, in addition missed BUG_if_bug() call
+		exit elapsed:_TIME_ code:99
+		atexit elapsed:_TIME_ code:99
+	EOF
+	test_cmp expect actual
+'
+
 sane_unset GIT_TRACE2_BRIEF
 
 # Now test without environment variables and get all Trace2 settings
