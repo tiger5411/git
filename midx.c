@@ -4,7 +4,7 @@
 #include "dir.h"
 #include "lockfile.h"
 #include "packfile.h"
-#include "object-store.h"
+#include "object-file.h"
 #include "hash-lookup.h"
 #include "midx.h"
 #include "progress.h"

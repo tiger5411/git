@@ -7,6 +7,7 @@
  * creation etc.
  */
 #include "cache.h"
+#include "object-file.h"
 #include "config.h"
 #include "string-list.h"
 #include "lockfile.h"
@@ -31,6 +32,7 @@
 #include "quote.h"
 #include "packfile.h"
 #include "object-store.h"
+#include "object-file.h"
 #include "promisor-remote.h"
 #include "submodule.h"
 

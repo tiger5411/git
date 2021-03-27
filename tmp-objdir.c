@@ -7,6 +7,7 @@
 #include "strvec.h"
 #include "quote.h"
 #include "object-store.h"
+#include "object-file.h"
 
 struct tmp_objdir {
 	struct strbuf path;

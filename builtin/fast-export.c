@@ -9,6 +9,7 @@
 #include "refs.h"
 #include "refspec.h"
 #include "object-store.h"
+#include "object-file.h"
 #include "commit.h"
 #include "object.h"
 #include "tag.h"

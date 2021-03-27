@@ -9,6 +9,7 @@
 #include "strbuf.h"
 #include "packfile.h"
 #include "object-store.h"
+#include "object-file.h"
 
 static struct bulk_checkin_state {
 	unsigned plugged:1;

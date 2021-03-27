@@ -4,7 +4,7 @@
 #include "cache.h"
 #include "streaming.h"
 #include "repository.h"
-#include "object-store.h"
+#include "object-file.h"
 #include "replace-object.h"
 #include "packfile.h"
 

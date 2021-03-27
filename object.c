@@ -2,6 +2,7 @@
 #include "object.h"
 #include "replace-object.h"
 #include "object-store.h"
+#include "object-file.h"
 #include "blob.h"
 #include "tree.h"
 #include "commit.h"
