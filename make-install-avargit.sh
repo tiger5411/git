@@ -127,7 +127,8 @@ for series in \
     avar/doc-make-lint-fixes \
     avar/doc-config-includes \
     avar/usage-api-add-bug \
-    avar/fsck-error-on-completely-invalid
+    avar/fsck-error-on-completely-invalid \
+    avar/makefile-add-quiet-to-tags-and-TAGS-targets
 do
 	echo $series >>$series_list
 done
