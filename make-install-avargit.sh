@@ -184,7 +184,7 @@ test -n "$only_merge" && exit
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Compile
-make -j $(nproc) all man
+make -j $(nproc) all #man
 test -n "$only_compile" && exit
 
 # First run a smaller subset of tests, likelier to have failures:
@@ -208,7 +208,7 @@ new_version=$(git rev-parse HEAD)
 new_tagname=$(tag_name)
 new_tag=$(tag_it "$new_version" "$new_tagname")
 last_version=$(git rev-parse avar/private)
-make -j $(nproc) install install-man
+make -j $(nproc) install #install-man
 show_built_from
 
 # Post-install & report
