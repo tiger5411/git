@@ -1377,7 +1377,7 @@ int parse_loose_header(const char *hdr, struct object_info *oi)
 		type_len++;
 	}
 
-	type = type_from_string_gently(type_buf, type_len, 1);
+	type = type_from_string_gently(type_buf, type_len);
 	if (oi->type_name)
 		strbuf_add(oi->type_name, type_buf, type_len);
 	if (oi->typep)
