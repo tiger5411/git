@@ -97,7 +97,7 @@ set +x
 for series in \
     avar/fsck-doc \
     avar/makefile-do-not-build-fuzz-under-all \
-    avar/fsck-h-interface-5 \
+    avar/fsck-h-interface-6 \
     avar/t4018-diff-hunk-header-regex-tests-4-beginning \
     avar/t4018-diff-hunk-header-regex-tests-4 \
     avar/diff-W-context-3 \
@@ -111,7 +111,6 @@ for series in \
     avar/tree-walk-api-refactor-4 \
     avar/tree-walk-api-canon-mode-switch \
     avar/pr-git-973/newren/ort-remainder-v1 \
-    avar/makefile-rename-git-binary-not-in-place \
     avar/mktag-broken-and-chain-typo-2 \
     avar/support-test-verbose-under-prove-2 \
     avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
@@ -128,7 +127,10 @@ for series in \
     avar/doc-config-includes \
     avar/usage-api-add-bug \
     avar/fsck-error-on-completely-invalid \
-    avar/makefile-add-quiet-to-tags-and-TAGS-targets
+    avar/makefile-misc-crap-improved-make-clean \
+    avar/makefile-add-quiet-to-tags-and-TAGS-targets \
+    avar/makefile-rename-git-binary-not-in-place \
+    avar/makefile-ln-or-cp-script
 do
 	echo $series >>$series_list
 done
