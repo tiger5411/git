@@ -3176,27 +3176,30 @@ distclean: clean
 	$(RM) -r autom4te.cache
 
 profile-clean:
-	$(QUIET_CLEAN)$(RM) $(addsuffix *.gcda,$(addprefix $(PROFILE_DIR)/, $(object_dirs))) && \
+	$(QUIET_QUIET)$(RM) $(addsuffix *.gcda,$(addprefix $(PROFILE_DIR)/, $(object_dirs))) && \
 	$(RM) $(addsuffix *.gcno,$(addprefix $(PROFILE_DIR)/, $(object_dirs)))
 
 cocciclean:
-	$(QUIET_CLEAN)$(RM) contrib/coccinelle/*.cocci.patch*
+	$(QUIET_QUIET)$(RM) contrib/coccinelle/*.cocci.patch*
+
+clean-test:
+	$(QUIET_QUIET)$(MAKE) -C t/ clean >/dev/null
 
 clean-documentation:
-	$(QUIET_CLEAN)$(MAKE) -C Documentation/ clean
+	$(QUIET_QUIET)$(MAKE) -C Documentation/ clean >/dev/null
 
 clean-templates:
-	$(QUIET_CLEAN)$(MAKE) -C templates/ clean
+	$(QUIET_QUIET)$(MAKE) -C templates/ clean >/dev/null
 
 clean-perl:
 ifndef NO_PERL
-	$(QUIET_CLEAN)$(MAKE) -C gitweb clean && \
+	$(QUIET_QUIET)$(MAKE) -C gitweb clean >/dev/null && \
 	$(RM) -r perl/build/
 endif
 
 clean-tcltk:
 ifndef NO_TCLTK
-	$(QUIET_CLEAN)$(MAKE) -C gitk-git clean && \
+	$(QUIET_QUIET)$(MAKE) -C gitk-git clean >/dev/null && \
 	$(MAKE) -C git-gui clean 2>/dev/null
 endif
 
@@ -3214,9 +3217,9 @@ ifdef MSVC
 	$(RM) $(patsubst %.exe,%.ipdb,$(TEST_PROGRAMS))
 	$(RM) compat/vcbuild/MSVC-DEFS-GEN
 endif
-.PHONY: clean-documentation clean-templates clean-perl clean-templates clean-msvc
+.PHONY: clean-test clean-documentation clean-templates clean-perl clean-templates clean-msvc
 
-clean: profile-clean coverage-clean cocciclean clean-templates clean-documentation clean-perl clean-tcltk clean-msvc
+clean: profile-clean coverage-clean cocciclean clean-test clean-templates clean-documentation clean-perl clean-tcltk clean-msvc
 	$(QUIET_CLEAN)$(RM) *.res && \
 	$(RM) $(OBJECTS) && \
 	$(RM) $(LIB_FILE) $(XDIFF_LIB) && \
@@ -3231,7 +3234,6 @@ clean: profile-clean coverage-clean cocciclean clean-templates clean-documentati
 	$(RM) $(GIT_TARNAME).tar.gz && \
 	$(RM) $(htmldocs).tar.gz $(manpages).tar.gz && \
 	$(RM) Documentation/GIT-EXCLUDED-PROGRAMS && \
-	$(MAKE) -C t/ clean && \
 	$(RM) GIT-VERSION-FILE GIT-CFLAGS GIT-LDFLAGS GIT-BUILD-OPTIONS && \
 	$(RM) GIT-USER-AGENT GIT-PREFIX && \
 	$(RM) GIT-SCRIPT-DEFINES GIT-PERL-DEFINES GIT-PERL-HEADER GIT-PYTHON-VARS
@@ -3305,14 +3307,14 @@ coverage:
 
 object_dirs := $(sort $(dir $(OBJECTS)))
 coverage-clean-results:
-	$(QUIET_CLEAN)$(RM) $(addsuffix *.gcov,$(object_dirs)) && \
+	$(QUIET_QUIET)$(RM) $(addsuffix *.gcov,$(object_dirs)) && \
 	$(RM) $(addsuffix *.gcda,$(object_dirs)) && \
 	$(RM) coverage-untested-functions && \
 	$(RM) -r cover_db/ && \
 	$(RM) -r cover_db_html/
 
 coverage-clean: coverage-clean-results
-	$(QUIET_CLEAN)$(RM) $(addsuffix *.gcno,$(object_dirs))
+	$(QUIET_QUIET)$(RM) $(addsuffix *.gcno,$(object_dirs))
 
 COVERAGE_CFLAGS = $(CFLAGS) -O0 -ftest-coverage -fprofile-arcs
 COVERAGE_LDFLAGS = $(CFLAGS)  -O0 -lgcov
