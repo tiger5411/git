@@ -1954,6 +1954,7 @@ endif
 
 ifneq ($(findstring s,$(MAKEFLAGS)),s)
 ifndef V
+	QUIET          = @
 	QUIET_CC       = @echo '   ' CC $@;
 	QUIET_AR       = @echo '   ' AR $@;
 	QUIET_LINK     = @echo '   ' LINK $@;
@@ -2242,12 +2243,50 @@ config-list.h: generate-configlist.sh
 config-list.h: Documentation/*config.txt Documentation/config/*.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-configlist.sh >$@
 
-command-list.h: generate-cmdlist.sh command-list.txt
+EXCLUDED_COMMAND_LIST =
+EXCLUDED_COMMAND_LIST += git
+EXCLUDED_COMMAND_LIST += git-bisect-lk2009
+EXCLUDED_COMMAND_LIST += git-credential-cache--daemon
+EXCLUDED_COMMAND_LIST += git-fsck-objects
+EXCLUDED_COMMAND_LIST += git-init-db
+EXCLUDED_COMMAND_LIST += git-mergetool--lib
+EXCLUDED_COMMAND_LIST += git-remote-ext
+EXCLUDED_COMMAND_LIST += git-remote-fd
+EXCLUDED_COMMAND_LIST += git-sh-i18n--envsubst
+EXCLUDED_COMMAND_LIST += git-submodules
+EXCLUDED_COMMAND_LIST += git-tools
+EXCLUDED_COMMAND_LIST += git-version
+EXCLUDED_COMMAND_LIST += git-web--browse
+EXCLUDED_COMMAND_LIST += gitweb.conf
 
-command-list.h: $(wildcard Documentation/git*.txt)
-	$(QUIET_GEN)$(SHELL_PATH) ./generate-cmdlist.sh \
-		$(patsubst %,--exclude-program %,$(EXCLUDED_PROGRAMS)) \
-		command-list.txt >$@
+EXCLUDED_TXT += $(patsubst %,Documentation/%.txt,$(EXCLUDED_PROGRAMS) $(EXCLUDED_COMMAND_LIST))
+COMMAND_LIST_TXT_DEP = $(filter-out $(EXCLUDED_TXT), $(wildcard Documentation/git*.txt))
+
+COMMAND_LIST_GEN = $(patsubst Documentation/%.txt,.build/command-list.h.d/%.gen,$(COMMAND_LIST_TXT_DEP))
+
+.build:
+	$(QUIET)mkdir .build
+.build/command-list.h.d: | .build
+	$(QUIET)mkdir -p .build/command-list.h.d
+
+# We must depend on .build/command-list.h as an "order-only"
+# prerequisite, its mtime will change when these targets run.
+$(COMMAND_LIST_GEN): | .build/command-list.h.d
+$(COMMAND_LIST_GEN): command-list.txt
+$(COMMAND_LIST_GEN): generate-cmdlist.sh
+$(COMMAND_LIST_GEN): .build/command-list.h.d/%.gen: Documentation/%.txt
+	$(QUIET)grep "^$(patsubst .build/command-list.h.d/%.gen,%,$@) " command-list.txt >$@.txt && \
+	./generate-cmdlist.sh --entry-only $@.txt >$@
+
+command-list.h: $(COMMAND_LIST_GEN)
+command-list.h: generate-cmdlist.sh
+command-list.h: command-list.txt
+	$(QUIET_GEN){ \
+		$(SHELL_PATH) ./generate-cmdlist.sh --header-only command-list.txt && \
+		echo "static struct cmdname_help command_list[] = {" && \
+		LC_ALL=C sort $(COMMAND_LIST_GEN) && \
+		echo "};"; \
+	} >$@
 
 hook-list.h: generate-hooklist.sh Documentation/githooks.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-hooklist.sh >$@
@@ -3238,6 +3277,7 @@ clean: profile-clean coverage-clean cocciclean
 	$(RM) $(SP_OBJ)
 	$(RM) $(HCC)
 	$(RM) -r bin-wrappers $(dep_dirs) $(compdb_dir) compile_commands.json
+	$(RM) -r .build/
 	$(RM) -r po/build/
 	$(RM) *.pyc *.pyo */*.pyc */*.pyo $(GENERATED_H) $(ETAGS_TARGET) tags cscope*
 	$(RM) -r .dist-tmp-dir .doc-tmp-dir
