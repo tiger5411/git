@@ -1,7 +1,7 @@
 # The default target of this Makefile is...
 all::
 
-# Define V=1 to have a more verbose compile.
+# Define V=1 to have a more verbose compile, V=2 for even more verbose.
 #
 # Define SHELL_PATH to a POSIX shell if your /bin/sh is broken.
 #
@@ -497,7 +497,7 @@ all::
 #        USE_PARENS_AROUND_GETTEXT_N to produce only relevant warnings.
 
 GIT-VERSION-FILE: FORCE
-	@$(SHELL_PATH) ./GIT-VERSION-GEN
+	$(QUIET_QUIET)$(SHELL_PATH) ./GIT-VERSION-GEN
 -include GIT-VERSION-FILE
 
 # Set our default configuration.
@@ -1920,6 +1920,7 @@ endif
 
 ifneq ($(findstring s,$(MAKEFLAGS)),s)
 ifndef V
+	QUIET_QUIET    = @
 	QUIET_CC       = @echo '   ' CC $@;
 	QUIET_AR       = @echo '   ' AR $@;
 	QUIET_LINK     = @echo '   ' LINK $@;
@@ -1939,6 +1940,10 @@ ifndef V
 	export V
 	export QUIET_GEN
 	export QUIET_BUILT_IN
+else
+ifneq ($(V),2)
+QUIET_QUIET    = @
+endif
 endif
 endif
 
@@ -2061,7 +2066,7 @@ GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
 GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
 GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
 GIT-USER-AGENT: FORCE
-	@if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
+	$(QUIET_QUIET)if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
 		echo '$(GIT_USER_AGENT_SQ)' >GIT-USER-AGENT; \
 	fi
 
@@ -2291,7 +2296,7 @@ $(SCRIPT_PERL_GEN): % : %.perl GIT-PERL-DEFINES GIT-PERL-HEADER GIT-VERSION-FILE
 
 PERL_DEFINES := $(subst $(space),:,$(PERL_DEFINES))
 GIT-PERL-DEFINES: FORCE
-	@FLAGS='$(PERL_DEFINES)'; \
+	$(QUIET_QUIET)FLAGS='$(PERL_DEFINES)'; \
 	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
 		echo >&2 "    * new perl-specific parameters"; \
 		echo "$$FLAGS" >$@+; \
