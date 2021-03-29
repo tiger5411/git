@@ -26,6 +26,10 @@ DEVELOPER=1
 # Can safely test 'make install'
 prefix=$prefix
 
+# Better installation
+INSTALL_SYMLINKS=Y
+NO_INSTALL_HARDLINKS=Y
+
 # Dashed built-ins make 'make all' verbose
 SKIP_DASHED_BUILT_INS=Y
 
