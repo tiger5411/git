@@ -107,8 +107,8 @@ for series in \
     avar/describe-test-refactoring-2 \
     avar/fix-coccicheck-4 \
     avar/object-is-type-error-refactor-2 \
-    avar/nuke-read-tree-api-5 \
-    avar/tree-walk-api-refactor-4 \
+    avar/tree-walk-api-refactor-prep \
+    avar/tree-walk-api-refactor-5 \
     avar/tree-walk-api-canon-mode-switch \
     avar/pr-git-973/newren/ort-remainder-v1 \
     avar/support-test-verbose-under-prove-2 \
