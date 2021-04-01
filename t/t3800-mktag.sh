@@ -12,15 +12,32 @@ test_description='git mktag: tag object verify test'
 # given in the expect.pat file.
 
 check_verify_failure () {
-	test_expect_success "$1" "
+	subject=$1 &&
+	message=$2 &&
+	shift 2 &&
+
+	no_strict=
+	while test $# != 0
+	do
+		case "$1" in
+		--no-strict)
+			no_strict=yes
+			;;
+		esac
+		shift
+	done &&
+
+	test_expect_success "$subject" "
 		test_must_fail git mktag <tag.sig 2>message &&
-		grep '$2' message &&
-		if test '$3' != '--no-strict'
-		then
-			test_must_fail git mktag --no-strict <tag.sig 2>message.no-strict &&
-			grep '$2' message.no-strict
-		fi
+		grep '$message' message
 	"
+
+	if test -n "$no_strict"
+	then
+		test_expect_success "$subject suceeeds with --no-strict" "
+			git mktag --no-strict <tag.sig
+		"
+	fi
 }
 
 test_expect_mktag_success() {
@@ -167,7 +184,8 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- correct type, nonexisting object' \
-	'^fatal: could not read tagged object'
+	'^fatal: could not read tagged object' \
+	'bad fsck: ok'
 
 cat >tag.sig <<EOF
 object $head
@@ -200,7 +218,7 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- mismatched type, valid object' \
-	'^fatal: object.*tagged as.*tree.*but is.*commit'
+	'^fatal: object.*tagged as.*tree.*but is.*commit' \
 
 ############################################################
 #  9.5. verify object (hash/type) check -- replacement
@@ -243,7 +261,8 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify tag-name check' \
-	'^error:.* badTagName:' '--no-strict'
+	'^error:.* badTagName:' \
+	--no-strict
 
 ############################################################
 # 11. tagger line label check #1
@@ -257,7 +276,8 @@ This is filler
 EOF
 
 check_verify_failure '"tagger" line label check #1' \
-	'^error:.* missingTaggerEntry:' '--no-strict'
+	'^error:.* missingTaggerEntry:' \
+	--no-strict
 
 ############################################################
 # 12. tagger line label check #2
@@ -272,7 +292,8 @@ This is filler
 EOF
 
 check_verify_failure '"tagger" line label check #2' \
-	'^error:.* missingTaggerEntry:' '--no-strict'
+	'^error:.* missingTaggerEntry:' \
+	--no-strict
 
 ############################################################
 # 13. allow missing tag author name like fsck
@@ -301,7 +322,8 @@ tagger T A Gger <
 EOF
 
 check_verify_failure 'disallow malformed tagger' \
-	'^error:.* badEmail:' '--no-strict'
+	'^error:.* badEmail:' \
+	--no-strict
 
 ############################################################
 # 15. allow empty tag email
@@ -425,7 +447,8 @@ this line should not be here
 EOF
 
 check_verify_failure 'detect invalid header entry' \
-	'^error:.* extraHeaderEntry:' '--no-strict'
+	'^error:.* extraHeaderEntry:' \
+	--no-strict
 
 test_expect_success 'invalid header entry config & fsck' '
 	test_must_fail git mktag <tag.sig &&
