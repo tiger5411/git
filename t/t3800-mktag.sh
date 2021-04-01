@@ -64,7 +64,7 @@ check_verify_failure () {
 		git -C bad-tag for-each-ref "$tag_ref" >actual &&
 		test_cmp expected actual &&
 		# segfaults!
-		! git -C bad-tag for-each-ref --format="%(*objectname)"
+		test_must_fail git -C bad-tag for-each-ref --format="%(*objectname)"
 	'
 }
 
