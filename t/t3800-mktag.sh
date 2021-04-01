@@ -17,6 +17,8 @@ check_verify_failure () {
 	shift 2 &&
 
 	bad_fsck_no_refs_ok=
+	bad_fsck_refs_err_is_empty=
+	bad_fsck_refs_out_is_broken_link=
 	no_strict=
 	while test $# != 0
 	do
@@ -26,6 +28,12 @@ check_verify_failure () {
 			;;
 		--bad-fsck-no-refs-ok)
 			bad_fsck_no_refs_ok=yes
+			;;
+		--bad-fsck-refs-err-is-empty)
+			bad_fsck_refs_err_is_empty=yes
+			;;
+		--bad-fsck-refs-out-is-broken-link)
+			bad_fsck_refs_out_is_broken_link=yes
 			;;
 		esac
 		shift
@@ -47,7 +55,9 @@ check_verify_failure () {
 		# Not test_when_finished, used in later tests
 		rm -rf bad-tag &&
 
-		git init -b bad-branch --bare bad-tag &&
+		test_create_repo bad-tag &&
+		# fsck below should not complain about unborn branches
+		test_commit -C bad-tag A &&
 
 		git -C bad-tag hash-object -t tag -w --stdin --literally <tag.sig >bad-obj
 	"
@@ -71,16 +81,35 @@ check_verify_failure () {
 		# failure. But test that it does fail.
 		test_must_fail git -C bad-tag update-ref $bad_obj &&
 
-		cp bad-obj bad-tag/refs/heads/bad-branch
+		cp bad-obj bad-tag/.git/refs/tags/bad-tag
 	'
 
 	test_expect_success "fsck ALWAYS NOT OK with bad object+ref for '$subject'" '
-		test_must_fail git -C bad-tag fsck 2>err &&
+		test_must_fail git -C bad-tag fsck >out 2>err &&
+		if test -n "$bad_fsck_refs_err_is_empty"
+		then
+			test_must_be_empty err
+		fi &&
+		cat out &&
 		cat err
 	'
 
+	if test -n "$bad_fsck_refs_out_is_broken_link"
+	then
+		test_expect_success "fsck broken link output for '$subject'" '
+			grep "broken link" out
+		'
+	elif grep "broken link" out
+	then
+		test_expect_success 'bad' 'false'
+		test_expect_success "fsck output for '$subject'" '
+			test_line_count = 2 err &&
+			grep -e "not a commit" -e "object could not be parsed" err
+		'
+	fi
+
 	test_expect_success "for-each-ref with bad object+ref for '$subject'" '
-		! git -C bad-tag for-each-ref --format="%(*objectname)"
+		test_must_fail git -C bad-tag for-each-ref --format="%(*objectname)"
 	'
 }
 
@@ -229,7 +258,9 @@ EOF
 
 check_verify_failure 'verify object (hash/type) check -- correct type, nonexisting object' \
 	'^fatal: could not read tagged object' \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-err-is-empty \
+	--bad-fsck-refs-out-is-broken-link
 
 cat >tag.sig <<EOF
 object $head
@@ -263,7 +294,9 @@ EOF
 
 check_verify_failure 'verify object (hash/type) check -- mismatched type, valid object' \
 	'^fatal: object.*tagged as.*tree.*but is.*commit' \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-err-is-empty \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 #  9.5. verify object (hash/type) check -- replacement
@@ -293,7 +326,9 @@ EOF
 
 check_verify_failure 'verify object (hash/type) check -- mismatched type, valid object' \
 	'^fatal: object.*tagged as.*tree.*but is.*blob' \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-err-is-empty \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 10. verify tag-name check
@@ -309,7 +344,8 @@ EOF
 check_verify_failure 'verify tag-name check' \
 	'^error:.* badTagName:' \
 	--no-strict \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 11. tagger line label check #1
@@ -325,7 +361,8 @@ EOF
 check_verify_failure '"tagger" line label check #1' \
 	'^error:.* missingTaggerEntry:' \
 	--no-strict \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 12. tagger line label check #2
@@ -342,7 +379,8 @@ EOF
 check_verify_failure '"tagger" line label check #2' \
 	'^error:.* missingTaggerEntry:' \
 	--no-strict \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 13. allow missing tag author name like fsck
@@ -373,7 +411,8 @@ EOF
 check_verify_failure 'disallow malformed tagger' \
 	'^error:.* badEmail:' \
 	--no-strict \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 15. allow empty tag email
@@ -413,7 +452,8 @@ tagger T A Gger <tagger@example.com>__
 EOF
 
 check_verify_failure 'disallow missing tag timestamp' \
-	'^error:.* badDate:'
+	'^error:.* badDate:' \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 18. detect invalid tag timestamp1
@@ -427,7 +467,8 @@ tagger T A Gger <tagger@example.com> Tue Mar 25 15:47:44 2008
 EOF
 
 check_verify_failure 'detect invalid tag timestamp1' \
-	'^error:.* badDate:'
+	'^error:.* badDate:' \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 19. detect invalid tag timestamp2
@@ -441,7 +482,8 @@ tagger T A Gger <tagger@example.com> 2008-03-31T12:20:15-0500
 EOF
 
 check_verify_failure 'detect invalid tag timestamp2' \
-	'^error:.* badDate:'
+	'^error:.* badDate:' \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 20. detect invalid tag timezone1
@@ -455,7 +497,8 @@ tagger T A Gger <tagger@example.com> 1206478233 GMT
 EOF
 
 check_verify_failure 'detect invalid tag timezone1' \
-	'^error:.* badTimezone:'
+	'^error:.* badTimezone:' \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 21. detect invalid tag timezone2
@@ -469,7 +512,8 @@ tagger T A Gger <tagger@example.com> 1206478233 +  30
 EOF
 
 check_verify_failure 'detect invalid tag timezone2' \
-	'^error:.* badTimezone:'
+	'^error:.* badTimezone:' \
+	--bad-fsck-refs-out-is-broken-link
 
 ############################################################
 # 22. allow invalid tag timezone3 (the maximum is -1200/+1400)
@@ -499,7 +543,9 @@ EOF
 check_verify_failure 'detect invalid header entry' \
 	'^error:.* extraHeaderEntry:' \
 	--no-strict \
-	--bad-fsck-no-refs-ok
+	--bad-fsck-no-refs-ok \
+	--bad-fsck-refs-err-is-empty \
+	--bad-fsck-refs-out-is-broken-link
 
 test_expect_success 'invalid header entry config & fsck' '
 	test_must_fail git mktag <tag.sig &&
