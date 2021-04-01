@@ -18,6 +18,7 @@ check_verify_failure () {
 
 	bad_fsck_no_refs_ok=
 	bad_fsck_refs_err_is_empty=
+	bad_fsck_refs_err_is_custom=
 	bad_fsck_refs_out_is_broken_link=
 	no_strict=
 	while test $# != 0
@@ -31,6 +32,9 @@ check_verify_failure () {
 			;;
 		--bad-fsck-refs-err-is-empty)
 			bad_fsck_refs_err_is_empty=yes
+			;;
+		--bad-fsck-refs-err-is-custom)
+			bad_fsck_refs_err_is_custom=yes
 			;;
 		--bad-fsck-refs-out-is-broken-link)
 			bad_fsck_refs_out_is_broken_link=yes
@@ -65,11 +69,11 @@ check_verify_failure () {
 	if test -n "$bad_fsck_no_refs_ok"
 	then
 		test_expect_success "fsck OK with bad object for '$subject'" '
-			git -C bad-tag fsck
+			git -C bad-tag fsck --strict
 		'
 	else
 		test_expect_success "fsck NOT OK with bad object for '$subject'" '
-			test_must_fail git -C bad-tag fsck
+			test_must_fail git -C bad-tag fsck --strict
 		'
 	fi
 
@@ -85,26 +89,42 @@ check_verify_failure () {
 	'
 
 	test_expect_success "fsck ALWAYS NOT OK with bad object+ref for '$subject'" '
-		test_must_fail git -C bad-tag fsck >out 2>err &&
-		if test -n "$bad_fsck_refs_err_is_empty"
-		then
-			test_must_be_empty err
-		fi &&
-		cat out &&
-		cat err
+		test_must_fail git -c fsck.missingTaggerEntry=error -c fsck.badTagName=error -C bad-tag fsck >out 2>err
 	'
 
 	if test -n "$bad_fsck_refs_out_is_broken_link"
 	then
-		test_expect_success "fsck broken link output for '$subject'" '
-			grep "broken link" out
+		test_expect_success "fsck broken link output for '$subject' --> err is 'broken link'" '
+			grep "broken link" out &&
+			test_line_count = 3 out &&
+			grep "^broken link from" out &&
+			grep "^ *to *\\(commit\\|tree\\|blob\\|tag\\)" out &&
+			grep "^missing \\(commit\\|tree\\|blob\\|tag\\)" out
 		'
-	elif grep "broken link" out
+	else
+		test_expect_success "fsck ALWAYS NOT OK with bad object+ref for '$subject' --> out is empty" '
+			test_must_be_empty out
+		'
+	fi
+
+	if test -n "$bad_fsck_refs_err_is_empty"
 	then
-		test_expect_success 'bad' 'false'
-		test_expect_success "fsck output for '$subject'" '
-			test_line_count = 2 err &&
-			grep -e "not a commit" -e "object could not be parsed" err
+		test_expect_success "fsck ALWAYS NOT OK with bad object+ref for '$subject' --> err is empty" '
+			test_must_be_empty err
+		'
+	elif test -n "$bad_fsck_refs_err_is_custom"
+	then
+		test_expect_success "fsck ALWAYS NOT OK with bad object+ref for '$subject' --> err is checked below" '
+			true
+		'
+	elif grep "$message" err
+	then
+		test_expect_success "fsck output for '$subject' --> err was checked above" '
+			test_line_count = 1 err
+		'
+	else
+		test_expect_success "fsck output for '$subject' --> err was checked above" '
+			grep "object could not be parsed" err
 		'
 	fi
 
@@ -271,7 +291,16 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- made-up type, valid object' \
-	'^error:.* badType:'
+	'^error:.* badType:' \
+	--bad-fsck-refs-err-is-custom
+
+test_expect_success 'check it' '
+	grep "unknown tag type" err &&
+	grep "object could not be parsed" err
+'
+test_expect_failure 'check it' '
+	test_line_count = 4 err
+'
 
 cat >tag.sig <<EOF
 object $(test_oid deadbeef)
@@ -282,7 +311,16 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify object (hash/type) check -- made-up type, nonexisting object' \
-	'^error:.* badType:'
+	'^error:.* badType:' \
+	--bad-fsck-refs-err-is-custom
+
+test_expect_success 'check it' '
+	grep "unknown tag type" err &&
+	grep "object could not be parsed" err
+'
+test_expect_failure 'check it' '
+	test_line_count = 4 err
+'
 
 cat >tag.sig <<EOF
 object $head
@@ -342,7 +380,7 @@ tagger . <> 0 +0000
 EOF
 
 check_verify_failure 'verify tag-name check' \
-	'^error:.* badTagName:' \
+	'^error.*: badTagName:' \
 	--no-strict \
 	--bad-fsck-no-refs-ok \
 	--bad-fsck-refs-out-is-broken-link
@@ -359,7 +397,7 @@ This is filler
 EOF
 
 check_verify_failure '"tagger" line label check #1' \
-	'^error:.* missingTaggerEntry:' \
+	'^error.* :missingTaggerEntry:' \
 	--no-strict \
 	--bad-fsck-no-refs-ok \
 	--bad-fsck-refs-out-is-broken-link
@@ -377,7 +415,7 @@ This is filler
 EOF
 
 check_verify_failure '"tagger" line label check #2' \
-	'^error:.* missingTaggerEntry:' \
+	'^error.*: missingTaggerEntry:' \
 	--no-strict \
 	--bad-fsck-no-refs-ok \
 	--bad-fsck-refs-out-is-broken-link
