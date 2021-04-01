@@ -43,19 +43,45 @@ check_verify_failure () {
 		"
 	fi
 
-	test_expect_success "$subject -> hash-object --literally" "
-		test_when_finished 'rm -rf bad-tag' &&
-		test_create_repo bad-tag &&
-		git -C bad-tag hash-object -t tag -w --stdin --literally <tag.sig &&
+	test_expect_success "setup: create the bad object for '$subject'" "
+		# Not test_when_finished, used in later tests
+		rm -rf bad-tag &&
 
-		if test -n '$bad_fsck_no_refs_ok'
-		then
-			git -C bad-tag fsck
-		else
-			test_must_fail git -C bad-tag fsck
-		fi
+		git init -b bad-branch --bare bad-tag &&
+
+		git -C bad-tag hash-object -t tag -w --stdin --literally <tag.sig >bad-obj
 	"
 
+	if test -n "$bad_fsck_no_refs_ok"
+	then
+		test_expect_success "fsck OK with bad object for '$subject'" '
+			git -C bad-tag fsck
+		'
+	else
+		test_expect_success "fsck NOT OK with bad object for '$subject'" '
+			test_must_fail git -C bad-tag fsck
+		'
+	fi
+
+	test_expect_success "$subject -> create ref" '
+		bad_obj=$(cat bad-obj) &&
+
+		# Not using update-ref here for the actual work since
+		# it might fail, and we are not that interested in its
+		# failure. But test that it does fail.
+		test_must_fail git -C bad-tag update-ref $bad_obj &&
+
+		cp bad-obj bad-tag/refs/heads/bad-branch
+	'
+
+	test_expect_success "fsck ALWAYS NOT OK with bad object+ref for '$subject'" '
+		test_must_fail git -C bad-tag fsck 2>err &&
+		cat err
+	'
+
+	test_expect_success "for-each-ref with bad object+ref for '$subject'" '
+		! git -C bad-tag for-each-ref --format="%(*objectname)"
+	'
 }
 
 test_expect_mktag_success() {
