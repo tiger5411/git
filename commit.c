@@ -33,13 +33,20 @@ const char *commit_type = "commit";
 struct commit *lookup_commit_reference_gently(struct repository *r,
 		const struct object_id *oid, int quiet)
 {
-	struct object *obj = deref_tag(r,
-				       parse_object(r, oid),
-				       NULL, 0);
+	struct object *tmp = parse_object(r, oid);
+	struct object *obj = deref_tag(r, tmp, NULL, 0);
 
 	if (!obj)
 		return NULL;
-	return object_as_type(obj, OBJ_COMMIT, quiet);
+
+	if (obj->type <= 0)
+		BUG("should have initialized obj->type = OBJ_{COMMIT,TREE,BLOB,TAG} from deref_tag()");
+	if (obj->type != OBJ_COMMIT) {
+		if (!quiet)
+			oid_is_type_or_error(oid, obj->type, OBJ_COMMIT);
+		return NULL;
+	}
+	return (struct commit *)obj;
 }
 
 struct commit *lookup_commit_reference(struct repository *r, const struct object_id *oid)
