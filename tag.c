@@ -141,7 +141,7 @@ void release_tag_memory(struct tag *t)
 int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, unsigned long size)
 {
 	struct object_id oid;
-	char type[20];
+	enum object_type type;
 	const char *bufptr = data;
 	const char *tail = bufptr + size;
 	const char *nl;
@@ -170,23 +170,23 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 	bufptr += 5;
 	nl = memchr(bufptr, '\n', tail - bufptr);
 	taglen = nl - bufptr;
-	if (!nl || sizeof(type) <= taglen)
+	if (!nl)
 		return -1;
-	memcpy(type, bufptr, taglen);
-	type[taglen] = '\0';
-	bufptr = nl + 1;
-
-	if (!strcmp(type, blob_type))
+	type = type_from_string_gently(bufptr, taglen);
+	if (type == OBJ_BLOB)
 		item->tagged = (struct object *)lookup_blob(r, &oid);
-	else if (!strcmp(type, tree_type))
+	else if (type == OBJ_TREE)
 		item->tagged = (struct object *)lookup_tree(r, &oid);
-	else if (!strcmp(type, commit_type))
+	else if (type == OBJ_COMMIT)
 		item->tagged = (struct object *)lookup_commit(r, &oid);
-	else if (!strcmp(type, tag_type))
+	else if (type == OBJ_TAG)
 		item->tagged = (struct object *)lookup_tag(r, &oid);
+	else if (type < 0)
+		return error("unknown tag type '%.*s' in %s", (int)taglen,
+			     bufptr, oid_to_hex(&item->object.oid));
 	else
-		return error("unknown tag type '%s' in %s",
-			     type, oid_to_hex(&item->object.oid));
+		BUG("unreachable type_from_string_gently() = %d", type);
+	bufptr = nl + 1;
 
 	if (!item->tagged)
 		return error("bad tag pointer to %s in %s",
