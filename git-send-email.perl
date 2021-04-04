@@ -219,8 +219,8 @@ sub system_or_msg {
 	my $exit_code = $? >> 8;
 	return unless $signalled or $exit_code;
 
-	return sprintf(__("failed to run command %s, died with code %d"),
-		       "@$args", $exit_code);
+	return sprintf(__("fatal: command '%s' died with exit code %d"),
+		       $args->[0], $exit_code);
 }
 
 sub system_or_die {
@@ -1945,12 +1945,6 @@ sub unique_email_list {
 	return @emails;
 }
 
-sub validate_patch_error {
-	my ($fn, $error) = @_;
-	die sprintf(__("fatal: %s: %s\nwarning: no patches were sent\n"),
-		    $fn, $error);
-}
-
 sub validate_patch {
 	my ($fn, $xfer_encoding) = @_;
 
@@ -1965,12 +1959,14 @@ sub validate_patch {
 			chdir($repo->wc_path() or $repo->repo_path())
 				or die("chdir: $!");
 			local $ENV{"GIT_DIR"} = $repo->repo_path();
-			if (my $msg = system_or_msg([$validate_hook, $target])) {
-				$hook_error = __("rejected by sendemail-validate hook");
-			}
+			$hook_error = system_or_msg([$validate_hook, $target]);
 			chdir($cwd_save) or die("chdir: $!");
 		}
-		validate_patch_error($fn, $hook_error) if $hook_error;
+		if ($hook_error) {
+			die sprintf(__("fatal: %s: rejected by sendemail-validate hook\n" .
+				       "%s\n" .
+				       "warning: no patches were sent\n"), $fn, $hook_error);
+		}
 	}
 
 	# Any long lines will be automatically fixed if we use a suitable transfer
@@ -1980,7 +1976,8 @@ sub validate_patch {
 			or die sprintf(__("unable to open %s: %s\n"), $fn, $!);
 		while (my $line = <$fh>) {
 			if (length($line) > 998) {
-				validate_patch_error($fn, sprintf(__("%s: patch contains a line longer than 998 characters"), $.));
+				die sprintf(__("fatal: %s:%d is longer than 998 characters\n" .
+					       "warning: no patches were sent\n"), $fn, $.);
 			}
 		}
 	}
