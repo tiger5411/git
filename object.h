@@ -121,7 +121,7 @@ struct object *lookup_object(struct repository *r, const struct object_id *oid);
 
 void *create_object(struct repository *r, const struct object_id *oid, void *obj);
 
-void *object_as_type(struct object *obj, enum object_type type, int quiet);
+void *object_as_type(struct object *obj, enum object_type type);
 
 void oid_is_type_or_die(const struct object_id *oid,
 			const enum object_type got,
