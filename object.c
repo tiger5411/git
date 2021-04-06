@@ -207,8 +207,7 @@ void *object_as_type(struct object *obj, enum object_type type, int quiet)
 		else
 			obj->type = type;
 		return obj;
-	}
-	else {
+	} else {
 		if (!quiet)
 			error(_(object_type_mismatch_msg),
 			      oid_to_hex(&obj->oid),
