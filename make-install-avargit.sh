@@ -88,6 +88,7 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   avar/test-lib-add-GIT_TEST_TIMEOUT-2
 #   more-gc-detach-under-lock
 #   avar/makefile-do-not-build-fuzz-under-all (just drop it?)
+#   avar/even-more-mktag-tests
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
@@ -106,11 +107,9 @@ for series in \
     avar/worktree-add-orphan \
     avar/describe-test-refactoring-2 \
     avar/fix-coccicheck-4 \
-    avar/object-is-type-error-refactor-2 \
     avar/tree-walk-api-refactor-prep \
     avar/tree-walk-api-refactor-5 \
     avar/tree-walk-api-canon-mode-switch \
-    avar/pr-git-973/newren/ort-remainder-v1 \
     avar/support-test-verbose-under-prove-2 \
     avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
@@ -126,7 +125,15 @@ for series in \
     avar/makefile-misc-crap-improved-make-clean \
     avar/makefile-add-quiet-to-tags-and-TAGS-targets \
     avar/makefile-rename-git-binary-not-in-place \
-    avar/makefile-ln-or-cp-script
+    avar/makefile-ln-or-cp-script \
+    avar/jk-fix-null-check-on-parse-object-failure-and-mktag-tests \
+    avar/send-email-hook-refactor-error-2 \
+    avar/show-branch-tests \
+    avar/object-api-misc-small \
+    avar/object-api-enum-object-type-misc \
+    avar/object-as-type-simplified \
+    avar/object-is-type-error-refactor-3 \1
+    avar/completion-cherry-pick-head
 do
 	echo $series >>$series_list
 done
