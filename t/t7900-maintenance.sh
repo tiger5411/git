@@ -30,28 +30,41 @@ test_expect_success 'help text' '
 '
 
 test_expect_success 'run [--auto|--quiet]' '
-	GIT_TRACE2_EVENT="$(pwd)/run-no-auto.txt" \
-		git maintenance run 2>/dev/null &&
-	GIT_TRACE2_EVENT="$(pwd)/run-auto.txt" \
-		git maintenance run --auto 2>/dev/null &&
-	GIT_TRACE2_EVENT="$(pwd)/run-no-quiet.txt" \
-		git maintenance run --no-quiet 2>/dev/null &&
-	test_subcommand git gc --quiet <run-no-auto.txt &&
-	test_subcommand ! git gc --auto --quiet <run-auto.txt &&
-	test_subcommand git gc --no-quiet <run-no-quiet.txt
+	test_expect_process_tree --depth 0 git maintenance run <<-\OUT 3<<-\ERR &&
+	git gc --quiet
+	OUT
+	ERR
+
+	test_expect_process_tree --depth 0 git maintenance run --auto <<-\OUT 3<<-\ERR &&
+	OUT
+	ERR
+
+	test_expect_process_tree --depth 0 git maintenance run --quiet <<-\OUT 3<<-\ERR &&
+	git gc --quiet
+	OUT
+	ERR
+
+	test_expect_process_tree --depth 0 git maintenance run --no-quiet <<-\OUT 3<<-\ERR
+	git gc --no-quiet
+	OUT
+	ERR
 '
 
 test_expect_success 'maintenance.auto config option' '
-	GIT_TRACE2_EVENT="$(pwd)/default" git commit --quiet --allow-empty -m 1 &&
-	test_subcommand git maintenance run --auto --quiet <default &&
-	GIT_TRACE2_EVENT="$(pwd)/true" \
-		git -c maintenance.auto=true \
-		commit --quiet --allow-empty -m 2 &&
-	test_subcommand git maintenance run --auto --quiet  <true &&
-	GIT_TRACE2_EVENT="$(pwd)/false" \
-		git -c maintenance.auto=false \
-		commit --quiet --allow-empty -m 3 &&
-	test_subcommand ! git maintenance run --auto --quiet  <false
+	test_expect_process_tree git commit --quiet --allow-empty -m 1 <<-\OUT 3<<-\ERR &&
+	git maintenance run --auto --quiet
+	OUT
+	ERR
+
+	test_expect_process_tree git commit --quiet --allow-empty -m 2 <<-\OUT 3<<-\ERR &&
+	git maintenance run --auto --quiet
+	OUT
+	ERR
+
+	test_expect_process_tree git commit --quiet --allow-empty -m 3 <<-\OUT 3<<-\ERR
+	git maintenance run --auto --quiet
+	OUT
+	ERR
 '
 
 test_expect_success 'maintenance.<task>.enabled' '

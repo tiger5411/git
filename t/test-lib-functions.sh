@@ -1625,6 +1625,38 @@ test_path_is_hidden () {
 	return 1
 }
 
+test_expect_process_tree () {
+	depth= &&
+	>actual &&
+	cat >expect &&
+	cat <&3 >expect.err
+	while test $# != 0
+	do
+		case "$1" in
+		--depth)
+			depth="$2"
+			shift
+			;;
+		*)
+			break
+			;;
+		esac
+		shift
+	done &&
+	log="$(pwd)/proc-tree.txt" &&
+	>"$log" &&
+	GIT_TRACE2_PERF="$log" "$@" 2>actual.err &&
+	grep "child_start" proc-tree.txt >proc-tree-start.txt || : &&
+	if test -n "$depth"
+	then
+		grep " d$depth " proc-tree-start.txt >tmp.txt || : &&
+		mv tmp.txt proc-tree-start.txt
+	fi &&
+	sed -e 's/^.*argv:\[//' -e 's/\]$//' <proc-tree-start.txt >actual &&
+	test_cmp expect actual &&
+	test_cmp expect.err actual.err
+} 7>&2 2>&4
+
 # Check that the given command was invoked as part of the
 # trace2-format trace on stdin.
 #
