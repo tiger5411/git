@@ -127,13 +127,16 @@ for series in \
     avar/makefile-rename-git-binary-not-in-place \
     avar/makefile-ln-or-cp-script \
     avar/jk-fix-null-check-on-parse-object-failure-and-mktag-tests \
-    avar/send-email-hook-refactor-error-2 \
+    avar/send-email-map-in-void-context \
+    avar/send-email-hook-refactor-error-3 \
+    avar/send-email-fixes-and-speedup \
     avar/show-branch-tests \
     avar/object-api-misc-small \
     avar/object-api-enum-object-type-misc \
     avar/object-as-type-simplified \
-    avar/object-is-type-error-refactor-3 \1
-    avar/completion-cherry-pick-head
+    avar/object-is-type-error-refactor-3 \
+    avar/completion-cherry-pick-head \
+    avar/test-lib-test-oid-to-dir
 do
 	echo $series >>$series_list
 done
