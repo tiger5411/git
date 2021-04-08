@@ -277,8 +277,16 @@ static int parse_funcname(struct userdiff_funcname *f, const char *k,
 
 static int parse_tristate(int *b, const char *k, const char *v)
 {
-	int tristate = git_config_tristate(k, v);
-	*b = tristate == 2 ? -1 : tristate;
+	enum git_config_type_bool_or_auto tristate = git_config_tristate(k, v);
+	switch (tristate) {
+	case GIT_CONFIG_TYPE_BOOL_OR_AUTO_FALSE:
+	case GIT_CONFIG_TYPE_BOOL_OR_AUTO_TRUE:
+		*b = tristate;
+		break;
+	case GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO:
+		*b = -1;
+		break;
+	}
 	return 0;
 }
 

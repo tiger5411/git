@@ -201,7 +201,14 @@ int git_parse_maybe_bool(const char *);
  * Same as `git_parse_maybe_bool`, except that "auto" is recognized and
  * will return "2".
  */
-int git_parse_maybe_tristate(const char *);
+enum git_config_type_maybe_bool_or_auto {
+	GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_BAD   = -1,
+	GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_FALSE = 0,
+	GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_TRUE  = 1,
+	GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_AUTO  = 2,
+};
+	
+enum git_config_type_maybe_bool_or_auto git_parse_maybe_tristate(const char *);
 
 /**
  * Parse the string to an integer, including unit factors. Dies on error;
@@ -236,7 +243,13 @@ int git_config_bool(const char *, const char *);
  * Like git_config_bool() except "auto" is also recognized and will
  * return "2"
  */
-int git_config_tristate(const char *, const char *);
+enum git_config_type_bool_or_auto {
+	GIT_CONFIG_TYPE_BOOL_OR_AUTO_FALSE = GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_FALSE,
+	GIT_CONFIG_TYPE_BOOL_OR_AUTO_TRUE  = GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_TRUE,
+	GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO  = GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_AUTO,
+};
+enum git_config_type_bool_or_auto git_config_tristate(const char *name,
+						      const char *value);
 
 /**
  * Allocates and copies the value string into the `dest` parameter; if no

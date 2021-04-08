@@ -406,12 +406,16 @@ static int http_options(const char *var, const char *value, void *cb)
 		return git_config_string(&user_agent, var, value);
 
 	if (!strcmp("http.emptyauth", var)) {
-		int tristate = git_config_tristate(var, value);
-		if (tristate == 2)
+		enum git_config_type_bool_or_auto v = git_config_tristate(var, value);
+		switch (v) {
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_FALSE:
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_TRUE:
+			curl_empty_auth = v;
+			return 0;
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO:
 			curl_empty_auth = -1;
-		else
-			curl_empty_auth = tristate;
-		return 0;
+			return 0;
+		}
 	}
 
 	if (!strcmp("http.delegation", var)) {

@@ -868,14 +868,17 @@ static int git_format_config(const char *var, const char *value, void *cb)
 		return 0;
 	}
 	if (!strcmp(var, "format.numbered")) {
-		int tristate = git_config_tristate(var, value);
-		if (tristate == 2) {
+		enum git_config_type_bool_or_auto v = git_config_tristate(var, value);
+		switch (v) {
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_FALSE:
 			auto_number = 1;
 			return 0;
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_TRUE:
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO:
+			numbered = v;
+			auto_number = auto_number && numbered;
+			return 0;
 		}
-		numbered = tristate;
-		auto_number = auto_number && numbered;
-		return 0;
 	}
 	if (!strcmp(var, "format.attach")) {
 		if (value && *value)
@@ -905,12 +908,18 @@ static int git_format_config(const char *var, const char *value, void *cb)
 	if (!strcmp(var, "format.signaturefile"))
 		return git_config_pathname(&signature_file, var, value);
 	if (!strcmp(var, "format.coverletter")) {
-		int tristate = git_config_tristate(var, value);
-		if (tristate == 2)
+		enum git_config_type_bool_or_auto v = git_config_tristate(var, value);
+		switch (v) {
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_FALSE:
+			config_cover_letter = COVER_OFF;
+			return 0;
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_TRUE:
+			config_cover_letter = COVER_ON;
+			return 0;
+		case GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO:
 			config_cover_letter = COVER_AUTO;
-		else
-			config_cover_letter = tristate ? COVER_ON : COVER_OFF;
-		return 0;
+			return 0;
+		}
 	}
 	if (!strcmp(var, "format.outputdirectory"))
 		return git_config_string(&config_output_directory, var, value);

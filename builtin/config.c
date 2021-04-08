@@ -268,11 +268,18 @@ static int format_config(struct strbuf *buf, const char *key_, const char *value
 			else
 				strbuf_addstr(buf, v ? "true" : "false");
 		} else if (type == TYPE_BOOL_OR_AUTO) {
-			int v = git_config_tristate(key_, value_);
-			if (v == 2)
+			enum git_config_type_bool_or_auto v = git_config_tristate(key_, value_);
+			switch (v) {
+			case GIT_CONFIG_TYPE_BOOL_OR_AUTO_FALSE:
+				strbuf_addstr(buf, "false");
+				break;
+			case GIT_CONFIG_TYPE_BOOL_OR_AUTO_TRUE:
+				strbuf_addstr(buf, "true");
+				break;
+			case GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO:
 				strbuf_addstr(buf, "auto");
-			else
-				strbuf_addstr(buf, v ? "true" : "false");
+				break;
+			}
 		} else if (type == TYPE_PATH) {
 			const char *v;
 			if (git_config_pathname(&v, key_, value_) < 0)
@@ -446,13 +453,17 @@ static char *normalize_value(const char *key, const char *value)
 			return xstrdup(v ? "true" : "false");
 	}
 	if (type == TYPE_BOOL_OR_AUTO) {
-		int v = git_parse_maybe_tristate(value);
-		if (v < 0)
+		enum git_config_type_maybe_bool_or_auto v = git_parse_maybe_tristate(value); 
+		switch (v) {
+		case GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_BAD:
 			return xstrdup(value);
-		else if (v == 2)
-			xstrdup("auto");
-		else
-			return xstrdup(v ? "true" : "false");
+		case GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_FALSE:
+			return xstrdup("false");
+		case GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_TRUE:
+			return xstrdup("true");
+		case GIT_CONFIG_TYPE_MAYBE_BOOL_OR_AUTO_AUTO:
+			return xstrdup("auto");
+		}
 	}
 	if (type == TYPE_COLOR) {
 		char v[COLOR_MAXLEN];

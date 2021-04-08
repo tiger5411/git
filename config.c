@@ -1257,11 +1257,11 @@ int git_parse_maybe_bool(const char *value)
 	return -1;
 }
 
-int git_parse_maybe_tristate(const char *value)
+enum git_config_type_maybe_bool_or_auto git_parse_maybe_tristate(const char *value)
 {
 	int v = git_parse_maybe_bool(value);
 	if (v < 0 && !strcasecmp(value, "auto"))
-		return 2;
+		return GIT_CONFIG_TYPE_BOOL_OR_AUTO_AUTO;
 	return v;
 }
 
@@ -1276,9 +1276,10 @@ int git_config_bool_or_int(const char *name, const char *value, int *is_bool)
 	return git_config_int(name, value);
 }
 
-int git_config_tristate(const char *name, const char *value)
+enum git_config_type_bool_or_auto git_config_tristate(const char *name,
+						      const char *value)
 {
-	int v = git_parse_maybe_tristate(value);
+	enum git_config_type_maybe_bool_or_auto v = git_parse_maybe_tristate(value);
 	if (v < 0)
 		die(_("bad tristate config value '%s' for '%s'"), value, name);
 	return v;
