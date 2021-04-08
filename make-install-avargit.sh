@@ -98,7 +98,6 @@ set +x
 for series in \
     avar/fsck-doc \
     avar/makefile-do-not-build-fuzz-under-all \
-    avar/fsck-h-interface-6 \
     avar/t4018-diff-hunk-header-regex-tests-4-beginning \
     avar/t4018-diff-hunk-header-regex-tests-4 \
     avar/diff-W-context-3 \
