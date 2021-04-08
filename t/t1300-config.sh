@@ -874,6 +874,55 @@ test_expect_success 'get --bool-or-str' '
 	test_cmp expect actual
 '
 
+test_expect_success 'there is no --bool-or-auto, --<type> is deprecated in favor of --type=<type>' '
+	test_expect_code 129 git config --bool-or-auto
+'
+
+test_expect_success 'get --type=bool-or-auto' '
+	cat >.git/config <<-\EOF &&
+	[bool]
+	true1
+	true2 = true
+	false = false
+	[int]
+	int1 = 0
+	int2 = 1
+	int3 = -1
+	[string]
+	string1 = hello
+	string2 = there you
+	[auto]
+	auto1 = auto
+	auto2 = AUTO
+	[bad-auto]
+	bad-auto1 = AUTOMATIC
+	EOF
+	cat >expect <<-\EOF &&
+	true
+	true
+	false
+	false
+	true
+	true
+	auto
+	auto
+	EOF
+	{
+		git config --type=bool-or-auto bool.true1 &&
+		git config --type=bool-or-auto bool.true2 &&
+		git config --type=bool-or-auto bool.false &&
+		git config --type=bool-or-auto int.int1 &&
+		git config --type=bool-or-auto int.int2 &&
+		git config --type=bool-or-auto int.int3 &&
+		git config --type=bool-or-auto auto.auto1 &&
+		git config --type=bool-or-auto auto.auto2
+	} >actual &&
+	test_cmp expect actual &&
+
+	test_must_fail git config --type=bool-or-auto --get bad-auto.bad-auto1 2>err &&
+	grep "bad tristate config value" err
+'
+
 cat >expect <<\EOF
 [bool]
 	true1 = true
