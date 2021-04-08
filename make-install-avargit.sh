@@ -89,6 +89,10 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   more-gc-detach-under-lock
 #   avar/makefile-do-not-build-fuzz-under-all (just drop it?)
 #   avar/even-more-mktag-tests
+# TODO (bkng work):
+#   reflog-expire-do-not-assert-oid-when-locking-refs
+#   hash-object-no-zlib
+#   check-collisions-config-5
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #
@@ -98,9 +102,9 @@ set +x
 for series in \
     avar/fsck-doc \
     avar/makefile-do-not-build-fuzz-under-all \
-    avar/t4018-diff-hunk-header-regex-tests-4-beginning \
-    avar/t4018-diff-hunk-header-regex-tests-4 \
-    avar/diff-W-context-3 \
+    avar/t4018-diff-hunk-header-regex-tests-4-beginning-2 \
+    avar/t4018-diff-hunk-header-regex-tests-5 \
+    avar/diff-W-context-4 \
     avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/commit-graph-usage \
     avar/worktree-add-orphan \
@@ -115,7 +119,8 @@ for series in \
     avar/test-lib-bail-out-on-accidental-prove-invocation \
     avar/fix-rebase-no-reschedule-failed-exec-with-config \
     avar/format-patch-prettier-message-id \
-    avar/kill-git-test-gettext-poison-finally \
+    avar/kill-git-test-gettext-poison-finally-2 \
+    avar/git-config-bool-or-auto \
     avar/bundle-uri-design-doc \
     avar/doc-make-lint-fixes \
     avar/doc-config-includes \
