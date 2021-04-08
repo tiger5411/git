@@ -1229,6 +1229,10 @@ ssize_t git_config_ssize_t(const char *name, const char *value)
 static int git_parse_maybe_bool_text(const char *value)
 {
 	if (!value)
+		/*
+		 * "[foo]\nbar\n" and "-c foo.bar" on the command-line
+		 * are true.
+		 */
 		return 1;
 	if (!*value)
 		return 0;
