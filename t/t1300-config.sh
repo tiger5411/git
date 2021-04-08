@@ -802,6 +802,78 @@ test_expect_success 'get --bool-or-int' '
 	test_cmp expect actual
 '
 
+test_expect_success 'get --bool-or-str' '
+	cat >.git/config <<-\EOF &&
+	[bool]
+	true1
+	true2 = true
+	true3 = TRUE
+	true4 = yes
+	true5 = YES
+	true6 = on
+	true7 = ON
+	false1 =
+	false2 = false
+	false3 = FALSE
+	false4 = no
+	false5 = NO
+	false6 = off
+	false7 = OFF
+	[int]
+	int1 = 0
+	int2 = 1
+	int3 = -1
+	[string]
+	string1 = hello
+	string2 = there you
+	EOF
+	cat >expect <<-\EOF &&
+	true
+	true
+	true
+	true
+	true
+	true
+	true
+	false
+	false
+	false
+	false
+	false
+	false
+	false
+	false
+	false
+	true
+	true
+	hello
+	there you
+	EOF
+	{
+		git config --type=bool-or-str bool.true1 &&
+		git config --bool-or-str bool.true2 &&
+		git config --bool-or-str bool.true3 &&
+		git config --bool-or-str bool.true4 &&
+		git config --bool-or-str bool.true5 &&
+		git config --bool-or-str bool.true6 &&
+		git config --bool-or-str bool.true7 &&
+		git config --bool-or-str bool.false1 &&
+		git config --bool-or-str bool.false2 &&
+		git config --bool-or-str bool.false3 &&
+		git config --bool-or-str bool.false4 &&
+		git config --bool-or-str bool.false5 &&
+		git config --bool-or-str bool.false6 &&
+		git config --bool-or-str bool.false6 &&
+		git config --bool-or-str bool.false7 &&
+		git config --bool-or-str int.int1 &&
+		git config --bool-or-str int.int2 &&
+		git config --bool-or-str int.int3 &&
+		git config --bool-or-str string.string1 &&
+		git config --bool-or-str string.string2
+	} >actual &&
+	test_cmp expect actual
+'
+
 cat >expect <<\EOF
 [bool]
 	true1 = true
