@@ -671,7 +671,7 @@ test_expect_success 'fsck --connectivity-only' '
 		# its type. That lets us see that --connectivity-only is
 		# not actually looking at the contents, but leaves it
 		# free to examine the type if it chooses.
-		empty=.git/objects/$(test_oid_to_path $EMPTY_BLOB) &&
+		empty="$(test_oid_to_objects_path $EMPTY_BLOB)" &&
 		blob=$(echo unrelated | git hash-object -w --stdin) &&
 		mv -f $(sha1_file $blob) $empty &&
 

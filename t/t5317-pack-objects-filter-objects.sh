@@ -407,9 +407,9 @@ test_expect_success 'setup r1 - delete loose blobs' '
 	awk -f print_2.awk ls_files_result |
 	sort >expected &&
 
-	for id in `cat expected | sed "s|..|&/|"`
+	for id in `cat expected`
 	do
-		rm r1/.git/objects/$id || return 1
+		rm r1/"$(test_oid_to_objects_path $id)" || return 1
 	done
 '
 

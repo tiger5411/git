@@ -1706,6 +1706,10 @@ test_oid_to_path () {
 	echo "${1%$basename}/$basename"
 }
 
+test_oid_to_objects_path () {
+	echo .git/objects/"$(test_oid_to_path $1)"
+}
+
 # Choose a port number based on the test script's number and store it in
 # the given variable name, unless that variable already contains a number.
 test_set_port () {
