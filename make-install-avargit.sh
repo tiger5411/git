@@ -175,7 +175,7 @@ do
 		continue
 	fi
 	git --no-pager range-diff --right-only origin/master...$branch >$series_list.range-diff
-	grep -v -- " ----------- >" $series_list.range-diff >$series_list.range-diff.no-new || :
+	grep -E -v -- " ----------+ >" $series_list.range-diff >$series_list.range-diff.no-new || :
 	if test -s $series_list.range-diff.no-new
 	then
 		echo "Have partial merge in rangediff of origin/master...$branch, rebase!:"
