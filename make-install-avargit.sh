@@ -117,12 +117,12 @@ for series in \
     avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
     avar/test-lib-bail-out-on-accidental-prove-invocation \
-    avar/fix-rebase-no-reschedule-failed-exec-with-config \
+    avar/fix-rebase-no-reschedule-failed-exec-with-config-2 \
     avar/format-patch-prettier-message-id \
     avar/kill-git-test-gettext-poison-finally-2 \
     avar/git-config-bool-or-auto \
     avar/bundle-uri-design-doc \
-    avar/doc-make-lint-fixes \
+    avar/doc-make-lint-fixes-2 \
     avar/doc-config-includes \
     avar/usage-api-add-bug \
     avar/fsck-error-on-completely-invalid \
@@ -133,6 +133,8 @@ for series in \
     avar/jk-fix-null-check-on-parse-object-failure-and-mktag-tests \
     avar/send-email-map-in-void-context \
     avar/send-email-hook-refactor-error-3 \
+    avar/send-email-make-fixes \
+    avar/send-email-smtp-config-minor \
     avar/send-email-fixes-and-speedup \
     avar/show-branch-tests \
     avar/object-api-misc-small \
@@ -196,7 +198,7 @@ test -n "$only_merge" && exit
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Compile
-make -j $(nproc) all #man
+make -j $(nproc) all man check-docs
 test -n "$only_compile" && exit
 
 # First run a smaller subset of tests, likelier to have failures:
@@ -220,7 +222,7 @@ new_version=$(git rev-parse HEAD)
 new_tagname=$(tag_name)
 new_tag=$(tag_it "$new_version" "$new_tagname")
 last_version=$(git rev-parse avar/private)
-make -j $(nproc) install #install-man
+make -j $(nproc) install install-man
 show_built_from
 
 # Post-install & report
