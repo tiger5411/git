@@ -213,7 +213,8 @@ test -n "$only_basic_test" && exit
 # Run all tests
 (
 	cd t &&
-	GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="--exec /bin/bash --jobs=$(nproc) --timer --state=failed,slow,save"
+	make -j $(nproc) clean-except-prove-cache &&
+	GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make -j $(nproc) all test-lint GIT_PROVE_OPTS="--exec /bin/bash --jobs=$(nproc) --timer --state=failed,slow,save"
 )
 test -n "$only_test" && exit
 
