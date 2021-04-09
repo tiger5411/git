@@ -127,7 +127,6 @@ for series in \
     avar/usage-api-add-bug \
     avar/fsck-error-on-completely-invalid \
     avar/makefile-misc-crap-improved-make-clean \
-    avar/makefile-add-quiet-to-tags-and-TAGS-targets \
     avar/makefile-rename-git-binary-not-in-place \
     avar/makefile-ln-or-cp-script \
     avar/jk-fix-null-check-on-parse-object-failure-and-mktag-tests \
