@@ -480,10 +480,15 @@ void warning_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
 
 /*
  * Let callers be aware of the constant return value; this can help
- * gcc with -Wuninitialized analysis. We restrict this trick to gcc, though,
- * because some compilers may not support variadic macros. Since we're only
- * trying to help gcc, anyway, it's OK; other compilers will fall back to
- * using the function as usual.
+ * gcc with -Wuninitialized analysis.
+ *
+ * We restrict this trick to gcc, though, because while we rely on the
+ * presence of C99 variadic macros, this code also relies on the
+ * non-standard behavior of GCC's __VA_ARGS__, allowing error() to
+ * work even if no format specifiers are passed to error().
+ *
+ * Since we're only trying to help gcc, anyway, it's OK; other
+ * compilers will fall back to using the function as usual.
  */
 #if defined(__GNUC__)
 static inline int const_error(void)
