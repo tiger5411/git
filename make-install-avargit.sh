@@ -104,58 +104,56 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #
 # If we've got a previous resolution, the merge --continue will
 # continue the merge. TODO: make it support --no-edit
-set +x
-for series in \
-    avar/fsck-doc \
-    avar/test-lib-various \
-    avar/makefile-do-not-build-fuzz-under-all \
-    avar/t4018-diff-hunk-header-regex-tests-4-beginning-2 \
-    avar/t4018-diff-hunk-header-regex-tests-5 \
-    avar/diff-W-context-4 \
-    avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-3 \
-    avar/pcre2-conversion-of-diffcore-pickaxe \
-    avar/commit-graph-usage \
-    avar/worktree-add-orphan \
-    avar/svn-code-in-test-body \
-    avar/describe-test-refactoring-2 \
-    avar/tree-walk-api-refactor-prep \
-    avar/tree-walk-api-refactor-5 \
-    avar/tree-walk-api-canon-mode-switch \
-    avar/t0000-lib-subtest-split-and-refactor \
-    avar/support-test-verbose-under-prove-2 \
-    avar/sh-remove-sha1-variables \
-    avar/test-lib-bail-out-on-accidental-prove-invocation-2 \
-    avar/fix-rebase-no-reschedule-failed-exec-with-config-2 \
-    avar/format-patch-prettier-message-id \
-    avar/kill-git-test-gettext-poison-finally-2 \
-    avar/git-config-bool-or-auto \
-    avar/bundle-uri-design-doc \
-    avar/doc-make-lint-fixes-2 \
-    avar/doc-config-includes \
-    avar/usage-api-add-bug \
-    avar/fsck-error-on-completely-invalid \
-    avar/makefile-misc-crap-improved-make-clean \
-    avar/makefile-rename-git-binary-not-in-place \
-    avar/makefile-ln-or-cp-script \
-    avar/jk-fix-null-check-on-parse-object-failure-and-mktag-tests \
-    avar/send-email-map-in-void-context \
-    avar/send-email-hook-refactor-error-3 \
-    avar/send-email-make-fixes \
-    avar/send-email-smtp-config-minor \
-    avar/send-email-fixes-and-speedup \
-    avar/show-branch-tests \
-    avar/object-api-misc-small \
-    avar/object-api-enum-object-type-misc \
-    avar/object-as-type-simplified \
-    avar/object-is-type-error-refactor-3 \
-    avar/completion-cherry-pick-head \
-    avar/test-lib-test-oid-to-dir \
-    avar/variadic-macros
-do
-	echo $series >>$series_list
-done
+cat >$series_list.commented <<\EOF
+avar/fsck-doc
+avar/test-lib-various
+avar/makefile-do-not-build-fuzz-under-all
+avar/t4018-diff-hunk-header-regex-tests-4-beginning-2
+avar/t4018-diff-hunk-header-regex-tests-5
+avar/diff-W-context-4
+avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-3
+avar/pcre2-conversion-of-diffcore-pickaxe
+avar/commit-graph-usage
+avar/worktree-add-orphan
+avar/svn-code-in-test-body
+avar/describe-test-refactoring-2
+avar/tree-walk-api-refactor-prep
+avar/tree-walk-api-refactor-5
+avar/tree-walk-api-canon-mode-switch
+avar/t0000-lib-subtest-split-and-refactor
+avar/support-test-verbose-under-prove-2
+avar/sh-remove-sha1-variables
+avar/test-lib-bail-out-on-accidental-prove-invocation-2
+avar/fix-rebase-no-reschedule-failed-exec-with-config-2
+avar/format-patch-prettier-message-id
+avar/kill-git-test-gettext-poison-finally-2
+avar/git-config-bool-or-auto
+avar/bundle-uri-design-doc
+avar/doc-make-lint-fixes-2
+avar/doc-config-includes
+avar/usage-api-add-bug
+avar/fsck-error-on-completely-invalid
+avar/makefile-misc-crap-improved-make-clean
+avar/makefile-rename-git-binary-not-in-place
+avar/makefile-ln-or-cp-script
+avar/jk-fix-null-check-on-parse-object-failure-and-mktag-tests
+avar/send-email-map-in-void-context
+avar/send-email-hook-refactor-error-3
+avar/send-email-make-fixes
+avar/send-email-smtp-config-minor
+avar/send-email-fixes-and-speedup
+avar/show-branch-tests
+avar/object-api-misc-small
+avar/object-api-enum-object-type-misc
+avar/object-as-type-simplified
+avar/object-is-type-error-refactor-3
+avar/completion-cherry-pick-head
+avar/test-lib-test-oid-to-dir
+avar/variadic-macros
+EOF
 
 # Sanity check that this is all pushed out
+grep -v -e '^$' -e '^#' $series_list.commented >$series_list
 while read -r branch
 do
 	if ! git rev-parse refs/remotes/avar/$branch >/dev/null 2>&1
