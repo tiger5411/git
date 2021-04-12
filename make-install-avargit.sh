@@ -98,8 +98,6 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   reflog-expire-do-not-assert-oid-when-locking-refs
 #   hash-object-no-zlib
 #   check-collisions-config-5
-# TODO:
-#   avar/variadic-macros (causes t7810-grep.sh failure??)
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
 #   avar/fix-coccicheck-4 (see https://lore.kernel.org/git/877dlwotjc.fsf@evledraar.gmail.com/)
@@ -151,7 +149,8 @@ for series in \
     avar/object-as-type-simplified \
     avar/object-is-type-error-refactor-3 \
     avar/completion-cherry-pick-head \
-    avar/test-lib-test-oid-to-dir
+    avar/test-lib-test-oid-to-dir \
+    avar/variadic-macros
 do
 	echo $series >>$series_list
 done
