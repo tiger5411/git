@@ -44,7 +44,7 @@ tag_name() {
 }
 
 tag_it() {
-        tmp=$(mktemp /tmp/avargit-XXXXX)
+	tmp=$(mktemp /tmp/avargit-XXXXX)
 	cat >$tmp <<-EOF
 	object $1
 	type commit
@@ -59,20 +59,20 @@ tag_it() {
 	printf "\0" >>$tmp
 	cat "$meta_dir"/"$0" >>$tmp
 
-        git mktag --strict <$tmp
+	git mktag --strict <$tmp
 }
 
 show_built_from() {
-        built_from=$(git version --build-options | grep -P -o '(?<=built from commit: ).*')
-        echo "Info:"
-        echo "  - Now running: $(git version)"
-        echo "  - Now running built from: $(git reference $built_from)"
+	built_from=$(git version --build-options | grep -P -o '(?<=built from commit: ).*')
+	echo "Info:"
+	echo "  - Now running: $(git version)"
+	echo "  - Now running built from: $(git reference $built_from)"
 }
 
 reset_it() {
-        git reset --hard @{u}
-        git merge --abort || :
-        git reset --hard @{u}
+	git reset --hard @{u}
+	git merge --abort || :
+	git reset --hard @{u}
 }
 
 show_built_from
