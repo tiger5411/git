@@ -8,6 +8,7 @@ only_merge=
 only_compile=
 only_basic_test=
 only_test=
+force_push=
 while test $# != 0
 do
 	case "$1" in
@@ -28,6 +29,9 @@ do
 		;;
 	--only-test)
 		only_test=yes
+		;;
+	--force-push)
+		force_push=yes
 		;;
 	*)
 		break
@@ -164,8 +168,13 @@ do
 		then
 			echo Have $branch and avar/$branch at two different commits:
 			cat $series_list.tmp
-			# Die if I need to force push, will manually sort it out.
-			git push avar $branch:$branch
+			if test -z "$force_push"
+			then
+				# Die if I need to force push, will manually sort it out.
+				git push avar $branch:$branch
+			else
+				git push avar $branch:$branch -f
+			fi
 		fi
 	fi
 
