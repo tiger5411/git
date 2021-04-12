@@ -94,30 +94,33 @@ series_list=$(mktemp /tmp/avargit-series-XXXXX)
 #   reflog-expire-do-not-assert-oid-when-locking-refs
 #   hash-object-no-zlib
 #   check-collisions-config-5
+# TODO:
+#   avar/variadic-macros (causes t7810-grep.sh failure??)
 # Ejected:
 #   avar/fix-tree-mode-fsck (in favor of avar/tree-walk-api-refactor)
+#   avar/fix-coccicheck-4 (see https://lore.kernel.org/git/877dlwotjc.fsf@evledraar.gmail.com/)
 #
 # If we've got a previous resolution, the merge --continue will
 # continue the merge. TODO: make it support --no-edit
 set +x
 for series in \
     avar/fsck-doc \
+    avar/test-lib-various \
     avar/makefile-do-not-build-fuzz-under-all \
     avar/t4018-diff-hunk-header-regex-tests-4-beginning-2 \
     avar/t4018-diff-hunk-header-regex-tests-5 \
     avar/diff-W-context-4 \
-    avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
+    avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-3 \
+    avar/pcre2-conversion-of-diffcore-pickaxe \
     avar/commit-graph-usage \
     avar/worktree-add-orphan \
     avar/describe-test-refactoring-2 \
-    avar/fix-coccicheck-4 \
     avar/tree-walk-api-refactor-prep \
     avar/tree-walk-api-refactor-5 \
     avar/tree-walk-api-canon-mode-switch \
     avar/support-test-verbose-under-prove-2 \
-    avar/support-test-verbose-under-prove-2-for-avar/pcre2-fixes-diffcore-pickaxe-pcre-etc-2-on-v2.31.0 \
     avar/sh-remove-sha1-variables \
-    avar/test-lib-bail-out-on-accidental-prove-invocation \
+    avar/test-lib-bail-out-on-accidental-prove-invocation-2 \
     avar/fix-rebase-no-reschedule-failed-exec-with-config-2 \
     avar/format-patch-prettier-message-id \
     avar/kill-git-test-gettext-poison-finally-2 \
@@ -163,6 +166,17 @@ do
 			cat $series_list.tmp
 			# Die if I need to force push, will manually sort it out.
 			git push avar $branch:$branch
+		fi
+	fi
+
+	upstream=$(git for-each-ref --format="%(upstream)" refs/heads/$branch)
+
+	if echo $upstream | grep -q ^refs/remotes/avar/
+	then
+		if ! git merge-base --is-ancestor $upstream $branch
+		then
+			echo $branch needs to be rebased on latest $upstream
+			exit 1
 		fi
 	fi
 done <$series_list
