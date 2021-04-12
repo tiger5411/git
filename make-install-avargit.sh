@@ -70,6 +70,7 @@ show_built_from() {
 }
 
 reset_it() {
+	git bisect reset
 	git reset --hard @{u}
 	git merge --abort || :
 	git reset --hard @{u}
