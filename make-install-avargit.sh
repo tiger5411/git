@@ -118,10 +118,12 @@ for series in \
     avar/pcre2-conversion-of-diffcore-pickaxe \
     avar/commit-graph-usage \
     avar/worktree-add-orphan \
+    avar/svn-code-in-test-body \
     avar/describe-test-refactoring-2 \
     avar/tree-walk-api-refactor-prep \
     avar/tree-walk-api-refactor-5 \
     avar/tree-walk-api-canon-mode-switch \
+    avar/t0000-lib-subtest-split-and-refactor \
     avar/support-test-verbose-under-prove-2 \
     avar/sh-remove-sha1-variables \
     avar/test-lib-bail-out-on-accidental-prove-invocation-2 \
