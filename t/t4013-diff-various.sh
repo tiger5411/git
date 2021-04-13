@@ -220,13 +220,7 @@ do
 		then
 			process_diffs "$actual" >actual &&
 			process_diffs "$expect" >expect &&
-			case $cmd in
-			*format-patch* | *-stat*)
-				test_cmp expect actual;;
-			*)
-				test_cmp expect actual;;
-			esac &&
-			rm -f "$actual" actual expect
+			test_cmp expect actual
 		else
 			# this is to help developing new tests.
 			cp "$actual" "$expect"
