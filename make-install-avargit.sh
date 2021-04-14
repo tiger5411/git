@@ -85,6 +85,7 @@ reset_it
 git checkout build-master || git checkout -b build-master -t origin/master
 
 # The list of topics I'm merging
+set +x
 series_list=$(mktemp /tmp/avargit-series-XXXXX)
 grep -v \
      -e '^$' \
