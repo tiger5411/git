@@ -95,7 +95,6 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 	unsigned flags = HASH_FORMAT_CHECK;
 	const char *vpath = NULL;
 	const char *object_format = NULL;
-	const struct git_hash_algo *algo;
 	const struct option hash_object_options[] = {
 		OPT_STRING('t', NULL, &type, N_("type"), N_("object type")),
 		OPT_BIT('w', NULL, &flags, N_("write the object into the object database"),
@@ -124,17 +123,17 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 
 	git_config(git_default_config, NULL);
 
-	algo = the_hash_algo;
-	if (object_format) {
-		if (flags & HASH_WRITE_OBJECT)
-			errstr = "Can't use -w with --object-format";
-		else {
-			int id = hash_algo_by_name(object_format);
-			if (id == GIT_HASH_UNKNOWN)
-				errstr = "Unknown object format";
-			else
-				algo = &hash_algos[id];
+
+	if (object_format && flags & HASH_WRITE_OBJECT) {
+		errstr = "Can't use -w with --object-format";
+		goto error;
+	} else if (object_format) {
+		int id = hash_algo_by_name(object_format);
+		if (id == GIT_HASH_UNKNOWN) {
+			errstr = "Unknown object format";
+			goto error;
 		}
+		repo_set_hash_algo(the_repository, id);
 	}
 
 	if (stdin_paths) {
@@ -152,6 +151,7 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 			errstr = "Can't use --path with --no-filters";
 	}
 
+error:
 	if (errstr) {
 		error("%s", errstr);
 		usage_with_options(hash_object_usage, hash_object_options);
