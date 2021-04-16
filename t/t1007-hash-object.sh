@@ -83,7 +83,7 @@ test_expect_success 'hash a file' '
 	test "$(test_oid hello)" = $(git hash-object hello)
 '
 
-test_expect_failure 'hash a file with a given algorithm' '
+test_expect_success 'hash a file with a given algorithm' '
 	test "$(test_oid --hash=sha1 hello)" = $(git hash-object --object-format=sha1 hello) &&
 	test "$(test_oid --hash=sha256 hello)" = $(git hash-object --object-format=sha256 hello)
 '
@@ -255,7 +255,9 @@ test_expect_success '--literally with extra-long type' '
 
 test_expect_success '--literally with --object-format' '
 	test $(test_oid --hash=sha1 hello) = $(git hash-object -t blob --literally --object-format=sha1 hello) &&
-	test $(test_oid --hash=sha256 hello) = $(git hash-object -t blob --literally --object-format=sha256 hello)
+	test $(test_oid --hash=sha256 hello) = $(git hash-object -t blob --literally --object-format=sha256 hello) &&
+	test $(test_oid --hash=sha256 hello) = $(git --object-format=sha256 hash-object -t blob --literally hello) &&
+	test $(test_oid --hash=sha256 hello) = $(git --object-format=sha1 hash-object -t blob --object-format=sha256 --literally hello)
 '
 
 test_done

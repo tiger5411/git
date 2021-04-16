@@ -16,6 +16,8 @@ static int verify_one_pack(const char *path, unsigned int flags, const char *has
 	int stat_only = flags & VERIFY_PACK_STAT_ONLY;
 	int err;
 
+	if (hash_algo)
+		strvec_pushf(argv, "--object-format=%s", hash_algo);
 	strvec_push(argv, "index-pack");
 
 	if (stat_only)
@@ -24,9 +26,6 @@ static int verify_one_pack(const char *path, unsigned int flags, const char *has
 		strvec_push(argv, "--verify-stat");
 	else
 		strvec_push(argv, "--verify");
-
-	if (hash_algo)
-		strvec_pushf(argv, "--object-format=%s", hash_algo);
 
 	/*
 	 * In addition to "foo.pack" we accept "foo.idx" and "foo";
@@ -71,8 +70,7 @@ int cmd_verify_pack(int argc, const char **argv, const char *prefix)
 			VERIFY_PACK_VERBOSE),
 		OPT_BIT('s', "stat-only", &flags, N_("show statistics only"),
 			VERIFY_PACK_STAT_ONLY),
-		OPT_STRING(0, "object-format", &object_format, N_("hash"),
-			   N_("specify the hash algorithm to use")),
+		OPT_OBJECT_FORMAT(0, "object-format", &object_format),
 		OPT_END()
 	};
 

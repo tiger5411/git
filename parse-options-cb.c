@@ -293,3 +293,17 @@ int parse_opt_passthru_argv(const struct option *opt, const char *arg, int unset
 
 	return 0;
 }
+
+int parse_opt_object_format_cb(const struct option *opt, const char *arg, int unset)
+{
+	const char **value = opt->value;
+
+	BUG_ON_OPT_NEG(unset);
+
+	if (arg)
+		repo_set_hash_algo_arg(the_repository, arg);
+	if (value)
+		*value = arg;
+
+	return 0;
+}

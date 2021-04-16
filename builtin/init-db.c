@@ -548,8 +548,7 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 			   N_("separate git dir from working tree")),
 		OPT_STRING('b', "initial-branch", &initial_branch, N_("name"),
 			   N_("override the name of the initial branch")),
-		OPT_STRING(0, "object-format", &object_format, N_("hash"),
-			   N_("specify the hash algorithm to use")),
+		OPT_OBJECT_FORMAT(0, "object-format", &object_format),
 		OPT_END()
 	};
 
@@ -607,11 +606,8 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 		free(cwd);
 	}
 
-	if (object_format) {
+	if (object_format)
 		hash_algo = hash_algo_by_name(object_format);
-		if (hash_algo == GIT_HASH_UNKNOWN)
-			die(_("unknown hash algorithm '%s'"), object_format);
-	}
 
 	if (init_shared_repository != -1)
 		set_shared_repository(init_shared_repository);

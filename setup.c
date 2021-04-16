@@ -1308,7 +1308,15 @@ const char *setup_git_directory_gently(int *nongit_ok)
 				gitdir = DEFAULT_GIT_DIR_ENVIRONMENT;
 			setup_git_env(gitdir);
 		}
-		if (startup_info->have_repository)
+		if (startup_info->have_repository &&
+		    /*
+		     * If we have called initialize_the_repository()
+		     * via common-main.c let's not set things up from
+		     * the REPOSITORY_FORMAT_INIT defaults again,
+		     * otherwise we'll clobber e.g. a invocations of
+		     * "git --object-format=<HASH> some-cmd".
+		     */
+		    !the_repository->hash_algo)
 			repo_set_hash_algo(the_repository, repo_fmt.hash_algo);
 	}
 

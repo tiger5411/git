@@ -91,6 +91,15 @@ void repo_set_hash_algo(struct repository *repo, int hash_algo)
 	repo->hash_algo = &hash_algos[hash_algo];
 }
 
+void repo_set_hash_algo_arg(struct repository *repo, const char *algo)
+{
+	int algo_id = hash_algo_by_name(algo);
+	if (algo_id == GIT_HASH_UNKNOWN)
+		die(_("unknown hash algorithm '%s'"), algo);
+	fprintf(stderr, "now setting %s=%d\n", algo, algo_id);
+	repo_set_hash_algo(the_repository, algo_id);
+}
+
 /*
  * Attempt to resolve and set the provided 'gitdir' for repository 'repo'.
  * Return 0 upon success and a non-zero value upon failure.

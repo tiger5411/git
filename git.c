@@ -160,6 +160,8 @@ static int handle_options(const char ***argv, int *argc, int *envchanged)
 				trace2_cmd_name("_query_");
 				exit(0);
 			}
+		} else if (skip_prefix(cmd, "--object-format=", &cmd)) {
+			repo_set_hash_algo_arg(the_repository, cmd);
 		} else if (!strcmp(cmd, "--html-path")) {
 			puts(system_path(GIT_HTML_PATH));
 			trace2_cmd_name("_query_");

@@ -104,19 +104,21 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 		OPT_BOOL( 0 , "no-filters", &no_filters, N_("store file as is without filters")),
 		OPT_BOOL( 0, "literally", &literally, N_("just hash any random garbage to create corrupt objects for debugging Git")),
 		OPT_STRING( 0 , "path", &vpath, N_("file"), N_("process file as it were from this path")),
-		OPT_STRING( 0 , "object-format", &object_format, N_("object-format"), N_("Use this hash algorithm")),
+		OPT_OBJECT_FORMAT(0, "object-format", &object_format),
 		OPT_END()
 	};
 	int i;
 	const char *errstr = NULL;
 
-	argc = parse_options(argc, argv, prefix, hash_object_options,
-			     hash_object_usage, 0);
-
+	/* might setup the hash algorithm */
 	if (flags & HASH_WRITE_OBJECT)
 		prefix = setup_git_directory();
 	else
 		prefix = setup_git_directory_gently(&nongit);
+
+	/* maybe override the already setup hash algorithm */
+	argc = parse_options(argc, argv, prefix, hash_object_options,
+			     hash_object_usage, 0);
 
 	if (vpath && prefix)
 		vpath = xstrdup(prefix_filename(prefix, vpath));
@@ -126,32 +128,20 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 
 	if (object_format && flags & HASH_WRITE_OBJECT) {
 		errstr = "Can't use -w with --object-format";
-		goto error;
-	} else if (object_format) {
-		int id = hash_algo_by_name(object_format);
-		if (id == GIT_HASH_UNKNOWN) {
-			errstr = "Unknown object format";
-			goto error;
-		}
-		repo_set_hash_algo(the_repository, id);
-	}
-
-	if (stdin_paths) {
+	} else if (stdin_paths) {
 		if (hashstdin)
 			errstr = "Can't use --stdin-paths with --stdin";
 		else if (argc)
 			errstr = "Can't specify files with --stdin-paths";
 		else if (vpath)
 			errstr = "Can't use --stdin-paths with --path";
-	}
-	else {
+	} else {
 		if (hashstdin > 1)
 			errstr = "Multiple --stdin arguments are not supported";
 		if (vpath && no_filters)
 			errstr = "Can't use --path with --no-filters";
 	}
 
-error:
 	if (errstr) {
 		error("%s", errstr);
 		usage_with_options(hash_object_usage, hash_object_options);
