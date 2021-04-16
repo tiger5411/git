@@ -17,8 +17,7 @@
  * needs to bypass the data conversion performed by, and the type
  * limitation imposed by, index_fd() and its callees.
  */
-static int hash_literally(struct object_id *oid, int fd, const char *type,
-			  unsigned flags, const struct git_hash_algo *algo)
+static int hash_literally(struct object_id *oid, int fd, const char *type, unsigned flags)
 {
 	struct strbuf buf = STRBUF_INIT;
 	int ret;
@@ -26,46 +25,42 @@ static int hash_literally(struct object_id *oid, int fd, const char *type,
 	if (strbuf_read(&buf, fd, 4096) < 0)
 		ret = -1;
 	else
-		ret = hash_object_file_literally_algop(buf.buf, buf.len, type, oid,
-						       flags, algo);
+		ret = hash_object_file_literally(buf.buf, buf.len, type, oid,
+						 flags);
 	strbuf_release(&buf);
 	return ret;
 }
 
 static void hash_fd(int fd, const char *type, const char *path, unsigned flags,
-		    int literally, const struct git_hash_algo *algo)
+		    int literally)
 {
 	struct stat st;
 	struct object_id oid;
 
-	if (!literally && algo != the_hash_algo)
-		die(_("Can't use hash algo %s except literally yet"), algo->name);
-
 	if (fstat(fd, &st) < 0 ||
 	    (literally
-	     ? hash_literally(&oid, fd, type, flags, algo)
+	     ? hash_literally(&oid, fd, type, flags)
 	     : index_fd(the_repository->index, &oid, fd, &st,
 			type_from_string(type), path, flags)))
 		die((flags & HASH_WRITE_OBJECT)
 		    ? "Unable to add %s to database"
 		    : "Unable to hash %s", path);
-	printf("%s\n", hash_to_hex_algop(oid.hash, algo));
+	printf("%s\n", oid_to_hex(&oid));
 	maybe_flush_or_die(stdout, "hash to stdout");
 }
 
 static void hash_object(const char *path, const char *type, const char *vpath,
-			unsigned flags, int literally,
-			const struct git_hash_algo *algo)
+			unsigned flags, int literally)
 {
 	int fd;
 	fd = open(path, O_RDONLY);
 	if (fd < 0)
 		die_errno("Cannot open '%s'", path);
-	hash_fd(fd, type, vpath, flags, literally, algo);
+	hash_fd(fd, type, vpath, flags, literally);
 }
 
 static void hash_stdin_paths(const char *type, int no_filters, unsigned flags,
-			     int literally, const struct git_hash_algo *algo)
+			     int literally)
 {
 	struct strbuf buf = STRBUF_INIT;
 	struct strbuf unquoted = STRBUF_INIT;
@@ -78,7 +73,7 @@ static void hash_stdin_paths(const char *type, int no_filters, unsigned flags,
 			strbuf_swap(&buf, &unquoted);
 		}
 		hash_object(buf.buf, type, no_filters ? NULL : buf.buf, flags,
-			    literally, algo);
+			    literally);
 	}
 	strbuf_release(&buf);
 	strbuf_release(&unquoted);
@@ -163,7 +158,7 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 	}
 
 	if (hashstdin)
-		hash_fd(0, type, vpath, flags, literally, algo);
+		hash_fd(0, type, vpath, flags, literally);
 
 	for (i = 0 ; i < argc; i++) {
 		const char *arg = argv[i];
@@ -172,12 +167,12 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 		if (prefix)
 			arg = to_free = prefix_filename(prefix, arg);
 		hash_object(arg, type, no_filters ? NULL : vpath ? vpath : arg,
-			    flags, literally, algo);
+			    flags, literally);
 		free(to_free);
 	}
 
 	if (stdin_paths)
-		hash_stdin_paths(type, no_filters, flags, literally, algo);
+		hash_stdin_paths(type, no_filters, flags, literally);
 
 	return 0;
 }
