@@ -95,6 +95,13 @@ grep -v \
 # Sanity check that this is all pushed out
 while read -r branch
 do
+	# Should always have upstream info
+	if ! git rev-parse @{upstream} >/dev/null
+	then
+		echo No upstream setup for $branch
+		exit 1
+	fi
+
 	if ! git rev-parse refs/remotes/avar/$branch >/dev/null 2>&1
 	then
 		echo Pushing missing $branch to avar remote
