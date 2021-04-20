@@ -92,6 +92,7 @@ grep -v \
      -e '^#' \
      ~/g/git.meta/series.conf >$series_list
 
+>$series_list.old-merge
 # Sanity check that this is all pushed out
 while read -r branch
 do
@@ -99,6 +100,38 @@ do
 	if ! git rev-parse @{upstream} >/dev/null
 	then
 		echo No upstream setup for $branch
+		exit 1
+	fi
+
+	# Is anything else depending on an older version of this?
+	# Assume that dependencies come first and make a note of "bad"
+	# reverse dependencies (some are legitimate older versions
+	# themselves)
+	case "$branch" in
+	    *-[0-9])
+		    base=$(echo "$branch" | sed 's/-[0-9]$//')
+
+		    git config --local --get-regexp '^branch\.[^.]+\.merge' \
+			>$series_list.cfg
+		    # "-[^0-9]$" to only pick up e.g. "foo-5" and
+		    # "foo-4" for a "foo-5", not a "foo-prep" for a
+		    # "foo-5".
+		    grep " refs/heads/$base-[^0-9]$" $series_list.cfg >$series_list.cfg.base || :
+		    if test -s $series_list.cfg.base
+		    then
+			    grep -v " refs/heads/$branch$" $series_list.cfg.base \
+				 >>$series_list.old-merge || :
+		    fi
+		    ;;
+	    *)
+		    ;;
+	esac
+
+	# Does this branch still depend on an older upstream?
+	if grep -q "$branch" $series_list.old-merge
+	then
+		my_depends="$(git config branch.$branch.merge)"
+		echo "$branch depends on $my_depends but a newer version is in this series.conf!"
 		exit 1
 	fi
 
