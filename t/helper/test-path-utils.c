@@ -177,14 +177,6 @@ static int is_dotgitmodules(const char *path)
 	return is_hfs_dotgitmodules(path) || is_ntfs_dotgitmodules(path);
 }
 
-static int cmp_by_st_size(const void *a, const void *b)
-{
-	intptr_t x = (intptr_t)((struct string_list_item *)a)->util;
-	intptr_t y = (intptr_t)((struct string_list_item *)b)->util;
-
-	return x > y ? -1 : (x < y ? +1 : 0);
-}
-
 /*
  * A very simple, reproducible pseudo-random generator. Copied from
  * `test-genrandom.c`.
@@ -426,29 +418,6 @@ int cmd__path_utils(int argc, const char **argv)
 		}
 		close(fd);
 		return 0;
-	}
-
-	if (argc > 5 && !strcmp(argv[1], "slice-tests")) {
-		int res = 0;
-		long offset, stride, i;
-		struct string_list list = STRING_LIST_INIT_NODUP;
-		struct stat st;
-
-		offset = strtol(argv[2], NULL, 10);
-		stride = strtol(argv[3], NULL, 10);
-		if (stride < 1)
-			stride = 1;
-		for (i = 4; i < argc; i++)
-			if (stat(argv[i], &st))
-				res = error_errno("Cannot stat '%s'", argv[i]);
-			else
-				string_list_append(&list, argv[i])->util =
-					(void *)(intptr_t)st.st_size;
-		QSORT(list.items, list.nr, cmp_by_st_size);
-		for (i = offset; i < list.nr; i+= stride)
-			printf("%s\n", list.items[i].string);
-
-		return !!res;
 	}
 
 	if (argc > 1 && !strcmp(argv[1], "protect_ntfs_hfs"))
