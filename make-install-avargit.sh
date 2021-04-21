@@ -9,6 +9,8 @@ only_compile=
 only_basic_test=
 only_test=
 force_push=
+auto_rebase=
+verbose=
 while test $# != 0
 do
 	case "$1" in
@@ -32,6 +34,12 @@ do
 		;;
 	--force-push)
 		force_push=yes
+		;;
+	--auto-rebase)
+		auto_rebase=yes
+		;;
+	--verbose)
+		verbose=yes
 		;;
 	*)
 		break
@@ -97,75 +105,71 @@ grep -v \
 while read -r branch
 do
 	# Should always have upstream info
-	if ! git rev-parse @{upstream} >/dev/null
-	then
+	upstream=$(git for-each-ref --format="%(upstream)" "refs/heads/$branch")
+	case "$upstream" in
+	refs/remotes/origin/master)
+		aheadbehind=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
+		test -n "$verbose" && echo "Branch $branch is $aheadbehind upstream master"
+		# OK
+		;;
+	"refs/heads/*")
+		echo "Broken branch config for $branch, has remote=. ?"
+		exit 1
+		;;
+	"")
 		echo No upstream setup for $branch
 		exit 1
-	fi
+		;;
+	refs/remotes/avar/*)
+		vless=$(echo "$upstream" | sed 's/-[0-9]$//')
+		git for-each-ref --format="%(refname)" "$vless*" |
+			grep -P "^$vless(?:|-[0-9]+)$" |
+			sort -nr >$series_list.vless
+		current=$(head -n 1 $series_list.vless)
 
-	# Is anything else depending on an older version of this?
-	# Assume that dependencies come first and make a note of "bad"
-	# reverse dependencies (some are legitimate older versions
-	# themselves)
-	case "$branch" in
-	    *-[0-9])
-		    base=$(echo "$branch" | sed 's/-[0-9]$//')
-
-		    git config --local --get-regexp '^branch\.[^.]+\.merge' \
-			>$series_list.cfg
-		    # "-[^0-9]$" to only pick up e.g. "foo-5" and
-		    # "foo-4" for a "foo-5", not a "foo-prep" for a
-		    # "foo-5".
-		    grep " refs/heads/$base-[^0-9]$" $series_list.cfg >$series_list.cfg.base || :
-		    if test -s $series_list.cfg.base
-		    then
-			    grep -v " refs/heads/$branch$" $series_list.cfg.base \
-				 >>$series_list.old-merge || :
-		    fi
-		    ;;
-	    *)
-		    ;;
-	esac
-
-	# Does this branch still depend on an older upstream?
-	if grep -q "$branch" $series_list.old-merge
-	then
-		my_depends="$(git config branch.$branch.merge)"
-		echo "$branch depends on $my_depends but a newer version is in this series.conf!"
-		exit 1
-	fi
-
-	if ! git rev-parse refs/remotes/avar/$branch >/dev/null 2>&1
-	then
-		echo Pushing missing $branch to avar remote
-		git push avar $branch:$branch
-	else
-		git rev-parse $branch refs/remotes/avar/$branch >$series_list.tmp
-		num_sha=$(uniq $series_list.tmp | wc -l)
-		if test $num_sha -ne 1
+		if test "$upstream" != "$current"
 		then
-			echo Have $branch and avar/$branch at two different commits:
-			cat $series_list.tmp
-			if test -z "$force_push"
-			then
-				# Die if I need to force push, will manually sort it out.
-				git push avar $branch:$branch
-			else
-				git push avar $branch:$branch -f
-			fi
-		fi
-	fi
+			echo "error: $branch depends on:"
+			echo "    $upstream" | sed 's!refs/remotes/avar/!!'
+			echo "but should depend on:"
+			echo "    $current" | sed 's!refs/remotes/avar/!!'
+			echo "Fix it with:"
+			echo "    git checkout $branch &&"
+			echo "    git branch --set-upstream-to $current &&" | sed 's!refs/remotes/!!'
+			echo "    git rebase --onto $current $upstream &&" | sed 's!refs/remotes/!!'
+			echo "    git push avar HEAD -f"
+			echo
+			echo "Found these versions of the series:"
+			cat $series_list.vless
 
-	upstream=$(git for-each-ref --format="%(upstream)" refs/heads/$branch)
-
-	if echo $upstream | grep -q ^refs/remotes/avar/
-	then
-		if ! git merge-base --is-ancestor $upstream $branch
-		then
-			echo $branch needs to be rebased on latest $upstream
 			exit 1
 		fi
-	fi
+
+		aheadbehind=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
+		case "$aheadbehind" in
+		    *behind*)
+			    echo "Need to rebase $branch on:"
+			    echo "    $upstream" | sed 's!refs/remotes/avar/!!'
+			    echo "It is currently $aheadbehind"
+			    if test -n "$auto_rebase"
+			    then
+				    git checkout $branch
+				    git rebase
+				    # Die if I need to force push, will manually sort it out.
+				    echo git push avar $branch:$branch ${force_push:+--force}
+			    fi
+			    exit 1
+			    ;;
+		    *ahead*)
+			    test -n "$verbose" && echo "Branch $branch is $aheadbehind of upstream $upstream"
+			    ;;
+		esac
+
+		;;
+	*)
+		echo "General fail of $branch=$upstream"
+		exit 1
+	esac
 done <$series_list
 
 # Check what's already merged
@@ -186,6 +190,10 @@ do
 	fi
 done <$series_list
 test -n "$only_range_diff" && exit
+
+# Checkout work area
+reset_it
+git checkout build-master || git checkout -b build-master -t origin/master
 
 # Merge it all together
 set -x
