@@ -179,7 +179,7 @@ do
 	then
 		continue
 	fi
-	git --no-pager range-diff --right-only origin/master...$branch >$series_list.range-diff
+	git --no-pager range-diff --no-notes --right-only origin/master...$branch >$series_list.range-diff
 	grep -E -v -- " ----------+ >" $series_list.range-diff >$series_list.range-diff.no-new || :
 	if test -s $series_list.range-diff.no-new
 	then
