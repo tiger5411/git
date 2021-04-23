@@ -3,6 +3,7 @@ set -e
 set -x
 
 no_range_diff=
+only_sanity=
 only_range_diff=
 only_merge=
 only_compile=
@@ -16,6 +17,9 @@ do
 	case "$1" in
 	--no-range-diff)
 		no_range_diff=yes
+		;;
+	--only-sanity)
+		only_sanity=yes
 		;;
 	--only-range-diff)
 		only_range_diff=yes
@@ -171,6 +175,7 @@ do
 		exit 1
 	esac
 done <$series_list
+test -n "$only_sanity" && exit
 
 # Check what's already merged
 while read -r branch
