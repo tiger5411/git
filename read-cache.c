@@ -1952,7 +1952,7 @@ static void tweak_untracked_cache(struct index_state *istate)
 		add_untracked_cache(istate);
 		break;
 	case UNTRACKED_CACHE_UNSET:
-	case UNTRACKED_CACHE_KEEP:
+		/* This includes core.untrackedCache=keep */
 		break;
 	}
 	return;
