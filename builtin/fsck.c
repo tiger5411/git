@@ -600,12 +600,23 @@ static int fsck_loose(const struct object_id *oid, const char *path, void *data)
 	unsigned long size;
 	void *contents;
 	int eaten;
+	struct strbuf sb = STRBUF_INIT;
+	struct object_info oi = OBJECT_INFO_INIT;
+	int err = 0;
 
-	if (read_loose_object(path, oid, &type, &size, &contents) < 0) {
+	oi.type_name = &sb;
+	oi.sizep = &size;
+	oi.typep = &type;
+
+	if (read_loose_object(path, oid, &contents, &oi) < 0)
+		err = error(_("%s: object corrupt or missing: %s"),
+			    oid_to_hex(oid), path);
+	if (type < 0)
+		err = error(_("%s: object is of unknown type '%s': %s"),
+			    oid_to_hex(oid), sb.buf, path);
+	if (err) {
 		errors_found |= ERROR_OBJECT;
-		error(_("%s: object corrupt or missing: %s"),
-		      oid_to_hex(oid), path);
-		return 0; /* keep checking other objects */
+		goto cleanup;
 	}
 
 	if (!contents && type != OBJ_BLOB)
@@ -618,9 +629,7 @@ static int fsck_loose(const struct object_id *oid, const char *path, void *data)
 		errors_found |= ERROR_OBJECT;
 		error(_("%s: object could not be parsed: %s"),
 		      oid_to_hex(oid), path);
-		if (!eaten)
-			free(contents);
-		return 0; /* keep checking other objects */
+		goto cleanup_eaten;
 	}
 
 	obj->flags &= ~(REACHABLE | SEEN);
@@ -628,8 +637,11 @@ static int fsck_loose(const struct object_id *oid, const char *path, void *data)
 	if (fsck_obj(obj, contents, size))
 		errors_found |= ERROR_OBJECT;
 
+cleanup_eaten:
 	if (!eaten)
 		free(contents);
+cleanup:
+	strbuf_release(&sb);
 	return 0; /* keep checking other objects, even if we saw an error */
 }
 
