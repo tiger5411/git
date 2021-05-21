@@ -357,12 +357,14 @@ sub read_config {
 		use Data::Dumper;
 		if (ref($target) eq "ARRAY") {
 			my @values = $repo->config_get($key);
+			next unless defined $values[0];
 			next if $configured->{$setting}++;
 			warn Dumper [$key, \@values];
 			@$target = @values;
 		}
 		else {
 			my $v = $repo->config_get($key);
+			next unless defined $v;
 			next if $configured->{$setting}++;
 			$$target = $v;
 		}

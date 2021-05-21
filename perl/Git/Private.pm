@@ -50,8 +50,6 @@ sub list_config {
 	my $self = shift;
 
 	my $list_config = ($self->{list_config} ||= $self->_list_config(@_));
-	#use Data::Dumper;
-	#die Dumper $list_config;
 	return $list_config;
 }
 
