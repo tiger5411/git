@@ -676,7 +676,7 @@ sub is_format_patch_arg {
 			'--quiet',
 			$f,
 		],
-		code_ok => [1],
+		code_ok => [1, 128],
 	)->run;
 
 	return if $cmd->{code} == 1;
