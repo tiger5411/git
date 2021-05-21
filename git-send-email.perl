@@ -20,8 +20,7 @@ use 5.008;
 use strict;
 use warnings;
 use Getopt::Long;
-use Git::LoadCPAN::Error qw(:try);
-use Git;
+use Git::Private;
 use Git::I18N;
 
 Getopt::Long::Configure qw/ pass_through /;
@@ -113,8 +112,7 @@ EOT
 }
 
 sub completion_helper {
-    print Git::command('format-patch', '--git-completion-helper');
-    exit(0);
+	exec 'git', 'format-patch', '--git-completion-helper';
 }
 
 # most mail servers generate the Date: header, but not all...
@@ -179,8 +177,9 @@ my (@config_bcc, @getopt_bcc);
 # Example reply to:
 #$initial_in_reply_to = ''; #<20050203173208.GA23964@foobar.com>';
 
-my $repo = eval { Git->repository() };
-my @repo = $repo ? ($repo) : ();
+my $repo = Git::Private->new(
+	config_prefix => "^sende?mail[.]"
+);
 
 # Behavior modification variables
 my ($quiet, $dry_run) = (0, 0);
@@ -211,7 +210,13 @@ sub system_or_die {
 
 sub do_edit {
 	if (!defined($editor)) {
-		$editor = Git::command_oneline('var', 'GIT_EDITOR');
+		my ($fh, $cmd) = Git::Private::open_git(
+			'-|',
+			'var',
+			'GIT_EDITOR'
+		);
+		chomp($editor = <$fh>);
+		Git::Private::close_git($cmd, $fh);
 	}
 	my $die_msg = __("the editor exited uncleanly, aborting everything");
 	if (defined($multiedit) && !$multiedit) {
@@ -318,16 +323,12 @@ $SIG{INT}  = \&signal_handler;
 
 # Read our sendemail.* config
 sub read_config {
-	my ($known_keys, $configured, $prefix) = @_;
+	my ($configured, $prefix) = @_;
 
 	foreach my $setting (keys %config_bool_settings) {
 		my $target = $config_bool_settings{$setting};
 		my $key = "$prefix.$setting";
-		next unless exists $known_keys->{$key};
-		my $v = (@{$known_keys->{$key}} == 1 &&
-			 $known_keys->{$key}->[0] =~ /^(?:true|false)$/s)
-			? $known_keys->{$key}->[0] eq 'true'
-			: Git::config_bool(@repo, $key);
+		my $v = $repo->config_bool($key);
 		next unless defined $v;
 		next if $configured->{$setting}++;
 		$$target = $v;
@@ -336,15 +337,14 @@ sub read_config {
 	foreach my $setting (keys %config_path_settings) {
 		my $target = $config_path_settings{$setting};
 		my $key = "$prefix.$setting";
-		next unless exists $known_keys->{$key};
 		if (ref($target) eq "ARRAY") {
-			my @values = Git::config_path(@repo, $key);
+			my @values = $repo->config_path($key);
 			next unless @values;
 			next if $configured->{$setting}++;
 			@$target = @values;
 		}
 		else {
-			my $v = Git::config_path(@repo, "$prefix.$setting");
+			my $v = $repo->config_path("$prefix.$setting");
 			next unless defined $v;
 			next if $configured->{$setting}++;
 			$$target = $v;
@@ -354,46 +354,16 @@ sub read_config {
 	foreach my $setting (keys %config_settings) {
 		my $target = $config_settings{$setting};
 		my $key = "$prefix.$setting";
-		next unless exists $known_keys->{$key};
 		if (ref($target) eq "ARRAY") {
-			my @values = @{$known_keys->{$key}};
+			my @values = $repo->config_get($key);
 			next if $configured->{$setting}++;
 			@$target = @values;
 		}
 		else {
-			my $v = $known_keys->{$key}->[0];
+			my $v = $repo->config_get($key);
 			next if $configured->{$setting}++;
 			$$target = $v;
 		}
-	}
-}
-
-sub config_regexp {
-	my ($regex) = @_;
-	my @ret;
-	eval {
-		my $ret = Git::command(
-			'config',
-			'--null',
-			'--get-regexp',
-			$regex,
-		);
-		@ret = map { split /\n/, $_, 2 } split /\0/, $ret;
-		1;
-	} or do {
-		# If we have no keys we're OK, otherwise re-throw
-		die $@ if $@->value != 1;
-	};
-	return @ret;
-}
-
-# Save ourselves a lot of work of shelling out to 'git config' (it
-# parses 'bool' etc.) by only doing so for config keys that exist.
-my %known_config_keys;
-{
-	my @kv = config_regexp("^sende?mail[.]");
-	while (my ($k, $v) = splice @kv, 0, 2) {
-		push @{$known_config_keys{$k}} => $v;
 	}
 }
 
@@ -401,7 +371,7 @@ my %known_config_keys;
 # special-case first before the rest of the config is read.
 {
 	my $key = "sendemail.identity";
-	$identity = Git::config(@repo, $key) if exists $known_config_keys{$key};
+	$identity = $repo->config_get($key);
 }
 my $rc = GetOptions(
 	"identity=s" => \$identity,
@@ -413,8 +383,8 @@ undef $identity if $no_identity;
 # Now we know enough to read the config
 {
     my %configured;
-    read_config(\%known_config_keys, \%configured, "sendemail.$identity") if defined $identity;
-    read_config(\%known_config_keys, \%configured, "sendemail");
+    read_config(\%configured, "sendemail.$identity") if defined $identity;
+    read_config(\%configured, "sendemail");
 }
 
 # Begin by accumulating all the variables (defined above), that we will end up
@@ -498,14 +468,14 @@ unless ($rc) {
     usage();
 }
 
-if ($forbid_sendmail_variables && grep { /^sendmail/s } keys %known_config_keys) {
+if ($forbid_sendmail_variables && grep { /^sendmail/s } $repo->known_config_keys) {
 	die __("fatal: found configuration options for 'sendmail'\n" .
 		"git-send-email is configured with the sendemail.* options - note the 'e'.\n" .
 		"Set sendemail.forbidSendmailVariables to false to disable this check.\n");
 }
 
 die __("Cannot run git format-patch from outside a repository\n")
-	if $format_patch and not $repo;
+	if $format_patch and not defined Git::Private::git_rev_parse_git_dir();
 
 die __("`batch-size` and `relogin` must be specified together " .
 	"(via command-line or configuration option)\n")
@@ -569,11 +539,27 @@ my ($repoauthor, $repocommitter);
 	my $common = sub {
 		my ($what) = @_;
 		return $cache{$what} if exists $cache{$what};
-		($cache{$what}) = Git::ident_person(@repo, $what);
-		return $cache{$what};
+
+		my @cmd = (
+			'git',
+			'var',
+			$what,
+		);
+		open my $fh, '-|', @cmd or die "Can't run @cmd: $!";
+		my $ret = do {
+			local $/;
+			<$fh>;
+		};
+		if (!close $fh) {
+			die "error closing @cmd: $!" if $!;
+			my $code = $? >> 8;
+			die "got exit code $code from @cmd"
+		}
+		my ($identstr) = $ret =~ /^(.*) <(.*)> (\d+ [+-]\d{4})$/;
+		return ($cache{$what} = $identstr);
 	};
-	$repoauthor = sub { $common->('author') };
-	$repocommitter = sub { $common->('committer') };
+	$repoauthor = sub { $common->('GIT_AUTHOR_IDENT') };
+	$repocommitter = sub { $common->('GIT_COMMITTER_IDENT') };
 }
 
 sub parse_address_line {
@@ -677,34 +663,43 @@ if ($dump_aliases) {
 # is_format_patch_arg($f) returns 0 if $f names a patch, or 1 if
 # $f is a revision list specification to be passed to format-patch.
 sub is_format_patch_arg {
-	return unless $repo;
+	my $git_dir = shift;
+	return unless $git_dir;
 	my $f = shift;
-	try {
-		$repo->command('rev-parse', '--verify', '--quiet', $f);
-		if (defined($format_patch)) {
-			return $format_patch;
-		}
-		die sprintf(__(<<EOF), $f, $f);
+	my ($fh, $cmd) = Git::Private::open_git(
+		'-|',
+		'rev-parse',
+		'--verify',
+		'--quiet',
+		$f,
+	);
+	my $out = do {
+		local $/;
+		<$fh>;
+	};
+	my $ret = Git::Private::close_git($cmd, $fh, 1);
+	return if $ret == 1;
+	if (defined($format_patch)) {
+		return $format_patch;
+	}
+	die sprintf(__(<<EOF), $f, $f);
 File '%s' exists but it could also be the range of commits
 to produce patches for.  Please disambiguate by...
 
     * Saying "./%s" if you mean a file; or
     * Giving --format-patch option if you mean a range.
 EOF
-	} catch Git::Error::Command with {
-		# Not a valid revision.  Treat it as a filename.
-		return 0;
-	}
 }
 
 # Now that all the defaults are set, process the rest of the command line
 # arguments and collect up the files that need to be processed.
 my @rev_list_opts;
+my $git_dir = Git::Private::git_rev_parse_git_dir();
 while (defined(my $f = shift @ARGV)) {
 	if ($f eq "--") {
 		push @rev_list_opts, "--", @ARGV;
 		@ARGV = ();
-	} elsif (-d $f and !is_format_patch_arg($f)) {
+	} elsif (-d $f and !is_format_patch_arg($git_dir, $f)) {
 		opendir my $dh, $f
 			or die sprintf(__("Failed to opendir %s: %s"), $f, $!);
 
@@ -712,7 +707,7 @@ while (defined(my $f = shift @ARGV)) {
 		push @files, grep { -f $_ } map { File::Spec->catfile($f, $_) }
 				sort readdir $dh;
 		closedir $dh;
-	} elsif ((-f $f or -p $f) and !is_format_patch_arg($f)) {
+	} elsif ((-f $f or -p $f) and !is_format_patch_arg($git_dir, $f)) {
 		push @files, $f;
 	} else {
 		push @rev_list_opts, $f;
@@ -721,9 +716,18 @@ while (defined(my $f = shift @ARGV)) {
 
 if (@rev_list_opts) {
 	die __("Cannot run git format-patch from outside a repository\n")
-		unless $repo;
+		unless defined Git::Private::git_rev_parse_git_dir();
 	require File::Temp;
-	push @files, $repo->command('format-patch', '-o', File::Temp::tempdir(CLEANUP => 1), @rev_list_opts);
+	my ($fh, $cmd) = Git::Private::open_git(
+		'-|',
+		'format-patch',
+		'-o',
+		File::Temp::tempdir(CLEANUP => 1),
+		@rev_list_opts,
+	);
+	chomp(my @ret = <$fh>);
+	Git::Private::close_git($cmd, $fh);
+	push @files, @ret;
 }
 
 @files = handle_backup_files(@files);
@@ -761,8 +765,9 @@ if ($compose) {
 	# Note that this does not need to be secure, but we will make a small
 	# effort to have it be unique
 	require File::Temp;
-	$compose_filename = ($repo ?
-		File::Temp::tempfile(".gitsendemail.msg.XXXXXX", DIR => $repo->repo_path()) :
+	my $git_dir = Git::Private::git_rev_parse_git_dir();
+	$compose_filename = (defined $git_dir ?
+		File::Temp::tempfile(".gitsendemail.msg.XXXXXX", DIR => $git_dir) :
 		File::Temp::tempfile(".gitsendemail.msg.XXXXXX", DIR => "."))[1];
 	open my $c, ">", $compose_filename
 		or die sprintf(__("Failed to open for writing %s: %s"), $compose_filename, $!);
@@ -773,7 +778,14 @@ if ($compose) {
 	my $tpl_in_reply_to = $initial_in_reply_to || '';
 	my $tpl_reply_to = $reply_to || '';
 
-	print $c <<EOT1, Git::prefix_lines("GIT: ", __(<<EOT2)), <<EOT3;
+	my $prefix_lines = sub {
+		my $prefix = shift;
+		my $string = join("\n", @_);
+		$string =~ s/^/$prefix/mg;
+		return $string;
+	};
+
+	print $c <<EOT1, $prefix_lines->("GIT: ", __(<<EOT2)), <<EOT3;
 From $tpl_sender # This line is ignored.
 EOT1
 Lines beginning in "GIT:" will be removed.
@@ -1991,28 +2003,29 @@ sub unique_email_list {
 sub validate_patch {
 	my ($fn, $xfer_encoding) = @_;
 
-	if ($repo) {
-		require File::Spec;
-		my $validate_hook = File::Spec->catfile($repo->hooks_path(),
-					    'sendemail-validate');
-		my $hook_error;
-		if (-x $validate_hook) {
-			require Cwd;
-			my $target = Cwd::abs_path($fn);
-			# The hook needs a correct cwd and GIT_DIR.
-			my $cwd_save = Cwd::getcwd();
-			chdir($repo->wc_path() or $repo->repo_path())
-				or die("chdir: $!");
-			local $ENV{"GIT_DIR"} = $repo->repo_path();
-			$hook_error = system_or_msg([$validate_hook, $target]);
-			chdir($cwd_save) or die("chdir: $!");
-		}
-		if ($hook_error) {
-			die sprintf(__("fatal: %s: rejected by sendemail-validate hook\n" .
-				       "%s\n" .
-				       "warning: no patches were sent\n"), $fn, $hook_error);
-		}
-	}
+	return;
+	# if ($repo) {
+	# 	require File::Spec;
+	# 	my $validate_hook = File::Spec->catfile($repo->hooks_path(),
+	# 				    'sendemail-validate');
+	# 	my $hook_error;
+	# 	if (-x $validate_hook) {
+	# 		require Cwd;
+	# 		my $target = Cwd::abs_path($fn);
+	# 		# The hook needs a correct cwd and GIT_DIR.
+	# 		my $cwd_save = Cwd::getcwd();
+	# 		chdir($repo->wc_path() or $repo->repo_path())
+	# 			or die("chdir: $!");
+	# 		local $ENV{"GIT_DIR"} = $repo->repo_path();
+	# 		$hook_error = system_or_msg([$validate_hook, $target]);
+	# 		chdir($cwd_save) or die("chdir: $!");
+	# 	}
+	# 	if ($hook_error) {
+	# 		die sprintf(__("fatal: %s: rejected by sendemail-validate hook\n" .
+	# 			       "%s\n" .
+	# 			       "warning: no patches were sent\n"), $fn, $hook_error);
+	# 	}
+	# }
 
 	# Any long lines will be automatically fixed if we use a suitable transfer
 	# encoding.
