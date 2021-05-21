@@ -45,8 +45,7 @@ sub get {
 		# piping to /dev/null.
 		1 while <$fh>;
 	} elsif ($slurp) {
-		local $/;
-		chomp(@{$self->{out}} = <$fh>);
+		chomp(@{$self->{out}} = do { local $/; <$fh> });
 	} else {
 		chomp(@{$self->{out}} = <$fh>);
 	}
@@ -65,6 +64,7 @@ sub out {
 	if ($devnull) {
 		return;
 	} elsif ($slurp) {
+
 		return $out->[0];
 	} else {
 		return @$out;

@@ -210,13 +210,14 @@ sub system_or_die {
 
 sub do_edit {
 	if (!defined($editor)) {
-		my ($fh, $cmd) = Git::Private::open_git(
-			'-|',
-			'var',
-			'GIT_EDITOR'
-		);
-		chomp($editor = <$fh>);
-		Git::Private::close_git($cmd, $fh);
+		$editor = Git::Private::Command->new(
+			command	=> 'git',
+			mode	=> '-|',
+			args	=> [
+				'var',
+				'GIT_EDITOR',
+			],
+		)->run->out;
 	}
 	my $die_msg = __("the editor exited uncleanly, aborting everything");
 	if (defined($multiedit) && !$multiedit) {
@@ -354,12 +355,10 @@ sub read_config {
 	foreach my $setting (keys %config_settings) {
 		my $target = $config_settings{$setting};
 		my $key = "$prefix.$setting";
-		use Data::Dumper;
 		if (ref($target) eq "ARRAY") {
 			my @values = $repo->config_get($key);
 			next unless defined $values[0];
 			next if $configured->{$setting}++;
-			warn Dumper [$key, \@values];
 			@$target = @values;
 		}
 		else {
@@ -479,7 +478,7 @@ if ($forbid_sendmail_variables && grep { /^sendmail/s } $repo->known_config_keys
 }
 
 die __("Cannot run git format-patch from outside a repository\n")
-	if $format_patch and not defined Git::Private::git_rev_parse_git_dir();
+	if $format_patch and not defined $repo->rev_parse_git_dir;
 
 die __("`batch-size` and `relogin` must be specified together " .
 	"(via command-line or configuration option)\n")
@@ -667,22 +666,20 @@ if ($dump_aliases) {
 # is_format_patch_arg($f) returns 0 if $f names a patch, or 1 if
 # $f is a revision list specification to be passed to format-patch.
 sub is_format_patch_arg {
-	my $git_dir = shift;
-	return unless $git_dir;
 	my $f = shift;
-	my ($fh, $cmd) = Git::Private::open_git(
-		'-|',
-		'rev-parse',
-		'--verify',
-		'--quiet',
-		$f,
-	);
-	my $out = do {
-		local $/;
-		<$fh>;
-	};
-	my $ret = Git::Private::close_git($cmd, $fh, 1);
-	return if $ret == 1;
+	my $cmd = Git::Private::Command->new(
+		command	=> 'git',
+		mode	=> '-|',
+		args	=> [
+			'rev-parse',
+			'--verify',
+			'--quiet',
+			$f,
+		],
+		code_ok => [1],
+	)->run;
+
+	return if $cmd->{code} == 1;
 	if (defined($format_patch)) {
 		return $format_patch;
 	}
@@ -698,12 +695,11 @@ EOF
 # Now that all the defaults are set, process the rest of the command line
 # arguments and collect up the files that need to be processed.
 my @rev_list_opts;
-my $git_dir = Git::Private::git_rev_parse_git_dir();
 while (defined(my $f = shift @ARGV)) {
 	if ($f eq "--") {
 		push @rev_list_opts, "--", @ARGV;
 		@ARGV = ();
-	} elsif (-d $f and !is_format_patch_arg($git_dir, $f)) {
+	} elsif (-d $f and !is_format_patch_arg($f)) {
 		opendir my $dh, $f
 			or die sprintf(__("Failed to opendir %s: %s"), $f, $!);
 
@@ -711,7 +707,7 @@ while (defined(my $f = shift @ARGV)) {
 		push @files, grep { -f $_ } map { File::Spec->catfile($f, $_) }
 				sort readdir $dh;
 		closedir $dh;
-	} elsif ((-f $f or -p $f) and !is_format_patch_arg($git_dir, $f)) {
+	} elsif ((-f $f or -p $f) and !is_format_patch_arg($f)) {
 		push @files, $f;
 	} else {
 		push @rev_list_opts, $f;
@@ -720,18 +716,18 @@ while (defined(my $f = shift @ARGV)) {
 
 if (@rev_list_opts) {
 	die __("Cannot run git format-patch from outside a repository\n")
-		unless defined Git::Private::git_rev_parse_git_dir();
+		unless defined $repo->rev_parse_git_dir;
 	require File::Temp;
-	my ($fh, $cmd) = Git::Private::open_git(
-		'-|',
-		'format-patch',
-		'-o',
-		File::Temp::tempdir(CLEANUP => 1),
-		@rev_list_opts,
-	);
-	chomp(my @ret = <$fh>);
-	Git::Private::close_git($cmd, $fh);
-	push @files, @ret;
+	push @files, Git::Private::Command->new(
+		command	=> 'git',
+		mode	=> '-|',
+		args	=> [
+			'format-patch',
+			'-o',
+			File::Temp::tempdir(CLEANUP => 1),
+			@rev_list_opts,
+		],
+	)->run->out;
 }
 
 @files = handle_backup_files(@files);
@@ -769,7 +765,7 @@ if ($compose) {
 	# Note that this does not need to be secure, but we will make a small
 	# effort to have it be unique
 	require File::Temp;
-	my $git_dir = Git::Private::git_rev_parse_git_dir();
+	my $git_dir = $repo->rev_parse_git_dir;
 	$compose_filename = (defined $git_dir ?
 		File::Temp::tempfile(".gitsendemail.msg.XXXXXX", DIR => $git_dir) :
 		File::Temp::tempfile(".gitsendemail.msg.XXXXXX", DIR => "."))[1];

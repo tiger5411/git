@@ -70,49 +70,26 @@ sub known_config_keys {
 
 }
 
-sub git_rev_parse_git_dir {
-	my ($fh, $cmd) = open_git(
-		'-|',
-		'rev-parse',
-		'--git-dir',
-	);
-	chomp(my $path = do {
-		local $/;
-		<$fh>;
-	});
-	my $ret = close_git($cmd, $fh, 128);
-	return undef if $ret == 128;
-	return $path;
+sub rev_parse {
+	my $self = shift;
+
+	require Git::Private::Command;
+	my $cmd = Git::Private::Command->new(
+		command	=> 'git',
+		mode	=> '-|',
+		args	=> [
+			'rev-parse',
+			@_,
+		],
+		code_ok	=> [128],
+		slurp => 1,
+	)->run->out;
 }
 
-sub git_config_get_regexp {
-	my ($regex) = @_;
-	my ($fh, $cmd) = open_git(
-		'-|',
-		'config',
-		'--null',
-		'--get-regexp',
-		$regex,
-	);
-	my @ret = map {
-		# For empty values we won't have a \n, let's
-		# return undef there
-		my ($k, $v) = split /\n/, $_, 2;
-		($k, $v);
-	} split /\0/, do {
-		local $/;
-		<$fh>;
-	};
-	close_git($cmd, $fh, 1);
+sub rev_parse_git_dir {
+	my $self = shift;
 
-	return @ret;
-}
-
-sub git_config_get_regexp_as_known_keys {
-	my @kv = git_config_get_regexp(@_);
-	my %kv;
-
-	return %kv;
+	return $self->{rev_parse_git_dir} ||= $self->rev_parse('--git-dir');
 }
 
 sub _config_common {
