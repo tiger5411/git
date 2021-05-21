@@ -49,7 +49,10 @@ sub _list_config {
 sub list_config {
 	my $self = shift;
 
-	return $self->{list_config} ||= $self->_list_config(@_)
+	my $list_config = ($self->{list_config} ||= $self->_list_config(@_));
+	#use Data::Dumper;
+	#die Dumper $list_config;
+	return $list_config;
 }
 
 sub _known_config_keys {
@@ -141,11 +144,26 @@ sub _config_common {
 
 sub config_get {
 	my $self = shift;
+	my $key = shift;
+
+	my ($config_prefix) = @$self{qw(config_prefix)};
+	if ($config_prefix) {
+		my $known_keys = $self->known_config_keys;
+		return undef unless exists $known_keys->{$key};
+		my $wantarray = wantarray;
+		if ($wantarray) {
+			return @{$known_keys->{$key}};
+		} else {
+			return $known_keys->{$key}->[0];
+		}
+	}
+
 	return $self->_config_common(@_);
 }
 
 sub config_bool {
-	my ($self, $key) = @_;
+	my $self = shift;
+	my $key = shift;
 
 	my ($config_prefix) = @$self{qw(config_prefix)};
 	if ($config_prefix) {

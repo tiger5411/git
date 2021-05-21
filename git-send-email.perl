@@ -354,9 +354,11 @@ sub read_config {
 	foreach my $setting (keys %config_settings) {
 		my $target = $config_settings{$setting};
 		my $key = "$prefix.$setting";
+		use Data::Dumper;
 		if (ref($target) eq "ARRAY") {
 			my @values = $repo->config_get($key);
 			next if $configured->{$setting}++;
+			warn Dumper [$key, \@values];
 			@$target = @values;
 		}
 		else {

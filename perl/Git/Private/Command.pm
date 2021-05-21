@@ -22,7 +22,10 @@ sub close {
 
 	my ($command, $mode, $args) = @$self{qw(command mode args)};
 
-	return $self if close $self->{fh};
+	if (close $self->{fh}) {
+		$self->{code} = $self->{raw_code} = 0;
+		return $self;
+	}
 	die "could not close($command, @$args): $!" if $!;
 	my $raw_code = $self->{raw_code} = $?;
 	my $code     = $self->{code} = $? >> 8;
