@@ -37,7 +37,6 @@ struct progress {
 	uint64_t total;
 	unsigned last_percent;
 	unsigned delay;
-	unsigned sparse;
 	struct throughput *throughput;
 	uint64_t start_ns;
 	struct strbuf counters_sb;
@@ -259,7 +258,7 @@ static void set_global_progress(struct progress *progress)
 }
 
 static struct progress *start_progress_delay(const char *title, uint64_t total,
-					     unsigned delay, unsigned sparse)
+					     unsigned delay)
 {
 	struct progress *progress = xmalloc(sizeof(*progress));
 	progress->title = title;
@@ -267,7 +266,6 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	progress->last_value = -1;
 	progress->last_percent = -1;
 	progress->delay = delay;
-	progress->sparse = sparse;
 	progress->throughput = NULL;
 	progress->start_ns = getnanotime();
 	strbuf_init(&progress->counters_sb, 0);
@@ -291,39 +289,12 @@ static int get_default_delay(void)
 
 struct progress *start_delayed_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, get_default_delay(), 0);
+	return start_progress_delay(title, total, get_default_delay());
 }
 
 struct progress *start_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, 0, 0);
-}
-
-/*
- * Here "sparse" means that the caller might use some sampling criteria to
- * decide when to call display_progress() rather than calling it for every
- * integer value in[0 .. total).  In particular, the caller might not call
- * display_progress() for the last value in the range.
- *
- * When "sparse" is set, stop_progress() will automatically force the done
- * message to show 100%.
- */
-struct progress *start_sparse_progress(const char *title, uint64_t total)
-{
-	return start_progress_delay(title, total, 0, 1);
-}
-
-struct progress *start_delayed_sparse_progress(const char *title,
-					       uint64_t total)
-{
-	return start_progress_delay(title, total, get_default_delay(), 1);
-}
-
-static void finish_if_sparse(struct progress *progress)
-{
-	if (progress->sparse &&
-	    progress->last_value != progress->total)
-		display_progress(progress, progress->total);
+	return start_progress_delay(title, total, 0);
 }
 
 static void force_last_update(struct progress *progress, const char *msg)
@@ -375,7 +346,6 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 		return;
 	*p_progress = NULL;
 
-	finish_if_sparse(progress);
 	if (progress->last_value != -1)
 		force_last_update(progress, msg);
 	log_trace2(progress);
