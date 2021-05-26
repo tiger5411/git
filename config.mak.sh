@@ -48,8 +48,8 @@ LIBPCREDIR=\$(HOME)/g/pcre2/inst
 # t/Makefile
 id_u := \$(shell id -u)
 GIT_TEST_OPTS = 
-GIT_TEST_OPTS += "--root=/run/user/\$(id_u)/git"
-GIT_TEST_OPTS += "--verbose-log"
+GIT_TEST_OPTS += --root=/run/user/\$(id_u)/git
+GIT_TEST_OPTS += --verbose-log
 
 DEFAULT_TEST_TARGET=prove
 
