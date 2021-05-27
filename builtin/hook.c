@@ -7,7 +7,7 @@
 #include "strvec.h"
 
 static const char * const builtin_hook_usage[] = {
-	N_("git hook run <hook-name> [-- <hook-args>]"),
+	N_("git hook run [--to-stdin=<path>] <hook-name> [-- <hook-args>]"),
 	NULL
 };
 
@@ -23,6 +23,8 @@ static int run(int argc, const char **argv, const char *prefix)
 	struct option run_options[] = {
 		OPT_BOOL(0, "ignore-missing", &ignore_missing,
 			 N_("exit quietly with a zero exit code if the requested hook cannot be found")),
+		OPT_STRING(0, "to-stdin", &opt.path_to_stdin, N_("path"),
+			   N_("file to read into hooks' stdin")),
 		OPT_END(),
 	};
 
