@@ -44,6 +44,11 @@ struct hook_cb_data {
  */
 const char *find_hook(const char *name);
 
+/*
+ * A boolean version of find_hook()
+ */
+int hook_exists(const char *hookname);
+
 void run_hooks_opt_clear(struct run_hooks_opt *o);
 
 /*
