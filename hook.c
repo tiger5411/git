@@ -42,22 +42,51 @@ int hook_exists(const char *name)
 	return !!find_hook(name);
 }
 
+int pipe_from_string_list(struct strbuf *pipe, void *pp_cb, void *pp_task_cb)
+{
+	int *item_idx;
+	struct hook *ctx = pp_task_cb;
+	struct hook_cb_data *hook_cb = pp_cb;
+	struct string_list *to_pipe = hook_cb->options->feed_pipe_ctx;
+
+	/* Bootstrap the state manager if necessary. */
+	if (!ctx->feed_pipe_cb_data) {
+		ctx->feed_pipe_cb_data = xmalloc(sizeof(unsigned int));
+		*(int*)ctx->feed_pipe_cb_data = 0;
+	}
+
+	item_idx = ctx->feed_pipe_cb_data;
+
+	if (*item_idx < to_pipe->nr) {
+		strbuf_addf(pipe, "%s\n", to_pipe->items[*item_idx].string);
+		(*item_idx)++;
+		return 0;
+	}
+	return 1;
+}
+
 static int pick_next_hook(struct child_process *cp,
 			  struct strbuf *out,
 			  void *pp_cb,
 			  void **pp_task_cb)
 {
 	struct hook_cb_data *hook_cb = pp_cb;
-	const char *hook_path = hook_cb->hook_path;
+	struct hook *run_me = hook_cb->run_me;
+	const char *hook_path;
 
-	if (!hook_path)
+	if (!run_me)
 		return 0;
+	hook_path = run_me->hook_path;
 
 	strvec_pushv(&cp->env_array, hook_cb->options->env.v);
 	/* reopen the file for stdin; run_command closes it. */
 	if (hook_cb->options->path_to_stdin) {
 		cp->no_stdin = 0;
 		cp->in = xopen(hook_cb->options->path_to_stdin, O_RDONLY);
+	} else if (hook_cb->options->feed_pipe) {
+		/* ask for start_command() to make a pipe for us */
+		cp->in = -1;
+		cp->no_stdin = 0;
 	} else {
 		cp->no_stdin = 1;
 	}
@@ -69,14 +98,14 @@ static int pick_next_hook(struct child_process *cp,
 	strvec_pushv(&cp->args, hook_cb->options->args.v);
 
 	/* Provide context for errors if necessary */
-	*pp_task_cb = (char *)hook_path;
+	*pp_task_cb = run_me;
 
 	/*
 	 * This pick_next_hook() will be called again, we're only
 	 * running one hook, so indicate that no more work will be
 	 * done.
 	 */
-	hook_cb->hook_path = NULL;
+	hook_cb->run_me = NULL;
 
 	return 1;
 }
@@ -86,12 +115,12 @@ static int notify_start_failure(struct strbuf *out,
 				void *pp_task_cp)
 {
 	struct hook_cb_data *hook_cb = pp_cb;
-	const char *hook_path = pp_task_cp;
+	struct hook *run_me = pp_task_cp;
 
 	hook_cb->rc |= 1;
 
 	strbuf_addf(out, _("Couldn't start hook '%s'\n"),
-		    hook_path);
+		    run_me->hook_path);
 
 	return 1;
 }
@@ -117,6 +146,7 @@ static void run_hooks_opt_clear(struct run_hooks_opt *options)
 int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 {
 	struct strbuf abs_path = STRBUF_INIT;
+	struct hook my_hook = { 0 };
 	struct hook_cb_data cb_data = {
 		.rc = 0,
 		.hook_name = hook_name,
@@ -137,16 +167,17 @@ int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 		goto cleanup;
 	}
 
-	cb_data.hook_path = hook_path;
+	my_hook.hook_path = hook_path;
 	if (options->dir) {
 		strbuf_add_absolute_path(&abs_path, hook_path);
-		cb_data.hook_path = abs_path.buf;
+		my_hook.hook_path = abs_path.buf;
 	}
+	cb_data.run_me = &my_hook;
 
 	run_processes_parallel_tr2(jobs,
 				   pick_next_hook,
 				   notify_start_failure,
-				   NULL,
+				   options->feed_pipe,
 				   notify_hook_finished,
 				   &cb_data,
 				   "hook",
@@ -155,6 +186,7 @@ int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 cleanup:
 	strbuf_release(&abs_path);
 	run_hooks_opt_clear(options);
+	free(my_hook.feed_pipe_cb_data);
 	return ret;
 }
 
