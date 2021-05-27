@@ -59,4 +59,14 @@ int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options);
  * run_hooks_opt" initialized with "RUN_HOOKS_OPT_INIT".
  */
 int run_hooks(const char *hook_name);
+
+/**
+ * Like run_hooks(), a wrapper for run_hooks_opt().
+ *
+ * This wrapper will call run_hooks() options.args generated from a
+ * list of strings provided to this function. The arguments should be
+ * a list of `const char *` strings, terminated by a NULL
+ * argument. This is like the old run_hook_le() API.
+ */
+int run_hooksl(const char *hook_name, ...);
 #endif
