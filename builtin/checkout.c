@@ -9,6 +9,7 @@
 #include "config.h"
 #include "diff.h"
 #include "dir.h"
+#include "hook.h"
 #include "ll-merge.h"
 #include "lockfile.h"
 #include "merge-recursive.h"
@@ -106,13 +107,13 @@ struct branch_info {
 static int post_checkout_hook(struct commit *old_commit, struct commit *new_commit,
 			      int changed)
 {
-	return run_hook_le(NULL, "post-checkout",
-			   oid_to_hex(old_commit ? &old_commit->object.oid : null_oid()),
-			   oid_to_hex(new_commit ? &new_commit->object.oid : null_oid()),
-			   changed ? "1" : "0", NULL);
+	const char *old = oid_to_hex(old_commit ? &old_commit->object.oid : null_oid());
 	/* "new_commit" can be NULL when checking out from the index before
 	   a commit exists. */
+	const char *new = oid_to_hex(new_commit ? &new_commit->object.oid : null_oid());
+	const char *changedstr = changed ? "1" : "0";
 
+	return run_hooksl("post-checkout", old, new, changedstr, NULL);
 }
 
 static int update_some(const struct object_id *oid, struct strbuf *base,
