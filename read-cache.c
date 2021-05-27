@@ -26,6 +26,7 @@
 #include "thread-utils.h"
 #include "progress.h"
 #include "sparse-index.h"
+#include "hook.h"
 
 /* Mask for the name length in ce_flags in the on-disk index */
 
