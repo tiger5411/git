@@ -413,16 +413,23 @@ static void adjust_git_path(const struct repository *repo,
 		update_common_dir(buf, git_dir_len, repo->commondir);
 }
 
-static void strbuf_worktree_gitdir(struct strbuf *buf,
+static int strbuf_worktree_gitdir(struct strbuf *buf,
 				   const struct repository *repo,
 				   const struct worktree *wt)
 {
-	if (!wt)
+	if (!wt) {
+		if (!repo->gitdir)
+			/* Outside of a git repository, maybe in a
+			 * RUN_SETUP_GENTLY builtin.
+			 */
+			return -1;
 		strbuf_addstr(buf, repo->gitdir);
-	else if (!wt->id)
+	} else if (!wt->id) {
 		strbuf_addstr(buf, repo->commondir);
-	else
+	} else {
 		strbuf_git_common_path(buf, repo, "worktrees/%s", wt->id);
+	}
+	return 0;
 }
 
 static void do_git_path(const struct repository *repo,
@@ -430,7 +437,8 @@ static void do_git_path(const struct repository *repo,
 			const char *fmt, va_list args)
 {
 	int gitdir_len;
-	strbuf_worktree_gitdir(buf, repo, wt);
+	if (strbuf_worktree_gitdir(buf, repo, wt) < 0)
+		return;
 	if (buf->len && !is_dir_sep(buf->buf[buf->len - 1]))
 		strbuf_addch(buf, '/');
 	gitdir_len = buf->len;

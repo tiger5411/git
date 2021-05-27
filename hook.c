@@ -8,6 +8,8 @@ const char *find_hook(const char *name)
 
 	strbuf_reset(&path);
 	strbuf_git_path(&path, "hooks/%s", name);
+	if (!path.len)
+		return NULL;
 	if (access(path.buf, X_OK) < 0) {
 		int err = errno;
 
