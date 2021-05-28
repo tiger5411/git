@@ -138,6 +138,9 @@ static int notify_hook_finished(int result,
 	/* |= rc in cb */
 	hook_cb->rc |= result;
 
+	if (hook_cb->invoked_hook)
+		*hook_cb->invoked_hook = 1;
+
 	return 1;
 }
 
@@ -152,6 +155,7 @@ int run_found_hooks(const char *hook_name, const char *hook_path,
 		.rc = 0,
 		.hook_name = hook_name,
 		.options = options,
+		.invoked_hook = options->invoked_hook,
 	};
 	if (options->absolute_path) {
 		strbuf_add_absolute_path(&abs_path, hook_path);
