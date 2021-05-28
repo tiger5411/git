@@ -10,15 +10,23 @@ test_expect_success 'setup .git/hooks' '
 
 test_expect_success 'git hook run -- nonexistent hook' '
 	cat >stderr.expect <<-\EOF &&
-	error: cannot find a hook named does-not-exist
+	error: cannot find a hook named test-hook
 	EOF
-	test_expect_code 1 git hook run does-not-exist 2>stderr.actual &&
+	test_expect_code 1 git hook run test-hook 2>stderr.actual &&
 	test_cmp stderr.expect stderr.actual
 '
 
 test_expect_success 'git hook run -- nonexistent hook with --ignore-missing' '
-	git hook run --ignore-missing does-not-exist 2>stderr.actual &&
+	git hook run --ignore-missing test-hook 2>stderr.actual &&
 	test_must_be_empty stderr.actual
+'
+
+test_expect_success 'git hook run -- nonexistent hook with --ignore-missing' '
+	cat >stderr.expect <<-\EOF &&
+	fatal: the hook '"'"'unknown-hook'"'"' is not known to git, should be in hook-list.h via githooks(5)
+	EOF
+	test_expect_code 128 git hook run unknown-hook 2>stderr.actual &&
+	test_cmp stderr.expect stderr.actual
 '
 
 test_expect_success 'git hook run -- basic' '
