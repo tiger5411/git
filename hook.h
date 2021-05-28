@@ -37,6 +37,13 @@ struct hook_cb_data {
 	struct run_hooks_opt *options;
 };
 
+/*
+ * Returns the path to the hook file, or NULL if the hook is missing
+ * or disabled. Note that this points to static storage that will be
+ * overwritten by further calls to find_hook and run_hook_*.
+ */
+const char *find_hook(const char *name);
+
 void run_hooks_opt_clear(struct run_hooks_opt *o);
 
 /*
