@@ -77,7 +77,8 @@ test_commit_setvar () {
 		git ${indir:+ -C "$indir"} commit $signoff -m "$1" &&
 		oid=$(git ${indir:+ -C "$indir"} rev-parse HEAD)
 	fi &&
-	eval $var=$oid
+	suffix=${oid#???????} &&
+	eval $var=${oid%$suffix}
 }
 
 # Format the output of git commands to make a user-friendly and stable
@@ -85,25 +86,25 @@ test_commit_setvar () {
 # about future changes of the commit ID and spaces of the output.
 make_user_friendly_and_stable_output () {
 	sed \
-		-e "s/${A%${A#???????}}[0-9a-f]*/<COMMIT-A>/g" \
-		-e "s/${B%${B#???????}}[0-9a-f]*/<COMMIT-B>/g" \
-		-e "s/${C%${C#???????}}[0-9a-f]*/<COMMIT-C>/g" \
-		-e "s/${D%${D#???????}}[0-9a-f]*/<COMMIT-D>/g" \
-		-e "s/${E%${E#???????}}[0-9a-f]*/<COMMIT-E>/g" \
-		-e "s/${F%${F#???????}}[0-9a-f]*/<COMMIT-F>/g" \
-		-e "s/${G%${G#???????}}[0-9a-f]*/<COMMIT-G>/g" \
-		-e "s/${H%${H#???????}}[0-9a-f]*/<COMMIT-H>/g" \
-		-e "s/${I%${I#???????}}[0-9a-f]*/<COMMIT-I>/g" \
-		-e "s/${J%${J#???????}}[0-9a-f]*/<COMMIT-J>/g" \
-		-e "s/${K%${K#???????}}[0-9a-f]*/<COMMIT-K>/g" \
-		-e "s/${L%${L#???????}}[0-9a-f]*/<COMMIT-L>/g" \
-		-e "s/${M%${M#???????}}[0-9a-f]*/<COMMIT-M>/g" \
-		-e "s/${N%${N#???????}}[0-9a-f]*/<COMMIT-N>/g" \
-		-e "s/${O%${O#???????}}[0-9a-f]*/<COMMIT-O>/g" \
-		-e "s/${P%${P#???????}}[0-9a-f]*/<COMMIT-P>/g" \
-		-e "s/${TAG1%${TAG1#???????}}[0-9a-f]*/<TAG-1>/g" \
-		-e "s/${TAG2%${TAG2#???????}}[0-9a-f]*/<TAG-2>/g" \
-		-e "s/${TAG3%${TAG3#???????}}[0-9a-f]*/<TAG-3>/g" \
+		-e "s/$A[0-9a-f]*/<COMMIT-A>/g" \
+		-e "s/$B[0-9a-f]*/<COMMIT-B>/g" \
+		-e "s/$C[0-9a-f]*/<COMMIT-C>/g" \
+		-e "s/$D[0-9a-f]*/<COMMIT-D>/g" \
+		-e "s/$E[0-9a-f]*/<COMMIT-E>/g" \
+		-e "s/$F[0-9a-f]*/<COMMIT-F>/g" \
+		-e "s/$G[0-9a-f]*/<COMMIT-G>/g" \
+		-e "s/$H[0-9a-f]*/<COMMIT-H>/g" \
+		-e "s/$I[0-9a-f]*/<COMMIT-I>/g" \
+		-e "s/$J[0-9a-f]*/<COMMIT-J>/g" \
+		-e "s/$K[0-9a-f]*/<COMMIT-K>/g" \
+		-e "s/$L[0-9a-f]*/<COMMIT-L>/g" \
+		-e "s/$M[0-9a-f]*/<COMMIT-M>/g" \
+		-e "s/$N[0-9a-f]*/<COMMIT-N>/g" \
+		-e "s/$O[0-9a-f]*/<COMMIT-O>/g" \
+		-e "s/$P[0-9a-f]*/<COMMIT-P>/g" \
+		-e "s/$TAG1[0-9a-f]*/<TAG-1>/g" \
+		-e "s/$TAG2[0-9a-f]*/<TAG-2>/g" \
+		-e "s/$TAG3[0-9a-f]*/<TAG-3>/g" \
 		-e "s/ *\$//"
 }
 
