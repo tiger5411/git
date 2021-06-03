@@ -155,6 +155,9 @@ struct rev_info {
 	 *   revision.c's normal processing of the line (after
 	 *   possibly munging the provided strbuf).
 	 *
+	 *   Change "revarg_flags" to affect the subsequent handling
+	 *   in handle_revision_arg()
+	 *
 	 * - Return REV_INFO_STDIN_LINE_CONTINUE to indicate that the
 	 *   line is fully processed, moving onto the next line (if
 	 *   any)
@@ -163,6 +166,7 @@ struct rev_info {
 	 * around.
 	 */
 	rev_info_stdin_line_func handle_stdin_line;
+	int revarg_flags;
 	void *stdin_line_priv;
 
 	/* topo-sort */
@@ -432,8 +436,6 @@ void parse_revision_opt(struct rev_info *revs, struct parse_opt_ctx_t *ctx,
 			const char * const usagestr[]);
 #define REVARG_CANNOT_BE_FILENAME 01
 #define REVARG_COMMITTISH 02
-int handle_revision_arg(const char *arg, struct rev_info *revs,
-			int flags, unsigned revarg_opt);
 void revision_opts_finish(struct rev_info *revs);
 
 /**
