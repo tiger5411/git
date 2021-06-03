@@ -85,6 +85,11 @@ struct oidset;
 struct topo_walk_info;
 struct boundary_commits;
 
+enum rev_info_stdin {
+	REV_INFO_STDIN_CONSUME_ON_OPTION,
+	REV_INFO_STDIN_IGNORE,
+};
+
 struct rev_info {
 	/* Starting list */
 	struct commit_list *commits;
@@ -113,9 +118,22 @@ struct rev_info {
 	int rev_input_given;
 
 	/*
-	 * Whether we read from stdin due to the --stdin option.
+	 * How should we handle seeing --stdin?
+	 *
+	 * Defaults to REV_INFO_STDIN_CONSUME_ON_OPTION where we'll
+	 * attempt to read it if we see the --stdin option.
+	 *
+	 * Can be set to REV_INFO_STDIN_IGNORE to ignore the --stdin
+	 * option.
 	 */
-	int read_from_stdin;
+	enum rev_info_stdin stdin_handling;
+
+	/*
+	 * Did we read from stdin due to stdin_handling ==
+	 * REV_INFO_STDIN_CONSUME_ON_OPTION and seeing the --stdin
+	 * option?
+	 */
+	unsigned int consumed_stdin:1;
 
 	/* topo-sort */
 	enum rev_sort_order sort_order;
@@ -219,7 +237,7 @@ struct rev_info {
 			preserve_subject:1,
 			encode_email_headers:1,
 			include_header:1;
-	unsigned int	disable_stdin:1;
+
 	/* --show-linear-break */
 	unsigned int	track_linear:1,
 			track_first_time:1,
