@@ -345,6 +345,14 @@ edit. These can also be listed with 'git help --user-formats'.
 
 include::cmds-userformats.txt[]
 
+Git file formats and protocols
+------------------------------
+
+This documentation discusses the file formats and protocols that git
+itself uses. These can also be listed with 'git help --git-formats'.
+
+include::cmds-gitformats.txt[]
+
 Configuration Mechanism
 -----------------------
 

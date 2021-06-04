@@ -13,6 +13,7 @@ SYNOPSIS
 'git help' [-g|--guides]
 'git help' [-c|--config]
 'git help' [--user-formats]
+'git help' [--git-formats]
 
 DESCRIPTION
 -----------

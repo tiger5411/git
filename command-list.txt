@@ -47,6 +47,10 @@
 # .mailmap etc. files lives in man section 5. These entries can only
 # have the "userformats" attribute and nothing else.
 #
+# Git internal file formats and protocols, such as documentation for the
+# *.bundle format lives in man section 5. These entries can only have
+# the "gitformats" attribute and nothing else.
+#
 ### command list (do not change this line)
 # command name                          category [category] [category]
 git-add                                 mainporcelain           worktree
@@ -204,6 +208,7 @@ gitcvs-migration                        guide
 gitdiffcore                             guide
 giteveryday                             guide
 gitfaq                                  guide
+gitformat-bundle                        gitformats
 gitglossary                             guide
 githooks                                userformats
 gitignore                               userformats

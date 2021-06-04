@@ -230,6 +230,8 @@ test_expect_success "'git help -a' section spacing" '
 	Low-level Commands / Internal Helpers
 
 	Git user-facing file formats
+
+	Git internal file formats and protocols
 	EOF
 	test_cmp expect actual
 '

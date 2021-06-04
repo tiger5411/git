@@ -39,6 +39,7 @@ static struct category_description main_categories[] = {
 	{ CAT_synchingrepositories, N_("Low-level Commands / Syncing Repositories") },
 	{ CAT_purehelpers, N_("Low-level Commands / Internal Helpers") },
 	{ CAT_userformats, N_("Git user-facing file formats") },
+	{ CAT_gitformats, N_("Git internal file formats and protocols") },
 	{ 0, NULL }
 };
 
@@ -431,6 +432,16 @@ void list_user_formats_help(void)
 {
 	struct category_description catdesc[] = {
 		{ CAT_userformats, N_("Git user-facing file formats:") },
+		{ 0, NULL }
+	};
+	print_cmd_by_category(catdesc, NULL);
+	putchar('\n');
+}
+
+void list_git_formats_help(void)
+{
+	struct category_description catdesc[] = {
+		{ CAT_gitformats, N_("Internal file formats and protocols:") },
 		{ 0, NULL }
 	};
 	print_cmd_by_category(catdesc, NULL);
