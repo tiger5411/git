@@ -337,6 +337,13 @@ The following documentation pages are guides about Git concepts.
 
 include::cmds-guide.txt[]
 
+User-facing file formats
+------------------------
+
+This documentation discusses file formats that users are expected to
+edit. These can also be listed with 'git help --user-formats'.
+
+include::cmds-userformats.txt[]
 
 Configuration Mechanism
 -----------------------
