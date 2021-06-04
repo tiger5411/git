@@ -43,6 +43,7 @@ static enum help_action {
 	HELP_ACTION_ALL = 1,
 	HELP_ACTION_GUIDES,
 	HELP_ACTION_CONFIG,
+	HELP_ACTION_USER_FORMATS,
 	HELP_ACTION_CONFIG_FOR_COMPLETION,
 	HELP_ACTION_CONFIG_SECTIONS_FOR_COMPLETION,
 } cmd_mode;
@@ -64,6 +65,8 @@ static struct option builtin_help_options[] = {
 
 	OPT_CMDMODE('g', "guides", &cmd_mode, N_("print list of useful guides"),
 		    HELP_ACTION_GUIDES),
+	OPT_CMDMODE(0, "user-formats", &cmd_mode, N_("print list of user-facing file formats"),
+		    HELP_ACTION_USER_FORMATS),
 	OPT_CMDMODE('c', "config", &cmd_mode, N_("print all configuration variable names"),
 		    HELP_ACTION_CONFIG),
 	OPT_CMDMODE_F(0, "config-for-completion", &cmd_mode, "",
@@ -79,6 +82,7 @@ static const char * const builtin_help_usage[] = {
 	   "         [[-i|--info] [-m|--man] [-w|--web]] [<command>]"),
 	N_("git help [-g|--guides]"),
 	N_("git help [-c|--config]"),
+	N_("git help [--user-formats]"),
 	NULL
 };
 
@@ -612,6 +616,10 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 	case HELP_ACTION_CONFIG_FOR_COMPLETION:
 		no_extra_argc(argc);
 		list_config_help(SHOW_CONFIG_VARS);
+		return 0;
+	case HELP_ACTION_USER_FORMATS:
+		no_extra_argc(argc);
+		list_user_formats_help();
 		return 0;
 	case HELP_ACTION_CONFIG_SECTIONS_FOR_COMPLETION:
 		no_extra_argc(argc);
