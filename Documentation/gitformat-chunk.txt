@@ -1,5 +1,18 @@
-Chunk-based file formats
-========================
+gitformat-chunk(5)
+==================
+
+NAME
+----
+gitformat-chunk - Chunk-based file formats
+
+SYNOPSIS
+--------
+
+Used by linkgit:gitformat-commit-graph[5] and the "MIDX" format (see
+link:technical/pack-format.html[the pack format documentation]).
+
+DESCRIPTION
+-----------
 
 Some file formats in Git use a common concept of "chunks" to describe
 sections of the file. This allows structured access to a large file by
@@ -114,3 +127,7 @@ for future formats:
   in `midx.c` for how the chunk-format API is used to write and
   parse the multi-pack-index file format documented in
   link:technical/pack-format.html[the multi-pack-index file format].
+
+GIT
+---
+Part of the linkgit:git[1] suite
