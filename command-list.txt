@@ -210,6 +210,10 @@ giteveryday                             guide
 gitfaq                                  guide
 gitformat-bundle                        gitformats
 gitformat-commit-graph                  gitformats
+gitformat-pack-protocol                 gitformats
+gitformat-protocol-capabilities         gitformats
+gitformat-protocol-common               gitformats
+gitformat-protocol-v2                   gitformats
 gitglossary                             guide
 githooks                                userformats
 gitignore                               userformats
