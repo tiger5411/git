@@ -209,6 +209,7 @@ gitdiffcore                             guide
 giteveryday                             guide
 gitfaq                                  guide
 gitformat-bundle                        gitformats
+gitformat-commit-graph                  gitformats
 gitglossary                             guide
 githooks                                userformats
 gitignore                               userformats
