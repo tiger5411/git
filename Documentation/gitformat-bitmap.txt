@@ -14,7 +14,7 @@ DESCRIPTION
 -----------
 
 Bitmaps are a file format associated with .pack files. See
-link:technical/pack-format.html[the pack format documentation] and
+the pack format documentation in linkgit:gitformat-pack[5] and
 linkgit:git-pack-objects[1].
 
 == GIT bitmap v1 format
