@@ -217,6 +217,7 @@ gitformat-pack                          gitformats
 gitformat-pack-protocol                 gitformats
 gitformat-protocol-capabilities         gitformats
 gitformat-protocol-common               gitformats
+gitformat-protocol-http                 gitformats
 gitformat-protocol-v2                   gitformats
 gitformat-signature                     gitformats
 gitglossary                             guide
