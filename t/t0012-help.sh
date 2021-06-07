@@ -93,6 +93,19 @@ test_expect_success 'git help succeeds without git.html' '
 	test_cmp expect test-browser.log
 '
 
+test_expect_success 'git help -c' '
+	git help -c >help.output &&
+	cat >expect <<-\EOF &&
+
+	'\''git help config'\'' for more information
+	EOF
+	grep -v -E \
+		-e "^[^.]+\.[^.]+$" \
+		-e "^[^.]+\.[^.]+\.[^.]+$" \
+		help.output >actual &&
+	test_cmp expect actual
+'
+
 test_expect_success 'generate builtin list' '
 	git --list-cmds=builtins >builtins
 '
