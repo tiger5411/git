@@ -217,7 +217,8 @@ test -n "$only_merge" && exit
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Compile
-make -j $(nproc) all man check-docs
+make -j $(nproc) all check-docs
+make -j $(nproc) man
 test -n "$only_compile" && exit
 
 # First run a smaller subset of tests, likelier to have failures:
