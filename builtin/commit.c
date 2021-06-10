@@ -1706,6 +1706,7 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 	   running hooks, writing the trees, and interacting with the user.  */
 	if (!prepare_to_commit(index_file, prefix,
 			       current_head, &s, &author_ident)) {
+		strbuf_release(&author_ident);
 		rollback_index_files();
 		return 1;
 	}
