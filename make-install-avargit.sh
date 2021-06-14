@@ -114,8 +114,10 @@ do
 	refs/remotes/origin/master)
 		aheadbehind=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
 		test -n "$verbose" && echo "Branch $branch is $aheadbehind upstream master"
-		## TODO: Check if push is needed, cache this (i.e. rev-parse remote info)
-		#git push avar $branch:$branch
+		if test -n "$(git rev-list $branch...avar/$branch)"
+		then
+			git push avar $branch:$branch ${force_push:+--force}
+		fi
 		# OK
 		;;
 	"refs/heads/*")
