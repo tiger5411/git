@@ -52,8 +52,9 @@ do
 	shift
 done
 
-meta_dir="$(pwd)"
-cd ~/g/git.build
+META_DIR="$(pwd)"
+BUILD_DIR=~/g/git.build
+cd $BUILD_DIR
 
 tag_name() {
 	date +'avargit-v%Y-%m-%d-%H%M%S'
@@ -73,7 +74,7 @@ tag_it() {
 	EOF
 
 	printf "\0" >>$tmp
-	cat "$meta_dir"/"$0" >>$tmp
+	cat "$META_DIR"/"$0" >>$tmp
 
 	git mktag --strict <$tmp
 }
@@ -90,6 +91,50 @@ reset_it() {
 	git reset --hard @{u}
 	git merge --abort || :
 	git reset --hard @{u}
+}
+
+suggest_bisect() {
+	failed_tests=$(
+		cd test-results
+		grep -lve '^0$' *.exit | sed 's/\.exit/.sh/'
+	)
+
+	cat >/tmp/git-build-bisect.sh <<-EOF
+	#!/bin/sh
+	set -xe
+	cd $BUILD_DIR
+
+	if ! git bisect log 2>/dev/null
+	then
+		git bisect start
+		git bisect good @{upstream}
+		git bisect bad HEAD
+		git bisect run /tmp/git-build-bisect.sh
+		exit 0
+	fi
+
+	make -j $(nproc) all check-docs
+
+	(
+		cd t &&
+		GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 \
+			make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash" \
+			T="$failed_tests"
+	)
+	EOF
+	chmod +x /tmp/git-build-bisect.sh
+	cat <<-EOF
+	Try bisect with:
+
+            /tmp/git-build-bisect.sh
+
+        See:
+
+            cat /tmp/git-build-bisect.sh
+
+        for what it'll do
+	EOF
+	exit 1
 }
 
 show_built_from
@@ -223,20 +268,34 @@ make -j $(nproc) all check-docs
 make -j $(nproc) man
 test -n "$only_compile" && exit
 
+# Test sanity
+make -C t test-lint
+
+# Remove any past test state
+make -C t clean
+GIT_PROVE_OPTS="--state=save --jobs=$(nproc) --timer"
+export GIT_PROVE_OPTS
+
 # First run a smaller subset of tests, likelier to have failures:
 git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
 tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
 (
-	cd t &&
-	GIT_TEST_HTTPD=1 make GIT_PROVE_OPTS="--jobs=$(nproc) --timer" T="$(cat /tmp/git.build-tests.tr)"
+	cd t
+	if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS"
+	then
+		suggest_bisect
+	fi
 )
 test -n "$only_basic_test" && exit
 
 # Run all tests
 (
-	cd t &&
-	make -j $(nproc) clean-except-prove-cache &&
-	GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make -j $(nproc) all test-lint GIT_PROVE_OPTS="--exec /bin/bash --jobs=$(nproc) --timer --state=failed,slow,save"
+	cd t
+	make clean-except-prove-cache
+	if ! GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+	then
+		suggest_bisect
+	fi
 )
 test -n "$only_test" && exit
 
