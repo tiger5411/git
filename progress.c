@@ -8,7 +8,6 @@
  * published by the Free Software Foundation.
  */
 
-#define GIT_TEST_PROGRESS_ONLY
 #include "cache.h"
 #include "gettext.h"
 #include "progress.h"
@@ -24,9 +23,7 @@ static struct progress *global_progress;
  * These are only intended for testing the progress output, i.e. exclusively
  * for 'test-tool progress'.
  */
-int progress_testing;
-uint64_t progress_test_ns = 0;
-void progress_test_force_update(void)
+void test_progress_force_update(void)
 {
 	progress_update = 1;
 }
@@ -41,9 +38,6 @@ static void set_progress_signal(void)
 {
 	struct sigaction sa;
 	struct itimerval v;
-
-	if (progress_testing)
-		return;
 
 	progress_update = 0;
 
@@ -62,9 +56,6 @@ static void set_progress_signal(void)
 static void clear_progress_signal(void)
 {
 	struct itimerval v = {{0,},};
-
-	if (progress_testing)
-		return;
 
 	setitimer(ITIMER_REAL, &v, NULL);
 	signal(SIGALRM, SIG_IGN);
@@ -150,8 +141,8 @@ static void throughput_string(struct strbuf *buf, uint64_t total,
 
 static uint64_t progress_getnanotime(struct progress *progress)
 {
-	if (progress_testing)
-		return progress->start_ns + progress_test_ns;
+	if (progress->test_getnanotime)
+		return progress->start_ns + progress->test_getnanotime;
 	else
 		return getnanotime();
 }
@@ -231,7 +222,7 @@ static void set_global_progress(struct progress *progress)
 }
 
 static struct progress *start_progress_delay(const char *title, uint64_t total,
-					     unsigned delay)
+					     unsigned delay, int testing)
 {
 	struct progress *progress = xmalloc(sizeof(*progress));
 	progress->title = title;
@@ -245,9 +236,15 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	progress->title_len = utf8_strwidth(title);
 	progress->split = 0;
 	set_global_progress(progress);
-	set_progress_signal();
+	if (!testing)
+		set_progress_signal();
 	trace2_region_enter("progress", title, the_repository);
 	return progress;
+}
+
+struct progress *start_progress_testing(const char *title, uint64_t total)
+{
+	return start_progress_delay(title, total, 0, 1);
 }
 
 static int get_default_delay(void)
@@ -262,12 +259,12 @@ static int get_default_delay(void)
 
 struct progress *start_delayed_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, get_default_delay());
+	return start_progress_delay(title, total, get_default_delay(), 0);
 }
 
 struct progress *start_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, 0);
+	return start_progress_delay(title, total, 0, 0);
 }
 
 static void force_last_update(struct progress *progress, const char *msg)
