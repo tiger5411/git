@@ -46,6 +46,7 @@ struct progress {
 };
 
 static volatile sig_atomic_t progress_update;
+static struct progress *global_progress;
 
 /*
  * These are only intended for testing the progress output, i.e. exclusively
@@ -219,10 +220,15 @@ void progress_test_force_update(void)
 	progress_interval(SIGALRM);
 }
 
-static void set_progress_signal(void)
+static void set_progress_signal(struct progress *progress)
 {
 	struct sigaction sa;
 	struct itimerval v;
+
+	if (global_progress)
+		BUG("'%s' progress still active when trying to start '%s'",
+		    global_progress->title, progress->title);
+	global_progress = progress;
 
 	if (progress_testing)
 		return;
@@ -241,9 +247,13 @@ static void set_progress_signal(void)
 	setitimer(ITIMER_REAL, &v, NULL);
 }
 
-static void clear_progress_signal(void)
+static void clear_progress_signal(struct progress *progress)
 {
 	struct itimerval v = {{0,},};
+
+	if (!global_progress)
+		BUG("should have active global_progress when cleaning up");
+	global_progress = NULL;
 
 	if (progress_testing)
 		return;
@@ -268,7 +278,7 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	strbuf_init(&progress->counters_sb, 0);
 	progress->title_len = utf8_strwidth(title);
 	progress->split = 0;
-	set_progress_signal();
+	set_progress_signal(progress);
 	trace2_region_enter("progress", title, the_repository);
 	return progress;
 }
@@ -372,7 +382,7 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 		display(progress, progress->last_value, buf);
 		free(buf);
 	}
-	clear_progress_signal();
+	clear_progress_signal(progress);
 	strbuf_release(&progress->counters_sb);
 	if (progress->throughput)
 		strbuf_release(&progress->throughput->display);
