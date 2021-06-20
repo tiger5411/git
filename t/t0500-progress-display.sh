@@ -96,7 +96,8 @@ Working hard.......2.........3.........4.........5.........6.........7:
     0% (0/100), stalled.<CR>
     1% (1/100)          <CR>
    50% (50/100)<CR>
-   50% (50/100), done.
+  100% (100/100)<CR>
+  100% (100/100), done.
 EOF
 
 	cat >in <<-\EOF &&
@@ -104,6 +105,7 @@ EOF
 	signal
 	progress 1
 	progress 50
+	progress 100
 	stop
 	EOF
 	test-tool progress <in 2>stderr &&
@@ -421,6 +423,32 @@ test_expect_success 'BUG: start two concurrent progress bars' '
 	test_must_fail test-tool progress \
 		<in 2>stderr &&
 	grep -E "^BUG: .*: should have no global_progress in set_progress_signal\(\)$" stderr
+'
+
+test_expect_success 'BUG: display_progress() goes past declared "total"' '
+	cat >in <<-\EOF &&
+	start 3
+	progress 1
+	progress 2
+	progress 4
+	stop
+	EOF
+
+	test_must_fail test-tool progress <in 2>stderr &&
+	grep "BUG:.*total progress does not match" stderr
+'
+
+test_expect_success 'BUG: display_progress() does not reach declared "total"' '
+	cat >in <<-\EOF &&
+	start 5
+	progress 1
+	progress 2
+	progress 4
+	stop
+	EOF
+
+	test_must_fail test-tool progress <in 2>stderr &&
+	grep "BUG:.*total progress does not match" stderr
 '
 
 test_done

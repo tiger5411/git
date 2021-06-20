@@ -325,6 +325,7 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 
 	progress->total = total;
 	progress->last_value = -1;
+	progress->last_update = -1;
 	progress->last_percent = -1;
 	progress->delay = delay;
 	progress->throughput = NULL;
@@ -393,6 +394,13 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 	if (!progress)
 		return;
 	*p_progress = NULL;
+
+	if (progress->total &&
+	    progress->total != progress->last_update)
+		BUG("total progress does not match for \"%*s\": expected: %"PRIuMAX" got: %"PRIuMAX,
+		    (int)(progress->status_len_utf8), progress->title.buf,
+		    (uintmax_t)progress->total,
+		    (uintmax_t)progress->last_update);
 	if (progress->last_value != -1) {
 		/* Force the last update */
 		struct throughput *tp = progress->throughput;
