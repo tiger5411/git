@@ -57,6 +57,6 @@ struct progress *start_delayed_sparse_progress(const char *title,
 void stop_progress_msg(struct progress **p_progress, const char *msg);
 static inline void stop_progress(struct progress **p_progress)
 {
-	stop_progress_msg(p_progress, _("done"));
+	stop_progress_msg(p_progress, _(", done."));
 }
 #endif
