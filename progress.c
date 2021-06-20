@@ -40,6 +40,8 @@ static void display(struct progress *progress, uint64_t n,
 	const char *tp;
 	int show_update = 0;
 
+	if (progress->last_update != -1 && n < progress->last_update)
+		BUG("counting backwards with display_progress()");
 	progress->last_update = n;
 
 	if (progress->delay && (!progress_update || --progress->delay))

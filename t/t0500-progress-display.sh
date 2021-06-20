@@ -211,30 +211,6 @@ EOF
 	test_cmp expect out
 '
 
-# Progress counter goes backwards, this should not happen in practice.
-test_expect_success 'progress shortens - crazy caller' '
-	cat >expect <<-\EOF &&
-	Working hard:  10% (100/1000)<CR>
-	Working hard:  20% (200/1000)<CR>
-	Working hard:   0% (1/1000)  <CR>
-	Working hard: 100% (1000/1000)<CR>
-	Working hard: 100% (1000/1000), done.
-	EOF
-
-	cat >in <<-\EOF &&
-	start 1000
-	progress 100
-	progress 200
-	progress 1
-	progress 1000
-	stop
-	EOF
-	test-tool progress <in 2>stderr &&
-
-	show_cr <stderr >out &&
-	test_cmp expect out
-'
-
 test_expect_success 'progress display with throughput' '
 	cat >expect <<-\EOF &&
 	Working hard: 0, stalled.<CR>
@@ -449,6 +425,18 @@ test_expect_success 'BUG: display_progress() does not reach declared "total"' '
 
 	test_must_fail test-tool progress <in 2>stderr &&
 	grep "BUG:.*total progress does not match" stderr
+'
+
+test_expect_success 'BUG: display_progres() counting backwards' '
+	cat >in <<-\EOF &&
+	start 3
+	progress 1
+	progress 2
+	progress 1
+	EOF
+
+	test_must_fail test-tool progress <in 2>stderr &&
+	grep "BUG:.*counting backwards" stderr
 '
 
 test_done
