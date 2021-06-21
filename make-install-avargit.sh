@@ -166,9 +166,11 @@ do
 	refs/remotes/origin/master)
 		aheadbehind=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
 		test -n "$verbose" && echo "Branch $branch is $aheadbehind upstream master"
-		if test -n "$(git rev-list $branch...avar/$branch)"
+		if ! git rev-list $branch...avar/$branch
 		then
 			git push avar $branch:$branch ${force_push:+--force}
+			echo "Needed to push out '$branch', restart to appease the state machine!"
+			exit 1
 		fi
 		# OK
 		;;
