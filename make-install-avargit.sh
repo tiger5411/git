@@ -12,6 +12,7 @@ only_test=
 force_push=
 auto_rebase=
 verbose=
+debug=
 while test $# != 0
 do
 	case "$1" in
@@ -44,6 +45,9 @@ do
 		;;
 	--verbose)
 		verbose=yes
+		;;
+	--debug)
+		debug=yes
 		;;
 	*)
 		break
@@ -142,7 +146,10 @@ reset_it
 git checkout build-master || git checkout -b build-master -t origin/master
 
 # The list of topics I'm merging
-set +x
+if test -z "$debug"
+then
+	set +x
+fi
 series_list=$(mktemp /tmp/avargit-series-XXXXX)
 grep -v \
      -e '^$' \
