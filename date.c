@@ -5,6 +5,7 @@
  */
 
 #include "cache.h"
+#include "config.h"
 
 /*
  * This is like mktime, but without normalization of tm_wday and tm_yday.
@@ -591,7 +592,7 @@ static int match_multi_number(timestamp_t num, char c, const char *date,
 	case '/':
 	case '.':
 		if (!now)
-			now = time(NULL);
+			now = git_time_now();
 		refuse_future = NULL;
 		if (gmtime_r(&now, &now_tm))
 			refuse_future = &now_tm;
@@ -694,7 +695,7 @@ static int match_digit(const char *date, struct tm *tm, int *offset, int *tm_gmt
 		unsigned int num2 = (num % 10000) / 100;
 		unsigned int num3 = num % 100;
 		if (n == 8)
-			set_date(num1, num2, num3, NULL, time(NULL), tm);
+			set_date(num1, num2, num3, NULL, git_time_now(), tm);
 		else if (n == 6 && set_time(num1, num2, num3, tm) == 0 &&
 			 *end == '.' && isdigit(end[1]))
 			strtoul(end + 1, &end, 10);

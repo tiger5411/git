@@ -26,7 +26,7 @@ static void cache_credential(struct credential *c, int timeout)
 	/* take ownership of pointers */
 	memcpy(&e->item, c, sizeof(*c));
 	memset(c, 0, sizeof(*c));
-	e->expiration = time(NULL) + timeout;
+	e->expiration = git_time_now() + timeout;
 }
 
 static struct credential_cache_entry *lookup_credential(const struct credential *c)
@@ -53,7 +53,7 @@ static timestamp_t check_expirations(void)
 {
 	static timestamp_t wait_for_entry_until;
 	int i = 0;
-	timestamp_t now = time(NULL);
+	timestamp_t now = git_time_now();
 	timestamp_t next = TIME_MAX;
 
 	/*

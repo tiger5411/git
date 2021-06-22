@@ -124,7 +124,7 @@ int cmd_bugreport(int argc, const char **argv, const char *prefix)
 	struct strbuf buffer = STRBUF_INIT;
 	struct strbuf report_path = STRBUF_INIT;
 	int report = -1;
-	time_t now = time(NULL);
+	time_t now = git_time_now();
 	struct tm tm;
 	char *option_output = NULL;
 	char *option_suffix = "%Y-%m-%d-%H%M";

@@ -39,6 +39,7 @@
 #include "test-tool.h"
 #include "git-compat-util.h"
 #include <utime.h>
+#include "git-time.h"
 
 static const char usage_str[] =
 	"(-v|--verbose|-g|--get) (+|=|=+|=-|-)<seconds> <file>...";
@@ -60,7 +61,7 @@ static int timespec_arg(const char *arg, long int *set_time, int *set_eq)
 		return 0;
 	}
 	if ((*set_eq && *set_time < 0) || *set_eq == 2) {
-		time_t now = time(NULL);
+		time_t now = git_time_now();
 		*set_time += now;
 	}
 	return 1;

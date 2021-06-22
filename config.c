@@ -1874,6 +1874,14 @@ unsigned long git_env_ulong(const char *k, unsigned long val)
 	return val;
 }
 
+int64_t git_env_int64(const char *k, int64_t val)
+{
+	const char *v = getenv(k);
+	if (v && !git_parse_int64(v, &val))
+		die(_("failed to parse %s"), k);
+	return val;
+}
+
 int git_config_system(void)
 {
 	return !git_env_bool("GIT_CONFIG_NOSYSTEM", 0);

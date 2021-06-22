@@ -17,6 +17,7 @@
 #include "oid-array.h"
 #include "repository.h"
 #include "mem-pool.h"
+#include "git-time.h"
 
 #include <zlib.h>
 typedef struct git_zstream {

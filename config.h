@@ -320,6 +320,7 @@ int git_config_copy_section(const char *, const char *);
 int git_config_copy_section_in_file(const char *, const char *, const char *);
 int git_env_bool(const char *, int);
 unsigned long git_env_ulong(const char *, unsigned long);
+int64_t git_env_int64(const char *, int64_t);
 int git_config_system(void);
 int config_error_nonbool(const char *);
 #if defined(__GNUC__)

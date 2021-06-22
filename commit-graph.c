@@ -2155,7 +2155,7 @@ static void merge_commit_graphs(struct write_commit_graph_context *ctx)
 static void mark_commit_graphs(struct write_commit_graph_context *ctx)
 {
 	uint32_t i;
-	time_t now = time(NULL);
+	time_t now = git_time_now();
 
 	for (i = ctx->num_commit_graphs_after - 1; i < ctx->num_commit_graphs_before; i++) {
 		struct stat st;
@@ -2175,7 +2175,7 @@ static void expire_commit_graphs(struct write_commit_graph_context *ctx)
 	DIR *dir;
 	struct dirent *de;
 	size_t dirnamelen;
-	timestamp_t expire_time = time(NULL);
+	timestamp_t expire_time = git_time_now();
 
 	if (ctx->opts && ctx->opts->expire_time)
 		expire_time = ctx->opts->expire_time;

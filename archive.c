@@ -462,7 +462,7 @@ static void parse_treeish_arg(const char **argv,
 		archive_time = commit->date;
 	} else {
 		commit_oid = NULL;
-		archive_time = time(NULL);
+		archive_time = git_time_now();
 	}
 
 	tree = parse_tree_indirect(&oid);

@@ -2501,7 +2501,7 @@ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
 
 	git_config(receive_pack_config, NULL);
 	if (cert_nonce_seed)
-		push_cert_nonce = prepare_push_cert_nonce(service_dir, time(NULL));
+		push_cert_nonce = prepare_push_cert_nonce(service_dir, git_time_now());
 
 	if (0 <= transfer_unpack_limit)
 		unpack_limit = transfer_unpack_limit;
