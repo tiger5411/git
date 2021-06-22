@@ -571,41 +571,49 @@ create_repo_missing () {
 	)
 }
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices missing blob' '
 	create_repo_missing HEAD:subdir/file &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices missing subtree' '
 	create_repo_missing HEAD:subdir &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices missing root tree' '
 	create_repo_missing HEAD^{tree} &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices missing parent' '
 	create_repo_missing HEAD^ &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices missing tagged object' '
 	create_repo_missing tag^{blob} &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices ref pointing to missing commit' '
 	create_repo_missing HEAD &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck notices ref pointing to missing tag' '
 	create_repo_missing tag &&
 	test_must_fail git -C missing fsck
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck --connectivity-only' '
 	rm -rf connectivity-only &&
 	git init connectivity-only &&
@@ -640,6 +648,7 @@ test_expect_success 'fsck --connectivity-only' '
 	)
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck --connectivity-only with explicit head' '
 	rm -rf connectivity-only &&
 	git init connectivity-only &&
@@ -653,6 +662,7 @@ test_expect_success 'fsck --connectivity-only with explicit head' '
 	)
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck --name-objects' '
 	rm -rf name-objects &&
 	git init name-objects &&
@@ -719,6 +729,7 @@ test_expect_success 'fsck fails on corrupt packfile' '
 	test_i18ngrep "checksum mismatch" out
 '
 
+GIT_TEST_GC=false \
 test_expect_success 'fsck finds problems in duplicate loose objects' '
 	rm -rf broken-duplicate &&
 	git init broken-duplicate &&
