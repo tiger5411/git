@@ -24,6 +24,7 @@ struct progress {
 	struct strbuf status;
 	size_t status_len_utf8;
 
+	uint64_t last_update;
 	uint64_t last_value;
 	uint64_t total;
 	unsigned last_percent;
@@ -59,4 +60,6 @@ static inline void stop_progress(struct progress **p_progress)
 {
 	stop_progress_msg(p_progress, _(", done."));
 }
+void stop_progress_early(struct progress **p_progress);
+
 #endif
