@@ -29,7 +29,7 @@ struct transport_vtable {
 	/**
 	 * Returns a list of the remote side's bundle URIs.
 	 **/
-	struct string_list *(*get_bundle_uris)(struct transport *transport);
+	struct string_list *(*get_bundle_uri)(struct transport *transport);
 
 	/**
 	 * Fetch the objects for the given refs. Note that this gets

@@ -68,7 +68,7 @@ struct transport {
 	const char *url;
 	void *data;
 	const struct ref *remote_refs;
-	const struct string_list *bundle_uris;
+	const struct string_list *bundle_uri;
 
 	/**
 	 * Indicates whether we already called get_refs_list(); set by
@@ -77,10 +77,10 @@ struct transport {
 	unsigned got_remote_refs : 1;
 
 	/**
-	 * Indicates whether we already called get_bundle_uris_list(); set by
-	 * transport.c::transport_get_bundle_uris().
+	 * Indicates whether we already called get_bundle_uri_list(); set by
+	 * transport.c::transport_get_bundle_uri().
 	 */
-	unsigned got_bundle_uris : 1;
+	unsigned got_bundle_uri : 1;
 
 	/*
 	 * Transports that call take-over destroys the data specific to
@@ -280,7 +280,7 @@ const struct ref *transport_get_remote_refs(struct transport *transport,
 /*
  * Retrieve bundle URIs from a remote.
  */
-const struct string_list *transport_get_bundle_uris(struct transport *transport);
+const struct string_list *transport_get_bundle_uri(struct transport *transport);
 
 /*
  * Fetch the hash algorithm used by a remote.
