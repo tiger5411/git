@@ -32,7 +32,7 @@ test_expect_success 'test capability advertisement' '
 test_expect_success 'test capability advertisement with uploadpack.packfileURI' '
 	test_config uploadpack.blobPackfileUri FAKE &&
 
-	sed "s/\\(fetch=shallow.*\\)/\\1 packfile-uri/" <expect >expect.packfileURI &&
+	sed "s/\\(fetch=shallow.*\\)/\\1 packfile-uris/" <expect >expect.packfileURI &&
 
 	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
 		--advertise-capabilities >out &&
