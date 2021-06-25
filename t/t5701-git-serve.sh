@@ -32,7 +32,7 @@ test_expect_success 'test capability advertisement' '
 test_expect_success 'test capability advertisement with uploadpack.packfileURI' '
 	test_config uploadpack.blobPackfileUri FAKE &&
 
-	sed "s/\\(fetch=shallow.*\\)/\\1 packfile-uris/" <expect >expect.packfileURI &&
+	sed "s/\\(fetch=shallow.*\\)/\\1 packfile-uri/" <expect >expect.packfileURI &&
 
 	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
 		--advertise-capabilities >out &&
@@ -43,9 +43,9 @@ test_expect_success 'test capability advertisement with uploadpack.packfileURI' 
 echo test_expect_success 'test capability advertisement with uploadpack.bundleURI' '
 	test_config uploadpack.bundleURI FAKE &&
 
-	set "s/packfile-uris//g" <expect >expect.bundleURI &&
+	set "s/packfile-uri//g" <expect >expect.bundleURI &&
 
-	#awk "/^fetch=shallow$/ { print \"bundle-uris\" }1" <expect >expect.new &&
+	#awk "/^fetch=shallow$/ { print \"bundle-uri\" }1" <expect >expect.new &&
 	GIT_TEST_SIDEBAND_ALL=0 test-tool serve-v2 \
 		--advertise-capabilities >out &&
 	test-tool pkt-line unpack <out >actual &&
@@ -289,18 +289,18 @@ test_expect_success 'basics of object-info' '
 	test_cmp expect actual
 '
 
-# Test the basics of bundle-uris
+# Test the basics of bundle-uri
 #
-test_expect_success 'basics of bundle-uris' '
-	test_config uploadpack.bundleURIs https://example.com/test.bundle &&
+test_expect_success 'basics of bundle-uri' '
+	test_config uploadpack.bundleUri https://example.com/test.bundle &&
 	test-tool pkt-line pack >in <<-EOF &&
-	command=bundle-uris
+	command=bundle-uri
 	object-format=$(test_oid algo)
 	0000
 	EOF
 
 	cat >expect <<-EOF &&
-	$(git config uploadpack.bundleURIs)
+	$(git config uploadpack.bundleURI)
 	0000
 	EOF
 
@@ -309,17 +309,17 @@ test_expect_success 'basics of bundle-uris' '
 	test_cmp expect actual
 '
 
-test_expect_success 'basics of bundle-uris -- multiple URLs' '
-	test_config uploadpack.bundleURIs https://example.com/test.bundle &&
-	git config --add uploadpack.bundleURIs https://example.com/test2.bundle &&
+test_expect_success 'basics of bundle-uri -- multiple URLs' '
+	test_config uploadpack.bundleURI https://example.com/test.bundle &&
+	git config --add uploadpack.bundleURI https://example.com/test2.bundle &&
 	test-tool pkt-line pack >in <<-EOF &&
-	command=bundle-uris
+	command=bundle-uri
 	object-format=$(test_oid algo)
 	0000
 	EOF
 
 	cat >expect <<-EOF &&
-	$(git config --get-all uploadpack.bundleURIs)
+	$(git config --get-all uploadpack.bundleURI)
 	0000
 	EOF
 
@@ -328,8 +328,8 @@ test_expect_success 'basics of bundle-uris -- multiple URLs' '
 	test_cmp expect actual
 '
 
-test_expect_success 'clone and dump bundle URIs' '
-	test_config uploadpack.bundleURIs https://example.com/test.bundle &&
+test_expect_success 'clone and dump bundle URI' '
+	test_config uploadpack.bundleURI https://example.com/test.bundle &&
 	GIT_TRACE_PACKET="$(pwd)/log" git -c protocol.version=2 clone "file://$PWD" my-clone
 '
 

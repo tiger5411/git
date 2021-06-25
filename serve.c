@@ -6,7 +6,7 @@
 #include "strvec.h"
 #include "ls-refs.h"
 #include "protocol-caps.h"
-#include "bundle-uris.h"
+#include "bundle-uri.h"
 #include "serve.h"
 #include "upload-pack.h"
 
@@ -106,9 +106,9 @@ static struct protocol_capability capabilities[] = {
 		.advertise = agent_advertise,
 	},
 	{
-		.name = "bundle-uris",
-		.advertise = bundle_uris_advertise,
-		.command = bundle_uris,
+		.name = "bundle-uri",
+		.advertise = bundle_uri_advertise,
+		.command = bundle_uri,
 	},
 	{
 		.name = "ls-refs",

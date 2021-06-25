@@ -307,9 +307,9 @@ static struct ref *handshake(struct transport *transport, int for_push,
 	case protocol_v2:
 		if (server_feature_v2("session-id", &server_sid))
 			trace2_data_string("transfer", NULL, "server-sid", server_sid);
-		get_remote_bundle_uris(data->fd[1], &reader, NULL, for_push,
-				       transport->server_options,
-				       transport->stateless_rpc);
+		get_remote_bundle_uri(data->fd[1], &reader, NULL, for_push,
+				      transport->server_options,
+				      transport->stateless_rpc);
 		if (must_list_refs)
 			get_remote_refs(data->fd[1], &reader, &refs, for_push,
 					options,
@@ -342,7 +342,7 @@ static struct ref *handshake(struct transport *transport, int for_push,
 	return refs;
 }
 
-static struct string_list *get_bundle_uris_via_something(struct transport *transport)
+static struct string_list *get_bundle_uri_via_something(struct transport *transport)
 {
 	/*handshake(transport, 0, NULL, 1);*/
 	return NULL;
@@ -1045,12 +1045,12 @@ static struct transport_vtable bundle_vtable = {
 };
 
 static struct transport_vtable builtin_smart_vtable = {
-	.get_refs_list		= get_refs_via_connect,
-	.get_bundle_uris	= get_bundle_uris_via_something,
-	.fetch_refs		= fetch_refs_via_pack,
-	.push_refs		= git_transport_push,
-	.connect		= connect_git,
-	.disconnect		= disconnect_git
+	.get_refs_list	= get_refs_via_connect,
+	.get_bundle_uri	= get_bundle_uri_via_something,
+	.fetch_refs	= fetch_refs_via_pack,
+	.push_refs	= git_transport_push,
+	.connect	= connect_git,
+	.disconnect	= disconnect_git
 };
 
 struct transport *transport_get(struct remote *remote, const char *url)
@@ -1065,7 +1065,7 @@ struct transport *transport_get(struct remote *remote, const char *url)
 		BUG("No remote provided to transport_get()");
 
 	ret->got_remote_refs = 0;
-	ret->got_bundle_uris = 0;
+	ret->got_bundle_uri = 0;
 	ret->remote = remote;
 	helper = remote->foreign_vcs;
 
@@ -1428,19 +1428,19 @@ const struct ref *transport_get_remote_refs(struct transport *transport,
 	return transport->remote_refs;
 }
 
-const struct string_list *transport_get_bundle_uris(struct transport *transport)
+const struct string_list *transport_get_bundle_uri(struct transport *transport)
 {
-	if (!transport->got_bundle_uris) {
-		if (!transport->vtable->get_bundle_uris) {
+	if (!transport->got_bundle_uri) {
+		if (!transport->vtable->get_bundle_uri) {
 			warning("got nothing");
 			return NULL;
 		}
-		transport->bundle_uris =
-			transport->vtable->get_bundle_uris(transport);
-		transport->got_bundle_uris = 1;
+		transport->bundle_uri =
+			transport->vtable->get_bundle_uri(transport);
+		transport->got_bundle_uri = 1;
 	}
 
-	return transport->bundle_uris;
+	return transport->bundle_uri;
 }
 
 int transport_fetch_refs(struct transport *transport, struct ref *refs)

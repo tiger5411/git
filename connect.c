@@ -471,12 +471,12 @@ void check_stateless_delimiter(int stateless_rpc,
 		die("%s", error);
 }
 
-void get_remote_bundle_uris(int fd_out, struct packet_reader *reader,
-			    struct string_list *uris, int for_push,
-			    const struct string_list *server_options,
-			    int stateless_rpc)
+void get_remote_bundle_uri(int fd_out, struct packet_reader *reader,
+			   struct string_list *uri, int for_push,
+			   const struct string_list *server_options,
+			   int stateless_rpc)
 {
-	packet_write_fmt(fd_out, "command=bundle-uris\n");
+	packet_write_fmt(fd_out, "command=bundle-uri\n");
 	packet_flush(fd_out);
 
 	/* Process response from server */
