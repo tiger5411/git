@@ -69,3 +69,4 @@ if ! diff -u $toplevel/config.mak $tmp
 then
 	cp -v $tmp $toplevel/config.mak
 fi
+rm $tmp
