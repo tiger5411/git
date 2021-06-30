@@ -67,5 +67,5 @@ EOF
 toplevel=$(git rev-parse --show-toplevel)
 if ! diff -u $toplevel/config.mak $tmp
 then
-    cp -v $tmp $toplevel/config.mak
+	cp -v $tmp $toplevel/config.mak
 fi
