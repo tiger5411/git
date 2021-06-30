@@ -350,6 +350,9 @@ all::
 # Define USE_NED_ALLOCATOR if you want to replace the platforms default
 # memory allocators with the nedmalloc allocator written by Niall Douglas.
 #
+# Define USE_LAZY_DEALLOCATOR if you want to replace your platforms
+# free() with one that defers releasing memory.
+#
 # Define OVERRIDE_STRDUP to override the libc version of strdup(3).
 # This is necessary when using a custom allocator in order to avoid
 # crashes due to allocation and free working on different 'heaps'.
@@ -1866,6 +1869,11 @@ ifdef USE_NED_ALLOCATOR
 	OVERRIDE_STRDUP = YesPlease
 endif
 
+ifdef USE_LAZY_DEALLOCATOR
+	COMPAT_CFLAGS += -Icompat/lazyfree
+	COMPAT_OBJS += compat/lazyfree/lazyfree.o
+endif
+
 ifdef OVERRIDE_STRDUP
 	COMPAT_CFLAGS += -DOVERRIDE_STRDUP
 	COMPAT_OBJS += compat/strdup.o
@@ -2560,6 +2568,11 @@ ifdef USE_NED_ALLOCATOR
 compat/nedmalloc/nedmalloc.sp compat/nedmalloc/nedmalloc.o: EXTRA_CPPFLAGS = \
 	-DNDEBUG -DREPLACE_SYSTEM_ALLOCATOR
 compat/nedmalloc/nedmalloc.sp: SP_EXTRA_FLAGS += -Wno-non-pointer-null
+endif
+
+ifdef USE_LAZY_DEALLOCATOR
+compat/lazyfree/lazyfree.sp compat/lazyfree/lazyfree.o: EXTRA_CPPFLAGS = \
+	-DNDEBUG -DREPLACE_SYSTEM_ALLOCATOR
 endif
 
 git-%$X: %.o GIT-LDFLAGS $(GITLIBS)
