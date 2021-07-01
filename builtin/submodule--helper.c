@@ -313,7 +313,7 @@ struct module_list {
 	const struct cache_entry **entries;
 	int alloc, nr;
 };
-#define MODULE_LIST_INIT { NULL, 0, 0 }
+#define MODULE_LIST_INIT { 0 }
 
 static int module_list_compute(int argc, const char **argv,
 			       const char *prefix,
@@ -614,7 +614,7 @@ struct init_cb {
 	const char *prefix;
 	unsigned int flags;
 };
-#define INIT_CB_INIT { NULL, 0 }
+#define INIT_CB_INIT { 0 }
 
 static void init_submodule(const char *path, const char *prefix,
 			   unsigned int flags)
@@ -743,7 +743,7 @@ struct status_cb {
 	const char *prefix;
 	unsigned int flags;
 };
-#define STATUS_CB_INIT { NULL, 0 }
+#define STATUS_CB_INIT { 0 }
 
 static void print_status(unsigned int flags, char state, const char *path,
 			 const struct object_id *oid, const char *displaypath)
@@ -937,13 +937,13 @@ struct module_cb {
 	char status;
 	const char *sm_path;
 };
-#define MODULE_CB_INIT { 0, 0, NULL, NULL, '\0', NULL }
+#define MODULE_CB_INIT { 0 }
 
 struct module_cb_list {
 	struct module_cb **entries;
 	int alloc, nr;
 };
-#define MODULE_CB_LIST_INIT { NULL, 0, 0 }
+#define MODULE_CB_LIST_INIT { 0 }
 
 struct summary_cb {
 	int argc;
@@ -954,7 +954,7 @@ struct summary_cb {
 	unsigned int files: 1;
 	int summary_limit;
 };
-#define SUMMARY_CB_INIT { 0, NULL, NULL, 0, 0, 0, 0 }
+#define SUMMARY_CB_INIT { 0 }
 
 enum diff_cmd {
 	DIFF_INDEX,
@@ -1360,7 +1360,7 @@ struct sync_cb {
 	const char *prefix;
 	unsigned int flags;
 };
-#define SYNC_CB_INIT { NULL, 0 }
+#define SYNC_CB_INIT { 0 }
 
 static void sync_submodule(const char *path, const char *prefix,
 			   unsigned int flags)
@@ -1516,7 +1516,7 @@ struct deinit_cb {
 	const char *prefix;
 	unsigned int flags;
 };
-#define DEINIT_CB_INIT { NULL, 0 }
+#define DEINIT_CB_INIT { 0 }
 
 static void deinit_submodule(const char *path, const char *prefix,
 			     unsigned int flags)
