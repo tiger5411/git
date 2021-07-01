@@ -330,7 +330,9 @@ jobs:
     container: ${{matrix.vector.image}}
     steps:
     - uses: actions/checkout@v1
+    - run: env
     - run: ci/install-docker-dependencies.sh
+    - run: env
     - run: ci/run-build-and-tests.sh
     - run: ci/print-test-failures.sh
       if: failure()
