@@ -1,12 +1,14 @@
 #!/bin/sh
 set -e
 
+do_release=
 prefix=/tmp/git
 while test $# != 0
 do
 	case "$1" in
 	    --prefix)
 		prefix="$2"
+		do_release=1
 		shift
 		;;
 	    *)
@@ -15,6 +17,16 @@ do
 	esac
 	shift
 done
+
+toplevel=$(git rev-parse --show-toplevel)
+git_dir=$(git rev-parse --absolute-git-dir)
+
+if test -z "$do_release"
+then
+	# See https://lore.kernel.org/git/87mtr38tvd.fsf@evledraar.gmail.com/
+	grep -q ^"$toplevel"/version "$git_dir"/info/exclude || echo /version >>"$git_dir"/info/exclude
+	echo $(git grep -h -o -P '(?<=^DEF_VER=v).*' 'HEAD:GIT-VERSION-GEN')-dev >"$toplevel"/version
+fi
 
 tmp=$(mktemp /tmp/config.mak-XXXXX)
 cat >$tmp <<EOF
@@ -64,7 +76,6 @@ DEFAULT_TEST_TARGET=prove
 #GIT_PROVE_OPTS=--jobs 8 --state=failed,slow,save --timer
 EOF
 
-toplevel=$(git rev-parse --show-toplevel)
 if ! diff -u $toplevel/config.mak $tmp
 then
 	cp -v $tmp $toplevel/config.mak
