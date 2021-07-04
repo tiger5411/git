@@ -560,3 +560,143 @@ and associated requested information, each separated by a single space.
 	attr = "size"
 
 	obj-info = obj-id SP obj-size
+
+bundle-uri
+~~~~~~~~~~
+
+If the 'bundle-uri' capability is advertised, the server supports the
+`bundle-uri' command.
+
+The capability is currently advertised with no value (i.e. not
+"bundle-uri=somevalue"), a value may be added in the future for
+supporting command-wide extensions. Clients MUST ignore any unknown
+capability values and proceed with the 'bundle-uri` dialog they
+support.
+
+The 'bundle-uri' command is intended to be issued before `fetch` to
+get URIs to bundle files (see linkgit:git-bundle[1]) to "seed" and
+inform the subsequent `fetch` command.
+
+The client CAN issue `bundle-uri` before or after any other valid
+command. It's expected that it'll be issued after an `ls-refs` and
+before `fetch`.
+
+DISCUSSION of bundle-uri
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The intent of the feature is optimize for server resource consumption
+in the common case by changing the common case of fetching a very
+large PACK during linkgit:git-clone[1] into a smaller incremental
+fetch.
+
+It also allows servers to achieve better caching in combination with
+an `uploadpack.packObjectsHook` (see linkgit:git-config[1]).
+
+By having new clones or fetches be a more predictable and common
+negotiation against the tips of recently produces *.bundle file(s).
+Servers might even pre-generate the results of such negotiations for
+the `uploadpack.packObjectsHook` as new pushes come in.
+
+I.e. the server would anticipate that fresh clones will download a
+known bundle, followed by catching up to the current state of the
+repository using ref tips found in that bundle (or bundles).
+
+PROTOCOL for bundle-uri
+^^^^^^^^^^^^^^^^^^^^^^^
+
+A `bundle-uri` request takes no arguments, and as noted above does not
+currently advertise a capability value. Both may be added in the
+future.
+
+When the client issues a `command=bundle-uri` the response is a list
+of URIs the server would like the client to fetch out-of-bounds before
+proceeding with the `fetch` request in this format:
+
+	output = bundle-uri-line
+		 bundle-uri-line* flush-pkt
+
+	bundle-uri-line = PKT-LINE(bundle-uri)
+			  *(SP bundle-feature-key *(=bundle-feature-val))
+			  LF
+
+	bundle-uri = A URI such as a https://, ssh:// etc. URI
+
+	bundle-feature-key = Any printable ASCII characters except SP or "="
+	bundle-feature-val = Any printable ASCII characters except SP or "="
+
+No `bundle-feature-key`=`bundle-feature-value` fields are currently
+defined. See the discussion of features below.
+
+bundle-uri CLIENT AND SERVER EXPECTATIONS
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The advertised bundles MUST contain one or more reference tips for use
+by the client. Bundles that are not self-contained MUST use the
+standard "-" prefixes in the bundle format to indicate their
+prerequisites. I.e. they must be in the standard format "git bundle
+create" would create.
+
+If after an `ls-refs` the client finds that the ref tips it wants can
+be retrieved entirety from advertised bundle(s), it MAY
+disconnect. The results of such a "clone" or "fetch" should be
+indistinguishable from the state attained without using bundle-uri.
+
+The client MAY also keep the connection open pending download of the
+bundle-uris, e.g. should on or more downloads (or their validation)
+fail.
+
+The client MAY provide reference tips found in the bundle(s) to be
+downloaded out-of-bounds as `have` lines in the `fetch` request. They
+MAY also ignore the bundle(s) entirely (e.g. if they can't be
+downloaded) or some combination of the two.
+
+For the convenience of clients bundles SHOULD be provided in the order
+that they must be unpacked in if processed one-at-a-time by a dumber client.
+
+That usually means a "big bundle" first with most of the history
+that's self-contained, optionally followed by incremental updates on
+that "big bundle".
+
+This ordering is a mere convention and not a MUST, e.g. a repository
+with N branches with disconnected histories might have N "big
+bundles", each with their own self-contained history. A server might
+also only provide "incremental updates".
+
+A client MUST consider the content of the bundles themselves and their
+header as the ultimate source of truth. Servers MAY be tolerant of
+simpler clients by using the convention outlined above.
+
+As noted before a client MUST gracefully degrade on errors, whether
+that error is because of bad missing/data in the bundle URI(s), or
+because that client is too dumb to e.g. understand and fully parse out
+bundle headers and their prerequisite relationships.
+
+bundle-uri PROTOCOL FEATURES
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As noted above no `bundle-feature-key`=`bundle-feature-value` fields
+are currently defined.
+
+They are intended for future per-URI metadata which older clients MUST
+ignore and gracefully degrade on. Any fields they do recognize they
+CAN also ignore.
+
+Any backwards-incompatible addition of pre-URI key-value will be
+guarded by a new value or values in 'bundle-uri' capability
+advertisement itself, and/or by new future `bundle-uri` request
+arguments.
+
+While no per-URI key-value are currently supported currently they're
+intended to support future features such as:
+
+ * Add a "hash=<val>" or "size=<bytes>" advertise the expected hash or
+   size of the bundle file.
+
+ * Advertise that one or more bundle files are the same (to e.g. have
+   clients round-robin or otherwise choose one of N possible files).
+
+ * A "tip=<OID>" shortcut. A client who'd have the advertised <OID>
+   would know there was no need to download the relevant bundle(s),
+   they've got that OID already (for multi-tips the client would need
+   to fetch the bundle, or do e.g. HTTP range requests to get its
+   header).
