@@ -238,6 +238,10 @@ struct packet_writer {
 	unsigned use_sideband : 1;
 };
 
+#define PACKET_WRITER_INIT { \
+	.dest_fd = 1, \
+}
+
 void packet_writer_init(struct packet_writer *writer, int dest_fd);
 
 /* These functions die upon failure. */

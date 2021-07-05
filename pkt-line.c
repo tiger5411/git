@@ -629,8 +629,9 @@ enum packet_read_status packet_reader_peek(struct packet_reader *reader)
 
 void packet_writer_init(struct packet_writer *writer, int dest_fd)
 {
+	struct packet_writer blank = PACKET_WRITER_INIT;
+	memcpy(writer, &blank, sizeof(*writer));
 	writer->dest_fd = dest_fd;
-	writer->use_sideband = 0;
 }
 
 void packet_writer_write(struct packet_writer *writer, const char *fmt, ...)
