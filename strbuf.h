@@ -442,13 +442,14 @@ void strbuf_addftime(struct strbuf *sb, const char *fmt,
 
 /**
  * Read a given size of data from a FILE* pointer to the buffer.
+ * if the size is 0 the default hint is used.
  *
  * NOTE: The buffer is rewound if the read fails. If -1 is returned,
  * `errno` must be consulted, like you would do for `read(3)`.
  * `strbuf_read()`, `strbuf_read_file()` and `strbuf_getline_*()`
  * family of functions have the same behaviour as well.
  */
-size_t strbuf_fread(struct strbuf *sb, size_t size, FILE *file);
+size_t strbuf_fread(struct strbuf *sb, size_t hint, FILE *file);
 
 /**
  * Read the contents of a given file descriptor. The third argument can be

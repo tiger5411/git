@@ -498,10 +498,11 @@ void strbuf_add_percentencode(struct strbuf *dst, const char *src, int flags)
 	}
 }
 
-size_t strbuf_fread(struct strbuf *sb, size_t size, FILE *f)
+size_t strbuf_fread(struct strbuf *sb, size_t hint, FILE *f)
 {
 	size_t res;
 	size_t oldalloc = sb->alloc;
+	size_t size = strbuf_hint(hint);
 
 	strbuf_grow(sb, size);
 	res = fread(sb->buf + sb->len, 1, size, f);
