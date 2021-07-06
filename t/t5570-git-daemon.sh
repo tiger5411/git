@@ -194,9 +194,13 @@ test_expect_success 'hostname cannot break out of directory' '
 
 test_expect_success FAKENC 'hostname interpolation works after LF-stripping' '
 	{
-		printf "git-upload-pack /interp.git\n\0host=localhost" | packetize
-		printf "0000"
+		printf "git-upload-pack /interp.git\n\0host=localhost" |
+		test-tool pkt-line pack-raw-stdin &&
+		test-tool pkt-line pack <<-\EOF
+		0000
+		EOF
 	} >input &&
+
 	fake_nc "$GIT_DAEMON_HOST_PORT" <input >output &&
 	test-tool pkt-line unpack <output >actual &&
 
