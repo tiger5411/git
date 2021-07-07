@@ -2,8 +2,10 @@
 set -e
 set -x
 
+no_sanity=
 no_range_diff=
 only_sanity=
+range_diff_to=origin/master
 only_range_diff=
 only_merge=
 only_compile=
@@ -19,11 +21,18 @@ do
 	--no-range-diff)
 		no_range_diff=yes
 		;;
+	--no-sanity)
+		no_sanity=yes
+		;;
 	--only-sanity)
 		only_sanity=yes
 		;;
 	--only-range-diff)
 		only_range_diff=yes
+		;;
+	--range-diff-to)
+		range_diff_to="$2"
+		shift
 		;;
 	--only-merge)
 		only_merge=yes
@@ -160,6 +169,10 @@ grep -v \
 # Sanity check that this is all pushed out
 while read -r branch
 do
+	if test -n "$no_sanity$only_range_diff"
+	then
+		continue
+	fi
 	# Should always have upstream info
 	upstream=$(git for-each-ref --format="%(upstream)" "refs/heads/$branch")
 	case "$upstream" in
@@ -242,14 +255,14 @@ do
 	then
 		continue
 	fi
-	git --no-pager range-diff --no-notes --right-only origin/master...$branch >$series_list.range-diff
+	git --no-pager range-diff --no-notes --right-only $range_diff_to...$branch >$series_list.range-diff
 	grep -E -v -- " ----------+ >" $series_list.range-diff >$series_list.range-diff.no-new || :
 	if test -s $series_list.range-diff.no-new
 	then
-		echo "Have partial merge in rangediff of origin/master...$branch, rebase!:"
+		echo "Have partial merge in rangediff of $range_diff_to...$branch, rebase!:"
 		cat $series_list.range-diff
 	else
-		echo "Have $(wc -l $series_list.range-diff | cut -d ' ' -f1) unmerged in range-diff of origin/master...$branch"
+		echo "Have $(wc -l $series_list.range-diff | cut -d ' ' -f1) unmerged in range-diff of $range_diff_to...$branch"
 	fi
 done <$series_list
 test -n "$only_range_diff" && exit
