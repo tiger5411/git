@@ -837,7 +837,7 @@ static int feed_receive_hook(void *state_)
 
 static int feed_receive_hook_cb(struct strbuf *pipe, void *pp_cb, void *pp_task_cb)
 {
-	struct hook_state *hook = pp_task_cb;
+	struct hook *hook = pp_task_cb;
 	struct receive_hook_feed_state *feed_state = hook->feed_pipe_cb_data;
 	int rc;
 
