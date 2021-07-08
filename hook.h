@@ -2,6 +2,7 @@
 #define HOOK_H
 #include "strvec.h"
 #include "run-command.h"
+#include "list.h"
 
 struct run_hooks_opt
 {
@@ -50,8 +51,11 @@ struct run_hooks_opt
 	.args = STRVEC_INIT, \
 }
 
-struct hook_state {
-	unsigned int active;
+struct hook {
+	struct list_head list;
+
+	/* The path to the hook */
+	const char *hook_path;
 
 	/**
 	 * Use this to keep state for your feed_pipe_fn if you are using
@@ -64,10 +68,9 @@ struct hook_cb_data {
 	/* rc reflects the cumulative failure state */
 	int rc;
 	const char *hook_name;
-	const char *hook_path;
+	struct list_head *head;
 	struct hook *run_me;
 	struct run_hooks_opt *options;
-	struct hook_state *hook_state;
 };
 
 /*
@@ -78,7 +81,7 @@ struct hook_cb_data {
 const char *find_hook(const char *name);
 
 /**
- * A boolean version of find_hook()
+ * A boolean version of list_hooks()
  */
 int hook_exists(const char *hookname);
 
