@@ -287,6 +287,7 @@ static int process_request(void)
 	struct strvec keys = STRVEC_INIT;
 	struct protocol_capability *command = NULL;
 	const char *client_sid;
+	const char *client_agent;
 
 	packet_reader_init(&reader, 0, NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
@@ -351,6 +352,9 @@ static int process_request(void)
 
 	if (has_capability(&keys, "session-id", &client_sid))
 		trace2_data_string("transfer", NULL, "client-sid", client_sid);
+
+	if (has_capability(&keys, "agent", &client_agent))
+		trace2_data_string("transfer", NULL, "client-agent", client_agent);
 
 	call_command(command, the_repository, &keys, &reader);
 
