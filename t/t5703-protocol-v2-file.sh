@@ -40,10 +40,14 @@ test_expect_success 'ls-remote handling a bad client using file:// protocol v2' 
 	fatal: remote error: ls-refs: unexpected argument: '"'"'test-bad-client'"'"'
 	EOF
 	test_must_fail env \
+		GIT_TRACE2_EVENT="$(pwd)/event" \
 		GIT_TRACE_PACKET="$(pwd)/log" \
 		GIT_TEST_PROTOCOL_BAD_LS_REFS=true \
 		git -c protocol.version=2 \
 		ls-remote "file://$(pwd)/file_parent" main >out 2>err.actual &&
+
+	grep agent event | jq -r . &&
+	false &&
 
 	test_must_be_empty out &&
 	test_cmp err.expect err.actual &&
