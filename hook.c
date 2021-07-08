@@ -37,9 +37,56 @@ const char *find_hook(const char *name)
 	return path.buf;
 }
 
+static void remove_hook(struct list_head *head)
+{
+	struct hook *hook = list_entry(head, struct hook, list);
+	list_del(head);
+	free(hook->feed_pipe_cb_data);
+	free(hook);
+}
+
+static void clear_hook_list(struct list_head *head)
+{
+	struct list_head *pos, *tmp;
+	list_for_each_safe(pos, tmp, head)
+		remove_hook(pos);
+	free(head);
+}
+
+static struct list_head *list_hooks(const char *hook_name)
+{
+	struct list_head *hook_head = xmalloc(sizeof(struct list_head));
+
+	INIT_LIST_HEAD(hook_head);
+
+	if (!hook_name)
+		BUG("need a hook_name!");
+
+	if (have_git_dir()) {
+		const char *hook_path = find_hook(hook_name);
+
+		/* Add the hook from the hookdir */
+		if (hook_path) {
+			struct hook *to_add = xmalloc(sizeof(*to_add));
+			to_add->hook_path = hook_path;
+			to_add->feed_pipe_cb_data = NULL;
+			list_add_tail(&to_add->list, hook_head);
+		}
+	}
+
+	return hook_head;
+}
+
 int hook_exists(const char *name)
 {
-	return !!find_hook(name);
+	struct list_head *hooks;
+	int exists;
+
+	hooks = list_hooks(name);
+	exists = !list_empty(hooks);
+	clear_hook_list(hooks);
+
+	return exists;
 }
 
 int pipe_from_string_list(struct strbuf *pipe, void *pp_cb, void *pp_task_cb)
@@ -94,18 +141,21 @@ static int pick_next_hook(struct child_process *cp,
 	cp->trace2_hook_name = hook_cb->hook_name;
 	cp->dir = hook_cb->options->dir;
 
-	strvec_push(&cp->args, hook_path);
+	if (cp->dir && !is_absolute_path(hook_path))
+		strvec_push(&cp->args, absolute_path(hook_path));
+	else
+		strvec_push(&cp->args, hook_path);
 	strvec_pushv(&cp->args, hook_cb->options->args.v);
 
 	/* Provide context for errors if necessary */
 	*pp_task_cb = run_me;
 
-	/*
-	 * This pick_next_hook() will be called again, we're only
-	 * running one hook, so indicate that no more work will be
-	 * done.
-	 */
-	hook_cb->run_me = NULL;
+	/* Get the next entry ready */
+	if (hook_cb->run_me->list.next == hook_cb->head)
+		hook_cb->run_me = NULL;
+	else
+		hook_cb->run_me = list_entry(hook_cb->run_me->list.next,
+					     struct hook, list);
 
 	return 1;
 }
@@ -148,6 +198,7 @@ static void run_hooks_opt_clear(struct run_hooks_opt *options)
 
 int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 {
+	struct list_head *hooks = list_hooks(hook_name);
 	struct strbuf abs_path = STRBUF_INIT;
 	struct hook my_hook = { 0 };
 	struct hook_cb_data cb_data = {
@@ -156,27 +207,22 @@ int run_hooks_opt(const char *hook_name, struct run_hooks_opt *options)
 		.options = options,
 		.invoked_hook = options->invoked_hook,
 	};
-	const char *const hook_path = find_hook(hook_name);
 	int jobs = 1;
 	int ret = 0;
 
 	if (!options)
 		BUG("a struct run_hooks_opt must be provided to run_hooks");
 
-	if (!hook_path && !options->error_if_missing)
+	if (list_empty(hooks) && !options->error_if_missing)
 		goto cleanup;
 
-	if (!hook_path) {
+	if (list_empty(hooks)) {
 		ret = error("cannot find a hook named %s", hook_name);
 		goto cleanup;
 	}
 
-	my_hook.hook_path = hook_path;
-	if (options->dir) {
-		strbuf_add_absolute_path(&abs_path, hook_path);
-		my_hook.hook_path = abs_path.buf;
-	}
-	cb_data.run_me = &my_hook;
+	cb_data.head = hooks;
+	cb_data.run_me = list_first_entry(hooks, struct hook, list);
 
 	run_processes_parallel_tr2(jobs,
 				   pick_next_hook,
@@ -192,6 +238,7 @@ cleanup:
 	strbuf_release(&abs_path);
 	run_hooks_opt_clear(options);
 	free(my_hook.feed_pipe_cb_data);
+	clear_hook_list(hooks);
 	return ret;
 }
 
