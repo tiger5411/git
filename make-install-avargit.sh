@@ -274,15 +274,19 @@ do
 	then
 		continue
 	fi
-	git --no-pager range-diff --no-notes --right-only $range_diff_to...$branch >$series_list.range-diff
+	t="$series_list.range-diff.t"
+	/usr/bin/time -f "%E" -o "$t" \
+		git --no-pager range-diff --no-notes --right-only $range_diff_to...$branch \
+		>$series_list.range-diff
 	grep -E -v -- " ----------+ >" $series_list.range-diff >$series_list.range-diff.no-new || :
 	if test -s $series_list.range-diff.no-new
 	then
-		echo "Have partial merge in rangediff of $range_diff_to...$branch, rebase!:"
+		echo "$(cat "$t"): Have partial merge in rangediff of $range_diff_to...$branch, rebase!:"
 		cat $series_list.range-diff
 	else
-		echo "Have $(wc -l $series_list.range-diff | cut -d ' ' -f1) unmerged in range-diff of $range_diff_to...$branch"
+		echo "$(cat "$t"): Have $(wc -l $series_list.range-diff | cut -d ' ' -f1) unmerged in range-diff of $range_diff_to...$branch"
 	fi
+	rm "$t"
 done <$series_list
 test -n "$only_range_diff" && exit
 
