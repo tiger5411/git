@@ -173,6 +173,25 @@ do
 	then
 		continue
 	fi
+
+	# Should always have the latest branch
+	vless=$(echo "refs/heads/$branch" | sed 's/-[0-9]$//')
+	git for-each-ref --format="%(refname)" "$vless*" |
+		grep -P "^$vless(?:|-[0-9]+)$" |
+		sort -nr >$series_list.vless
+	current=$(head -n 1 $series_list.vless)
+
+	if test "refs/heads/$branch" != "$current"
+	then
+		echo "error: in series.conf I have:"
+		echo "	$branch:"
+		echo "But should have:"
+		echo "	$current" | sed -e 's!refs/heads/!!'
+		echo "Found these versions of the series:"
+		cat $series_list.vless | sed -e 's!refs/heads/!!'
+		exit 1
+	fi
+
 	# Should always have upstream info
 	upstream=$(git for-each-ref --format="%(upstream)" "refs/heads/$branch")
 	case "$upstream" in
