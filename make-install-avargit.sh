@@ -249,8 +249,7 @@ do
 			    then
 				    git checkout $branch
 				    git rebase
-				    # Die if I need to force push, will manually sort it out.
-				    echo git push avar $branch:$branch ${force_push:+--force}
+				    git push avar $branch:$branch ${force_push:+--force}
 			    fi
 			    exit 1
 			    ;;
