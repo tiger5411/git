@@ -24,7 +24,12 @@ git_dir=$(git rev-parse --absolute-git-dir)
 if test -z "$do_release"
 then
 	# See https://lore.kernel.org/git/87mtr38tvd.fsf@evledraar.gmail.com/
-	grep -q ^"$toplevel"/version "$git_dir"/info/exclude || echo /version >>"$git_dir"/info/exclude
+	if ! grep -q ^"$toplevel"/version "$git_dir"/info/exclude
+	then
+		# Mkdir for worktrees, they don't have "info" pre-created
+		mkdir "$git_dir"/info &&
+		echo /version >>"$git_dir"/info/exclude
+	fi
 	echo $(git grep -h -o -P '(?<=^DEF_VER=v).*' 'HEAD:GIT-VERSION-GEN')-dev >"$toplevel"/version
 fi
 
