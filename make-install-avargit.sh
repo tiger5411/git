@@ -107,12 +107,14 @@ reset_it() {
 }
 
 suggest_bisect() {
+	rev="$1"
 	failed_tests=$(
 		cd test-results
-		grep -lve '^0$' *.exit | sed 's/\.exit/.sh/'
+		grep -lve '^0$' *.exit | sed 's/\.exit/.sh/' |
+		tr '\n' ' ' | sed 's/ $//'
 	)
 
-	cat >/tmp/git-build-bisect.sh <<-EOF
+	sed 's/^\t//' >/tmp/git-build-bisect.sh <<EOF
 	#!/bin/sh
 	set -xe
 	cd $BUILD_DIR
@@ -121,32 +123,38 @@ suggest_bisect() {
 	then
 		git bisect start
 		git bisect good @{upstream}
-		git bisect bad HEAD
+		git bisect bad $rev
 		git bisect run /tmp/git-build-bisect.sh
 		exit 0
 	fi
 
-	make -j $(nproc) all check-docs
+	if ! make -j $(nproc) all check-docs
+	then
+		exit 125
+	fi
 
 	(
 		cd t &&
-		GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 \
-			make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash" \
+		env \
+			GIT_TEST_HTTPD=1 \
+			GIT_TEST_DEFAULT_HASH=sha256 \
+			make \
+			GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash" \
 			T="$failed_tests"
 	)
-	EOF
+EOF
 	chmod +x /tmp/git-build-bisect.sh
-	cat <<-EOF
+	sed 's/^\t//' <<-EOF
 	Try bisect with:
 
-            /tmp/git-build-bisect.sh
+		/tmp/git-build-bisect.sh
 
-        See:
+	See:
 
-            cat /tmp/git-build-bisect.sh
+		cat /tmp/git-build-bisect.sh
 
-        for what it'll do
-	EOF
+	for what it'll do
+EOF
 	exit 1
 }
 
@@ -320,6 +328,9 @@ make -C t clean
 GIT_PROVE_OPTS="--state=save --jobs=$(nproc) --timer"
 export GIT_PROVE_OPTS
 
+# This version
+new_version=$(git rev-parse HEAD)
+
 # First run a smaller subset of tests, likelier to have failures:
 git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
 tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
@@ -327,7 +338,7 @@ tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
 	cd t
 	if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS"
 	then
-		suggest_bisect
+		suggest_bisect "$new_version"
 	fi
 )
 test -n "$only_basic_test" && exit
@@ -338,7 +349,7 @@ test -n "$only_basic_test" && exit
 	make clean-except-prove-cache
 	if ! GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 	then
-		suggest_bisect
+		suggest_bisect "$new_version"
 	fi
 )
 test -n "$only_test" && exit
