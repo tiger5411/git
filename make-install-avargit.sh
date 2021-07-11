@@ -100,6 +100,7 @@ show_built_from() {
 }
 
 reset_it() {
+	git checkout build-master || git checkout -b build-master -t origin/master
 	git bisect reset
 	git reset --hard @{u}
 	git merge --abort || :
@@ -160,7 +161,6 @@ EOF
 
 show_built_from
 reset_it
-git checkout build-master || git checkout -b build-master -t origin/master
 
 # The list of topics I'm merging
 if test -z "$debug"
@@ -299,7 +299,6 @@ test -n "$only_range_diff" && exit
 
 # Checkout work area
 reset_it
-git checkout build-master || git checkout -b build-master -t origin/master
 
 # Merge it all together
 set -x
