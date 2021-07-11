@@ -45,7 +45,7 @@ static void remove_hook(struct list_head *head)
 	free(hook);
 }
 
-static void clear_hook_list(struct list_head *head)
+void clear_hook_list(struct list_head *head)
 {
 	struct list_head *pos, *tmp;
 	list_for_each_safe(pos, tmp, head)
@@ -53,7 +53,7 @@ static void clear_hook_list(struct list_head *head)
 	free(head);
 }
 
-static struct list_head *list_hooks(const char *hook_name)
+struct list_head *list_hooks(const char *hook_name)
 {
 	struct list_head *hook_head = xmalloc(sizeof(struct list_head));
 
