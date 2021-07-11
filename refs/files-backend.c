@@ -953,6 +953,7 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 							&lock->old_oid, type,
 							&resolve_errno);
 	if (!resolved && resolve_errno == EISDIR) {
+		int ignore_errno = 0;
 		/*
 		 * we are trying to lock foo but we used to
 		 * have foo/bar which now does not exist;
@@ -967,9 +968,15 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 					    refname);
 			goto error_return;
 		}
-		resolved = !!refs_resolve_ref_unsafe(&refs->base,
-						     refname, resolve_flags,
-						     &lock->old_oid, type);
+		resolved = !!refs_resolve_ref_unsafe_with_errno(&refs->base,
+								refname, resolve_flags,
+								&lock->old_oid, type,
+								&ignore_errno);
+		if (ignore_errno)
+			BUG("hit errno %d (%s) that will be ignored, "
+			    "resolve errno is %d (%s)",
+			    ignore_errno, strerror(ignore_errno),
+			    resolve_errno, strerror(resolve_errno));
 	}
 	if (!resolved &&
 	    (resolve_errno != ENOTDIR ||
