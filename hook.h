@@ -109,6 +109,17 @@ const char *find_hook(const char *name);
 int hook_exists(const char *hookname);
 
 /**
+ * Provides a linked list of 'struct hook' detailing commands which should run
+ * in response to the 'hookname' event, in execution order.
+ */
+struct list_head *list_hooks(const char *hookname);
+
+/**
+ * Clears a hook list returned by list_hooks().
+ */
+void clear_hook_list(struct list_head *head);
+
+/**
  * Takes a `hook_name`, resolves it to a path with find_hook(), and
  * runs the hook for you with the options specified in "struct
  * run_hooks opt". Will free memory associated with the "struct run_hooks_opt".
