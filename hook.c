@@ -172,6 +172,16 @@ static int hook_config_lookup(const char *key, const char *value, void *cb_data)
 		if (!command)
 			BUG("git_config_get_value overwrote a string it shouldn't have");
 
+
+		/*
+		 * Check if a hookcmd with that name exists. If it doesn't,
+		 * 'git_config_get_value()' is documented not to touch &command,
+		 * so we don't need to do anything.
+		 */
+		strbuf_reset(&hookcmd_name);
+		strbuf_addf(&hookcmd_name, "hookcmd.%s.command", command);
+		git_config_get_value(hookcmd_name.buf, &command);
+
 		append_or_move_hook(head, command);
 
 		strbuf_release(&hookcmd_name);
