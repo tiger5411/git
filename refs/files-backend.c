@@ -1414,6 +1414,7 @@ static int rename_tmp_log(struct files_ref_store *refs, const char *newrefname)
 
 	strbuf_release(&path);
 	strbuf_release(&tmp);
+	errno = 0;
 	return ret;
 }
 
