@@ -122,15 +122,25 @@ test_expect_success 'git hook list: existing hook' '
 	test_cmp expect actual
 '
 
-test_expect_success 'git hook run -- out-of-repo runs excluded' '
+test_expect_success 'git hook run: out-of-repo runs execute global hooks' '
+	test_config_global hook.global-hook.event test-hook --add &&
+	test_config_global hook.global-hook.command "echo no repo no problems" --add &&
+
+	echo "global-hook" >expect &&
+	nongit git hook list test-hook >actual &&
+	test_cmp expect actual &&
+
+	echo "no repo no problems" >expect &&
+
+	nongit git hook run test-hook 2>actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'git -c core.hooksPath=<PATH> hook run' '
 	test_hook test-hook <<-EOF &&
 	echo Test hook
 	EOF
 
-	nongit test_must_fail git hook run test-hook
-'
-
-test_expect_success 'git -c core.hooksPath=<PATH> hook run' '
 	mkdir my-hooks &&
 	write_script my-hooks/test-hook <<-\EOF &&
 	echo Hook ran $1 >>actual
@@ -142,10 +152,6 @@ test_expect_success 'git -c core.hooksPath=<PATH> hook run' '
 	Hook ran two
 	Hook ran three
 	Hook ran four
-	EOF
-
-	test_hook test-hook <<-EOF &&
-	echo Test hook
 	EOF
 
 	# Test various ways of specifying the path. See also
