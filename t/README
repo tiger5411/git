@@ -448,6 +448,13 @@ GIT_TEST_CHECKOUT_WORKERS=<n> overrides the 'checkout.workers' setting
 to <n> and 'checkout.thresholdForParallelism' to 0, forcing the
 execution of the parallel-checkout code.
 
+GIT_TEST_PASSING_SANITIZE_LEAK=<boolean> when compiled with
+SANITIZE=leak will run only those tests that have whitelisted
+themselves as passing with no memory leaks. Do this by sourcing
+"test-pragma-SANITIZE=leak-ok.sh" before sourcing "test-lib.sh" itself
+at the top of the test script. This test mode is used by the
+"linux-SANITIZE=leak" CI target.
+
 Naming Tests
 ------------
 
