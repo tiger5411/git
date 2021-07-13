@@ -698,6 +698,7 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 			ret = error(_("unknown type: %d"), o->type);
 		}
 	}
+	release_revisions(&rev);
 	free(objects);
 	return ret;
 }
