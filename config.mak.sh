@@ -27,7 +27,7 @@ then
 	if ! grep -q ^"$toplevel"/version "$git_dir"/info/exclude
 	then
 		# Mkdir for worktrees, they don't have "info" pre-created
-		mkdir "$git_dir"/info &&
+		mkdir "$git_dir"/info 2>/dev/null &&
 		echo /version >>"$git_dir"/info/exclude
 	fi
 	echo $(git grep -h -o -P '(?<=^DEF_VER=v).*' 'HEAD:GIT-VERSION-GEN')-dev >"$toplevel"/version
