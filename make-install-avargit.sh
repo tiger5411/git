@@ -100,6 +100,7 @@ show_built_from() {
 }
 
 reset_it() {
+	git reset --hard
 	git checkout build-master || git checkout -b build-master -t origin/master
 	git bisect reset
 	git reset --hard @{u}
