@@ -1,6 +1,7 @@
 #include "cache.h"
 #include "bundle-uri.h"
 #include "pkt-line.h"
+#include "config.h"
 
 /**
  * serve.[ch] API.
@@ -36,6 +37,9 @@ int bundle_uri_startup_config(const char *var, const char *value, void *data)
 
 int bundle_uri_advertise(struct repository *r, struct strbuf *value)
 {
+	if (value &&
+	    git_env_bool("GIT_TEST_BUNDLE_URI_UNKNOWN_CAPABILITY_VALUE", 0))
+		strbuf_addf(value, "test-unknown-capability-value");
 	return advertise_bundle_uri;
 }
 
