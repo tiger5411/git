@@ -96,6 +96,7 @@ void tr2tls_unset_self(void)
 	pthread_setspecific(tr2tls_key, NULL);
 
 	free(ctx->array_us_start);
+	strbuf_release(&ctx->thread_name);
 	free(ctx);
 }
 
