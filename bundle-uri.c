@@ -26,6 +26,10 @@ static int bundle_uri_config(const char *var, const char *value, void *data)
 
 int bundle_uri_advertise(struct repository *r, struct strbuf *value)
 {
+	if (value &&
+	    git_env_bool("GIT_TEST_BUNDLE_URI_UNKNOWN_CAPABILITY_VALUE", 0))
+		strbuf_addstr(value, "test-unknown-capability-value");
+
 	if (advertise_bundle_uri != -1)
 		goto cached;
 
