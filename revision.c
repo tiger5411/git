@@ -2898,11 +2898,43 @@ int setup_revisions(int argc, const char **argv, struct rev_info *revs, struct s
 	return left;
 }
 
+static void release_revisions_commit_list(struct rev_info *revs)
+{
+	struct commit_list *commits = revs->commits;
+	
+	if (!commits)
+		return;
+	free_commit_list(commits);
+	revs->commits = NULL;
+}
+
+static void release_revisions_cmdline_rev(struct rev_cmdline_entry *rev)
+{
+	if (!rev)
+		return;
+	free(rev->name);
+	FREE_AND_NULL(rev);
+}
+
+static void release_revisions_cmdline(struct rev_cmdline_info *cmdline)
+{
+	int i;
+
+	for (i = 0; i < cmdline->nr; i++) {
+		struct rev_cmdline_entry *e = cmdline->rev + i;
+		release_revisions_cmdline_rev(e);
+	}
+	if (!cmdline)
+		return;
+}
+
 void release_revisions(struct rev_info *revs)
 {
 	if (!revs)
 		return;
-	free(revs->mailmap);
+	release_revisions_commit_list(revs);
+	clear_mailmap(revs->mailmap);
+	release_revisions_cmdline(&revs->cmdline);
 }
 
 static void add_child(struct rev_info *revs, struct commit *parent, struct commit *child)
@@ -4062,10 +4094,7 @@ static void create_boundary_commit_list(struct rev_info *revs)
 	 * boundary commits anyway.  (This is what the code has always
 	 * done.)
 	 */
-	if (revs->commits) {
-		free_commit_list(revs->commits);
-		revs->commits = NULL;
-	}
+	release_revisions_commit_list(revs);
 
 	/*
 	 * Put all of the actual boundary commits from revs->boundary_commits

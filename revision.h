@@ -66,7 +66,7 @@ struct rev_cmdline_info {
 	unsigned int alloc;
 	struct rev_cmdline_entry {
 		struct object *item;
-		const char *name;
+		char *name;
 		enum {
 			REV_CMD_REF,
 			REV_CMD_PARENTS_ONLY,

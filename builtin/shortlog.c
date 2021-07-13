@@ -419,6 +419,7 @@ parse_done:
 	shortlog_output(&log);
 	if (log.file != stdout)
 		fclose(log.file);
+	release_revisions(&rev);
 	return 0;
 }
 

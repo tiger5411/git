@@ -622,7 +622,7 @@ static void show_setup_revisions_tweak(struct rev_info *rev,
 int cmd_show(int argc, const char **argv, const char *prefix)
 {
 	struct rev_info rev;
-	struct object_array_entry *objects;
+	struct object_array_entry *objects = NULL;
 	struct setup_revision_opt opt;
 	struct pathspec match_all;
 	int i, count, ret = 0;
@@ -642,8 +642,10 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 	opt.tweak = show_setup_revisions_tweak;
 	cmd_log_init(argc, argv, prefix, &rev, &opt);
 
-	if (!rev.no_walk)
-		return cmd_log_walk(&rev);
+	if (!rev.no_walk) {
+		ret = cmd_log_walk(&rev);
+		goto cleanup;
+	}
 
 	count = rev.pending.nr;
 	objects = rev.pending.objects;
@@ -698,6 +700,7 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 			ret = error(_("unknown type: %d"), o->type);
 		}
 	}
+cleanup:
 	release_revisions(&rev);
 	free(objects);
 	return ret;
@@ -744,6 +747,7 @@ int cmd_log(int argc, const char **argv, const char *prefix)
 {
 	struct rev_info rev;
 	struct setup_revision_opt opt;
+	int ret;
 
 	init_log_defaults();
 	git_config(git_log_config, NULL);
@@ -755,7 +759,9 @@ int cmd_log(int argc, const char **argv, const char *prefix)
 	opt.revarg_opt = REVARG_COMMITTISH;
 	opt.tweak = log_setup_revisions_tweak;
 	cmd_log_init(argc, argv, prefix, &rev, &opt);
-	return cmd_log_walk(&rev);
+	ret = cmd_log_walk(&rev);
+	release_revisions(&rev);
+	return ret;
 }
 
 /* format-patch */
