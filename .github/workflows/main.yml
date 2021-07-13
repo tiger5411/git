@@ -232,6 +232,12 @@ jobs:
           - jobname: linux-gcc-default
             cc: gcc
             pool: ubuntu-latest
+          - jobname: linux-SANITIZE=leak
+            cc: gcc
+            pool: ubuntu-latest
+          - jobname: osx-SANITIZE=leak
+            cc: gcc
+            pool: macos-latest
     env:
       CC: ${{matrix.vector.cc}}
       jobname: ${{matrix.vector.jobname}}
