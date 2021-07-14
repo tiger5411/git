@@ -106,6 +106,7 @@ reset_it() {
 	git reset --hard @{u}
 	git merge --abort || :
 	git reset --hard @{u}
+	rm -f version
 }
 
 suggest_bisect() {
