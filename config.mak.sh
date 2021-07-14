@@ -40,6 +40,10 @@ CFLAGS=-O0 -g
 DEVELOPER=1
 #DEVOPTS=no-error
 
+## Core flags for testing
+
+# SANITIZE=leak
+
 # Doesn't exist anymore. See my 0f50c8e32c8 (Makefile: remove the
 # NO_R_TO_GCC_LINKER flag, 2019-05-17), but still needed to build old
 # versions due to the LIBPCREDIR below.
