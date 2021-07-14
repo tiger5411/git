@@ -83,11 +83,14 @@ tag_it() {
 
 	My personal git version built from (mostly) my outstanding topics.
 
-	The hacky script that built this follows after the NUL:
+	The hacky script that built this follows after the NUL, and the
+	series.conf after another NUL:
 	EOF
 
 	printf "\0" >>$tmp
 	cat "$META_DIR"/"$0" >>$tmp
+	printf "\0" >>$tmp
+	cat "$META_DIR"/series.conf >>$tmp
 
 	git mktag --strict <$tmp
 }
