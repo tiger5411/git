@@ -28,6 +28,10 @@ struct shortlog {
 	FILE *file;
 };
 
+#define SHORTLOG_INIT { \
+	.list = STRING_LIST_INIT_NODUP, \
+}
+
 void shortlog_init(struct shortlog *log);
 
 void shortlog_add_commit(struct shortlog *log, struct commit *commit);
