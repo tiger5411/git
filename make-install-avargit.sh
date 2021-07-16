@@ -174,9 +174,9 @@ then
 fi
 series_list=$(mktemp /tmp/avargit-series-XXXXX)
 grep -v \
-     -e '^$' \
-     -e '^#' \
-     ~/g/git.meta/series.conf >$series_list
+	-e '^$' \
+	-e '^#' \
+	~/g/git.meta/series.conf >$series_list
 
 >$series_list.old-merge
 # Sanity check that this is all pushed out
@@ -237,14 +237,14 @@ do
 		if test "$upstream" != "$current"
 		then
 			echo "error: $branch depends on:"
-			echo "    $upstream" | sed 's!refs/remotes/avar/!!'
+			echo "	$upstream_short" | sed 's!refs/remotes/avar/!!'
 			echo "but should depend on:"
-			echo "    $current" | sed 's!refs/remotes/avar/!!'
+			echo "	$current" | sed 's!refs/remotes/avar/!!'
 			echo "Fix it with:"
-			echo "    git checkout $branch &&"
-			echo "    git branch --set-upstream-to $current &&" | sed 's!refs/remotes/!!'
-			echo "    git rebase --onto $current $upstream &&" | sed 's!refs/remotes/!!'
-			echo "    git push avar HEAD -f"
+			echo "	git checkout $branch &&"
+			echo "	git branch --set-upstream-to $current &&" | sed 's!refs/remotes/!!'
+			echo "	git rebase --onto $current $upstream_short &&"
+			echo "	git push avar HEAD -f"
 			echo
 			echo "Found these versions of the series:"
 			cat $series_list.vless
