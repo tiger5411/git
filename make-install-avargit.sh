@@ -205,20 +205,26 @@ do
 		exit 1
 	fi
 
+	# Should have pushed that latest branch
+	git for-each-ref \
+		"refs/heads/$branch" "refs/remotes/avar/$branch" >$series_list.vcmp
+	if test $(cut -d ' ' -f 1 $series_list.vcmp | sort -u | wc -l) -ne 1
+	then
+		echo "error: Our upstream of $branch should be the same!"
+		echo "error: Got this instead:"
+		cat $series_list.vcmp
+		git push avar $branch:$branch ${force_push:+--force}
+	fi
+
 	# Should always have upstream info
 	upstream=$(git for-each-ref --format="%(upstream)" "refs/heads/$branch")
+	upstream_short=$(echo $upstream | sed -e 's!refs/remotes/avar/!!' -e 's!refs/remotes/origin/!!')
+
+	# Which means we have aheadbehind info
+	aheadbehind=$(git for-each-ref --format="%(upstream:trackshort)" "refs/heads/$branch")
+	aheadbehind_long=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
+
 	case "$upstream" in
-	refs/remotes/origin/master)
-		aheadbehind=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
-		test -n "$verbose" && echo "Branch $branch is $aheadbehind upstream master"
-		if ! git rev-list $branch...avar/$branch
-		then
-			git push avar $branch:$branch ${force_push:+--force}
-			echo "Needed to push out '$branch', restart to appease the state machine!"
-			exit 1
-		fi
-		# OK
-		;;
 	"refs/heads/*")
 		echo "Broken branch config for $branch, has remote=. ?"
 		exit 1
@@ -227,6 +233,26 @@ do
 		echo No upstream setup for $branch
 		exit 1
 		;;
+	refs/remotes/origin/master)
+		if test -n "$verbose"
+		then
+			echo "$branch is $aheadbehind ($aheadbehind_long) of master"
+		fi
+		;;
+	refs/remotes/avar/*)
+		if test -n "$verbose" && test "$aheadbehind" != ">"
+		then
+			echo "$branch should be ahead of $upstream_short, am $aheadbehind instead ($aheadbehind_long)"
+		fi
+		;;
+	*)
+		echo "WTF @ $branch -> $upstream?"
+		exit 1
+		;;
+	esac
+
+	# For my own branches not based on "master"
+	case "$upstream" in
 	refs/remotes/avar/*)
 		vless=$(echo "$upstream" | sed 's/-[0-9]$//')
 		git for-each-ref --format="%(refname)" "$vless*" |
@@ -254,27 +280,36 @@ do
 
 		aheadbehind=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
 		case "$aheadbehind" in
-		    *behind*)
-			    echo "Need to rebase $branch on:"
-			    echo "    $upstream" | sed 's!refs/remotes/avar/!!'
-			    echo "It is currently $aheadbehind"
-			    if test -n "$auto_rebase"
-			    then
-				    git checkout $branch
-				    git rebase
-				    git push avar $branch:$branch ${force_push:+--force}
-			    fi
-			    exit 1
-			    ;;
-		    *ahead*)
-			    test -n "$verbose" && echo "Branch $branch is $aheadbehind of upstream $upstream"
-			    ;;
+		*behind*)
+			echo "Need to rebase $branch on:"
+			echo "	$upstream" | sed 's!refs/remotes/avar/!!'
+			echo "It is currently $aheadbehind"
+			cat >$series_list.auto-rebase <<-EOF
+			git -C ~/g/git checkout $branch &&
+			git -C ~/g/git rebase &&
+			git -C ~/g/git push avar $branch:$branch ${force_push:+--force}
+			EOF
+			if test -n "$auto_rebase"
+			then
+				echo "Doing a rebase with --auto-rebase, script:"
+				echo
+				cat $series_list.auto-rebase | sed 's/^/	/'
+				eval "$(cat $series_list.auto-rebase)"
+			else
+				echo "To rebase it, do:"
+				echo
+				cat $series_list.auto-rebase | sed 's/^/	/'
+				exit 1
+			fi
+			;;
+		*ahead*)
+			test -n "$verbose" && echo "$branch is $aheadbehind of upstream $upstream"
+			;;
 		esac
 
 		;;
 	*)
-		echo "General fail of $branch=$upstream"
-		exit 1
+		;;
 	esac
 done <$series_list
 test -n "$only_sanity" && exit
