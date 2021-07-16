@@ -179,7 +179,9 @@ grep -v \
 	~/g/git.meta/series.conf >$series_list
 
 >$series_list.old-merge
+
 # Sanity check that this is all pushed out
+pushed=
 while read -r branch
 do
 	if test -n "$no_sanity$only_range_diff"
@@ -214,6 +216,7 @@ do
 		echo "error: Got this instead:"
 		cat $series_list.vcmp
 		git push avar $branch:$branch ${force_push:+--force}
+		pushed=1
 	fi
 
 	# Should always have upstream info
@@ -295,6 +298,7 @@ do
 				echo
 				cat $series_list.auto-rebase | sed 's/^/	/'
 				eval "$(cat $series_list.auto-rebase)"
+				pushed=1
 			else
 				echo "To rebase it, do:"
 				echo
@@ -313,6 +317,13 @@ do
 	esac
 done <$series_list
 test -n "$only_sanity" && exit
+
+# TODO BUG
+if test -n "$pushed"
+then
+	echo "We did pushes in the sanity phase, re-run"
+	exit 1
+fi
 
 # Check what's already merged
 while read -r branch
