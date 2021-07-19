@@ -25,7 +25,6 @@
 #include "shallow.h"
 #include "commit-reach.h"
 #include "commit-graph.h"
-#include "alloc.h"
 
 static int transfer_unpack_limit = -1;
 static int fetch_unpack_limit = -1;
@@ -148,14 +147,8 @@ static int rev_list_insert_ref(struct fetch_negotiator *negotiator,
 {
 	struct commit *c = deref_without_lazy_fetch(oid, 0);
 
-	if (!c && getenv("FAKE_TIPS")) {
-		c = create_object(the_repository, oid, alloc_commit_node(the_repository));
-	}
-
-	if (!c)
-		return error(_("could not find --negotiation-tip=%s!"), oid_to_hex(oid));
-
-	negotiator->add_tip(negotiator, c);
+	if (c)
+		negotiator->add_tip(negotiator, c);
 	return 0;
 }
 

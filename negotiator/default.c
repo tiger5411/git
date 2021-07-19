@@ -25,7 +25,7 @@ static void rev_list_push(struct negotiation_state *ns,
 	if (!(commit->object.flags & mark)) {
 		commit->object.flags |= mark;
 
-		if (parse_commit(commit) && !getenv("FAKE_TIPS"))
+		if (parse_commit(commit))
 			return;
 
 		prio_queue_put(&ns->rev_list, commit);
