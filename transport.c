@@ -937,7 +937,7 @@ static struct transport_vtable taken_over_vtable = {
 void transport_take_over(struct transport *transport,
 			 struct child_process *child)
 {
-	struct git_transport_data *data;
+	struct git_transport_data *data = NULL;
 
 	if (!transport->smart_options)
 		BUG("taking over transport requires non-NULL "
