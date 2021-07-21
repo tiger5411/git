@@ -172,13 +172,18 @@ static int fetch_refs_from_bundle(struct transport *transport,
 	return ret;
 }
 
-static int close_bundle(struct transport *transport)
+static void bundle_data_release(struct transport *transport)
+{
+	struct bundle_transport_data *data = transport->data;
+	bundle_header_release(&data->header);
+	free(data);
+}
+
+static int disconnect_bundle(struct transport *transport)
 {
 	struct bundle_transport_data *data = transport->data;
 	if (data->fd > 0)
 		close(data->fd);
-	bundle_header_release(&data->header);
-	free(data);
 	return 0;
 }
 
@@ -866,6 +871,12 @@ static int connect_git(struct transport *transport, const char *name,
 	return 0;
 }
 
+static void git_transport_data_release(struct transport *transport)
+{
+	struct git_transport_data *data = transport->data;
+	free(data);
+}
+
 static int disconnect_git(struct transport *transport)
 {
 	struct git_transport_data *data = transport->data;
@@ -878,7 +889,8 @@ static int disconnect_git(struct transport *transport)
 		finish_connect(data->conn);
 	}
 
-	free(data);
+	git_transport_data_release(transport);
+
 	return 0;
 }
 
@@ -906,7 +918,9 @@ void transport_take_over(struct transport *transport,
 	data->fd[0] = data->conn->out;
 	data->fd[1] = data->conn->in;
 	data->got_remote_heads = 0;
-	transport->data = data;
+
+	/*if (transport->data_free)
+		transport->data_free(transport);*/
 
 	transport->vtable = &taken_over_vtable;
 	transport->smart_options = &(data->options);
@@ -1037,7 +1051,7 @@ static struct transport_vtable bundle_vtable = {
 	fetch_refs_from_bundle,
 	NULL,
 	NULL,
-	close_bundle
+	disconnect_bundle
 };
 
 static struct transport_vtable builtin_smart_vtable = {
@@ -1087,6 +1101,7 @@ struct transport *transport_get(struct remote *remote, const char *url)
 		bundle_header_init(&data->header);
 		transport_check_allowed("file");
 		ret->data = data;
+		ret->data_free = bundle_data_release;
 		ret->vtable = &bundle_vtable;
 		ret->smart_options = NULL;
 	} else if (!is_url(url)
@@ -1102,6 +1117,7 @@ struct transport *transport_get(struct remote *remote, const char *url)
 		 */
 		struct git_transport_data *data = xcalloc(1, sizeof(*data));
 		ret->data = data;
+		ret->data_free = git_transport_data_release;;
 		ret->vtable = &builtin_smart_vtable;
 		ret->smart_options = &(data->options);
 
@@ -1485,7 +1501,8 @@ int transport_disconnect(struct transport *transport)
 		ret = transport->vtable->disconnect(transport);
 	if (transport->got_remote_refs)
 		free_refs((void *)transport->remote_refs);
-	transport_helper_release(transport);
+	if (transport->data_free)
+		transport->data_free(transport);
 	free(transport);
 	return ret;
 }

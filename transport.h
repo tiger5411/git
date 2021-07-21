@@ -61,12 +61,17 @@ enum transport_family {
 	TRANSPORT_FAMILY_IPV6
 };
 
+struct transport;
+typedef void (*transport_data_free_fn_t)(struct transport *);
+
 struct transport {
 	const struct transport_vtable *vtable;
 
 	struct remote *remote;
 	const char *url;
 	void *data;
+	transport_data_free_fn_t data_free;
+	
 	const struct ref *remote_refs;
 
 	/**

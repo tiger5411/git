@@ -101,13 +101,24 @@ static const char *remove_ext_force(const char *url)
 	return url;
 }
 
+void transport_helper_release(struct transport *transport)
+{
+	struct helper_data *data = transport->data;
+	if (&data->rs)
+		refspec_clear(&data->rs);
+	if (data->helper)
+		FREE_AND_NULL(data->helper);
+	FREE_AND_NULL(data->name);
+	free(data);
+}
+
 static void do_take_over(struct transport *transport)
 {
 	struct helper_data *data;
 	data = (struct helper_data *)transport->data;
 	transport_take_over(transport, data->helper);
 	fclose(data->out);
-	free(data);
+	//transport_helper_release(transport);
 }
 
 static void standard_options(struct transport *t);
@@ -373,17 +384,6 @@ static void standard_options(struct transport *t)
 		set_helper_option(t, "family", "ipv6");
 		break;
 	}
-}
-
-void transport_helper_release(struct transport *transport)
-{
-	struct helper_data *data = transport->data;
-	if (&data->rs)
-		refspec_clear(&data->rs);
-	if (data->helper)
-		FREE_AND_NULL(data->helper);
-	free(data->name);
-	free(data);
 }
 
 static int transport_helper_disconnect(struct transport *transport)
@@ -1287,6 +1287,7 @@ int transport_helper_init(struct transport *transport, const char *name)
 		debug = 1;
 
 	transport->data = data;
+	transport->data_free = transport_helper_release;
 	transport->vtable = &vtable;
 	transport->smart_options = &(data->transport_options);
 	return 0;
