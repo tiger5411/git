@@ -121,7 +121,9 @@ static int setup_tmp_objdir(const char *root)
 	return ret;
 }
 
-static struct tmp_objdir *tmp_objdir_create_extended(const char *prefix, int need_env)
+static struct tmp_objdir *tmp_objdir_create_extended(const char *prefix,
+						     int need_env,
+						     int pack_subdir)
 {
 	static int installed_handlers;
 	struct tmp_objdir *t;
@@ -133,7 +135,7 @@ static struct tmp_objdir *tmp_objdir_create_extended(const char *prefix, int nee
 	strbuf_init(&t->path, 0);
 	strvec_init(&t->env);
 
-	strbuf_addf(&t->path, "%s/%s-XXXXXX", prefix, get_object_directory());
+	strbuf_addf(&t->path, "%s/%s-XXXXXX", get_object_directory(), prefix);
 
 	/*
 	 * Grow the strbuf beyond any filename we expect to be placed in it.
@@ -144,6 +146,7 @@ static struct tmp_objdir *tmp_objdir_create_extended(const char *prefix, int nee
 	strbuf_grow(&t->path, 1024);
 
 	if (!mkdtemp(t->path.buf)) {
+		error_errno("could not create %s", t->path.buf);
 		/* free, not destroy, as we never touched the filesystem */
 		tmp_objdir_free(t);
 		return NULL;
@@ -156,7 +159,7 @@ static struct tmp_objdir *tmp_objdir_create_extended(const char *prefix, int nee
 		installed_handlers++;
 	}
 
-	if (setup_tmp_objdir(t->path.buf)) {
+	if (pack_subdir && setup_tmp_objdir(t->path.buf)) {
 		tmp_objdir_destroy(t);
 		return NULL;
 	}
@@ -176,12 +179,12 @@ no_env:
 
 struct tmp_objdir *tmp_objdir_create(void)
 {
-	return tmp_objdir_create_extended("incoming", 1);
+	return tmp_objdir_create_extended("incoming", 1, 1);
 }
 
 struct tmp_objdir *tmp_bundledir_create(void)
 {
-	return tmp_objdir_create_extended("incoming-bundle", 0);
+	return tmp_objdir_create_extended("incoming-bundle", 0, 0);
 }
 
 

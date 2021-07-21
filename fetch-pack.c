@@ -1571,7 +1571,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		const struct strbuf *tmpdir_buf;
 
 		errno = 0;
-		tmpdir = tmp_objdir_create();
+		tmpdir = tmp_bundledir_create();
 		if (!tmpdir)
 			die_errno("unable to create temporary object directory");
 		tmpdir_buf = tmp_objdir_path(tmpdir);
@@ -1588,6 +1588,9 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 
 		if (finish_command(&cmd))
 			die("fetch-pack: unable to finish http-fetch");
+		break;
+
+		tmp_objdir_destroy(tmpdir);
 	}
 
 	packet_reader_init(&reader, fd[0], NULL, 0,

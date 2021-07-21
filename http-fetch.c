@@ -44,12 +44,20 @@ static void fetch_single_packfile(struct object_id *packfile_hash,
 	http_cleanup();
 }
 
+static int fetch_single_bundle(const char *output, const char *uri)
+{
+	return 0;
+}
+
 int cmd_main(int argc, const char **argv)
 {
 	const char *url;
+	const char *output = NULL;
 	struct object_id packfile_hash = { 0 };
 	struct strvec index_pack_args = STRVEC_INIT;
 	struct option options[] = {
+		OPT_STRING('o', "output", &output, N_("file"),
+			   N_("write the downloaded file to <file>")),
 		{ OPTION_CALLBACK, 0, "packfile", &packfile_hash,
 		  N_("checksum"), N_("the checksum of the packfile"),
 		  PARSE_OPT_NONEG, parse_opt_object_id_hex, 0 },
@@ -62,6 +70,15 @@ int cmd_main(int argc, const char **argv)
 	git_config(git_default_config, NULL);
 
 	argc = parse_options(argc, argv, NULL, options, http_fetch_usage, 0);
+
+	if (output) {
+		if (argc != 1) {
+			error(_("must provide one URL with --output"));
+			goto usage;
+		}
+		url = argv[0];
+		return fetch_single_bundle(output, url);
+	}
 
 	if (is_null_oid(&packfile_hash)) {
 		error(_("must supply --packfile, --stdin or <commit>"));
