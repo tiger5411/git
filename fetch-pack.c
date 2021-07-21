@@ -1556,11 +1556,41 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	struct object_id common_oid;
 	int received_ready = 0;
 	struct string_list packfile_uris = STRING_LIST_INIT_DUP;
-	int i;
+	int i = 0;
 	struct strvec index_pack_args = STRVEC_INIT;
+	struct string_list_item *item;
 
 	negotiator = &negotiator_alloc;
 	fetch_negotiator_init(r, negotiator);
+
+	for_each_string_list_item(item, args->bundle_uri) {
+		struct strbuf buf = STRBUF_INIT;
+		struct strbuf cmd = STRBUF_INIT;
+		struct strbuf bdl = STRBUF_INIT;
+		struct strbuf tip = STRBUF_INIT;
+		FILE *fp;
+
+		strbuf_addf(&bdl, "%s/%s", the_repository->gitdir, "tmp.bdl");
+		strbuf_addf(&tip, "%s/%s", the_repository->gitdir, "tip.bdl");
+		strbuf_addf(&cmd, "/home/avar/g/git/bundle-uri.sh %s %s %s %s",
+			    r->gitdir, item->string, bdl.buf, tip.buf);
+		fprintf(stderr, "Downloading bundle %s...\n", item->string);
+		if (system(cmd.buf)) {
+			warning("failed to run %s", cmd.buf);
+			_exit(1);
+		}
+		fp = xfopen(tip.buf, "r");
+		while (strbuf_getline_lf(&buf, fp) != EOF) {
+			struct oid_array tips = OID_ARRAY_INIT;
+			struct object_id oid;
+			if (get_oid(buf.buf, &oid)) {
+				warning("%s is not a valid object", buf.buf);
+			}
+			fprintf(stderr, "...got tip %s\n", oid_to_hex(&oid));
+			oid_array_append(&tips, &oid);
+			mark_tips(negotiator, &tips);
+		}
+	}
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE);
