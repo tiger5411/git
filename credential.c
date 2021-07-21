@@ -127,6 +127,7 @@ static void credential_apply_config(struct credential *c)
 
 	git_config(urlmatch_config_entry, &config);
 	free(normalized_url);
+	urlmatch_config_release(&config);
 	strbuf_release(&url);
 
 	c->configured = 1;
