@@ -2385,6 +2385,7 @@ struct http_object_request *new_http_object_request(const char *base_url,
 abort:
 	strbuf_release(&prevfile);
 	free(freq->url);
+	git_inflate_end(&freq->stream);
 	free(freq);
 	return NULL;
 }
@@ -2455,4 +2456,6 @@ void release_http_object_request(struct http_object_request *freq)
 		freq->slot = NULL;
 	}
 	strbuf_release(&freq->tmpfile);
+	git_inflate_end(&freq->stream);
+	free(freq);
 }
