@@ -1112,6 +1112,7 @@ struct transport *transport_get(struct remote *remote, const char *url)
 		int len = external_specification_len(url);
 		char *handler = xstrndup(url, len);
 		transport_helper_init(ret, handler);
+		free(handler);
 	}
 
 	if (ret->smart_options) {
@@ -1484,6 +1485,7 @@ int transport_disconnect(struct transport *transport)
 		ret = transport->vtable->disconnect(transport);
 	if (transport->got_remote_refs)
 		free_refs((void *)transport->remote_refs);
+	transport_helper_release(transport);
 	free(transport);
 	return ret;
 }

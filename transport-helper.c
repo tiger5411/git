@@ -18,7 +18,7 @@
 static int debug;
 
 struct helper_data {
-	const char *name;
+	char *name;
 	struct child_process *helper;
 	FILE *out;
 	unsigned fetch : 1,
@@ -249,7 +249,6 @@ static int disconnect_helper(struct transport *transport)
 		close(data->helper->out);
 		fclose(data->out);
 		res = finish_command(data->helper);
-		FREE_AND_NULL(data->helper);
 	}
 	return res;
 }
@@ -376,13 +375,21 @@ static void standard_options(struct transport *t)
 	}
 }
 
-static int release_helper(struct transport *transport)
+void transport_helper_release(struct transport *transport)
 {
-	int res = 0;
 	struct helper_data *data = transport->data;
-	refspec_clear(&data->rs);
-	res = disconnect_helper(transport);
-	free(transport->data);
+	if (&data->rs)
+		refspec_clear(&data->rs);
+	if (data->helper)
+		FREE_AND_NULL(data->helper);
+	free(data->name);
+	free(data);
+}
+
+static int transport_helper_disconnect(struct transport *transport)
+{
+	int res = disconnect_helper(transport);
+	transport_helper_release(transport);
 	return res;
 }
 
@@ -1266,13 +1273,13 @@ static struct transport_vtable vtable = {
 	fetch,
 	push_refs,
 	connect_helper,
-	release_helper
+	transport_helper_disconnect,
 };
 
 int transport_helper_init(struct transport *transport, const char *name)
 {
 	struct helper_data *data = xcalloc(1, sizeof(*data));
-	data->name = name;
+	data->name = xstrdup(name);
 
 	transport_check_allowed(name);
 

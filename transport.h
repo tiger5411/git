@@ -288,6 +288,7 @@ int transport_connect(struct transport *transport, const char *name,
 
 /* Transport methods defined outside transport.c */
 int transport_helper_init(struct transport *transport, const char *name);
+void transport_helper_release(struct transport *transport);
 int bidirectional_transfer_loop(int input, int output);
 
 /* common methods used by transport.c and builtin/send-pack.c */
