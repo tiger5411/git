@@ -121,7 +121,7 @@ static int setup_tmp_objdir(const char *root)
 	return ret;
 }
 
-struct tmp_objdir *tmp_objdir_create(void)
+static struct tmp_objdir *tmp_objdir_create_extended(const char *prefix, int need_env)
 {
 	static int installed_handlers;
 	struct tmp_objdir *t;
@@ -133,7 +133,7 @@ struct tmp_objdir *tmp_objdir_create(void)
 	strbuf_init(&t->path, 0);
 	strvec_init(&t->env);
 
-	strbuf_addf(&t->path, "%s/incoming-XXXXXX", get_object_directory());
+	strbuf_addf(&t->path, "%s/%s-XXXXXX", prefix, get_object_directory());
 
 	/*
 	 * Grow the strbuf beyond any filename we expect to be placed in it.
@@ -161,14 +161,29 @@ struct tmp_objdir *tmp_objdir_create(void)
 		return NULL;
 	}
 
+	if (!need_env)
+		goto no_env;
+
 	env_append(&t->env, ALTERNATE_DB_ENVIRONMENT,
 		   absolute_path(get_object_directory()));
 	env_replace(&t->env, DB_ENVIRONMENT, absolute_path(t->path.buf));
 	env_replace(&t->env, GIT_QUARANTINE_ENVIRONMENT,
 		    absolute_path(t->path.buf));
 
+no_env:
 	return t;
 }
+
+struct tmp_objdir *tmp_objdir_create(void)
+{
+	return tmp_objdir_create_extended("incoming", 1);
+}
+
+struct tmp_objdir *tmp_bundledir_create(void)
+{
+	return tmp_objdir_create_extended("incoming-bundle", 0);
+}
+
 
 /*
  * Make sure we copy packfiles and their associated metafiles in the correct
@@ -279,6 +294,11 @@ int tmp_objdir_migrate(struct tmp_objdir *t)
 
 	tmp_objdir_destroy(t);
 	return ret;
+}
+
+const struct strbuf *tmp_objdir_path(const struct tmp_objdir *t)
+{
+	return &t->path;
 }
 
 const char **tmp_objdir_env(const struct tmp_objdir *t)

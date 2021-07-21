@@ -27,6 +27,22 @@ struct tmp_objdir;
 struct tmp_objdir *tmp_objdir_create(void);
 
 /*
+ * Create a new temporary bundle directory; returns NULL on
+ * failure.
+ *
+ * Does not populate the env for child_process.env. Do not use this
+ * with tmp_objdir_migrate() or tmp_objdir_add_as_alternate().
+ */
+struct tmp_objdir *tmp_bundledir_create(void);
+
+/*
+ * Peek inside the state of the tmp_objdir and return the "path" after
+ * tmp_bundledir_create() has been called successfully.
+ */
+struct strbuf;
+const struct strbuf *tmp_objdir_path(const struct tmp_objdir *);
+
+/*
  * Return a list of environment strings, suitable for use with
  * child_process.env, that can be passed to child programs to make use of the
  * temporary object directory.
