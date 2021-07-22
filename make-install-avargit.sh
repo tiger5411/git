@@ -223,6 +223,23 @@ do
 	upstream=$(git for-each-ref --format="%(upstream)" "refs/heads/$branch")
 	upstream_short=$(echo $upstream | sed -e 's!refs/remotes/avar/!!' -e 's!refs/remotes/origin/!!')
 
+	# Catch a topic of mine that depends on another topic I've
+	# ejected or not listed in series.conf explicitly.
+	case "$upstream" in
+	refs/remotes/avar/*)
+		if ! grep -q -x "$upstream_short" $series_list
+		then
+			echo "error:	$branch"
+			echo "error: depends on:"
+			echo "error:	$upstream_short"
+			echo "error: but that dependency is not itself in series.conf!"
+			exit 1
+		fi
+		;;
+	*)
+		;;
+	esac
+
 	# Which means we have aheadbehind info
 	aheadbehind=$(git for-each-ref --format="%(upstream:trackshort)" "refs/heads/$branch")
 	aheadbehind_long=$(git for-each-ref --format="%(upstream:track,nobracket)" "refs/heads/$branch")
