@@ -26,24 +26,34 @@
 
 int cmd__progress(int argc, const char **argv)
 {
+	int total = 0;
+	const char *title = NULL;
 	const char *default_title = "Working hard";
 	char *detached_title = NULL;
 	struct strbuf line = STRBUF_INIT;
 	struct progress *progress = NULL;
 
 	const char *usage[] = {
+		"test-tool progress [--total=<n>] <progress-title>",
 		"test-tool progress <stdin",
 		NULL
 	};
 	struct option options[] = {
+		OPT_INTEGER(0, "total", &total, "total number of items"),
 		OPT_END(),
 	};
 
 	argc = parse_options(argc, argv, NULL, options, usage, 0);
-	if (argc)
-		usage_with_options(usage, options);
+	if (!title) {
+		if (argc)
+			usage_with_options(usage, options);
+	} else if (argc != 1) {
+			usage_with_options(usage, options);
+	}
 
 	progress_testing = 1;
+	if (title)
+		progress = start_progress(title, total);
 	while (strbuf_getline(&line, stdin) != EOF) {
 		char *end;
 
