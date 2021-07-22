@@ -2180,8 +2180,8 @@ struct http_pack_request *new_direct_http_pack_request(
 	strbuf_addf(&preq->tmpfile, "%s.temp", sha1_pack_name(packed_git_hash));
 	preq->packfile = fopen(preq->tmpfile.buf, "a");
 	if (!preq->packfile) {
-		error("Unable to open local file %s for pack",
-		      preq->tmpfile.buf);
+		error_errno("Unable to open local file %s for pack",
+			    preq->tmpfile.buf);
 		goto abort;
 	}
 
@@ -2213,6 +2213,49 @@ abort:
 	free(preq->url);
 	free(preq);
 	return NULL;
+}
+
+struct http_bundle_request *new_direct_http_bundle_request(char *file, char *url)
+{
+	struct http_bundle_request *preq;
+
+	CALLOC_ARRAY(preq, 1);
+
+	preq->url = url;
+
+	preq->outfile = fopen(file, "a");
+	if (!preq->outfile) {
+		error_errno("Unable to open local file %s to download bundle", file);
+		goto abort;
+	}
+
+	preq->slot = get_active_slot();
+	curl_easy_setopt(preq->slot->curl, CURLOPT_WRITEDATA, preq->outfile);
+	curl_easy_setopt(preq->slot->curl, CURLOPT_WRITEFUNCTION, fwrite);
+	curl_easy_setopt(preq->slot->curl, CURLOPT_URL, preq->url);
+	curl_easy_setopt(preq->slot->curl, CURLOPT_HTTPHEADER,
+		no_pragma_header);
+
+	return preq;
+abort:
+	free(preq->url);
+	free(preq);
+	return NULL;
+}
+
+void release_http_bundle_request(struct http_bundle_request *preq)
+{
+	preq->slot = NULL;
+	free(preq->url);
+	free(preq);
+}
+
+int finish_http_bundle_request(struct http_bundle_request *preq)
+{
+	fclose(preq->outfile);
+	preq->outfile = NULL;
+
+	return 0;
 }
 
 /* Helpers for fetching objects (loose) */

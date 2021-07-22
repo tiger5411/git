@@ -191,6 +191,17 @@ struct http_pack_request *new_direct_http_pack_request(
 int finish_http_pack_request(struct http_pack_request *preq);
 void release_http_pack_request(struct http_pack_request *preq);
 
+struct http_bundle_request {
+	char *url;
+	FILE *outfile;
+	struct active_request_slot *slot;
+};
+
+struct http_bundle_request *new_direct_http_bundle_request(char *url, char *file);
+int finish_http_bundle_request(struct http_bundle_request *preq);
+void release_http_bundle_request(struct http_bundle_request *preq);
+
+
 /*
  * Remove p from the given list, and invoke install_packed_git() on it.
  *

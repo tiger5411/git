@@ -44,8 +44,33 @@ static void fetch_single_packfile(struct object_id *packfile_hash,
 	http_cleanup();
 }
 
-static int fetch_single_bundle(const char *output, const char *uri)
+static int fetch_single_bundle(const char *output, const char *url)
 {
+	struct http_bundle_request *preq;
+	struct slot_results results;
+	int ret;
+
+	http_init(NULL, url, 0);
+
+	preq = new_direct_http_bundle_request(xstrdup(output), xstrdup(url));
+	if (!preq)
+		die("couldn't create http bundle request");
+	preq->slot->results = &results;
+
+	if (!start_active_slot(preq->slot))
+		die("Unable to start request");
+
+	run_active_slot(preq->slot);
+	if (results.curl_result != CURLE_OK)
+		die("Unable to get bundle file %s\n%s", preq->url,
+		    curl_errorstr);
+
+	ret = finish_http_bundle_request(preq);
+	if (ret)
+		die("finish_http_bundle_request gave result %d", ret);
+
+	release_http_bundle_request(preq);
+	http_cleanup();
 	return 0;
 }
 

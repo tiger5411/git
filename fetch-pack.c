@@ -1561,24 +1561,30 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	int i = 0;
 	struct strvec index_pack_args = STRVEC_INIT;
 
+	struct tmp_objdir *tmpdir;
+	const struct strbuf *tmpdir_buf;
+
 	negotiator = &negotiator_alloc;
 	fetch_negotiator_init(r, negotiator);
 
-	for (i = 0; i < bundle_uri->nr; i++) {
-		struct string_list_item item = bundle_uri->items[i];
-		struct child_process cmd = CHILD_PROCESS_INIT;
-		struct tmp_objdir *tmpdir;
-		const struct strbuf *tmpdir_buf;
-
+	if (bundle_uri->nr) {
 		errno = 0;
 		tmpdir = tmp_bundledir_create();
 		if (!tmpdir)
 			die_errno("unable to create temporary object directory");
-		tmpdir_buf = tmp_objdir_path(tmpdir);
+		tmpdir_buf = tmp_objdir_path(tmpdir);		
+	}
+
+	for (i = 0; i < bundle_uri->nr; i++) {
+		struct string_list_item item = bundle_uri->items[i];
+		struct child_process cmd = CHILD_PROCESS_INIT;
+		struct strbuf tempfile = STRBUF_INIT;
+
+		strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir_buf->buf, i);
 
 		strvec_push(&cmd.args, "http-fetch");
 		strvec_push(&cmd.args, "-o");
-		strvec_push(&cmd.args, tmpdir_buf->buf);
+		strvec_push(&cmd.args, tempfile.buf);
 		strvec_push(&cmd.args, item.string);
 		cmd.git_cmd = 1;
 		cmd.no_stdin = 1;
@@ -1589,7 +1595,9 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		if (finish_command(&cmd))
 			die("fetch-pack: unable to finish http-fetch");
 		break;
+	}
 
+	if (bundle_uri->nr) {
 		tmp_objdir_destroy(tmpdir);
 	}
 
