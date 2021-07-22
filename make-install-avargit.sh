@@ -242,7 +242,7 @@ do
 			echo "$branch is $aheadbehind ($aheadbehind_long) of master"
 		fi
 		;;
-	refs/remotes/avar/*)
+	refs/remotes/avar/*|refs/remotes/gitster/*)
 		if test -n "$verbose" && test "$aheadbehind" != ">"
 		then
 			echo "$branch should be ahead of $upstream_short, am $aheadbehind instead ($aheadbehind_long)"
