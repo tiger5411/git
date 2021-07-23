@@ -985,6 +985,46 @@ static int get_pack(struct fetch_pack_args *args,
 	return 0;
 }
 
+struct get_bundle_uri_ctx {
+	struct repository *r;
+	struct tmp_objdir *tmpdir;
+	const struct strbuf *tmpdir_buf;
+	struct fetch_negotiator *negotiator;
+};
+#define GET_BUNDLE_URI_CTX_INIT { 0 }
+
+static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx *ctx,
+				struct string_list *bundle_uri,
+				struct fetch_negotiator *negotiator)
+{
+	fprintf(stderr, "Have %d bundles to download\n", bundle_uri->nr);
+
+	ctx->r = r;
+	ctx->negotiator = negotiator;
+
+	errno = 0;
+	ctx->tmpdir = tmp_bundledir_create();
+	if (!ctx->tmpdir) {
+		error_errno("unable to create temporary object directory");
+		return -1;
+	}
+
+	ctx->tmpdir_buf = tmp_objdir_path(ctx->tmpdir);		
+	return 0;
+}
+
+static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
+			  struct string_list_item *item)
+{
+	return 0;
+}
+
+static int get_bundle_uri_finish(struct get_bundle_uri_ctx *ctx)
+{
+	return 0;
+}
+
+
 static int cmp_ref_by_name(const void *a_, const void *b_)
 {
 	const struct ref *a = *((const struct ref **)a_);
@@ -1561,44 +1601,37 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	int i = 0;
 	struct strvec index_pack_args = STRVEC_INIT;
 
-	struct tmp_objdir *tmpdir;
-	const struct strbuf *tmpdir_buf;
-
 	negotiator = &negotiator_alloc;
 	fetch_negotiator_init(r, negotiator);
 
 	if (bundle_uri->nr) {
-		errno = 0;
-		tmpdir = tmp_bundledir_create();
-		if (!tmpdir)
-			die_errno("unable to create temporary object directory");
-		tmpdir_buf = tmp_objdir_path(tmpdir);		
-	}
+		struct get_bundle_uri_ctx ctx = GET_BUNDLE_URI_CTX_INIT;
+		int ret = get_bundle_uri_start(r, &ctx, bundle_uri, negotiator);
+		int nr = bundle_uri->nr;
+		
+		if (ret < 0) 
+			error(_("could not set up bundle URI fetching of %d bundles"),
+			      nr);
 
-	for (i = 0; i < bundle_uri->nr; i++) {
-		struct string_list_item item = bundle_uri->items[i];
-		struct child_process cmd = CHILD_PROCESS_INIT;
-		struct strbuf tempfile = STRBUF_INIT;
+		for (i = 0; i < nr; i++) {
+			struct string_list_item item = bundle_uri->items[i];
 
-		strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir_buf->buf, i);
+			ret = get_bundle_uri(&ctx, i, &item);
+			if (ret < 0) {
+				error(Q_("could not get the %dst bundle URI",
+					 "could not get the %dth bundle URI",
+					 i),
+				      i);
+				break;
+			}
+		}
 
-		strvec_push(&cmd.args, "http-fetch");
-		strvec_push(&cmd.args, "-o");
-		strvec_push(&cmd.args, tempfile.buf);
-		strvec_push(&cmd.args, item.string);
-		cmd.git_cmd = 1;
-		cmd.no_stdin = 1;
-
-		if (start_command(&cmd))
-			die("fetch-pack: unable to spawn http-fetch");
-
-		if (finish_command(&cmd))
-			die("fetch-pack: unable to finish http-fetch");
-		break;
-	}
-
-	if (bundle_uri->nr) {
-		tmp_objdir_destroy(tmpdir);
+		if (nr) {
+			ret = get_bundle_uri_finish(&ctx);
+			if (ret < 0)
+				error(_("could not finish up bundle URI fetching of %d bundles"),
+				      nr);
+		}
 	}
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
@@ -2134,3 +2167,4 @@ int report_unmatched_refs(struct ref **sought, int nr_sought)
 	}
 	return ret;
 }
+

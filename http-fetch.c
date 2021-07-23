@@ -52,6 +52,7 @@ static int fetch_single_bundle(const char *output, const char *url)
 
 	http_init(NULL, url, 0);
 
+	fprintf(stderr, "Downloading %s to %s\n", url, output);
 	preq = new_direct_http_bundle_request(xstrdup(output), xstrdup(url));
 	if (!preq)
 		die("couldn't create http bundle request");
