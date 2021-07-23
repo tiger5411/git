@@ -998,8 +998,6 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 				struct string_list *bundle_uri,
 				struct fetch_negotiator *negotiator)
 {
-	fprintf(stderr, "Have %d bundles to download\n", bundle_uri->nr);
-
 	ctx->r = r;
 	ctx->negotiator = negotiator;
 
