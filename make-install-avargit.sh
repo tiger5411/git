@@ -58,6 +58,10 @@ do
 	--debug)
 		debug=yes
 		;;
+	--*)
+		echo "Unknown option $1"
+		exit 1
+		;;
 	*)
 		break
 		;;
