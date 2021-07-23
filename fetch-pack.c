@@ -26,6 +26,7 @@
 #include "commit-reach.h"
 #include "commit-graph.h"
 #include "tmp-objdir.h"
+#include "bundle.h"
 
 static int transfer_unpack_limit = -1;
 static int fetch_unpack_limit = -1;
@@ -988,7 +989,7 @@ static int get_pack(struct fetch_pack_args *args,
 struct get_bundle_uri_ctx {
 	struct repository *r;
 	struct tmp_objdir *tmpdir;
-	const struct strbuf *tmpdir_buf;
+	const char *tmpdir_buf;
 	struct fetch_negotiator *negotiator;
 };
 #define GET_BUNDLE_URI_CTX_INIT { 0 }
@@ -1007,7 +1008,7 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 	if (!ctx->tmpdir)
 		return error_errno("unable to create temporary object directory");
 
-	ctx->tmpdir_buf = tmp_objdir_path(ctx->tmpdir);		
+	ctx->tmpdir_buf = tmp_objdir_path(ctx->tmpdir)->buf;
 	return 0;
 }
 
@@ -1016,15 +1017,18 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 {
 	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int bundle_fd = -1;
-	struct child_process cmd = CHILD_PROCESS_INIT;
+	//struct child_process cmd = CHILD_PROCESS_INIT;
 	int ret = 0;
 	struct string_list_item *item;
 
 	bundle_fd = read_bundle_header(bundle_file, &header);
-	if (bundle < 0) {
+	if (bundle_fd < 0) {
 		ret = error("could not read_bundle_header(%s)", bundle_file);
 		goto cleanup;
 	}
+
+	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
+		lseek(bundle_fd, 0, SEEK_SET);
 
 	ret = unbundle(ctx->r, &header, bundle_fd, 1);
 	if (ret < 0) {
@@ -1032,26 +1036,26 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 		goto cleanup;
 	}
 
-	for_each_string_list_item(item, &header->references) {
-		const char *name = item.string;;
-		struct object_id *oid = item.util;
+	for_each_string_list_item(item, &header.references) {
+		const char *name = item->string;
+		struct object_id *oid = item->util;
 
 		printf("%s %s\n", oid_to_hex(oid), name);
 	}
 	bundle_header_release(&header);
 
-	die("have a %s at this point", tempfile.buf);
-	strvec_push(&cmd.args, "bundle");
-	strvec_push(&cmd.args, "unbundle");
-	strvec_push(&cmd.args, tempfile.buf);
-	cmd.git_cmd = 1;
-	cmd.no_stdin = 1;
+	/* die("have a %s at this point", tempfile.buf); */
+	/* strvec_push(&cmd.args, "bundle"); */
+	/* strvec_push(&cmd.args, "unbundle"); */
+	/* strvec_push(&cmd.args, tempfile.buf); */
+	/* cmd.git_cmd = 1; */
+	/* cmd.no_stdin = 1; */
 
-	if (start_command(&cmd))
-		return error("fetch-pack: unable to spawn git bundle unbundle");
+	/* if (start_command(&cmd)) */
+	/* 	return error("fetch-pack: unable to spawn git bundle unbundle"); */
 
-	if (finish_command(&cmd))
-		return error("fetch-pack: unable to finish git bundle unbundle");
+	/* if (finish_command(&cmd)) */
+	/* 	return error("fetch-pack: unable to finish git bundle unbundle"); */
 
 cleanup:
 
@@ -1064,10 +1068,10 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	struct strbuf tempfile = STRBUF_INIT;
-	const char *tmpdir = ctx->tmpdir_buf->buf;
+	const char *tmpdir_buf = ctx->tmpdir_buf;
 	int ret = 0;
 
-	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir, nth);
+	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir_buf, nth);
 	strvec_push(&cmd.args, "http-fetch");
 	strvec_push(&cmd.args, "-o");
 	strvec_push(&cmd.args, tempfile.buf);
@@ -1085,7 +1089,7 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 		goto cleanup;
 	}
 
-	ret = unbundle_bundle_uri(tempfile);
+	ret = unbundle_bundle_uri(ctx, tempfile.buf);
 
 cleanup:
 	strbuf_release(&tempfile);
