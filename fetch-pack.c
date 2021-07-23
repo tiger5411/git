@@ -1072,11 +1072,11 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 	int ret = 0;
 
 	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir_buf, nth);
-	strvec_push(&cmd.args, "http-fetch");
-	strvec_push(&cmd.args, "-o");
-	strvec_push(&cmd.args, tempfile.buf);
+	strvec_push(&cmd.args, "curl");
+	//strvec_push(&cmd.args, "-o");
+	//strvec_push(&cmd.args, tempfile.buf);
 	strvec_push(&cmd.args, item->string);
-	cmd.git_cmd = 1;
+	cmd.git_cmd = 0;
 	cmd.no_stdin = 1;
 
 	if (start_command(&cmd)) {
