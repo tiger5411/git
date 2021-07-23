@@ -1085,6 +1085,7 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 
 	strvec_push(&cmd.args, "curl");
 	strvec_push(&cmd.args, "--silent");
+	//strvec_push(&cmd.args, "--progress-bar");
 	strvec_push(&cmd.args, "--output");
 	strvec_push(&cmd.args, "-");
 	strvec_push(&cmd.args, item->string);
