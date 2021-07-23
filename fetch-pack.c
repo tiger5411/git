@@ -732,7 +732,8 @@ static void mark_complete_and_common_ref(struct fetch_negotiator *negotiator,
 		if (!c || !(c->object.flags & COMPLETE))
 			continue;
 
-		negotiator->known_common(negotiator, c);
+		if (negotiator->known_common)
+			negotiator->known_common(negotiator, c);
 	}
 	trace2_region_leave("fetch-pack", "mark_common_remote_refs", NULL);
 
@@ -749,9 +750,11 @@ static int everything_local(struct fetch_pack_args *args,
 	struct ref *ref;
 	int retval;
 
+	fprintf(stderr, "checking refs\n");
 	for (retval = 1, ref = *refs; ref ; ref = ref->next) {
 		const struct object_id *remote = &ref->old_oid;
 		struct object *o;
+		fprintf(stderr, "checking refs...\n");
 
 		o = lookup_object(the_repository, remote);
 		if (!o || !(o->flags & COMPLETE)) {
@@ -1702,6 +1705,8 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		struct get_bundle_uri_ctx ctx = GET_BUNDLE_URI_CTX_INIT;
 		int ret = get_bundle_uri_start(r, &ctx, bundle_uri);
 		int nr = bundle_uri->nr;
+
+		trace2_region_enter("fetch-pack", "bundle-uri", the_repository);
 		
 		if (ret < 0) 
 			error(_("could not set up bundle URI fetching of %d bundles"),
@@ -1721,8 +1726,14 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				break;
 			}
 
-			for (j = 0; j < bundle_oids.nr; j++)
-				rev_list_insert_ref(negotiator, &bundle_oids.oid[j]);
+			for (j = 0; j < bundle_oids.nr; j++) {
+				struct object_id *oid = &bundle_oids.oid[j];
+
+				print_verbose(args, _("got %s via bundle #%d (#%dth)"),
+					      oid_to_hex(oid), i, j);
+				rev_list_insert_ref(negotiator, oid);
+				mark_complete(oid);
+			}
 		}
 
 		if (nr) {
@@ -1731,6 +1742,8 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				error(_("could not finish up bundle URI fetching of %d bundles"),
 				      nr);
 		}
+
+		trace2_region_leave("fetch-pack", "bundle-uri", the_repository);
 	}
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
@@ -1756,10 +1769,13 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 			/* Filter 'ref' by 'sought' and those that aren't local */
 			mark_complete_and_common_ref(negotiator, args, &ref);
 			filter_refs(args, &ref, sought, nr_sought);
-			if (everything_local(args, &ref))
+			if (everything_local(args, &ref)) {
+				print_verbose(args, _("everything is local, disconnecting"));
 				state = FETCH_DONE;
-			else
+			} else {
+				print_verbose(args, _("have non-local, need to fetch"));
 				state = FETCH_SEND_REQUEST;
+			}
 
 			mark_tips(negotiator, args->negotiation_tips);
 			for_each_cached_alternate(negotiator,
