@@ -988,30 +988,27 @@ static int get_pack(struct fetch_pack_args *args,
 struct get_bundle_uri_ctx {
 	struct repository *r;
 	unsigned int nr;
-	struct fetch_negotiator *negotiator;
 };
 #define GET_BUNDLE_URI_CTX_INIT { 0 }
 
 static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx *ctx,
-				struct string_list *bundle_uri,
-				struct fetch_negotiator *negotiator)
+				struct string_list *bundle_uri)
 {
 	ctx->r = r;
 	ctx->nr = bundle_uri->nr;
-	ctx->negotiator = negotiator;
 
 	return 0;
 }
 
 static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 			       const char *bundle_uri, unsigned int nth,
-			       FILE *in, int in_fd)
+			       FILE *in, int in_fd,
+			       struct oid_array *bundle_oids)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int ret = 0;
 	struct string_list_item *item;
-	struct oidset bundle_oids = OIDSET_INIT;
 	struct strbuf progress1 = STRBUF_INIT;
 	struct strbuf progress2 = STRBUF_INIT;
 
@@ -1037,15 +1034,15 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 		 */
 		struct object_id *oid = item->util;
 
-		oidset_insert(&bundle_oids, oid);
+		oid_array_append(bundle_oids, oid);
 	}
 	bundle_header_release(&header);
 
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
 		lseek(in_fd, 0, SEEK_SET);
 
-	strbuf_addf(&progress1,   "Fetching bundle URI (%d/%d)", nth + 1, ctx->nr);
-	strbuf_addf(&progress2, "Indexing bundle URI (%d/%d)", nth + 1, ctx->nr);
+	strbuf_addf(&progress1, "Fetching bundle URI (%d/%d)", nth + 1, ctx->nr);
+	strbuf_addf(&progress2, "Indexing %5lu refs (%d/%d)", bundle_oids->nr, nth + 1, ctx->nr);
 
 	strvec_push(&cmd.args, "index-pack");
 	strvec_push(&cmd.args, "--fix-thin");
@@ -1055,7 +1052,6 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 	strvec_push(&cmd.args, progress1.buf);
 	strvec_push(&cmd.args, "--progress-title-resolve");
 	strvec_push(&cmd.args, progress2.buf);
-
 
 	cmd.git_cmd = 1;
 	cmd.in = in_fd;
@@ -1077,7 +1073,8 @@ cleanup:
 }
 
 static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
-			  struct string_list_item *item)
+			  struct string_list_item *item,
+			  struct oid_array *bundle_oids)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	struct strbuf tempfile = STRBUF_INIT;
@@ -1102,7 +1099,7 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 
 	out = xfdopen(cmd.out, "r");
 	out_fd = fileno(out);
-	ret = unbundle_bundle_uri(ctx, uri, nth, out, out_fd);
+	ret = unbundle_bundle_uri(ctx, uri, nth, out, out_fd, bundle_oids);
 
 	if (finish_command(&cmd)) {
 		ret = error("fetch-pack: unable to finish http-fetch");
@@ -1704,7 +1701,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 
 	if (bundle_uri->nr) {
 		struct get_bundle_uri_ctx ctx = GET_BUNDLE_URI_CTX_INIT;
-		int ret = get_bundle_uri_start(r, &ctx, bundle_uri, negotiator);
+		int ret = get_bundle_uri_start(r, &ctx, bundle_uri);
 		int nr = bundle_uri->nr;
 		
 		if (ret < 0) 
@@ -1713,8 +1710,10 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 
 		for (i = 0; i < nr; i++) {
 			struct string_list_item item = bundle_uri->items[i];
+			struct oid_array bundle_oids = OID_ARRAY_INIT;
+			int j;
 
-			ret = get_bundle_uri(&ctx, i, &item);
+			ret = get_bundle_uri(&ctx, i, &item, &bundle_oids);
 			if (ret < 0) {
 				error(Q_("could not get the %dst bundle URI",
 					 "could not get the %dth bundle URI",
@@ -1722,6 +1721,9 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				      i);
 				break;
 			}
+
+			for (j = 0; j < bundle_oids.nr; j++)
+				rev_list_insert_ref(negotiator, &bundle_oids.oid[j]);
 		}
 
 		if (nr) {

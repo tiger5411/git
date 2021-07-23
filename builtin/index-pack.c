@@ -1761,7 +1761,6 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
-		fprintf(stderr, "trying %d/%s\n", i, argv[i]);
 
 		if (*arg == '-') {
 			if (!strcmp(arg, "--stdin")) {
