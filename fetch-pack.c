@@ -1013,26 +1013,24 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 }
 
 static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
-			       const char *bundle_file)
+			       const char *bundle_uri, FILE *in, int in_fd)
 {
 	struct bundle_header header = BUNDLE_HEADER_INIT;
-	int bundle_fd = -1;
-	//struct child_process cmd = CHILD_PROCESS_INIT;
 	int ret = 0;
 	struct string_list_item *item;
 
-	bundle_fd = read_bundle_header(bundle_file, &header);
-	if (bundle_fd < 0) {
-		ret = error("could not read_bundle_header(%s)", bundle_file);
+	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
+	if (ret < 0) {
+		ret = error("could not read_bundle_header(%s)", bundle_uri);
 		goto cleanup;
 	}
 
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
-		lseek(bundle_fd, 0, SEEK_SET);
+		lseek(in_fd, 0, SEEK_SET);
 
-	ret = unbundle(ctx->r, &header, bundle_fd, 1);
+	ret = unbundle(ctx->r, &header, in_fd, 1);
 	if (ret < 0) {
-		error("could not unbundle(%s)", bundle_file);
+		error("could not unbundle(%s)", bundle_uri);
 		goto cleanup;
 	}
 
@@ -1070,26 +1068,35 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 	struct strbuf tempfile = STRBUF_INIT;
 	const char *tmpdir_buf = ctx->tmpdir_buf;
 	int ret = 0;
+	const char *uri = item->string;
+	FILE *out;
+	int out_fd;
 
 	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir_buf, nth);
 	strvec_push(&cmd.args, "curl");
-	//strvec_push(&cmd.args, "-o");
-	//strvec_push(&cmd.args, tempfile.buf);
+	strvec_push(&cmd.args, "--silent");
+	strvec_push(&cmd.args, "--output");
+	strvec_push(&cmd.args, "-");
 	strvec_push(&cmd.args, item->string);
 	cmd.git_cmd = 0;
 	cmd.no_stdin = 1;
+	cmd.out = -1;
 
 	if (start_command(&cmd)) {
 		ret = error("fetch-pack: unable to spawn http-fetch");
 		goto cleanup;
 	}
 
+	out = xfdopen(cmd.out, "r");
+	out_fd = fileno(out);
+	ret = unbundle_bundle_uri(ctx, uri, out, out_fd);
+
 	if (finish_command(&cmd)) {
 		ret = error("fetch-pack: unable to finish http-fetch");
 		goto cleanup;
 	}
 
-	ret = unbundle_bundle_uri(ctx, tempfile.buf);
+
 
 cleanup:
 	strbuf_release(&tempfile);
