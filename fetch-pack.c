@@ -1011,11 +1011,34 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 	return 0;
 }
 
-static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx)
+static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
+			       const char *bundle_file)
 {
 	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int bundle_fd = -1;
 	struct child_process cmd = CHILD_PROCESS_INIT;
+	int ret = 0;
+	struct string_list_item *item;
+
+	bundle_fd = read_bundle_header(bundle_file, &header);
+	if (bundle < 0) {
+		ret = error("could not read_bundle_header(%s)", bundle_file);
+		goto cleanup;
+	}
+
+	ret = unbundle(ctx->r, &header, bundle_fd, 1);
+	if (ret < 0) {
+		error("could not unbundle(%s)", bundle_file);
+		goto cleanup;
+	}
+
+	for_each_string_list_item(item, &header->references) {
+		const char *name = item.string;;
+		struct object_id *oid = item.util;
+
+		printf("%s %s\n", oid_to_hex(oid), name);
+	}
+	bundle_header_release(&header);
 
 	die("have a %s at this point", tempfile.buf);
 	strvec_push(&cmd.args, "bundle");
@@ -1030,8 +1053,10 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx)
 	if (finish_command(&cmd))
 		return error("fetch-pack: unable to finish git bundle unbundle");
 
+cleanup:
 
-	return 0;
+
+	return ret;
 }
 
 static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
