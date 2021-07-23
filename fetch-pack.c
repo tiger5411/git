@@ -1016,6 +1016,37 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 			  struct string_list_item *item)
 {
+	struct child_process cmd = CHILD_PROCESS_INIT;
+	struct strbuf tempfile = STRBUF_INIT;
+	const char *tmpdir = ctx->tmpdir_buf->buf;
+
+	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir, nth);
+	strvec_push(&cmd.args, "http-fetch");
+	strvec_push(&cmd.args, "-o");
+	strvec_push(&cmd.args, tempfile.buf);
+	strvec_push(&cmd.args, item->string);
+	cmd.git_cmd = 1;
+	cmd.no_stdin = 1;
+
+	if (start_command(&cmd))
+		return error("fetch-pack: unable to spawn http-fetch");
+
+	if (finish_command(&cmd))
+		return error("fetch-pack: unable to finish http-fetch");
+
+	die("have a %s at this point", tempfile.buf);
+	strvec_push(&cmd.args, "bundle");
+	strvec_push(&cmd.args, "unbundle");
+	strvec_push(&cmd.args, tempfile.buf);
+	cmd.git_cmd = 1;
+	cmd.no_stdin = 1;
+
+	if (start_command(&cmd))
+		return error("fetch-pack: unable to spawn git bundle unbundle");
+
+	if (finish_command(&cmd))
+		return error("fetch-pack: unable to finish git bundle unbundle");
+
 	return 0;
 }
 
