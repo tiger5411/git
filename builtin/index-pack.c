@@ -122,6 +122,8 @@ static int strict;
 static int do_fsck_object;
 static struct fsck_options fsck_options = FSCK_OPTIONS_MISSING_GITMODULES;
 static int verbose;
+static const char *progress_title_parse;
+static const char *progress_title_resolve;
 static int show_resolving_progress;
 static int show_stat;
 static int check_self_contained_and_connected;
@@ -1159,6 +1161,7 @@ static void parse_pack_objects(unsigned char *hash)
 
 	if (verbose)
 		progress = start_progress(
+				progress_title_parse ? progress_title_parse :
 				from_stdin ? _("Receiving objects") : _("Indexing objects"),
 				nr_objects);
 	for (i = 0; i < nr_objects; i++) {
@@ -1236,7 +1239,9 @@ static void resolve_deltas(void)
 	QSORT(ref_deltas, nr_ref_deltas, compare_ref_delta_entry);
 
 	if (verbose || show_resolving_progress)
-		progress = start_progress(_("Resolving deltas"),
+		progress = start_progress(
+				progress_title_resolve ? progress_title_resolve :
+				_("Resolving deltas"),
 					  nr_ref_deltas + nr_ofs_deltas);
 
 	nr_dispatched = 0;
@@ -1756,6 +1761,7 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
+		fprintf(stderr, "trying %d/%s\n", i, argv[i]);
 
 		if (*arg == '-') {
 			if (!strcmp(arg, "--stdin")) {
@@ -1808,6 +1814,14 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 				input_len = sizeof(*hdr);
 			} else if (!strcmp(arg, "-v")) {
 				verbose = 1;
+			} else if (!strcmp(arg, "--progress-title-parse")) {
+				if (progress_title_parse || (i+1) >= argc)
+					usage(index_pack_usage);
+				progress_title_parse = argv[++i];
+			} else if (!strcmp(arg, "--progress-title-resolve")) {
+				if (progress_title_resolve || (i+1) >= argc)
+					usage(index_pack_usage);
+				progress_title_resolve = argv[++i];
 			} else if (!strcmp(arg, "--show-resolving-progress")) {
 				show_resolving_progress = 1;
 			} else if (!strcmp(arg, "--report-end-of-input")) {
@@ -1836,8 +1850,9 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 				rev_index = 1;
 			} else if (!strcmp(arg, "--no-rev-index")) {
 				rev_index = 0;
-			} else
+			} else {
 				usage(index_pack_usage);
+			}
 			continue;
 		}
 

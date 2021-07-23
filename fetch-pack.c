@@ -1004,12 +1004,16 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 }
 
 static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
-			       const char *bundle_uri, FILE *in, int in_fd)
+			       const char *bundle_uri, unsigned int nth,
+			       FILE *in, int in_fd)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	struct bundle_header header = BUNDLE_HEADER_INIT;
 	int ret = 0;
 	struct string_list_item *item;
+	struct oidset bundle_oids = OIDSET_INIT;
+	struct strbuf progress1 = STRBUF_INIT;
+	struct strbuf progress2 = STRBUF_INIT;
 
 	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
 	if (ret < 0) {
@@ -1018,20 +1022,41 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 	}
 
 	for_each_string_list_item(item, &header.references) {
-		const char *name = item->string;
+		/*
+		 * The bundle's idea of the ref name is
+		 * item->string.
+		 * 
+		 * Here's where we could do concurrent negotiation
+		 * with the server (and possibly start the fetch!)
+		 * before or while we unpack the bundle with
+		 * index-pack. The negotiator would need a small
+		 * change to trust arbitrary OIDs instead of assuming
+		 * it has existing in-repo "struct commit *", but
+		 * ad-hoc testing reveals that it'll work & speed up
+		 * the fetch even more.
+		 */
 		struct object_id *oid = item->util;
 
-		printf("got via header: %s %s\n", oid_to_hex(oid), name);
+		oidset_insert(&bundle_oids, oid);
 	}
 	bundle_header_release(&header);
 
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
 		lseek(in_fd, 0, SEEK_SET);
 
+	strbuf_addf(&progress1,   "Fetching bundle URI (%d/%d)", nth + 1, ctx->nr);
+	strbuf_addf(&progress2, "Indexing bundle URI (%d/%d)", nth + 1, ctx->nr);
+
 	strvec_push(&cmd.args, "index-pack");
 	strvec_push(&cmd.args, "--fix-thin");
 	strvec_push(&cmd.args, "--stdin");
 	strvec_push(&cmd.args, "-v");
+	strvec_push(&cmd.args, "--progress-title-parse");
+	strvec_push(&cmd.args, progress1.buf);
+	strvec_push(&cmd.args, "--progress-title-resolve");
+	strvec_push(&cmd.args, progress2.buf);
+
+
 	cmd.git_cmd = 1;
 	cmd.in = in_fd;
 	cmd.no_stdout = 1;
@@ -1047,22 +1072,7 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 		goto cleanup;
 	}
 
-	/* die("have a %s at this point", tempfile.buf); */
-	/* strvec_push(&cmd.args, "bundle"); */
-	/* strvec_push(&cmd.args, "unbundle"); */
-	/* strvec_push(&cmd.args, tempfile.buf); */
-	/* cmd.git_cmd = 1; */
-	/* cmd.no_stdin = 1; */
-
-	/* if (start_command(&cmd)) */
-	/* 	return error("fetch-pack: unable to spawn git bundle unbundle"); */
-
-	/* if (finish_command(&cmd)) */
-	/* 	return error("fetch-pack: unable to finish git bundle unbundle"); */
-
 cleanup:
-
-
 	return ret;
 }
 
@@ -1092,7 +1102,7 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 
 	out = xfdopen(cmd.out, "r");
 	out_fd = fileno(out);
-	ret = unbundle_bundle_uri(ctx, uri, out, out_fd);
+	ret = unbundle_bundle_uri(ctx, uri, nth, out, out_fd);
 
 	if (finish_command(&cmd)) {
 		ret = error("fetch-pack: unable to finish http-fetch");
