@@ -1106,8 +1106,6 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 		goto cleanup;
 	}
 
-
-
 cleanup:
 	strbuf_release(&tempfile);
 
