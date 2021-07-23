@@ -1004,35 +1004,18 @@ static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx 
 
 	errno = 0;
 	ctx->tmpdir = tmp_bundledir_create();
-	if (!ctx->tmpdir) {
-		error_errno("unable to create temporary object directory");
-		return -1;
-	}
+	if (!ctx->tmpdir)
+		return error_errno("unable to create temporary object directory");
 
 	ctx->tmpdir_buf = tmp_objdir_path(ctx->tmpdir);		
 	return 0;
 }
 
-static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
-			  struct string_list_item *item)
+static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx)
 {
+	struct bundle_header header = BUNDLE_HEADER_INIT;
+	int bundle_fd = -1;
 	struct child_process cmd = CHILD_PROCESS_INIT;
-	struct strbuf tempfile = STRBUF_INIT;
-	const char *tmpdir = ctx->tmpdir_buf->buf;
-
-	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir, nth);
-	strvec_push(&cmd.args, "http-fetch");
-	strvec_push(&cmd.args, "-o");
-	strvec_push(&cmd.args, tempfile.buf);
-	strvec_push(&cmd.args, item->string);
-	cmd.git_cmd = 1;
-	cmd.no_stdin = 1;
-
-	if (start_command(&cmd))
-		return error("fetch-pack: unable to spawn http-fetch");
-
-	if (finish_command(&cmd))
-		return error("fetch-pack: unable to finish http-fetch");
 
 	die("have a %s at this point", tempfile.buf);
 	strvec_push(&cmd.args, "bundle");
@@ -1047,7 +1030,42 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 	if (finish_command(&cmd))
 		return error("fetch-pack: unable to finish git bundle unbundle");
 
+
 	return 0;
+}
+
+static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
+			  struct string_list_item *item)
+{
+	struct child_process cmd = CHILD_PROCESS_INIT;
+	struct strbuf tempfile = STRBUF_INIT;
+	const char *tmpdir = ctx->tmpdir_buf->buf;
+	int ret = 0;
+
+	strbuf_addf(&tempfile, "%s/%d.bundle", tmpdir, nth);
+	strvec_push(&cmd.args, "http-fetch");
+	strvec_push(&cmd.args, "-o");
+	strvec_push(&cmd.args, tempfile.buf);
+	strvec_push(&cmd.args, item->string);
+	cmd.git_cmd = 1;
+	cmd.no_stdin = 1;
+
+	if (start_command(&cmd)) {
+		ret = error("fetch-pack: unable to spawn http-fetch");
+		goto cleanup;
+	}
+
+	if (finish_command(&cmd)) {
+		ret = error("fetch-pack: unable to finish http-fetch");
+		goto cleanup;
+	}
+
+	ret = unbundle_bundle_uri(tempfile);
+
+cleanup:
+	strbuf_release(&tempfile);
+
+	return ret;
 }
 
 static int get_bundle_uri_finish(struct get_bundle_uri_ctx *ctx)
