@@ -1716,8 +1716,8 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 			if (ret < 0) {
 				error(Q_("could not get the %dst bundle URI",
 					 "could not get the %dth bundle URI",
-					 i),
-				      i);
+					 i + 1),
+				      i + 1);
 				break;
 			}
 
