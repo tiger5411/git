@@ -24,6 +24,12 @@ struct fetch_pack_args {
 	 */
 	const struct oid_array *negotiation_tips;
 
+	/*
+	 * A pointer to the already populated transport.bundle_uri
+	 * struct.
+	 */
+	struct string_list *bundle_uri;
+
 	unsigned deepen_relative:1;
 	unsigned quiet:1;
 	unsigned keep_pack:1;
