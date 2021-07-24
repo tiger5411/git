@@ -25,6 +25,7 @@
 #include "shallow.h"
 #include "commit-reach.h"
 #include "commit-graph.h"
+#include "bundle.h"
 
 static int transfer_unpack_limit = -1;
 static int fetch_unpack_limit = -1;
@@ -984,6 +985,135 @@ static int get_pack(struct fetch_pack_args *args,
 	return 0;
 }
 
+struct get_bundle_uri_ctx {
+	struct repository *r;
+	unsigned int nr;
+};
+#define GET_BUNDLE_URI_CTX_INIT { 0 }
+
+static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx *ctx,
+				struct string_list *bundle_uri)
+{
+	ctx->r = r;
+	ctx->nr = bundle_uri->nr;
+
+	return 0;
+}
+
+static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
+			       const char *bundle_uri, unsigned int nth,
+			       FILE *in, int in_fd,
+			       struct oid_array *bundle_oids)
+{
+	struct child_process cmd = CHILD_PROCESS_INIT;
+	struct bundle_header header = BUNDLE_HEADER_INIT;
+	int ret = 0;
+	struct string_list_item *item;
+	struct strbuf progress_title = STRBUF_INIT;
+
+	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
+	if (ret < 0) {
+		ret = error("could not read_bundle_header(%s)", bundle_uri);
+		goto cleanup;
+	}
+
+	for_each_string_list_item(item, &header.references) {
+		/*
+		 * The bundle's idea of the ref name is
+		 * item->string.
+		 *
+		 * Here's where we could do concurrent negotiation
+		 * with the server (and possibly start the fetch!)
+		 * before or while we unpack the bundle with
+		 * index-pack. The negotiator would need a small
+		 * change to trust arbitrary OIDs instead of assuming
+		 * it has existing in-repo "struct commit *", but
+		 * ad-hoc testing reveals that it'll work & speed up
+		 * the fetch even more.
+		 */
+		struct object_id *oid = item->util;
+
+		oid_array_append(bundle_oids, oid);
+	}
+	bundle_header_release(&header);
+
+	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
+		lseek(in_fd, 0, SEEK_SET);
+
+	strbuf_addf(&progress_title, "Receiving bundle (%d/%d)", nth + 1, ctx->nr);
+
+	strvec_push(&cmd.args, "index-pack");
+	strvec_push(&cmd.args, "--fix-thin");
+	strvec_push(&cmd.args, "--stdin");
+	strvec_push(&cmd.args, "--check-self-contained-and-connected");
+	strvec_push(&cmd.args, "-v");
+	strvec_push(&cmd.args, "--progress-title");
+	strvec_push(&cmd.args, progress_title.buf);
+
+	cmd.git_cmd = 1;
+	cmd.in = in_fd;
+	cmd.no_stdout = 1;
+	cmd.git_cmd = 1;
+
+	if (start_command(&cmd)) {
+		ret = error(_("fetch-pack: unable to spawn index-pack"));
+		goto cleanup;
+	}
+
+	if (finish_command(&cmd)) {
+		ret = error("fetch-pack: unable to finish index-pack");
+		goto cleanup;
+	}
+
+cleanup:
+	return ret;
+}
+
+static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
+			  struct string_list_item *item,
+			  struct oid_array *bundle_oids)
+{
+	struct child_process cmd = CHILD_PROCESS_INIT;
+	struct strbuf tempfile = STRBUF_INIT;
+	int ret = 0;
+	const char *uri = item->string;
+	FILE *out;
+	int out_fd;
+
+	strvec_push(&cmd.args, "curl");
+	strvec_push(&cmd.args, "--silent");
+	strvec_push(&cmd.args, "--output");
+	strvec_push(&cmd.args, "-");
+	strvec_push(&cmd.args, item->string);
+	cmd.git_cmd = 0;
+	cmd.no_stdin = 1;
+	cmd.out = -1;
+
+	if (start_command(&cmd)) {
+		ret = error("fetch-pack: unable to spawn http-fetch");
+		goto cleanup;
+	}
+
+	out = xfdopen(cmd.out, "r");
+	out_fd = fileno(out);
+	ret = unbundle_bundle_uri(ctx, uri, nth, out, out_fd, bundle_oids);
+
+	if (finish_command(&cmd)) {
+		ret = error("fetch-pack: unable to finish http-fetch");
+		goto cleanup;
+	}
+
+cleanup:
+	strbuf_release(&tempfile);
+
+	return ret;
+}
+
+static int get_bundle_uri_finish(struct get_bundle_uri_ctx *ctx)
+{
+	return 0;
+}
+
 static int cmp_ref_by_name(const void *a_, const void *b_)
 {
 	const struct ref *a = *((const struct ref **)a_);
@@ -1558,9 +1688,49 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	struct string_list packfile_uris = STRING_LIST_INIT_DUP;
 	int i;
 	struct strvec index_pack_args = STRVEC_INIT;
+	struct string_list *bundle_uri = args->bundle_uri;
 
 	negotiator = &negotiator_alloc;
 	fetch_negotiator_init(r, negotiator);
+
+	if (bundle_uri->nr) {
+		struct get_bundle_uri_ctx ctx = GET_BUNDLE_URI_CTX_INIT;
+		int ret = get_bundle_uri_start(r, &ctx, bundle_uri);
+		int nr = bundle_uri->nr;
+
+		trace2_region_enter("fetch-pack", "bundle-uri", the_repository);
+
+		if (ret < 0)
+			error(_("fetch-pack: could not set up bundle URI"));
+
+		for (i = 0; i < nr; i++) {
+			struct string_list_item item = bundle_uri->items[i];
+			struct oid_array bundle_oids = OID_ARRAY_INIT;
+			int j;
+
+			ret = get_bundle_uri(&ctx, i, &item, &bundle_oids);
+			if (ret < 0) {
+				error(_("could not get the bundle URI #%d"), i);
+				break;
+			}
+
+			for (j = 0; j < bundle_oids.nr; j++) {
+				struct object_id *oid = &bundle_oids.oid[j];
+				struct commit *c = deref_without_lazy_fetch(oid, 0);
+
+				print_verbose(args, _("got %s via bundle #%d (#%dth)"),
+					      oid_to_hex(oid), i, j);
+
+				negotiator->known_common(negotiator, c);
+				mark_complete(oid);
+			}
+		}
+
+		if (nr && get_bundle_uri_finish(&ctx) < 0)
+			error(_("fetch-pack: could not finish up bundle URI"));
+
+		trace2_region_leave("fetch-pack", "bundle-uri", the_repository);
+	}
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE);
