@@ -426,6 +426,7 @@ static int fetch_refs_via_pack(struct transport *transport,
 	args.server_options = transport->server_options;
 	args.negotiation_tips = data->options.negotiation_tips;
 	args.reject_shallow_remote = transport->smart_options->reject_shallow;
+	args.bundle_uri = &transport->bundle_uri;
 
 	if (!data->got_remote_heads) {
 		int i;
