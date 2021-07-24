@@ -1502,6 +1502,7 @@ int transport_fetch_refs(struct transport *transport, struct ref *refs)
 
 struct config_cb {
 	struct transport *transport;
+	int disabled;
 	int configured;
 	int ret;
 };
@@ -1512,7 +1513,15 @@ static int bundle_uri_config(const char *var, const char *value, void *data)
 	struct transport *transport = cb->transport;
 	struct string_list *uri = &transport->bundle_uri;
 
-	if (!strcmp(var, "transfer.injectbundleuri")) {
+	if (!strcmp(var, "transfer.bundleuri")) {
+		cb->disabled = !git_config_bool(var, value);
+		if (cb->disabled)
+			bundle_uri_string_list_clear(uri);
+		return 0;
+	}
+
+	if (!cb->disabled &&
+	    !strcmp(var, "transfer.injectbundleuri")) {
 		cb->configured = 1;
 		if (!value)
 			cb->ret = error(_("bad (empty) transfer.injectBundleURI"));
@@ -1536,6 +1545,10 @@ int transport_get_remote_bundle_uri(struct transport *transport, int quiet)
 		return 0;
 
 	git_config(bundle_uri_config, &cb);
+
+	/* Don't use bundle-uri at all */
+	if (cb.disabled)
+		return 0;
 
 	/* Our own config can fake it up with transport.injectBundleURI */
 	if (cb.configured)
