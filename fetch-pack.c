@@ -26,6 +26,7 @@
 #include "commit-reach.h"
 #include "commit-graph.h"
 #include "sigchain.h"
+#include "bundle.h"
 
 static int transfer_unpack_limit = -1;
 static int fetch_unpack_limit = -1;
@@ -1025,6 +1026,133 @@ static int get_pack(struct fetch_pack_args *args,
 	return 0;
 }
 
+static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
+			       unsigned int total_nr, FILE *in, int in_fd,
+			       struct oid_array *bundle_oids,
+			       unsigned int use_thin_pack)
+{
+	struct child_process cmd = CHILD_PROCESS_INIT;
+	struct bundle_header header = BUNDLE_HEADER_INIT;
+	int ret = 0;
+	struct string_list_item *item;
+	struct strbuf progress_title = STRBUF_INIT;
+	int code;
+
+	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
+	if (ret < 0) {
+		ret = error("could not read_bundle_header(%s)", bundle_uri);
+		goto cleanup;
+	}
+
+	for_each_string_list_item(item, &header.references) {
+		/*
+		 * The bundle's idea of the ref name is
+		 * item->string.
+		 *
+		 * Here's where we could do concurrent negotiation
+		 * with the server (and possibly start the fetch!)
+		 * before or while we unpack the bundle with
+		 * index-pack.
+		 *
+		 * The negotiator would need a small change to trust
+		 * arbitrary OIDs instead of assuming it has existing
+		 * in-repo "struct commit *", but ad-hoc testing
+		 * reveals that it'll work & speed up the fetch even
+		 * more, as we could proceed in parallel with the full
+		 * bundle fetching as soon as we get the headers.
+		 */
+		struct object_id *oid = item->util;
+
+		oid_array_append(bundle_oids, oid);
+	}
+
+	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
+		lseek(in_fd, 0, SEEK_SET);
+
+	strbuf_addf(&progress_title, "Receiving bundle (%d/%d)", nth, total_nr);
+	strvec_pushl(&cmd.args, "index-pack", "--stdin", "-v",
+		     "--progress-title", progress_title.buf, NULL);
+
+	if (header.prerequisites.nr && use_thin_pack)
+		strvec_push(&cmd.args, "--fix-thin");
+	strvec_push(&cmd.args, "--check-self-contained-and-connected");
+	add_index_pack_keep_option(&cmd.args);
+
+	cmd.git_cmd = 1;
+	cmd.in = in_fd;
+	cmd.no_stdout = 1;
+	cmd.git_cmd = 1;
+
+	if (start_command(&cmd)) {
+		ret = error(_("fetch-pack: unable to spawn index-pack"));
+		goto cleanup;
+	}
+
+	code = finish_command(&cmd);
+
+	if (header.prerequisites.nr && code == 1)
+		/*
+		 * index-pack returns -1 on
+		 * --check-self-contained-and-connected to indicate
+		 * that the pack was indeed not self contained and
+		 * connected. We know from the bundle header
+		 * prerequisites.
+		 */
+		code = 0;
+
+	if (code) {
+		ret = error(_("fetch-pack: unable to finish index-pack, exited with %d"), code);
+		goto cleanup;
+	}
+
+cleanup:
+	strbuf_release(&progress_title);
+	bundle_header_release(&header);
+	return ret;
+}
+
+static int get_bundle_uri(struct string_list_item *item, unsigned int nth,
+			  unsigned int total_nr, struct oid_array *bundle_oids,
+			  unsigned int use_thin_pack)
+{
+	struct child_process cmd = CHILD_PROCESS_INIT;
+	struct strbuf tempfile = STRBUF_INIT;
+	int ret = 0;
+	const char *uri = item->string;
+	FILE *out;
+	int out_fd;
+
+	strvec_push(&cmd.args, "curl");
+	strvec_push(&cmd.args, "--silent");
+	strvec_push(&cmd.args, "--output");
+	strvec_push(&cmd.args, "-");
+	strvec_push(&cmd.args, "--");
+	strvec_push(&cmd.args, item->string);
+	cmd.git_cmd = 0;
+	cmd.no_stdin = 1;
+	cmd.out = -1;
+
+	if (start_command(&cmd)) {
+		ret = error("fetch-pack: unable to spawn http-fetch");
+		goto cleanup;
+	}
+
+	out = xfdopen(cmd.out, "r");
+	out_fd = fileno(out);
+	ret = unbundle_bundle_uri(uri, nth, total_nr, out, out_fd,
+				  bundle_oids, use_thin_pack);
+
+	if (finish_command(&cmd)) {
+		ret = error("fetch-pack: unable to finish http-fetch");
+		goto cleanup;
+	}
+
+cleanup:
+	strbuf_release(&tempfile);
+
+	return ret;
+}
+
 static int cmp_ref_by_name(const void *a_, const void *b_)
 {
 	const struct ref *a = *((const struct ref **)a_);
@@ -1586,6 +1714,130 @@ static void do_check_stateless_delimiter(int stateless_rpc,
 				  _("git fetch-pack: expected response end packet"));
 }
 
+static int get_bundle_uri_add_known_common(struct string_list_item *item,
+					   unsigned int nth, unsigned int total_nr,
+					   struct fetch_negotiator *negotiator,
+					   struct fetch_pack_args *args,
+					   unsigned int use_thin_pack)
+{
+	int i;
+	struct oid_array bundle_oids = OID_ARRAY_INIT;
+
+	/*
+	 * We don't use OBJECT_INFO_QUICK here unlike in the rest of
+	 * the fetch routines, that's because the rest of them don't
+	 * need to consider a commit object that's just been
+	 * downloaded for further negotiation, but bundle-uri does for
+	 * adding newly downloaded OIDs to the negotiator.
+	 */
+	unsigned oi_flags = OBJECT_INFO_SKIP_FETCH_OBJECT;
+
+	if (get_bundle_uri(item, nth, total_nr, &bundle_oids, use_thin_pack) < 0)
+		return error(_("could not get the bundle URI #%d"), nth);
+
+	for (i = 0; i < bundle_oids.nr; i++) {
+		struct object_id *oid = &bundle_oids.oid[i];
+		enum object_type type = OBJ_NONE;
+		struct commit *c = deref_without_lazy_fetch_extended(oid, 0,
+								     &type,
+								     oi_flags);
+		if (!c) {
+			if (type == OBJ_BLOB || type == OBJ_TREE) {
+				print_verbose(args, "have %s %s via bundle-uri (ignoring due to type)",
+					      oid_to_hex(oid), type_name(type));
+				continue;
+			} else if (type) {
+				/*
+				 * OBJ_TAG should have been peeled,
+				 * and OBJ_COMMIT should have a
+				 * non-NULL "c".
+				 *
+				 * Should be a BUG() if we were not
+				 * bending over backwards to make
+				 * bundle-uri soft-fail.
+				 */
+				return error(_("bundle-uri says it has %s, got it at unexpected type %s"),
+					     oid_to_hex(oid), type_name(type));
+			}
+		}
+
+		print_verbose(args, "have %s %s via bundle-uri",
+			      oid_to_hex(oid), type_name(type));
+
+		negotiator->known_common(negotiator, c);
+		mark_complete(oid);
+	}
+	return 0;
+}
+
+static void do_fetch_pack_v2_bundle_uri(struct fetch_pack_args *args,
+					struct string_list  *bundle_uri,
+					struct fetch_negotiator *negotiator)
+{
+	struct string_list_item *item;
+	struct string_list list = STRING_LIST_INIT_NODUP;
+	struct string_list default_protocols = STRING_LIST_INIT_NODUP;
+	struct string_list *ok_protocols;
+
+	if (!bundle_uri)
+		return;
+
+	if (!bundle_uri->nr)
+		return;
+
+	if (uri_protocols.nr) {
+		ok_protocols = &uri_protocols;
+	} else {
+		string_list_append(&default_protocols, "http");
+		string_list_append(&default_protocols, "https");
+		ok_protocols = &default_protocols;
+	}
+
+	for_each_string_list_item(item, bundle_uri) {
+		const char *uri = item->string;
+		int protocol_ok = 0;
+		struct string_list_item *item2;
+
+		for_each_string_list_item(item2, ok_protocols) {
+			const char *s = item2->string;
+			const char *p;
+
+			if (skip_prefix(item->string, s, &p) &&
+			    starts_with(p, "://")) {
+				protocol_ok = 1;
+				break;
+			}
+		}
+
+		if (!protocol_ok) {
+			print_verbose(args, "skipping bundle-uri not on protocol whitelist: %s",
+				      item->string);
+			continue;
+		}
+
+		string_list_append(&list, uri)->util = item->util;
+	}
+
+	if (list.nr) {
+		int i;
+		unsigned int total_nr = list.nr;
+
+		trace2_region_enter("fetch-pack", "bundle-uri", the_repository);
+		for (i = 0; i < total_nr; i++) {
+			struct string_list_item item = list.items[i];
+			unsigned int nth = i + 1;
+
+			get_bundle_uri_add_known_common(&item, nth, total_nr,
+							negotiator, args,
+							args->use_thin_pack);
+		}
+		trace2_region_leave("fetch-pack", "bundle-uri", the_repository);
+	}
+
+	string_list_clear(&default_protocols, 0);;
+}
+
+
 static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				    int fd[2],
 				    const struct ref *orig_ref,
@@ -1609,12 +1861,15 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	struct string_list packfile_uris = STRING_LIST_INIT_DUP;
 	int i;
 	struct strvec index_pack_args = STRVEC_INIT;
+	struct string_list *bundle_uri = args->bundle_uri;
 
 	negotiator = &negotiator_alloc;
 	if (args->refetch)
 		fetch_negotiator_init_noop(negotiator);
 	else
 		fetch_negotiator_init(r, negotiator);
+
+	do_fetch_pack_v2_bundle_uri(args, bundle_uri, negotiator);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
