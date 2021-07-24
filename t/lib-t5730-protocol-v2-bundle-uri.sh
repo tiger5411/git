@@ -7,6 +7,8 @@ case "$T5730_PROTOCOL" in
 file)
 	T5730_PARENT=file_parent
 	T5730_URI="file://$PWD/file_parent"
+	T5730_URI_BDL_PROTO="file://"
+	T5730_URI_BDL="$T5730_URI_BDL_PROTO$PWD/file_parent"
 	T5730_BUNDLE_URI="$T5730_URI/fake.bdl"
 	test_set_prereq T5730_FILE
 	;;
@@ -15,6 +17,8 @@ git)
 	start_git_daemon --export-all --enable=receive-pack
 	T5730_PARENT="$GIT_DAEMON_DOCUMENT_ROOT_PATH/parent"
 	T5730_URI="$GIT_DAEMON_URL/parent"
+	T5730_URI_BDL_PROTO="file://"
+	T5730_URI_BDL="$T5730_URI_BDL_PROTO$GIT_DAEMON_DOCUMENT_ROOT_PATH/parent"
 	T5730_BUNDLE_URI="https://example.com/fake.bdl"
 	test_set_prereq T5730_GIT
 	;;
@@ -24,6 +28,8 @@ http)
 	T5730_PARENT="$HTTPD_DOCUMENT_ROOT_PATH/http_parent"
 	T5730_URI="$HTTPD_URL/smart/http_parent"
 	T5730_BUNDLE_URI="https://example.com/fake.bdl"
+	T5730_URI_BDL_PROTO="http://"
+	T5730_URI_BDL="$HTTPD_URL/dumb/http_parent"
 	test_set_prereq T5730_HTTP
 	;;
 *)
@@ -33,7 +39,20 @@ esac
 
 test_expect_success "setup protocol v2 $T5730_PROTOCOL:// tests" '
 	git init "$T5730_PARENT" &&
-	test_commit -C "$T5730_PARENT" one
+	test_commit -C "$T5730_PARENT" one &&
+	test_commit -C "$T5730_PARENT" two &&
+	test_commit -C "$T5730_PARENT" three &&
+	test_commit -C "$T5730_PARENT" four &&
+	test_commit -C "$T5730_PARENT" five &&
+	test_commit -C "$T5730_PARENT" six &&
+
+	mkdir "$T5730_PARENT"/bdl &&
+	git -C "$T5730_PARENT" bundle create bdl/1.bdl one &&
+	git -C "$T5730_PARENT" bundle create bdl/1-2.bdl one..two &&
+	git -C "$T5730_PARENT" bundle create bdl/2-3.bdl two..three &&
+	git -C "$T5730_PARENT" bundle create bdl/3-4.bdl three..four &&
+	git -C "$T5730_PARENT" bundle create bdl/4-5.bdl four..five &&
+	git -C "$T5730_PARENT" bundle create bdl/5-6.bdl five..six
 '
 
 # Poor man's URI escaping. Good enough for the test suite whose trash
@@ -316,4 +335,90 @@ test_expect_success "ls-remote-bundle-uri with bad -c transfer.injectBundleURI p
 	test_must_be_empty out &&
 	test_cmp err.expect err.actual &&
 	test_path_is_missing log
+'
+
+test_cmp_repo_refs() {
+	one="$1"
+	two="$2"
+	shift 2
+
+	git -C "$one" for-each-ref "$@" >expect &&
+	git -C "$two" for-each-ref "$@" >actual &&
+	test_cmp expect actual
+}
+
+test_expect_success "clone with bundle-uri protocol v2 over $T5730_PROTOCOL:// 1.bdl via $T5730_URI_BDL_PROTO" '
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/1.bdl | test_uri_escape)" &&
+
+	test_when_finished "rm -rf log child" &&
+	GIT_TRACE_PACKET="$PWD/log" \
+	git \
+		-c protocol.version=2 \
+		-c fetch.uriProtocols=file,http \
+		clone --verbose --verbose \
+		"$T5730_URI" child >out 2>err &&
+	grep -F "Receiving bundle (1/1)" err &&
+	grep "clone> want " log &&
+	test_cmp_repo_refs "$T5730_PARENT" child refs/heads refs/tags
+'
+
+test_expect_success "fetch with bundle-uri protocol v2 over $T5730_PROTOCOL:// 1.bdl via $T5730_URI_BDL_PROTO" '
+	test_when_finished "rm -f log" &&
+
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/1.bdl | test_uri_escape)" &&
+
+	test_when_finished "rm -rf log child" &&
+	git init --bare child &&
+	git -C child remote add --mirror=fetch origin "$T5730_URI" &&
+	GIT_TRACE_PACKET="$PWD/log" \
+	git -C child \
+		-c protocol.version=2 \
+		-c fetch.uriProtocols=file,http \
+		fetch --verbose --verbose >out 2>err &&
+	# Fetch is not supported yet
+	! grep -F "Receiving bundle (1/1)" err &&
+	grep "fetch> want " log &&
+	test_cmp_repo_refs "$T5730_PARENT" child refs/heads refs/tags
+'
+
+test_expect_success "clone with bundle-uri protocol v2 with $T5730_PROTOCOL:// 1 + 1-2 + [...].bdl via $T5730_URI_BDL_PROTO" '
+	test_when_finished "rm -f log" &&
+
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/1.bdl | test_uri_escape)" &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/1-2.bdl | test_uri_escape)" --add &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/2-3.bdl | test_uri_escape)" --add &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/3-4.bdl | test_uri_escape)" --add &&
+
+	test_when_finished "rm -rf log child" &&
+	GIT_TRACE_PACKET="$PWD/log" \
+	git \
+		-c protocol.version=2 \
+		-c fetch.uriProtocols=file,http \
+		clone --verbose --verbose \
+		"$T5730_URI" child >out 2>err &&
+	grep -F "Receiving bundle (4/4)" err &&
+	test_cmp_repo_refs "$T5730_PARENT" child refs/heads refs/tags &&
+	grep "clone> want " log
+'
+
+test_expect_success "clone with bundle-uri protocol v2 with $T5730_PROTOCOL:// ALL.bdl via $T5730_URI_BDL_PROTO" '
+	test_when_finished "rm -f log" &&
+
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/1.bdl | test_uri_escape)" &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/1-2.bdl | test_uri_escape)" --add &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/2-3.bdl | test_uri_escape)" --add &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/3-4.bdl | test_uri_escape)" --add &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/4-5.bdl | test_uri_escape)" --add &&
+	test_config -C "$T5730_PARENT" uploadpack.bundleURI "$(echo $T5730_URI_BDL/bdl/5-6.bdl | test_uri_escape)" --add &&
+
+	test_when_finished "rm -rf log child" &&
+	GIT_TRACE_PACKET="$PWD/log" \
+	git \
+		-c protocol.version=2 \
+		-c fetch.uriProtocols=file,http \
+		clone --verbose --verbose \
+		"$T5730_URI" child >out 2>err &&
+	grep -F "Receiving bundle (6/6)" err &&
+	test_cmp_repo_refs "$T5730_PARENT" child refs/heads refs/tags &&
+	! grep "clone> want " log
 '
