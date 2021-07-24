@@ -165,7 +165,8 @@ static int cmd_bundle_unbundle(int argc, const char **argv, const char *prefix) 
 	struct option options[] = {
 		OPT_END()
 	};
-	char *bundle_file;
+	char* bundle_file;
+	struct strvec extra_args = STRVEC_INIT;
 
 	argc = parse_options_cmd_bundle(argc, argv, prefix,
 			builtin_bundle_unbundle_usage, options, &bundle_file);
@@ -177,7 +178,7 @@ static int cmd_bundle_unbundle(int argc, const char **argv, const char *prefix) 
 	}
 	if (!startup_info->have_repository)
 		die(_("Need a repository to unbundle."));
-	ret = !!unbundle(the_repository, &header, bundle_fd, 0) ||
+	ret = !!unbundle(the_repository, &header, bundle_fd, &extra_args) ||
 		list_bundle_refs(&header, argc, argv);
 	bundle_header_release(&header);
 cleanup:
