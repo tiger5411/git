@@ -204,7 +204,7 @@ static void known_common(struct fetch_negotiator *n, struct commit *c)
 
 static void add_tip(struct fetch_negotiator *n, struct commit *c)
 {
-	n->known_common = NULL;
+	n->known_common = known_common_BUG;
 	if (c->object.flags & SEEN)
 		return;
 	rev_list_push(n->data, c, 0);
@@ -212,8 +212,8 @@ static void add_tip(struct fetch_negotiator *n, struct commit *c)
 
 static const struct object_id *next(struct fetch_negotiator *n)
 {
-	n->known_common = NULL;
-	n->add_tip = NULL;
+	n->known_common = known_common_BUG;
+	n->add_tip = add_tip_BUG;
 	return get_rev(n->data);
 }
 

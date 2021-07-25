@@ -11,10 +11,13 @@ static void known_common(struct fetch_negotiator *n, struct commit *c)
 static void add_tip(struct fetch_negotiator *n, struct commit *c)
 {
 	/* do nothing */
+	n->known_common = known_common_BUG;
 }
 
 static const struct object_id *next(struct fetch_negotiator *n)
 {
+	n->known_common = known_common_BUG;
+	n->add_tip = add_tip_BUG;
 	return NULL;
 }
 
