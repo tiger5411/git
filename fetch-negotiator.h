@@ -28,6 +28,9 @@ struct fetch_negotiator {
 	 * Once this function is invoked, known_common() cannot be invoked any
 	 * more.
 	 *
+	 * Set "known_common" to "known_common_BUG" in this callback
+	 * to assert the invocation flow.
+	 *
 	 * Indicate that this commit and all its ancestors are to be checked
 	 * for commonality with the server.
 	 */
@@ -36,6 +39,10 @@ struct fetch_negotiator {
 	/*
 	 * Once this function is invoked, known_common() and add_tip() cannot
 	 * be invoked any more.
+	 *
+	 * Set "add_tip" to "add_tip_BUG" in this callback to assert
+	 * the invocation flow, and "known_common" to
+	 * "known_common_BUG" as noted for in add_tip() above.
 	 *
 	 * Return the next commit that the client should send as a "have" line.
 	 */
@@ -55,5 +62,8 @@ struct fetch_negotiator {
 
 void fetch_negotiator_init(struct repository *r,
 			   struct fetch_negotiator *negotiator);
+
+void known_common_BUG(struct fetch_negotiator *, struct commit *);
+void add_tip_BUG(struct fetch_negotiator *, struct commit *);
 
 #endif

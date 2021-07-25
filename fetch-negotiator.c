@@ -23,3 +23,14 @@ void fetch_negotiator_init(struct repository *r,
 		return;
 	}
 }
+
+void known_common_BUG(struct fetch_negotiator *negotiator,
+		      struct commit *commit)
+{
+	BUG("known_common() called after add_tip() and/or next() was called");
+}
+
+void add_tip_BUG(struct fetch_negotiator *negotiator, struct commit *commit)
+{
+	BUG("add_tip() called after next() called");
+}
