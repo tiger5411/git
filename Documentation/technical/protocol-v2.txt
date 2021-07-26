@@ -775,3 +775,8 @@ A client receiving such a a response MAY assume that they can skip
 retrieving the header from a bundle at the indicated URI, and thus
 save themselves and the server(s) the request(s) needed to inspect the
 headers of that bundle or bundles.
+
+bundle-uri SEE ALSO
+^^^^^^^^^^^^^^^^^^^
+
+See the link:bundle-uri.html[Bundle URI Design Notes] for more.
