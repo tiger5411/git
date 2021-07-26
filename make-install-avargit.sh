@@ -151,11 +151,11 @@ suggest_bisect() {
 
 	(
 		cd t &&
-		env \
-			GIT_TEST_HTTPD=1 \
-			GIT_TEST_DEFAULT_HASH=sha256 \
-			make \
-			GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash" \
+		env \\
+			GIT_TEST_HTTPD=1 \\
+			GIT_TEST_DEFAULT_HASH=sha256 \\
+			make \\
+			GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash" \\
 			T="$failed_tests"
 	)
 EOF
