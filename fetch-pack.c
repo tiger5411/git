@@ -996,24 +996,8 @@ static int get_pack(struct fetch_pack_args *args,
 	return 0;
 }
 
-struct get_bundle_uri_ctx {
-	struct repository *r;
-	unsigned int nr;
-};
-#define GET_BUNDLE_URI_CTX_INIT { 0 }
-
-static int get_bundle_uri_start(struct repository *r, struct get_bundle_uri_ctx *ctx,
-				struct string_list *bundle_uri)
-{
-	ctx->r = r;
-	ctx->nr = bundle_uri->nr;
-
-	return 0;
-}
-
-static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
-			       const char *bundle_uri, unsigned int nth,
-			       FILE *in, int in_fd,
+static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
+			       unsigned int total_nr, FILE *in, int in_fd,
 			       struct oid_array *bundle_oids)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
@@ -1021,6 +1005,7 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 	int ret = 0;
 	struct string_list_item *item;
 	struct strbuf progress_title = STRBUF_INIT;
+	int code;
 
 	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
 	if (ret < 0) {
@@ -1051,7 +1036,7 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
 		lseek(in_fd, 0, SEEK_SET);
 
-	strbuf_addf(&progress_title, "Receiving bundle (%d/%d)", nth + 1, ctx->nr);
+	strbuf_addf(&progress_title, "Receiving bundle (%d/%d)", nth, total_nr);
 
 	strvec_push(&cmd.args, "index-pack");
 	strvec_push(&cmd.args, "--fix-thin");
@@ -1071,8 +1056,9 @@ static int unbundle_bundle_uri(struct get_bundle_uri_ctx *ctx,
 		goto cleanup;
 	}
 
-	if (finish_command(&cmd)) {
-		ret = error("fetch-pack: unable to finish index-pack");
+	code = finish_command(&cmd);
+	if (code) {
+		ret = error(_("fetch-pack: unable to finish index-pack, exited with %d"), code);
 		goto cleanup;
 	}
 
@@ -1080,9 +1066,8 @@ cleanup:
 	return ret;
 }
 
-static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
-			  struct string_list_item *item,
-			  struct oid_array *bundle_oids)
+static int get_bundle_uri(struct string_list_item *item, unsigned int nth,
+			  unsigned int total_nr, struct oid_array *bundle_oids)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	struct strbuf tempfile = STRBUF_INIT;
@@ -1095,6 +1080,7 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 	strvec_push(&cmd.args, "--silent");
 	strvec_push(&cmd.args, "--output");
 	strvec_push(&cmd.args, "-");
+	strvec_push(&cmd.args, "--");
 	strvec_push(&cmd.args, item->string);
 	cmd.git_cmd = 0;
 	cmd.no_stdin = 1;
@@ -1107,7 +1093,8 @@ static int get_bundle_uri(struct get_bundle_uri_ctx *ctx, unsigned int nth,
 
 	out = xfdopen(cmd.out, "r");
 	out_fd = fileno(out);
-	ret = unbundle_bundle_uri(ctx, uri, nth, out, out_fd, bundle_oids);
+	ret = unbundle_bundle_uri(uri, nth, total_nr, out, out_fd,
+				  bundle_oids);
 
 	if (finish_command(&cmd)) {
 		ret = error("fetch-pack: unable to finish http-fetch");
@@ -1118,11 +1105,6 @@ cleanup:
 	strbuf_release(&tempfile);
 
 	return ret;
-}
-
-static int get_bundle_uri_finish(struct get_bundle_uri_ctx *ctx)
-{
-	return 0;
 }
 
 static int cmp_ref_by_name(const void *a_, const void *b_)
@@ -1676,6 +1658,62 @@ static void do_check_stateless_delimiter(int stateless_rpc,
 				  _("git fetch-pack: expected response end packet"));
 }
 
+static int get_bundle_uri_add_known_common(struct string_list_item *item,
+					   unsigned int nth, unsigned int total_nr,
+					   struct fetch_negotiator *negotiator,
+					   struct fetch_pack_args *args)
+{
+	int i;
+	struct oid_array bundle_oids = OID_ARRAY_INIT;
+
+	/*
+	 * We don't use OBJECT_INFO_QUICK here unlike in the rest of
+	 * the fetch routines, that's because the rest of them don't
+	 * need to consider a commit object that's just been
+	 * downloaded for further negotiation, but bundle-uri does for
+	 * adding newly downloaded OIDs to the negotiator.
+	 */
+	unsigned oi_flags = OBJECT_INFO_SKIP_FETCH_OBJECT;
+
+	if (get_bundle_uri(item, nth, total_nr, &bundle_oids) < 0)
+		return error(_("could not get the bundle URI #%d"), nth);
+
+	for (i = 0; i < bundle_oids.nr; i++) {
+		struct object_id *oid = &bundle_oids.oid[i];
+		enum object_type type = OBJ_NONE;
+		struct commit *c = deref_without_lazy_fetch_extended(oid, 0,
+								     &type,
+								     oi_flags);
+		if (!c) {
+			if (type == OBJ_BLOB || type == OBJ_TREE) {
+				print_verbose(args, "have %s %s via bundle-uri (ignoring due to type)",
+					      oid_to_hex(oid), type_name(type));
+				continue;
+			} else if (type) {
+				/*
+				 * OBJ_TAG should have been peeled,
+				 * and OBJ_COMMIT should have a
+				 * non-NULL "c".
+				 *
+				 * Should be a BUG() if we were not
+				 * bending over backwards to make
+				 * bundle-uri soft-fail.
+				 */
+				return error(_("bundle-uri says it has %s, got it at unexpected type %s"),
+					     oid_to_hex(oid), type_name(type));
+			}
+		}
+
+		print_verbose(args, "have %s %s via bundle-uri",
+			      oid_to_hex(oid), type_name(type));
+
+		negotiator->known_common(negotiator, c);
+		mark_complete(oid);
+	}
+	return 0;
+}
+
+
 static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				    int fd[2],
 				    const struct ref *orig_ref,
@@ -1705,41 +1743,17 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	fetch_negotiator_init(r, negotiator);
 
 	if (bundle_uri->nr) {
-		struct get_bundle_uri_ctx ctx = GET_BUNDLE_URI_CTX_INIT;
-		int ret = get_bundle_uri_start(r, &ctx, bundle_uri);
-		int nr = bundle_uri->nr;
+		unsigned int total_nr = bundle_uri->nr;
 
 		trace2_region_enter("fetch-pack", "bundle-uri", the_repository);
-
-		if (ret < 0)
-			error(_("fetch-pack: could not set up bundle URI"));
-
-		for (i = 0; i < nr; i++) {
+		for (i = 0; i < total_nr; i++) {
 			struct string_list_item item = bundle_uri->items[i];
-			struct oid_array bundle_oids = OID_ARRAY_INIT;
-			int j;
+			unsigned int nth = i + 1;
 
-			ret = get_bundle_uri(&ctx, i, &item, &bundle_oids);
-			if (ret < 0) {
-				error(_("could not get the bundle URI #%d"), i);
-				break;
-			}
 
-			for (j = 0; j < bundle_oids.nr; j++) {
-				struct object_id *oid = &bundle_oids.oid[j];
-				struct commit *c = deref_without_lazy_fetch(oid, 0);
-
-				print_verbose(args, _("got %s via bundle #%d (#%dth)"),
-					      oid_to_hex(oid), i, j);
-
-				negotiator->known_common(negotiator, c);
-				mark_complete(oid);
-			}
+			get_bundle_uri_add_known_common(&item, nth, total_nr,
+							negotiator, args);
 		}
-
-		if (nr && get_bundle_uri_finish(&ctx) < 0)
-			error(_("fetch-pack: could not finish up bundle URI"));
-
 		trace2_region_leave("fetch-pack", "bundle-uri", the_repository);
 	}
 
