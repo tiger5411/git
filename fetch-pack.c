@@ -1767,7 +1767,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	negotiator = &negotiator_alloc;
 	fetch_negotiator_init(r, negotiator);
 
-	if (bundle_uri->nr) {
+	if (bundle_uri && bundle_uri->nr) {
 		unsigned int total_nr = bundle_uri->nr;
 
 		trace2_region_enter("fetch-pack", "bundle-uri", the_repository);
