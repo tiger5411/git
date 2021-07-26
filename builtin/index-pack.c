@@ -125,7 +125,6 @@ static int verbose;
 static const char *progress_title;
 static int show_resolving_progress;
 static int show_stat;
-static int check_self_contained_and_connected;
 
 static struct progress *progress;
 
@@ -228,7 +227,7 @@ static int mark_link(struct object *obj, enum object_type type,
 
 /* The content of each linked object must have been checked
    or it must be already present in the object database */
-static unsigned check_object(struct object *obj)
+static int check_object(struct object *obj)
 {
 	if (!obj)
 		return 0;
@@ -240,22 +239,22 @@ static unsigned check_object(struct object *obj)
 		unsigned long size;
 		int type = oid_object_info(the_repository, &obj->oid, &size);
 		if (type <= 0)
-			die(_("did not receive expected object %s"),
-			      oid_to_hex(&obj->oid));
+			return error(_("did not receive expected object %s"),
+				     oid_to_hex(&obj->oid));
 		if (type != obj->type)
-			die(_("object %s: expected type %s, found %s"),
-			    oid_to_hex(&obj->oid),
-			    type_name(obj->type), type_name(type));
+			return error(_("object %s: expected type %s, found %s"),
+				     oid_to_hex(&obj->oid),
+				     type_name(obj->type), type_name(type));
 		obj->flags |= FLAG_CHECKED;
-		return 1;
 	}
 
 	return 0;
 }
 
-static unsigned check_objects(void)
+static int check_objects(void)
 {
-	unsigned i, max, foreign_nr = 0;
+	unsigned i, max;
+	int bad_nr = 0;
 
 	max = get_max_object_index();
 
@@ -263,12 +262,14 @@ static unsigned check_objects(void)
 		progress = start_delayed_progress(_("Checking objects"), max);
 
 	for (i = 0; i < max; i++) {
-		foreign_nr += check_object(get_indexed_object(i));
+		if (check_object(get_indexed_object(i)) < 0)
+			bad_nr++;
+			
 		display_progress(progress, i + 1);
 	}
 
 	stop_progress(&progress);
-	return foreign_nr;
+	return bad_nr;
 }
 
 
@@ -1728,7 +1729,6 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	struct pack_idx_entry **idx_objects;
 	struct pack_idx_option opts;
 	unsigned char pack_hash[GIT_MAX_RAWSZ];
-	unsigned foreign_nr = 1;	/* zero is a "good" value, assume bad */
 	int report_end_of_input = 0;
 	int hash_algo = 0;
 
@@ -1768,9 +1768,6 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 				strict = 1;
 				do_fsck_object = 1;
 				fsck_set_msg_types(&fsck_options, arg);
-			} else if (!strcmp(arg, "--check-self-contained-and-connected")) {
-				strict = 1;
-				check_self_contained_and_connected = 1;
 			} else if (!strcmp(arg, "--fsck-objects")) {
 				do_fsck_object = 1;
 			} else if (!strcmp(arg, "--verify")) {
@@ -1914,8 +1911,11 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	conclude_pack(fix_thin_pack, curr_pack, pack_hash);
 	free(ofs_deltas);
 	free(ref_deltas);
-	if (strict)
-		foreign_nr = check_objects();
+	if (strict) {
+		int bad_nr = check_objects();
+		if (bad_nr)
+			die(_("got errors for %d objects under --strict"), bad_nr);
+	}
 
 	if (show_stat)
 		show_pack_info(stat_only);
