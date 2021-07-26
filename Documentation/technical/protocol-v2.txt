@@ -697,4 +697,7 @@ intended to support future features such as:
    to fetch the bundle, or do e.g. HTTP range requests to get its
    header).
 
+bundle-uri SEE ALSO
+^^^^^^^^^^^^^^^^^^^
 
+See the link:bundle-uri.html[Bundle URI Design Notes] for more.
