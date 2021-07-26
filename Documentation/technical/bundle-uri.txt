@@ -68,15 +68,27 @@ won't need.
 Security issues peculiar to bundle-uri
 --------------------------------------
 
-Both packfile-uri and bundle-uri use the fetch.uriProtocols
-configuration variable to configure which protocols they support.
+Both packfile-uri and bundle-uri use the `fetch.uriProtocols`
+configuration variable (see linkgit:git-config[1]) to configure which
+protocols they support.
 
 By default this is set to "http,https" for both, but bundle-uri
 supports adding "file" to that list. The server can thus point to
 "file://" URIs it expects the client to have access to.
 
-This is primarily intended for use with the transfer.injectBundleURI
-mechanism.
+This is primarily intended for use with the `transfer.injectBundleURI`
+mechanism, but can also be useful e.g. in a centralized environment
+where a server might point to a "file:///mnt/bundles/big-repo.bdl" it
+knows to be mounted on the local machine (e.g. a racked server),
+points to it in its "bundle-uri" response.
+
+The client can then add "file" to the `fetch.uriProtocols` list to
+obey such responses. That does mean that a malicious server can point
+to any arbitrary file on the local machine. The threat of this is
+considered minimal, since anyone adding `file` to `fetch.uriProtocols`
+likely knows what they're doing and controls both ands, and the worst
+they can do is make a curl(1) pipe garbage into "index-pack" (which
+will likely promptly die on the non-PACK-file).
 
 Security comparison with packfile-uri
 -------------------------------------
