@@ -284,4 +284,16 @@ test_expect_success 'index-pack -v --stdin produces progress for both phases' '
 	test_i18ngrep "Resolving deltas" err
 '
 
+test_expect_success 'index-pack --fix-thin and --check-self-contained-and-connected' '
+	git rev-list HEAD >obj-list &&
+	pack1=$(git pack-objects <obj-list to-HEAD) &&
+
+	# 
+	git init --bare trash-1.git &&
+	git -C trash-1.git index-pack --stdin <to-HEAD-$pack1.pack 2>err &&
+	test_must_be_empty err &&
+	
+	echo $pack1
+'
+
 test_done

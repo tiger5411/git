@@ -1952,5 +1952,8 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	if (rev_index_name == NULL)
 		free((void *) curr_rev_index);
 
+	if (check_self_contained_and_connected && foreign_nr)
+		return 1;
+
 	return 0;
 }
