@@ -740,6 +740,7 @@ int unbundle(struct repository *r, struct bundle_header *header,
 
 	strvec_push(&ip.args, "index-pack");
 	strvec_push(&ip.args, "--fix-thin");
+	strvec_push(&ip.args, "--check-self-contained-and-connected");
 	strvec_push(&ip.args, "--stdin");
 	if (extra_index_pack_args) {
 		struct strvec *extra = extra_index_pack_args;

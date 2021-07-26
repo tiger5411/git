@@ -1031,7 +1031,6 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 
 		oid_array_append(bundle_oids, oid);
 	}
-	bundle_header_release(&header);
 
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
 		lseek(in_fd, 0, SEEK_SET);
@@ -1039,9 +1038,11 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 	strbuf_addf(&progress_title, "Receiving bundle (%d/%d)", nth, total_nr);
 
 	strvec_push(&cmd.args, "index-pack");
-	strvec_push(&cmd.args, "--fix-thin");
 	strvec_push(&cmd.args, "--stdin");
-	strvec_push(&cmd.args, "--check-self-contained-and-connected");
+	//if (header.prerequisites.nr)
+		strvec_push(&cmd.args, "--fix-thin");
+	//else
+		strvec_push(&cmd.args, "--check-self-contained-and-connected");
 	strvec_push(&cmd.args, "-v");
 	strvec_push(&cmd.args, "--progress-title");
 	strvec_push(&cmd.args, progress_title.buf);
@@ -1063,6 +1064,8 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 	}
 
 cleanup:
+	strbuf_release(&progress_title);
+	bundle_header_release(&header);
 	return ret;
 }
 
