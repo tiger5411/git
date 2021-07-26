@@ -138,6 +138,12 @@ suggest_bisect() {
 		exit 0
 	fi
 
+	if ! (cd t && stat $failed_tests >/dev/null)
+	then
+		# New tests? Good
+		exit 0
+	fi
+
 	if ! make -j $(nproc) all check-docs
 	then
 		exit 125
