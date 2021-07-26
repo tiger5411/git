@@ -14,4 +14,23 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 T5730_PROTOCOL=file
 . "$TEST_DIRECTORY"/lib-t5370-protocol-v2-bundle-uri.sh
 
+test_expect_success "unknown capability value with $T5730_PROTOCOL:// using protocol v2" '
+	test_when_finished "rm -f log" &&
+
+	test_config -C "$T5370_PARENT" \
+		uploadpack.bundleURI "$T5370_BUNDLE_URI_ESCAPED" &&
+
+	GIT_TRACE_PACKET="$PWD/log" \
+	GIT_TEST_BUNDLE_URI_UNKNOWN_CAPABILITY_VALUE=true \
+	git \
+		-c protocol.version=2 \
+		ls-remote --symref "$T5370_URI" \
+		>actual 2>err &&
+
+	# Server responded using protocol v2
+	grep "ls-remote< version 2" log &&
+
+	grep "> bundle-uri=test-unknown-capability-value" log
+'
+
 test_done
