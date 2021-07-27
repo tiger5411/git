@@ -308,7 +308,8 @@ test_expect_success '--no-add-header overrides config.headers' '
 '
 
 test_expect_success 'multiple files' '
-	rm -rf patches/ &&
+	test_when_finished "rm -rf patches" &&
+
 	git checkout side &&
 	git format-patch -o patches/ main &&
 	ls patches/0001-Side-changes-1.patch patches/0002-Side-changes-2.patch patches/0003-Side-changes-3-with-n-backslash-n-in-it.patch
@@ -316,7 +317,6 @@ test_expect_success 'multiple files' '
 
 test_expect_success 'filename length limit' '
 	test_when_finished "rm -f 000*" &&
-	rm -rf 000[1-9]-*.patch &&
 	for len in 15 25 35
 	do
 		git format-patch --filename-max-length=$len -3 side &&
@@ -334,7 +334,6 @@ test_expect_success 'filename length limit' '
 
 test_expect_success 'filename length limit from config' '
 	test_when_finished "rm -f 000*" &&
-	rm -rf 000[1-9]-*.patch &&
 	for len in 15 25 35
 	do
 		git -c format.filenameMaxLength=$len format-patch -3 side &&
@@ -352,7 +351,6 @@ test_expect_success 'filename length limit from config' '
 
 test_expect_success 'filename limit applies only to basename' '
 	test_when_finished "rm -rf patches/" &&
-	rm -rf patches/ &&
 	for len in 15 25 35
 	do
 		git format-patch -o patches --filename-max-length=$len -3 side &&
@@ -369,7 +367,7 @@ test_expect_success 'filename limit applies only to basename' '
 '
 
 test_expect_success 'reroll count' '
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches --cover-letter --reroll-count 4 main..side >list &&
 	! grep -v "^patches/v4-000[0-3]-" list &&
 	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
@@ -377,7 +375,7 @@ test_expect_success 'reroll count' '
 '
 
 test_expect_success 'reroll count (-v)' '
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches --cover-letter -v4 main..side >list &&
 	! grep -v "^patches/v4-000[0-3]-" list &&
 	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
@@ -385,7 +383,7 @@ test_expect_success 'reroll count (-v)' '
 '
 
 test_expect_success 'reroll count (-v) with a fractional number' '
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches --cover-letter -v4.4 main..side >list &&
 	! grep -v "^patches/v4.4-000[0-3]-" list &&
 	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
@@ -393,7 +391,7 @@ test_expect_success 'reroll count (-v) with a fractional number' '
 '
 
 test_expect_success 'reroll (-v) count with a non number' '
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches --cover-letter -v4rev2 main..side >list &&
 	! grep -v "^patches/v4rev2-000[0-3]-" list &&
 	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
@@ -401,7 +399,7 @@ test_expect_success 'reroll (-v) count with a non number' '
 '
 
 test_expect_success 'reroll (-v) count with a non-pathname character' '
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches --cover-letter -v4---..././../--1/.2//  main..side >list &&
 	! grep -v "patches/v4-\.-\.-\.-1-\.2-000[0-3]-" list &&
 	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
@@ -647,7 +645,6 @@ test_expect_success 'thread config + --no-thread' '
 '
 
 test_expect_success 'excessive subject' '
-	rm -rf patches/ &&
 	git checkout side &&
 	before=$(git hash-object file) &&
 	before=$(git rev-parse --short $before) &&
@@ -733,7 +730,6 @@ test_expect_success 'format-patch -p suppresses stat' '
 
 test_expect_success 'format-patch from a subdirectory (1)' '
 	filename=$(
-		rm -rf sub &&
 		mkdir -p sub/dir &&
 		cd sub/dir &&
 		git format-patch -1
@@ -751,7 +747,6 @@ test_expect_success 'format-patch from a subdirectory (1)' '
 
 test_expect_success 'format-patch from a subdirectory (2)' '
 	filename=$(
-		rm -rf sub &&
 		mkdir -p sub/dir &&
 		cd sub/dir &&
 		git format-patch -1 -o ..
@@ -769,9 +764,7 @@ test_expect_success 'format-patch from a subdirectory (2)' '
 '
 
 test_expect_success 'format-patch from a subdirectory (3)' '
-	rm -f 0* &&
 	filename=$(
-		rm -rf sub &&
 		mkdir -p sub/dir &&
 		cd sub/dir &&
 		git format-patch -1 -o "$TRASH_DIRECTORY"
@@ -1066,13 +1059,15 @@ test_expect_success '--signature overrides format.signaturefile' '
 '
 
 test_expect_success TTY 'format-patch --stdout paginates' '
-	rm -f pager_used &&
+	test_when_finished "rm -f pager_used" &&
+
 	test_terminal env GIT_PAGER="wc >pager_used" git format-patch --stdout --all &&
 	test_path_is_file pager_used
 '
 
  test_expect_success TTY 'format-patch --stdout pagination can be disabled' '
-	rm -f pager_used &&
+	test_when_finished "rm -f pager_used" &&
+
 	test_terminal env GIT_PAGER="wc >pager_used" git --no-pager format-patch --stdout --all &&
 	test_terminal env GIT_PAGER="wc >pager_used" git -c "pager.format-patch=false" format-patch --stdout --all &&
 	test_path_is_missing pager_used &&
@@ -1080,11 +1075,11 @@ test_expect_success TTY 'format-patch --stdout paginates' '
 '
 
 test_expect_success 'format-patch handles multi-line subjects' '
-	rm -rf patches/ &&
 	echo content >>file &&
 	test_write_lines one two three >msg &&
 	git add file &&
 	git commit -F msg &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches -1 &&
 	grep ^Subject: patches/0001-one.patch >actual &&
 	echo "Subject: [PATCH] one two three" >expect &&
@@ -1092,11 +1087,11 @@ test_expect_success 'format-patch handles multi-line subjects' '
 '
 
 test_expect_success 'format-patch handles multi-line encoded subjects' '
-	rm -rf patches/ &&
 	echo content >>file &&
 	test_write_lines en två tre >msg &&
 	git add file &&
 	git commit -F msg &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches -1 &&
 	grep ^Subject: patches/0001-en.patch >actual &&
 	echo "Subject: [PATCH] =?UTF-8?q?en=20tv=C3=A5=20tre?=" >expect &&
@@ -1154,7 +1149,6 @@ Subject: [PATCH] =?UTF-8?q?f=C3=B6=C3=B6=20bar=20f=C3=B6=C3=B6=20bar=20f?=
  =?UTF-8?q?bar?=
 EOF
 test_expect_success 'format-patch wraps extremely long subject (rfc2047)' '
-	rm -rf patches/ &&
 	echo content >>file &&
 	git add file &&
 	git commit -m "$M512" &&
@@ -1707,7 +1701,6 @@ test_expect_success 'format patch ignores color.ui' '
 '
 
 test_expect_success 'format patch respects diff.relative' '
-	rm -rf subdir &&
 	mkdir subdir &&
 	echo other content >subdir/file2 &&
 	git add subdir/file2 &&
@@ -1979,7 +1972,7 @@ test_expect_success 'From line has expected format' '
 '
 
 test_expect_success 'format-patch -o with no leading directories' '
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch -o patches main..side &&
 	count=$(git rev-list --count main..side) &&
 	ls patches >list &&
@@ -1987,7 +1980,7 @@ test_expect_success 'format-patch -o with no leading directories' '
 '
 
 test_expect_success 'format-patch -o with leading existing directories' '
-	rm -rf existing-dir &&
+	test_when_finished "rm -rf existing-dir" &&
 	mkdir existing-dir &&
 	git format-patch -o existing-dir/patches main..side &&
 	count=$(git rev-list --count main..side) &&
@@ -1996,7 +1989,7 @@ test_expect_success 'format-patch -o with leading existing directories' '
 '
 
 test_expect_success 'format-patch -o with leading non-existing directories' '
-	rm -rf non-existing-dir &&
+	test_when_finished "rm -rf non-existing-dir" &&
 	git format-patch -o non-existing-dir/patches main..side &&
 	count=$(git rev-list --count main..side) &&
 	test_path_is_dir non-existing-dir &&
@@ -2006,7 +1999,7 @@ test_expect_success 'format-patch -o with leading non-existing directories' '
 
 test_expect_success 'format-patch format.outputDirectory option' '
 	test_config format.outputDirectory patches &&
-	rm -fr patches &&
+	test_when_finished "rm -rf patches" &&
 	git format-patch main..side &&
 	count=$(git rev-list --count main..side) &&
 	ls patches >list &&
@@ -2015,14 +2008,13 @@ test_expect_success 'format-patch format.outputDirectory option' '
 
 test_expect_success 'format-patch -o overrides format.outputDirectory' '
 	test_config format.outputDirectory patches &&
-	rm -fr patches patchset &&
+	test_when_finished "rm -rf patchset" &&
 	git format-patch main..side -o patchset &&
 	test_path_is_missing patches &&
 	test_path_is_dir patchset
 '
 
 test_expect_success 'format-patch forbids multiple outputs' '
-	rm -fr outfile outdir &&
 	test_must_fail \
 		git format-patch --stdout --output-directory=outdir &&
 	test_must_fail \
@@ -2032,23 +2024,21 @@ test_expect_success 'format-patch forbids multiple outputs' '
 '
 
 test_expect_success 'configured outdir does not conflict with output options' '
-	rm -fr outfile outdir &&
 	test_config format.outputDirectory outdir &&
 	git format-patch --stdout &&
 	test_path_is_missing outdir &&
 	git format-patch --output=outfile &&
-	test_path_is_missing outdir
+	test_path_is_missing outdir &&
+	test_path_exists outfile
 '
 
 test_expect_success 'format-patch --output' '
-	rm -fr outfile &&
 	git format-patch -3 --stdout HEAD >expect &&
 	git format-patch -3 --output=outfile HEAD &&
 	test_cmp expect outfile
 '
 
 test_expect_success 'format-patch --cover-letter --output' '
-	rm -fr outfile &&
 	git format-patch --cover-letter -3 --stdout HEAD >expect &&
 	git format-patch --cover-letter -3 --output=outfile HEAD &&
 	test_cmp expect outfile
