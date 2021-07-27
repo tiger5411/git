@@ -369,10 +369,17 @@ test_expect_success 'filename limit applies only to basename' '
 check_headers () {
 	cat >expect &&
 
+	local negate= &&
+	if test "$1" = "!"
+	then
+		negate="test_must_fail" &&
+		shift
+	fi &&
+
 	test_when_finished "rm -f patches" &&
-	git format-patch \
+	$negate git format-patch \
 		--stdout \
-		"$@" >patches &&
+		"$@" >patches 2>err &&
 
 	sed -n \
 		-e "/^Subject: / {
@@ -382,6 +389,94 @@ check_headers () {
 	<patches >actual &&
 	test_cmp expect actual
 }
+
+test_expect_success 'basic headers: default' '
+	check_headers main~..main <<-\EOF
+	Subject: [PATCH]
+	EOF
+'
+
+test_expect_success 'basic headers: --subject-prefix same as the default' '
+	check_headers --subject-prefix=PATCH main~..main <<-\EOF
+	Subject: [PATCH]
+	EOF
+'
+
+test_expect_success 'basic headers: --subject-prefix eats REV argument' '
+	check_headers --subject-prefix main~..main <<-\EOF &&
+	EOF
+	git format-patch --stdout --subject-prefix main~..main >actual &&
+	test_must_be_empty actual
+'
+
+test_expect_success 'basic headers: --subject-prefix without =' '
+	check_headers --subject-prefix ARGUMENT main~..main <<-\EOF
+	Subject: [ARGUMENT]
+	EOF
+'
+
+test_expect_success 'basic headers: --subject-prefix="SOME LONG SUBJECT" same as the default' '
+	check_headers --subject-prefix="SOME LONG SUBJECT" main~..main <<-\EOF
+	Subject: [SOME LONG SUBJECT]
+	EOF
+'
+
+test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix config' '
+	test_config format.subjectPrefix "CONFIG PREFIX" &&
+	check_headers main~..main <<-\EOF
+	Subject: [CONFIG PREFIX]
+	EOF
+'
+
+test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix config priority' '
+	test_config format.subjectPrefix "CONFIG PREFIX" &&
+	check_headers --subject-prefix="CLI PREFIX" main~..main <<-\EOF
+	Subject: [CLI PREFIX]
+	EOF
+'
+
+test_expect_success 'basic headers: --rfc option' '
+	check_headers --rfc main~..main <<-\EOF
+	Subject: [RFC PATCH]
+	EOF
+'
+
+test_expect_success 'basic headers: --rfc=ARGUMENT' '
+	cat >err.expect <<-\EOF &&
+	error: option `rfc'"'"' takes no value
+	EOF
+	check_headers ! --rfc=PREFIX main~..main <<-\EOF &&
+	EOF
+	test_cmp err.expect err
+'
+
+test_expect_success 'basic headers: --subject-prefix=RFC/PATCH --rfc (--subject-prefix wins)' '
+	check_headers --subject-prefix=RFC/PATCH --rfc main~..main <<-\EOF
+	Subject: [RFC PATCH]
+	EOF
+'
+
+test_expect_success 'basic headers: --rfc --subject-prefix=RFC/PATCH (--subject-prefix wins)' '
+	check_headers --subject-prefix="RFC/PATCH" --rfc main~..main <<-\EOF
+	Subject: [RFC PATCH]
+	EOF
+'
+
+test_expect_success 'basic headers: --rfc and format.subjectPrefix config priority' '
+	test_config format.subjectPrefix "CONFIG PREFIX" &&
+	check_headers --rfc main~..main <<-\EOF
+	Subject: [RFC PATCH]
+	EOF
+'
+
+test_expect_success 'basic headers: --subject-prefix with --v<N>' '
+	check_headers --subject-prefix=PREFIX -v1 main~..main <<-\EOF &&
+	Subject: [PREFIX v1]
+	EOF
+	check_headers -v1 --subject-prefix=PREFIX main~..main <<-\EOF
+	Subject: [PREFIX v1]
+	EOF
+'
 
 test_expect_success 'reroll count' '
 	check_headers --cover-letter --reroll-count 4 main..side <<-\EOF
