@@ -241,13 +241,14 @@ struct rev_info {
 	const char	*patch_suffix;
 	int		numbered_files;
 	const char	*reroll_count;
+	unsigned int    reroll_count_filename : 1;
 	char		*message_id;
 	struct ident_split from_ident;
 	struct string_list *ref_message_ids;
 	int		add_signoff;
 	const char	*extra_headers;
 	const char	*log_reencode;
-	const char	*subject_prefix;
+	const char	*custom_subject_prefix;
 	int		patch_name_max;
 	int		no_inline;
 	int		show_log_size;

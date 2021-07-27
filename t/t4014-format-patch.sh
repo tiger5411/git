@@ -464,18 +464,8 @@ test_expect_success 'basic headers: --rfc=ARGUMENT' '
 	test_cmp err.expect err
 '
 
-test_expect_success 'basic headers: --subject-prefix=RFC/PATCH --rfc (--subject-prefix wins)' '
-	check_headers --subject-prefix=RFC/PATCH --rfc main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
-	Subject: [RFC PATCH]
-	EOF
-'
-
-test_expect_success 'basic headers: --rfc --subject-prefix=RFC/PATCH (--subject-prefix wins)' '
-	check_headers --subject-prefix="RFC/PATCH" --rfc main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
-	Subject: [RFC PATCH]
-	EOF
+test_expect_success 'basic headers usage: --subject-prefix combined with --rfc' '
+	test_expect_code 129 git format-patch --subject-prefix="RFC PATCH" --rfc
 '
 
 test_expect_success 'basic headers: --rfc and format.subjectPrefix config priority' '
