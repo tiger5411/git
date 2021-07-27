@@ -366,44 +366,66 @@ test_expect_success 'filename limit applies only to basename' '
 	done
 '
 
+check_headers () {
+	cat >expect &&
+
+	test_when_finished "rm -f patches" &&
+	git format-patch \
+		--stdout \
+		"$@" >patches &&
+
+	sed -n \
+		-e "/^Subject: / {
+			s/^\(Subject: \[[^]]*\]\).*/\1/;
+			p;
+		}" \
+	<patches >actual &&
+	test_cmp expect actual
+}
+
 test_expect_success 'reroll count' '
-	test_when_finished "rm -rf patches" &&
-	git format-patch -o patches --cover-letter --reroll-count 4 main..side >list &&
-	! grep -v "^patches/v4-000[0-3]-" list &&
-	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
-	! grep -v "^Subject: \[PATCH v4 [0-3]/3\] " subjects
+	check_headers --cover-letter --reroll-count 4 main..side <<-\EOF
+	Subject: [PATCH v4 0/3]
+	Subject: [PATCH v4 1/3]
+	Subject: [PATCH v4 2/3]
+	Subject: [PATCH v4 3/3]
+	EOF
 '
 
 test_expect_success 'reroll count (-v)' '
-	test_when_finished "rm -rf patches" &&
-	git format-patch -o patches --cover-letter -v4 main..side >list &&
-	! grep -v "^patches/v4-000[0-3]-" list &&
-	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
-	! grep -v "^Subject: \[PATCH v4 [0-3]/3\] " subjects
+	check_headers --cover-letter -v4 main..side <<-\EOF
+	Subject: [PATCH v4 0/3]
+	Subject: [PATCH v4 1/3]
+	Subject: [PATCH v4 2/3]
+	Subject: [PATCH v4 3/3]
+	EOF
 '
 
 test_expect_success 'reroll count (-v) with a fractional number' '
-	test_when_finished "rm -rf patches" &&
-	git format-patch -o patches --cover-letter -v4.4 main..side >list &&
-	! grep -v "^patches/v4.4-000[0-3]-" list &&
-	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
-	! grep -v "^Subject: \[PATCH v4.4 [0-3]/3\] " subjects
+	check_headers --cover-letter -v4.4 main..side <<-\EOF
+	Subject: [PATCH v4.4 0/3]
+	Subject: [PATCH v4.4 1/3]
+	Subject: [PATCH v4.4 2/3]
+	Subject: [PATCH v4.4 3/3]
+	EOF
 '
 
 test_expect_success 'reroll (-v) count with a non number' '
-	test_when_finished "rm -rf patches" &&
-	git format-patch -o patches --cover-letter -v4rev2 main..side >list &&
-	! grep -v "^patches/v4rev2-000[0-3]-" list &&
-	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
-	! grep -v "^Subject: \[PATCH v4rev2 [0-3]/3\] " subjects
+	check_headers --cover-letter -v4rev2 main..side <<-\EOF
+	Subject: [PATCH v4rev2 0/3]
+	Subject: [PATCH v4rev2 1/3]
+	Subject: [PATCH v4rev2 2/3]
+	Subject: [PATCH v4rev2 3/3]
+	EOF
 '
 
 test_expect_success 'reroll (-v) count with a non-pathname character' '
-	test_when_finished "rm -rf patches" &&
-	git format-patch -o patches --cover-letter -v4---..././../--1/.2//  main..side >list &&
-	! grep -v "patches/v4-\.-\.-\.-1-\.2-000[0-3]-" list &&
-	sed -n -e "/^Subject: /p" $(cat list) >subjects &&
-	! grep -v "^Subject: \[PATCH v4---\.\.\./\./\.\./--1/\.2// [0-3]/3\] " subjects
+	check_headers --cover-letter -v4---..././../--1/.2//  main..side <<-\EOF
+	Subject: [PATCH v4---..././../--1/.2// 0/3]
+	Subject: [PATCH v4---..././../--1/.2// 1/3]
+	Subject: [PATCH v4---..././../--1/.2// 2/3]
+	Subject: [PATCH v4---..././../--1/.2// 3/3]
+	EOF
 '
 
 check_threading () {
