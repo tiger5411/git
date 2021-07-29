@@ -714,7 +714,7 @@ int cmd_difftool(int argc, const char **argv, const char *prefix)
 			    "tool returns a non - zero exit code")),
 		OPT_STRING('x', "extcmd", &extcmd, N_("command"),
 			   N_("specify a custom command for viewing diffs")),
-		OPT_ARGUMENT("no-index", &no_index, N_("passed to `diff`")),
+		OPT_BOOL(0, "no-index", &no_index, N_("passed to `diff`")),
 		OPT_END()
 	};
 	struct strvec args = STRVEC_INIT;
@@ -768,6 +768,8 @@ int cmd_difftool(int argc, const char **argv, const char *prefix)
 	 * each file that changed.
 	 */
 	strvec_push(&args, "diff");
+	if (no_index)
+		strvec_push(&args, "--no-index");
 	if (dir_diff)
 		strvec_pushl(&args, "--raw", "--no-abbrev", "-z", NULL);
 	strvec_pushv(&args, argv);
