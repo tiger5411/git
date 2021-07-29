@@ -222,13 +222,6 @@ populated with placeholder text.
 	allows for useful naming of a patch series, and can be
 	combined with the `--numbered` option.
 
---filename-max-length=<n>::
-	Instead of the standard 64 bytes, chomp the generated output
-	filenames at around '<n>' bytes (too short a value will be
-	silently raised to a reasonable length).  Defaults to the
-	value of the `format.filenameMaxLength` configuration
-	variable, or 64 if unconfigured.
-
 --rfc::
 	Alias for `--subject-prefix="RFC PATCH"`. RFC means "Request For
 	Comments"; use this when sending an experimental patch for
@@ -247,6 +240,13 @@ populated with placeholder text.
 	using such a reroll-count is that the range-diff/interdiff
 	with the previous version does not state exactly which
 	version the new interation is compared against.
+
+--filename-max-length=<n>::
+	Instead of the standard 64 bytes, chomp the generated output
+	filenames at around '<n>' bytes (too short a value will be
+	silently raised to a reasonable length).  Defaults to the
+	value of the `format.filenameMaxLength` configuration
+	variable, or 64 if unconfigured.
 
 --to=<email>::
 	Add a `To:` header to the email headers. This is in addition
