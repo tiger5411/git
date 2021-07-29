@@ -221,6 +221,17 @@ populated with placeholder text.
 	line, instead use '[<subject prefix>]'. This
 	allows for useful naming of a patch series, and can be
 	combined with the `--numbered` option.
++
+Consider using `-v 2` (or `--reroll-count=2`) for the common case of
+wanting a `--subject-prefix="PATCH v2"`, and likewise e.g. `--rfc -v2`
+instead of `--subject-prefix="RFC PATCH v2"`.
++
+As discussed below in the `--reroll-count` documentation using
+`--reroll-count` and `--rfc` instead of `--subject-prefix` is not
+equivalent. The `--reroll-count option` changes the generated
+filename, output emitted with the `--interdiff` and `--range-diff`
+options. Users will generally find those change to be desirable, as
+well as the brevity of `-vN` over `--subject-prefix="PATCH vN"`.
 
 --rfc::
 	Alias for `--subject-prefix="RFC PATCH"`. RFC means "Request For
