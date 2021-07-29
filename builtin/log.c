@@ -56,10 +56,7 @@ static const char *fmt_patch_subject_prefix = "PATCH";
 static int fmt_patch_name_max = FORMAT_PATCH_NAME_MAX_DEFAULT;
 static const char *fmt_pretty;
 
-static const char *message_id_format =
-	"%(if)%(message:rfc)%(then)RFC-%(end)"
-	"%(message:type)-"
-	"%(if)%(reroll_count)%(then)-v%(reroll_count)%(end)"
+static const char *message_id_format = "%(message:type)-"
 	"%(messagenum:padded).%(totalmessages)-"
 	"%(objectname:short)-%b-%d-%YT%H%M%SZ-%(identemail)";
 
@@ -1124,7 +1121,7 @@ static size_t expand_message_id(struct strbuf *sb, const char *start,
 		strbuf_addstr(sb, git_committer_info(flags));
 	} else {
 		unsigned int errlen = (unsigned long)len;
-		warning(_("bad format.messageID specifier %%%.*s"), errlen, start);
+		die(_("bad format.messageID specifier %%%.*s"), errlen, start);
 	}
 
 	return len;
