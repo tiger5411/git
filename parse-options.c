@@ -219,9 +219,14 @@ static enum parse_opt_result get_value(struct parse_opt_ctx_t *p,
 				     optname(opt, flags));
 		return 0;
 
-	default:
+	/* special types */
+	case OPTION_END:
+	case OPTION_GROUP:
+	case OPTION_NUMBER:
+	case OPTION_ALIAS:
 		BUG("opt->type %d should not happen", opt->type);
 	}
+	return -1; /* gcc 10.2.1-6's -Werror=return-type */
 }
 
 static enum parse_opt_result parse_short_opt(struct parse_opt_ctx_t *p,
@@ -468,8 +473,15 @@ static void parse_options_check(const struct option *opts)
 			BUG("OPT_ALIAS() should not remain at this point. "
 			    "Are you using parse_options_step() directly?\n"
 			    "That case is not supported yet.");
-		default:
-			; /* ok. (usually accepts an argument) */
+
+		case OPTION_BITOP:
+		case OPTION_END:
+		case OPTION_FILENAME:
+		case OPTION_GROUP:
+		case OPTION_INTEGER:
+		case OPTION_MAGNITUDE:
+		case OPTION_STRING:
+			break;
 		}
 		if (opts->argh &&
 		    strcspn(opts->argh, " _") != strlen(opts->argh))
@@ -543,7 +555,15 @@ static void show_negated_gitcomp(const struct option *opts, int show_all,
 		case OPTION_SET_INT:
 			has_unset_form = 1;
 			break;
-		default:
+		/* special types */
+		case OPTION_END:
+		case OPTION_GROUP:
+		case OPTION_NUMBER:
+		case OPTION_ALIAS:
+		/* options with no arguments */
+		case OPTION_BITOP:
+		/* options with arguments (usually) */
+		case OPTION_LOWLEVEL_CALLBACK:
 			break;
 		}
 		if (!has_unset_form)
@@ -593,7 +613,20 @@ static int show_gitcomp(const struct option *opts, int show_all)
 				break;
 			suffix = "=";
 			break;
-		default:
+		/* special types */
+		case OPTION_END:
+		case OPTION_NUMBER:
+		case OPTION_ALIAS:
+
+		/* options with no arguments */
+		case OPTION_BIT:
+		case OPTION_NEGBIT:
+		case OPTION_BITOP:
+		case OPTION_COUNTUP:
+		case OPTION_SET_INT:
+
+		/* options with arguments (usually) */
+		case OPTION_LOWLEVEL_CALLBACK:
 			break;
 		}
 		if (opts->flags & PARSE_OPT_COMP_ARG)
