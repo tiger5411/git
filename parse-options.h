@@ -34,6 +34,7 @@ enum parse_opt_flags {
 	PARSE_OPT_SHELL_EVAL = 1 << 6,
 	PARSE_OPT_REV_PARSE_PARSEOPT = 1 << 7,
 	PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG = 1 << 8,
+	PARSE_OPT_ERROR_AT_NON_OPTION = 1 << 9,
 };
 
 /**

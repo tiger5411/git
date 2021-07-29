@@ -42,9 +42,8 @@ int cmd_stripspace(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	argc = parse_options(argc, argv, prefix, options, stripspace_usage, 0);
-	if (argc)
-		usage_with_options(stripspace_usage, options);
+	parse_options(argc, argv, prefix, options, stripspace_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (mode == STRIP_COMMENTS || mode == COMMENT_LINES) {
 		setup_git_directory_gently(&nongit);

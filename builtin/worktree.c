@@ -153,9 +153,8 @@ static int prune(int ac, const char **av, const char *prefix)
 	};
 
 	expire = TIME_MAX;
-	ac = parse_options(ac, av, prefix, options, worktree_usage, 0);
-	if (ac)
-		usage_with_options(worktree_usage, options);
+	parse_options(ac, av, prefix, options, worktree_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 	prune_worktrees();
 	return 0;
 }
@@ -772,10 +771,9 @@ static int list(int ac, const char **av, const char *prefix)
 	};
 
 	expire = TIME_MAX;
-	ac = parse_options(ac, av, prefix, options, worktree_usage, 0);
-	if (ac)
-		usage_with_options(worktree_usage, options);
-	else if (verbose && porcelain)
+	parse_options(ac, av, prefix, options, worktree_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
+	if (verbose && porcelain)
 		die(_("options '%s' and '%s' cannot be used together"), "--verbose", "--porcelain");
 	else if (!line_terminator && !porcelain)
 		die(_("the option '%s' requires '%s'"), "-z", "--porcelain");

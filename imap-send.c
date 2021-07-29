@@ -1526,10 +1526,8 @@ int cmd_main(int argc, const char **argv)
 	setup_git_directory_gently(&nongit_ok);
 	git_config(git_imap_config, NULL);
 
-	argc = parse_options(argc, (const char **)argv, "", imap_send_options, imap_send_usage, 0);
-
-	if (argc)
-		usage_with_options(imap_send_usage, imap_send_options);
+	parse_options(argc, (const char **)argv, "", imap_send_options,
+		      imap_send_usage, PARSE_OPT_ERROR_AT_NON_OPTION);
 
 #ifndef USE_CURL_FOR_IMAP_SEND
 	if (use_curl) {
