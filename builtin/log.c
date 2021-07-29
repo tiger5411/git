@@ -56,10 +56,6 @@ static const char *fmt_patch_subject_prefix = "PATCH";
 static int fmt_patch_name_max = FORMAT_PATCH_NAME_MAX_DEFAULT;
 static const char *fmt_pretty;
 
-static const char *message_id_format = "%(message:type)-"
-	"%(messagenum:padded).%(totalmessages)-"
-	"%(objectname:short)-%b-%d-%YT%H%M%SZ-%(identemail)";
-
 static const char * const builtin_log_usage[] = {
 	N_("git log [<options>] [<revision-range>] [[--] <path>...]"),
 	N_("git show [<options>] <object>..."),
@@ -469,8 +465,6 @@ static int git_log_config(const char *var, const char *value, void *cb)
 		return git_config_string(&fmt_pretty, var, value);
 	if (!strcmp(var, "format.subjectprefix") && fmt_patch_subject_prefix)
 		return git_config_string(fmt_patch_subject_prefix, var, value);
-	if (!strcmp(var, "format.messageid"))
-		return git_config_string(&message_id_format, var, value);
 	if (!strcmp(var, "format.filenamemaxlength")) {
 		fmt_patch_name_max = git_config_int(var, value);
 		return 0;
@@ -1052,79 +1046,43 @@ struct subject_prefix_opt_callback_data {
 		 rfc : 1;
 };
 
-struct expand_message_id_data {
-	struct tm *tm;
-	const char *message_type;
-	int nr;
-	int total;
-	unsigned long total_len;
-	const struct object_id *oid;
-};
-
-static size_t expand_message_id_strftime(struct strbuf *sb, const char *start,
-					 struct expand_message_id_data *data)
+static void gen_message_id(struct subject_prefix_opt_callback_data *cb_data,
+			   const char *what,
+			   int nr,
+			   int total,
+			   const struct object_id *oid)
 {
+	struct rev_info *rev = cb_data->rev;
+	struct strbuf buf = STRBUF_INIT;
 	struct strbuf fmt = STRBUF_INIT;
-	if (!data->tm) {
-		time_t now = time(NULL);
-		struct tm *tm = xmalloc(sizeof(struct tm));
-		data->tm = gmtime_r(&now, tm);
-	}
+	struct strbuf tmp = STRBUF_INIT;
+	struct tm tm;
+	time_t now = time(NULL);
 
-	strbuf_addf(&fmt, "%%%c", *start);
-	strbuf_addftime(sb, fmt.buf, data->tm, 0, 0);
+	/* Figure out the right format width for START/END */
+	strbuf_addf(&tmp, "%d", total);
+	strbuf_addf(&fmt, "%%s%%s%%s-%%0%1$lud.%%0%1$lud-%%s-%%s-%%s", (unsigned long)tmp.len);
+	strbuf_reset(&tmp);
+
+	/* Have a pretty timestamp in the Message-Id */
+	strbuf_addftime(&tmp, "%Y%m%dT%H%M%SZ", gmtime_r(&now, &tm), 0, 0);
+
+	/* Create it! */
+	strbuf_addf(&buf, fmt.buf,
+		    cb_data->rfc ? "RFC-" : "",
+		    what,
+		    cb_data->reroll_count_int > -1 ? xstrfmt("-v%d", cb_data->reroll_count_int) : "",
+		    nr, total,
+		    /*
+		     * Short OID in Message-ID, cover letters get the
+		     * null_oid (for width consistency of all
+		     * Message-ID's in the series.
+		     */
+		    find_unique_abbrev(oid, DEFAULT_ABBREV),
+		    tmp.buf,
+		    git_committer_info(IDENT_NO_NAME|IDENT_NO_DATE|IDENT_STRICT));
+	rev->message_id = strbuf_detach(&buf, NULL);
 	strbuf_release(&fmt);
-
-	return 1;
-}
-
-static size_t expand_message_id(struct strbuf *sb, const char *start,
-				void *context)
-{
-	struct expand_message_id_data *data = context;
-	const char *end;
-	const struct object_id *oid = data->oid;
-	const char *p;
-	size_t len;
-
-	if (*start != '(')
-		return expand_message_id_strftime(sb, start, data);
-	end = strchr(start + 1, ')');
-	if (!end)
-		die(_("format.messageID format element '%s' does not end in ')'"),
-		    start);
-	len = end - start + 1;
-
-	if (skip_prefix(start, "(message:type)", &p)) {
-		strbuf_addstr(sb, data->message_type);
-	} else if (skip_prefix(start, "(messagenum:padded)", &p)) {
-		struct strbuf fmt = STRBUF_INIT;
-
-		if (!data->total_len) {
-			struct strbuf tmp = STRBUF_INIT;
-			strbuf_addf(&tmp, "%d", data->total);
-			data->total_len = tmp.len;
-			strbuf_release(&tmp);
-		}
-
-		strbuf_addf(&fmt, "%%0%lud", data->total_len);
-		strbuf_addf(sb, fmt.buf, data->nr);
-		strbuf_release(&fmt);
-	} else if (skip_prefix(start, "(totalmessages)", &p)) {
-		strbuf_addf(sb, "%d", data->total);
-	} else if (skip_prefix(start, "(objectname)", &p)) {
-		strbuf_addstr(sb, oid_to_hex(oid));
-	} else if (skip_prefix(start, "(objectname:short)", &p)) {
-		strbuf_addstr(sb, find_unique_abbrev(oid, DEFAULT_ABBREV));
-	} else if (skip_prefix(start, "(identemail)", &p)) {
-		int flags = IDENT_NO_NAME|IDENT_NO_DATE|IDENT_STRICT;
-		strbuf_addstr(sb, git_committer_info(flags));
-	} else {
-		unsigned int errlen = (unsigned long)len;
-		die(_("bad format.messageID specifier %%%.*s"), errlen, start);
-	}
-
-	return len;
 }
 
 static void print_signature(FILE *file)
@@ -1874,7 +1832,6 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 		.rev = &rev,
 		.reroll_count_int = -1,
 	};
-	struct expand_message_id_data message_id_cb_data = { 0 };
 
 	const struct option builtin_format_patch_options[] = {
 		OPT_CALLBACK_F('n', "numbered", &numbered, NULL,
@@ -2312,18 +2269,8 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 	if (cover_letter) {
 		int old_total = total++;
 		start_number--;
-		if (thread) {
-			struct strbuf sb = STRBUF_INIT;
-
-			message_id_cb_data.message_type = "cover";
-			message_id_cb_data.nr = 0;
-			message_id_cb_data.total = old_total;
-			message_id_cb_data.oid = null_oid();
-
-			strbuf_expand(&sb, message_id_format,
-				      expand_message_id, &message_id_cb_data);
-			rev.message_id = strbuf_detach(&sb, NULL);
-		}
+		if (thread)
+			gen_message_id(&subject_prefix_cb, "cover", 0, old_total, null_oid());
 		make_cover_letter(&rev, !!output_directory,
 				  origin, nr, list, branch_name, quiet);
 		print_bases(&bases, rev.diffopt.file);
@@ -2344,8 +2291,6 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 		rev.nr = total - nr + (start_number - 1);
 		/* Make the second and subsequent mails replies to the first */
 		if (thread) {
-			struct strbuf sb = STRBUF_INIT;
-
 			/* Have we already had a message ID? */
 			if (rev.message_id) {
 				/*
@@ -2377,16 +2322,7 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 					string_list_append(rev.ref_message_ids,
 							   rev.message_id);
 			}
-
-			message_id_cb_data.message_type = "patch";
-			message_id_cb_data.nr = rev.nr;
-			message_id_cb_data.total = msgid_total;
-			message_id_cb_data.oid = &commit->object.oid;
-			rev.message_id = strbuf_detach(&sb, NULL);
-
-			strbuf_expand(&sb, message_id_format,
-				      expand_message_id, &message_id_cb_data);
-			rev.message_id = strbuf_detach(&sb, NULL);
+			gen_message_id(&subject_prefix_cb, "patch", rev.nr, msgid_total, &commit->object.oid);
 		}
 
 		if (output_directory &&
