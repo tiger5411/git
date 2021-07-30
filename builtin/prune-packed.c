@@ -18,13 +18,9 @@ int cmd_prune_packed(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	argc = parse_options(argc, argv, prefix, prune_packed_options,
-			     prune_packed_usage, 0);
-
-	if (argc > 0)
-		usage_msg_opt(_("too many arguments"),
-			      prune_packed_usage,
-			      prune_packed_options);
+	parse_options(argc, argv, prefix, prune_packed_options,
+		      prune_packed_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	prune_packed_objects(opts);
 	return 0;
