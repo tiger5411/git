@@ -118,12 +118,9 @@ static int cmd_multi_pack_index_write(int argc, const char **argv)
 
 	if (isatty(2))
 		opts.flags |= MIDX_PROGRESS;
-	argc = parse_options(argc, argv, NULL,
-			     options, builtin_multi_pack_index_write_usage,
-			     PARSE_OPT_KEEP_UNKNOWN);
-	if (argc)
-		usage_with_options(builtin_multi_pack_index_write_usage,
-				   options);
+	parse_options(argc, argv, NULL,
+		      options, builtin_multi_pack_index_write_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	FREE_AND_NULL(options);
 
@@ -160,12 +157,9 @@ static int cmd_multi_pack_index_verify(int argc, const char **argv)
 
 	if (isatty(2))
 		opts.flags |= MIDX_PROGRESS;
-	argc = parse_options(argc, argv, NULL,
-			     options, builtin_multi_pack_index_verify_usage,
-			     PARSE_OPT_KEEP_UNKNOWN);
-	if (argc)
-		usage_with_options(builtin_multi_pack_index_verify_usage,
-				   options);
+	parse_options(argc, argv, NULL,
+		      options, builtin_multi_pack_index_verify_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	FREE_AND_NULL(options);
 
@@ -186,12 +180,9 @@ static int cmd_multi_pack_index_expire(int argc, const char **argv)
 
 	if (isatty(2))
 		opts.flags |= MIDX_PROGRESS;
-	argc = parse_options(argc, argv, NULL,
-			     options, builtin_multi_pack_index_expire_usage,
-			     PARSE_OPT_KEEP_UNKNOWN);
-	if (argc)
-		usage_with_options(builtin_multi_pack_index_expire_usage,
-				   options);
+	parse_options(argc, argv, NULL,
+		      options, builtin_multi_pack_index_expire_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	FREE_AND_NULL(options);
 
@@ -215,13 +206,11 @@ static int cmd_multi_pack_index_repack(int argc, const char **argv)
 
 	if (isatty(2))
 		opts.flags |= MIDX_PROGRESS;
-	argc = parse_options(argc, argv, NULL,
-			     options,
-			     builtin_multi_pack_index_repack_usage,
-			     PARSE_OPT_KEEP_UNKNOWN);
-	if (argc)
-		usage_with_options(builtin_multi_pack_index_repack_usage,
-				   options);
+
+	parse_options(argc, argv, NULL,
+		      options,
+		      builtin_multi_pack_index_repack_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	FREE_AND_NULL(options);
 
