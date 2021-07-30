@@ -1426,16 +1426,13 @@ static int maintenance_run(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix,
 			     builtin_maintenance_run_options,
 			     builtin_maintenance_run_usage,
-			     PARSE_OPT_STOP_AT_NON_OPTION);
+			     PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (opts.auto_flag && opts.schedule)
 		die(_("use at most one of --auto and --schedule=<frequency>"));
 
 	initialize_task_config(opts.schedule);
 
-	if (argc != 0)
-		usage_with_options(builtin_maintenance_run_usage,
-				   builtin_maintenance_run_options);
 	return maintenance_run_tasks(&opts);
 }
 
