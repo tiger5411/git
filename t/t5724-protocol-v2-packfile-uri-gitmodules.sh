@@ -17,8 +17,8 @@ configure_exclusion () {
 
 test_expect_success 'part of packfile response provided as URI' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child log &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -31,6 +31,7 @@ test_expect_success 'part of packfile response provided as URI' '
 	configure_exclusion "$P" my-blob >h &&
 	configure_exclusion "$P" other-blob >h2 &&
 
+	test_when_finished "rm -rf http_child log" &&
 	GIT_TRACE=1 GIT_TRACE_PACKET="$(pwd)/log" GIT_TEST_SIDEBAND_ALL=1 \
 	git -c protocol.version=2 \
 		-c fetch.uriprotocols=http,https \
@@ -66,8 +67,8 @@ test_expect_success 'part of packfile response provided as URI' '
 
 test_expect_success 'packfile URIs with fetch instead of clone' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child log &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -77,6 +78,7 @@ test_expect_success 'packfile URIs with fetch instead of clone' '
 
 	configure_exclusion "$P" my-blob >h &&
 
+	test_when_finished "rm -rf http_child" &&
 	git init http_child &&
 
 	GIT_TEST_SIDEBAND_ALL=1 \
@@ -87,8 +89,8 @@ test_expect_success 'packfile URIs with fetch instead of clone' '
 
 test_expect_success 'fetching with valid packfile URI but invalid hash fails' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child log &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -109,6 +111,7 @@ test_expect_success 'fetching with valid packfile URI but invalid hash fails' '
 		"uploadpack.blobpackfileuri" \
 		"$(cat objh) $(cat objh) $HTTPD_URL/dumb/mypack-$(cat packh).pack" &&
 
+	test_when_finished "rm -rf http_child" &&
 	test_must_fail env GIT_TEST_SIDEBAND_ALL=1 \
 		git -c protocol.version=2 \
 		-c fetch.uriprotocols=http,https \
@@ -118,8 +121,8 @@ test_expect_success 'fetching with valid packfile URI but invalid hash fails' '
 
 test_expect_success 'packfile-uri with transfer.fsckobjects' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child log &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -130,6 +133,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects' '
 	configure_exclusion "$P" my-blob >h &&
 
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
+	test_when_finished "rm -rf http_child" &&
 	git -c protocol.version=2 -c transfer.fsckobjects=1 \
 		-c fetch.uriprotocols=http,https \
 		clone "$HTTPD_URL/smart/http_parent" http_child &&
@@ -142,8 +146,8 @@ test_expect_success 'packfile-uri with transfer.fsckobjects' '
 
 test_expect_success 'packfile-uri with transfer.fsckobjects fails on bad object' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child log &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -164,6 +168,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails on bad object'
 	configure_exclusion "$P" my-blob >h &&
 
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
+	test_when_finished "rm -rf http_child" &&
 	test_must_fail git -c protocol.version=2 -c transfer.fsckobjects=1 \
 		-c fetch.uriprotocols=http,https \
 		clone "$HTTPD_URL/smart/http_parent" http_child 2>error &&
@@ -172,8 +177,8 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails on bad object'
 
 test_expect_success 'packfile-uri with transfer.fsckobjects succeeds when .gitmodules is separate from tree' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -186,6 +191,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects succeeds when .gitmo
 	configure_exclusion "$P" .gitmodules >h &&
 
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
+	test_when_finished "rm -rf http_child" &&
 	git -c protocol.version=2 -c transfer.fsckobjects=1 \
 		-c fetch.uriprotocols=http,https \
 		clone "$HTTPD_URL/smart/http_parent" http_child &&
@@ -198,8 +204,8 @@ test_expect_success 'packfile-uri with transfer.fsckobjects succeeds when .gitmo
 
 test_expect_success 'packfile-uri with transfer.fsckobjects fails when .gitmodules separate from tree is invalid' '
 	P="$HTTPD_DOCUMENT_ROOT_PATH/http_parent" &&
-	rm -rf "$P" http_child err &&
 
+	test_when_finished "rm -rf \"$P\"" &&
 	git init "$P" &&
 	git -C "$P" config "uploadpack.allowsidebandall" "true" &&
 
@@ -218,6 +224,7 @@ test_expect_success 'packfile-uri with transfer.fsckobjects fails when .gitmodul
 	fatal: fsck failed
 	EOF
 	sane_unset GIT_TEST_SIDEBAND_ALL &&
+	test_when_finished "rm -rf http_child" &&
 	test_must_fail git -c protocol.version=2 -c transfer.fsckobjects=1 \
 		-c fetch.uriprotocols=http,https \
 		clone "$HTTPD_URL/smart/http_parent" http_child >out 2>err.actual &&
