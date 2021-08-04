@@ -281,6 +281,13 @@ do
 		;;
 	esac
 
+	# --check sanity
+	if ! git -P log --oneline --check $upstream..$branch >/dev/null
+	then
+		echo "Have bad --check output for $branch:"
+		git -P log --oneline --check $upstream..$branch
+	fi
+
 	# For my own branches not based on "master"
 	case "$upstream" in
 	refs/remotes/avar/*)
