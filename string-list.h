@@ -104,6 +104,18 @@ struct string_list {
 void string_list_init_nodup(struct string_list *list);
 void string_list_init_dup(struct string_list *list);
 
+/**
+ * string_list_cmp_init_nodup() and string_list_cmp_init_dup() are
+ * like string_list_init_nodup() and string_list_init_dup(), except a
+ * `compare_string_fn` can be passed (e.g. strcasecmp(), instead of
+ * the default strcmp()).
+ */
+
+void string_list_cmp_init_nodup(struct string_list *list,
+				compare_strings_fn cmp);
+void string_list_cmp_init_dup(struct string_list *list,
+			      compare_strings_fn cmp);
+
 /** Callback function type for for_each_string_list */
 typedef int (*string_list_each_func_t)(struct string_list_item *, void *);
 

@@ -13,6 +13,20 @@ void string_list_init_dup(struct string_list *list)
 	memcpy(list, &blank, sizeof(*list));
 }
 
+void string_list_cmp_init_nodup(struct string_list *list,
+				compare_strings_fn cmp)
+{
+	string_list_init_nodup(list);
+	list->cmp = cmp;
+}
+
+void string_list_cmp_init_dup(struct string_list *list,
+			      compare_strings_fn cmp)
+{
+	string_list_init_dup(list);
+	list->cmp = cmp;
+}
+
 /* if there is no exact match, point to the index where the entry could be
  * inserted */
 static int get_entry_index(const struct string_list *list, const char *string,

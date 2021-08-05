@@ -584,10 +584,12 @@ static void record_df_conflict_files(struct merge_options *opt,
 	 * and the file need to be present, then the D/F file will be
 	 * reinstated with a new unique name at the time it is processed.
 	 */
-	struct string_list df_sorted_entries = STRING_LIST_INIT_NODUP;
 	const char *last_file = NULL;
 	int last_len = 0;
 	int i;
+	struct string_list df_sorted_entries;
+	string_list_cmp_init_nodup(&df_sorted_entries,
+				   string_list_df_name_compare);
 
 	/*
 	 * If we're merging merge-bases, we don't want to bother with
@@ -602,7 +604,6 @@ static void record_df_conflict_files(struct merge_options *opt,
 		string_list_append(&df_sorted_entries, next->string)->util =
 				   next->util;
 	}
-	df_sorted_entries.cmp = string_list_df_name_compare;
 	string_list_sort(&df_sorted_entries);
 
 	string_list_clear(&opt->priv->df_conflict_file_set, 1);
