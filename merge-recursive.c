@@ -2346,13 +2346,9 @@ static struct hashmap *get_directory_renames(struct diff_queue_struct *pairs)
 		/*
 		 * The relevant directory sub-portion of the original full
 		 * filepaths were xstrndup'ed before inserting into
-		 * possible_new_dirs, and instead of manually iterating the
-		 * list and free'ing each, just lie and tell
-		 * possible_new_dirs that it did the strdup'ing so that it
-		 * will free them for us.
+		 * possible_new_dirs.
 		 */
-		entry->possible_new_dirs.strdup_strings = 1;
-		string_list_clear(&entry->possible_new_dirs, 1);
+		string_list_clear_strings(&entry->possible_new_dirs, 1);
 	}
 
 	return dir_renames;
