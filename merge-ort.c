@@ -544,15 +544,10 @@ static void clear_or_reinit_internal_opts(struct merge_options_internal *opti,
 	strmap_func(&opti->conflicted, 0);
 
 	/*
-	 * opti->paths_to_free is similar to opti->paths; we created it with
-	 * strdup_strings = 0 to avoid making _another_ copy of the fullpath
-	 * but now that we've used it and have no other references to these
-	 * strings, it is time to deallocate them.  We do so by temporarily
-	 * setting strdup_strings to 1.
+	 * opti->paths_to_free is similar to opti->paths; it's memory
+	 * we borrowed and need to free with string_list_clear_strings().
 	 */
-	opti->paths_to_free.strdup_strings = 1;
-	string_list_clear(&opti->paths_to_free, 0);
-	opti->paths_to_free.strdup_strings = 0;
+	string_list_clear_strings(&opti->paths_to_free, 0);
 
 	if (opti->attr_index.cache_nr) /* true iff opt->renormalize */
 		discard_index(&opti->attr_index);
