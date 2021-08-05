@@ -772,10 +772,9 @@ static struct string_list extra_hdr = STRING_LIST_INIT_NODUP;
 static struct string_list extra_to = STRING_LIST_INIT_NODUP;
 static struct string_list extra_cc = STRING_LIST_INIT_NODUP;
 
-static void add_header(const char *orig_value)
+static void add_header(const char *value)
 {
 	struct string_list_item *item;
-	char *value = xstrdup(orig_value);
 	int len = strlen(value);
 	while (len && value[len - 1] == '\n')
 		len--;
@@ -790,8 +789,6 @@ static void add_header(const char *orig_value)
 		item = string_list_append(&extra_hdr, value);
 	}
 
-	/* For freeing with string_list_clear_util() */
-	item->util = value;
 	item->string[len] = '\0';
 }
 
@@ -854,7 +851,7 @@ static int git_format_config(const char *var, const char *value, void *cb)
 	if (!strcmp(var, "format.headers")) {
 		if (!value)
 			die(_("format.headers without value"));
-		add_header(xstrdup(value));
+		add_header(value);
 		return 0;
 	}
 	if (!strcmp(var, "format.suffix"))
@@ -1403,9 +1400,9 @@ static int inline_callback(const struct option *opt, const char *arg, int unset)
 static int header_callback(const struct option *opt, const char *arg, int unset)
 {
 	if (unset) {
-		string_list_clear_util(&extra_hdr);
-		string_list_clear_util(&extra_to);
-		string_list_clear_util(&extra_cc);
+		string_list_clear(&extra_hdr, 0);
+		string_list_clear(&extra_to, 0);
+		string_list_clear(&extra_cc, 0);
 	} else {
 		add_header(arg);
 	}
@@ -1833,6 +1830,9 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
+	extra_hdr.strdup_strings = 1;
+	extra_to.strdup_strings = 1;
+	extra_cc.strdup_strings = 1;
 	init_log_defaults();
 	init_display_notes(&notes_opt);
 	git_config(git_format_config, NULL);
@@ -2229,9 +2229,9 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	stop_progress(&progress);
 	free(list);
 	free(branch_name);
-	string_list_clear_util(&extra_to);
-	string_list_clear_util(&extra_cc);
-	string_list_clear_util(&extra_hdr);
+	string_list_clear(&extra_to, 0);
+	string_list_clear(&extra_cc, 0);
+	string_list_clear(&extra_hdr, 0);
 	if (ignore_if_in_upstream)
 		free_patch_ids(&ids);
 

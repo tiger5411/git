@@ -340,23 +340,9 @@ static void read_branches(void)
 
 struct ref_states {
 	struct remote *remote;
-
-	struct string_list new_refs;
-	struct string_list stale;
-	struct string_list tracked;
-	struct string_list heads;
-	struct string_list push;
-
+	struct string_list new_refs, stale, tracked, heads, push;
 	int queried;
 };
-
-#define REF_STATES_INIT { \
-	.new_refs = STRING_LIST_INIT_DUP, \
-	.stale = STRING_LIST_INIT_DUP, \
-	.tracked = STRING_LIST_INIT_DUP, \
-	.heads = STRING_LIST_INIT_DUP, \
-	.push = STRING_LIST_INIT_DUP, \
-}
 
 static int get_ref_states(const struct ref *remote_refs, struct ref_states *states)
 {
@@ -369,6 +355,9 @@ static int get_ref_states(const struct ref *remote_refs, struct ref_states *stat
 			die(_("Could not get fetch map for refspec %s"),
 				states->remote->fetch.raw[i]);
 
+	states->new_refs.strdup_strings = 1;
+	states->tracked.strdup_strings = 1;
+	states->stale.strdup_strings = 1;
 	for (ref = fetch_map; ref; ref = ref->next) {
 		if (!ref->peer_ref || !ref_exists(ref->peer_ref->name))
 			string_list_append(&states->new_refs, abbrev_branch(ref->name));
@@ -417,6 +406,7 @@ static int get_push_ref_states(const struct ref *remote_refs,
 
 	match_push_refs(local_refs, &push_map, &remote->push, MATCH_REFS_NONE);
 
+	states->push.strdup_strings = 1;
 	for (ref = push_map; ref; ref = ref->next) {
 		struct string_list_item *item;
 		struct push_info *info;
@@ -459,6 +449,7 @@ static int get_push_ref_states_noquery(struct ref_states *states)
 	if (remote->mirror)
 		return 0;
 
+	states->push.strdup_strings = 1;
 	if (!remote->push.nr) {
 		item = string_list_append(&states->push, _("(matching)"));
 		info = item->util = xcalloc(1, sizeof(struct push_info));
@@ -492,6 +483,7 @@ static int get_head_names(const struct ref *remote_refs, struct ref_states *stat
 	refspec.force = 0;
 	refspec.pattern = 1;
 	refspec.src = refspec.dst = "refs/heads/*";
+	states->heads.strdup_strings = 1;
 	get_fetch_map(remote_refs, &refspec, &fetch_map_tail, 0);
 	matches = guess_remote_head(find_ref_by_name(remote_refs, "HEAD"),
 				    fetch_map, 1);
@@ -913,7 +905,7 @@ static void clear_push_info(void *util, const char *string)
 {
 	struct push_info *info = util;
 	free(info->dest);
-	/* note: fixed memleak here */
+	free(info);
 }
 
 static void free_remote_ref_states(struct ref_states *states)
@@ -1167,7 +1159,7 @@ static int get_one_entry(struct remote *remote, void *priv)
 		string_list_append(list, remote->name)->util =
 				strbuf_detach(&url_buf, NULL);
 	} else
-		string_list_append(list, remote->name);
+		string_list_append(list, remote->name)->util = NULL;
 	if (remote->pushurl_nr) {
 		url = remote->pushurl;
 		url_nr = remote->pushurl_nr;
@@ -1219,7 +1211,7 @@ static int show(int argc, const char **argv)
 		OPT_BOOL('n', NULL, &no_query, N_("do not query remotes")),
 		OPT_END()
 	};
-	struct ref_states states = REF_STATES_INIT;
+	struct ref_states states;
 	struct string_list info_list = STRING_LIST_INIT_NODUP;
 	struct show_info info;
 
@@ -1341,7 +1333,8 @@ static int set_head(int argc, const char **argv)
 	if (!opt_a && !opt_d && argc == 2) {
 		head_name = xstrdup(argv[1]);
 	} else if (opt_a && !opt_d && argc == 1) {
-		struct ref_states states = REF_STATES_INIT;
+		struct ref_states states;
+		memset(&states, 0, sizeof(states));
 		get_remote_ref_states(argv[0], &states, GET_HEAD_NAMES);
 		if (!states.heads.nr)
 			result |= error(_("Cannot determine remote HEAD"));
@@ -1380,13 +1373,14 @@ static int set_head(int argc, const char **argv)
 static int prune_remote(const char *remote, int dry_run)
 {
 	int result = 0;
-	struct ref_states states = REF_STATES_INIT;
+	struct ref_states states;
 	struct string_list refs_to_prune = STRING_LIST_INIT_NODUP;
 	struct string_list_item *item;
 	const char *dangling_msg = dry_run
 		? _(" %s will become dangling!")
 		: _(" %s has become dangling!");
 
+	memset(&states, 0, sizeof(states));
 	get_remote_ref_states(remote, &states, GET_REF_STATES);
 
 	if (!states.stale.nr) {
