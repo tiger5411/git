@@ -90,6 +90,11 @@ void advise(const char *advice, ...);
 int advice_enabled(enum advice_type type);
 
 /**
+ * Enable or disable advice of a certain kind.
+ */
+void advice_set(enum advice_type type, int value);
+
+/**
  * Checks the visibility of the advice before printing.
  */
 __attribute__((format (printf, 2, 3)))

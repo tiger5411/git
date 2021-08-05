@@ -189,6 +189,11 @@ int advice_enabled(enum advice_type type)
 	}
 }
 
+void advice_set(enum advice_type type, int value)
+{
+	advice_setting[type].enabled = value;
+}
+
 void advise_if_enabled(enum advice_type type, const char *advice, ...)
 {
 	va_list params;

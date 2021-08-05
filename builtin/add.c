@@ -433,7 +433,7 @@ static void check_embedded_repo(const char *path)
 	if (advice_enabled(ADVICE_ADD_EMBEDDED_REPO)) {
 		advise(embedded_advice, name.buf, name.buf);
 		/* there may be multiple entries; advise only once */
-		advice_add_embedded_repo = 0;
+		advice_set(ADVICE_ADD_EMBEDDED_REPO, 0);
 	}
 
 	strbuf_release(&name);
