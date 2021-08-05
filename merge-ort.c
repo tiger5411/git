@@ -504,6 +504,16 @@ struct conflict_info {
 	assert((ci) && !(mi)->clean);        \
 } while (0)
 
+static void free_strmap_strings(struct strmap *map)
+{
+	struct hashmap_iter iter;
+	struct strmap_entry *entry;
+
+	strmap_for_each_entry(map, &iter, entry) {
+		free((char*)entry->key);
+	}
+}
+
 static void clear_or_reinit_internal_opts(struct merge_options_internal *opti,
 					  int reinitialize)
 {
@@ -517,11 +527,13 @@ static void clear_or_reinit_internal_opts(struct merge_options_internal *opti,
 		reinitialize ? strset_partial_clear : strset_clear;
 
 	/*
-	 * We used the the pattern of re-using already allocated
-	 * strings strmap_clear_strings() in make_traverse_path from
-	 * setup_path_info(). Deallocate them.
+	 * We marked opti->paths with strdup_strings = 0, so that we
+	 * wouldn't have to make another copy of the fullpath created by
+	 * make_traverse_path from setup_path_info().  But, now that we've
+	 * used it and have no other references to these strings, it is time
+	 * to deallocate them.
 	 */
-	strmap_clear_strings(&opti->paths, 0);
+	free_strmap_strings(&opti->paths);
 	strmap_func(&opti->paths, 1);
 
 	/*
@@ -2997,6 +3009,7 @@ static int collect_renames(struct merge_options *opt,
 	 * and have no other references to these strings, it is time to
 	 * deallocate them.
 	 */
+	free_strmap_strings(&collisions);
 	strmap_clear(&collisions, 1);
 	return clean;
 }
