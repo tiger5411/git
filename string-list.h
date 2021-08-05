@@ -105,6 +105,18 @@ void string_list_init_nodup(struct string_list *list);
 void string_list_init_dup(struct string_list *list);
 
 /**
+ * string_list_cmp_init_nodup() and string_list_cmp_init_dup() are
+ * like string_list_init_nodup() and string_list_init_dup(), except a
+ * `compare_string_fn` can be passed (e.g. strcasecmp(), instead of
+ * the default strcmp()).
+ */
+
+void string_list_cmp_init_nodup(struct string_list *list,
+				compare_strings_fn cmp);
+void string_list_cmp_init_dup(struct string_list *list,
+			      compare_strings_fn cmp);
+
+/**
  * TODO remove: For compatibility with any in-flight older API users
  */
 void string_list_init(struct string_list *list, int strdup_strings);
