@@ -38,6 +38,10 @@ advice.*::
 	commitBeforeMerge::
 		Advice shown when linkgit:git-merge[1] refuses to
 		merge to avoid overwriting local changes.
+	convertByteOrderMark::
+		Advice show when running file conversions, and a byte
+		order mark (BOM) is either unexpectedly missing or
+		present.
 	detachedHead::
 		Advice shown when you used
 		linkgit:git-switch[1] or linkgit:git-checkout[1]

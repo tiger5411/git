@@ -276,12 +276,16 @@ static int validate_encoding(const char *path, const char *enc,
 			 * We cut off the last two characters of the encoding name
 			 * to generate the encoding name suitable for BOMs.
 			 */
-			const char *advise_msg = _(
-				"The file '%s' contains a byte order "
-				"mark (BOM). Please use UTF-%.*s as "
-				"working-tree-encoding.");
-			int stripped_len = strlen(stripped) - strlen("BE");
-			advise(advise_msg, path, stripped_len, stripped);
+			if (advice_enabled(ADVICE_CONVERT_BYTE_ORDER_MARK)) {
+				const char *advise_msg = _(
+					"The file '%s' contains a byte order "
+					"mark (BOM). Please use UTF-%.*s as "
+					"working-tree-encoding.");
+				int stripped_len = strlen(stripped) - strlen("BE");
+				advise(advise_msg, path, stripped_len,
+				       stripped);
+			}
+
 			if (die_on_error)
 				die(error_msg, path, enc);
 			else {
@@ -291,12 +295,16 @@ static int validate_encoding(const char *path, const char *enc,
 		} else if (is_missing_required_utf_bom(enc, data, len)) {
 			const char *error_msg = _(
 				"BOM is required in '%s' if encoded as %s");
-			const char *advise_msg = _(
-				"The file '%s' is missing a byte order "
-				"mark (BOM). Please use UTF-%sBE or UTF-%sLE "
-				"(depending on the byte order) as "
-				"working-tree-encoding.");
-			advise(advise_msg, path, stripped, stripped);
+
+			if (advice_enabled(ADVICE_CONVERT_BYTE_ORDER_MARK)) {
+				const char *advise_msg = _(
+					"The file '%s' is missing a byte order "
+					"mark (BOM). Please use UTF-%sBE or UTF-%sLE "
+					"(depending on the byte order) as "
+					"working-tree-encoding.");
+				advise(advise_msg, path, stripped, stripped);
+			}
+
 			if (die_on_error)
 				die(error_msg, path, enc);
 			else {
