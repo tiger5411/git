@@ -4270,12 +4270,15 @@ static int reread_todo_if_changed(struct repository *r,
 	return 0;
 }
 
-static const char rescheduled_advice[] =
+static const char rescheduled_message[] =
 N_("Could not execute the todo command\n"
 "\n"
 "    %.*s"
 "\n"
-"It has been rescheduled; To edit the command before continuing, please\n"
+"It has been rescheduled.\n");
+
+static const char rescheduled_advice[] =
+N_("To edit the command before continuing, please\n"
 "edit the todo list first:\n"
 "\n"
 "    git rebase --edit-todo\n"
@@ -4348,11 +4351,13 @@ static int pick_commits(struct repository *r,
 				setenv(GIT_REFLOG_ACTION, prev_reflog_action, 1);
 			if (is_rebase_i(opts) && res < 0) {
 				/* Reschedule */
-				advise(_(rescheduled_advice),
-				       get_item_line_length(todo_list,
-							    todo_list->current),
-				       get_item_line(todo_list,
-						     todo_list->current));
+				fprintf(stderr, _(rescheduled_message),
+					get_item_line_length(todo_list,
+							     todo_list->current),
+					get_item_line(todo_list,
+						      todo_list->current));
+				if (advice_enabled(ADVICE_SEQUENCER_RESCHEDULED))
+					advise("%s", _(rescheduled_advice));
 				todo_list->current--;
 				if (save_todo(todo_list, opts))
 					return -1;
@@ -4436,10 +4441,12 @@ static int pick_commits(struct repository *r,
 			return error(_("unknown command %d"), item->command);
 
 		if (reschedule) {
-			advise(_(rescheduled_advice),
-			       get_item_line_length(todo_list,
-						    todo_list->current),
-			       get_item_line(todo_list, todo_list->current));
+			fprintf(stderr, _(rescheduled_message),
+				get_item_line_length(todo_list,
+						     todo_list->current),
+				get_item_line(todo_list, todo_list->current));
+			if (advice_enabled(ADVICE_SEQUENCER_RESCHEDULED))
+				advise("%s",_(rescheduled_advice));
 			todo_list->current--;
 			if (save_todo(todo_list, opts))
 				return -1;

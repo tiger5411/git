@@ -126,6 +126,8 @@ advice.*::
 		show directions on how to proceed from the current state.
 	sequencerInUse::
 		Advice shown when a sequencer command is already in progress.
+	sequencerRescheduled::
+		Advice shown when a sequencer command is rescheduled.
 	sequencerResolveConflict::
 		Advice shown when a sequencer command encounters a
 		conflict, with suggestions about how to solve it.
