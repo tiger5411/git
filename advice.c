@@ -33,46 +33,46 @@ static const char *advise_get_color(enum color_advice ix)
 
 static struct {
 	const char *key;
-	int enabled;
+	int disabled;
 } advice_setting[] = {
-	[ADVICE_ADD_EMBEDDED_REPO]			= { "addEmbeddedRepo", 1 },
-	[ADVICE_ADD_EMPTY_PATHSPEC]			= { "addEmptyPathspec", 1 },
-	[ADVICE_ADD_IGNORED_FILE]			= { "addIgnoredFile", 1 },
-	[ADVICE_AM_WORK_DIR] 				= { "amWorkDir", 1 },
-	[ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME] 	= { "checkoutAmbiguousRemoteBranchName", 1 },
-	[ADVICE_COMMIT_BEFORE_MERGE]			= { "commitBeforeMerge", 1 },
-	[ADVICE_DETACHED_HEAD]				= { "detachedHead", 1 },
-	[ADVICE_FETCH_SHOW_FORCED_UPDATES]		= { "fetchShowForcedUpdates", 1 },
-	[ADVICE_GRAFT_FILE_DEPRECATED]			= { "graftFileDeprecated", 1 },
-	[ADVICE_IGNORED_HOOK]				= { "ignoredHook", 1 },
-	[ADVICE_IMPLICIT_IDENTITY]			= { "implicitIdentity", 1 },
-	[ADVICE_NESTED_TAG]				= { "nestedTag", 1 },
-	[ADVICE_OBJECT_NAME_WARNING]			= { "objectNameWarning", 1 },
-	[ADVICE_PUSH_ALREADY_EXISTS]			= { "pushAlreadyExists", 1 },
-	[ADVICE_PUSH_FETCH_FIRST]			= { "pushFetchFirst", 1 },
-	[ADVICE_PUSH_NEEDS_FORCE]			= { "pushNeedsForce", 1 },
-	[ADVICE_PUSH_REF_NEEDS_UPDATE]			= { "pushRefNeedsUpdate", 1 },
-	[ADVICE_PUSH_NON_FF_CURRENT]			= { "pushNonFFCurrent", 1 },
-	[ADVICE_PUSH_NON_FF_MATCHING]			= { "pushNonFFMatching", 1 },
-	[ADVICE_PUSH_UNQUALIFIED_REF_NAME]		= { "pushUnqualifiedRefName", 1 },
-	[ADVICE_PUSH_UPDATE_REJECTED]			= { "pushUpdateRejected", 1 },
-	[ADVICE_RESET_QUIET_WARNING]			= { "resetQuiet", 1 },
-	[ADVICE_RESOLVE_CONFLICT]			= { "resolveConflict", 1 },
-	[ADVICE_RM_HINTS]				= { "rmHints", 1 },
-	[ADVICE_SEQUENCER_IN_USE]			= { "sequencerInUse", 1 },
-	[ADVICE_SET_UPSTREAM_FAILURE]			= { "setUpstreamFailure", 1 },
-	[ADVICE_SKIPPED_CHERRY_PICKS]			= { "skippedCherryPicks", 1 },
-	[ADVICE_STATUS_AHEAD_BEHIND_WARNING]		= { "statusAheadBehindWarning", 1 },
-	[ADVICE_STATUS_HINTS]				= { "statusHints", 1 },
-	[ADVICE_STATUS_U_OPTION]			= { "statusUoption", 1 },
-	[ADVICE_SUBMODULE_ALTERNATE_ERROR_STRATEGY_DIE] = { "submoduleAlternateErrorStrategyDie", 1 },
-	[ADVICE_UPDATE_SPARSE_PATH]			= { "updateSparsePath", 1 },
-	[ADVICE_WAITING_FOR_EDITOR]			= { "waitingForEditor", 1 },
+	[ADVICE_ADD_EMBEDDED_REPO]			= { "advice.addEmbeddedRepo" },
+	[ADVICE_ADD_EMPTY_PATHSPEC]			= { "advice.addEmptyPathspec" },
+	[ADVICE_ADD_IGNORED_FILE]			= { "advice.addIgnoredFile" },
+	[ADVICE_AM_WORK_DIR] 				= { "advice.amWorkDir" },
+	[ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME] 	= { "advice.checkoutAmbiguousRemoteBranchName" },
+	[ADVICE_COMMIT_BEFORE_MERGE]			= { "advice.commitBeforeMerge" },
+	[ADVICE_DETACHED_HEAD]				= { "advice.detachedHead" },
+	[ADVICE_FETCH_SHOW_FORCED_UPDATES]		= { "advice.fetchShowForcedUpdates" },
+	[ADVICE_GRAFT_FILE_DEPRECATED]			= { "advice.graftFileDeprecated" },
+	[ADVICE_IGNORED_HOOK]				= { "advice.ignoredHook" },
+	[ADVICE_IMPLICIT_IDENTITY]			= { "advice.implicitIdentity" },
+	[ADVICE_NESTED_TAG]				= { "advice.nestedTag" },
+	[ADVICE_OBJECT_NAME_WARNING]			= { "advice.objectNameWarning" },
+	[ADVICE_PUSH_ALREADY_EXISTS]			= { "advice.pushAlreadyExists" },
+	[ADVICE_PUSH_FETCH_FIRST]			= { "advice.pushFetchFirst" },
+	[ADVICE_PUSH_NEEDS_FORCE]			= { "advice.pushNeedsForce" },
+	[ADVICE_PUSH_REF_NEEDS_UPDATE]			= { "advice.pushRefNeedsUpdate" },
+	[ADVICE_PUSH_NON_FF_CURRENT]			= { "advice.pushNonFFCurrent" },
+	[ADVICE_PUSH_NON_FF_MATCHING]			= { "advice.pushNonFFMatching" },
+	[ADVICE_PUSH_UNQUALIFIED_REF_NAME]		= { "advice.pushUnqualifiedRefName" },
+	[ADVICE_PUSH_UPDATE_REJECTED]			= { "advice.pushUpdateRejected" },
+	[ADVICE_RESET_QUIET_WARNING]			= { "advice.resetQuiet" },
+	[ADVICE_RESOLVE_CONFLICT]			= { "advice.resolveConflict" },
+	[ADVICE_RM_HINTS]				= { "advice.rmHints" },
+	[ADVICE_SEQUENCER_IN_USE]			= { "advice.sequencerInUse" },
+	[ADVICE_SET_UPSTREAM_FAILURE]			= { "advice.setUpstreamFailure" },
+	[ADVICE_SKIPPED_CHERRY_PICKS]			= { "advice.skippedCherryPicks" },
+	[ADVICE_STATUS_AHEAD_BEHIND_WARNING]		= { "advice.statusAheadBehindWarning" },
+	[ADVICE_STATUS_HINTS]				= { "advice.statusHints" },
+	[ADVICE_STATUS_U_OPTION]			= { "advice.statusUoption" },
+	[ADVICE_SUBMODULE_ALTERNATE_ERROR_STRATEGY_DIE] = { "advice.submoduleAlternateErrorStrategyDie" },
+	[ADVICE_UPDATE_SPARSE_PATH]			= { "advice.updateSparsePath" },
+	[ADVICE_WAITING_FOR_EDITOR]			= { "advice.waitingForEditor" },
 };
 
 static const char turn_off_instructions[] =
 N_("\n"
-   "Disable this message with \"git config advice.%s false\"");
+   "Disable this message with \"git config %s false\"");
 
 static void vadvise(const char *advice, int display_instructions,
 		    const char *key, va_list params)
@@ -112,7 +112,7 @@ void advise(const char *advice, ...)
 
 int advice_enabled(enum advice_type type)
 {
-	return advice_setting[type].enabled;
+	return !advice_setting[type].disabled;
 }
 
 void advise_if_enabled(enum advice_type type, const char *advice, ...)
@@ -129,7 +129,7 @@ void advise_if_enabled(enum advice_type type, const char *advice, ...)
 
 int git_default_advice_config(const char *var, const char *value)
 {
-	const char *k, *slot_name;
+	const char *slot_name;
 	int i;
 
 	if (!strcmp(var, "color.advice")) {
@@ -146,13 +146,10 @@ int git_default_advice_config(const char *var, const char *value)
 		return color_parse(value, advice_colors[slot]);
 	}
 
-	if (!skip_prefix(var, "advice.", &k))
-		return 0;
-
 	for (i = 0; i < ARRAY_SIZE(advice_setting); i++) {
-		if (strcasecmp(k, advice_setting[i].key))
+		if (strcasecmp(var, advice_setting[i].key))
 			continue;
-		advice_setting[i].enabled = git_config_bool(var, value);
+		advice_setting[i].disabled = !git_config_bool(var, value);
 		return 0;
 	}
 
