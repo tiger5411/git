@@ -114,6 +114,9 @@ advice.*::
 		show directions on how to proceed from the current state.
 	sequencerInUse::
 		Advice shown when a sequencer command is already in progress.
+	sequencerResolveConflict::
+		Advice shown when a sequencer command encounters a
+		conflict, with suggestions about how to solve it.
 	skippedCherryPicks::
 		Shown when linkgit:git-rebase[1] skips a commit that has already
 		been cherry-picked onto the upstream branch.

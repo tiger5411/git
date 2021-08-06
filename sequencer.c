@@ -415,7 +415,7 @@ static void print_advice(struct repository *r, int show_hint,
 		return;
 	}
 
-	if (show_hint) {
+	if (show_hint && advice_enabled(ADVICE_SEQUENCER_RESOLVE_CONFLICT)) {
 		if (opts->no_commit)
 			advise(_("after resolving the conflicts, mark the corrected paths\n"
 				 "with 'git add <paths>' or 'git rm <paths>'"));
