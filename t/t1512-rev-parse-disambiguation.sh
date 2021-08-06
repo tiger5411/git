@@ -334,16 +334,16 @@ test_expect_success 'ambiguity errors are not repeated (peel)' '
 
 test_expect_success 'ambiguity hints' '
 	test_must_fail git rev-parse 000000000 2>stderr &&
-	grep ^hint: stderr >hints &&
-	# 16 candidates, plus one intro line
-	test_line_count = 17 hints
+	grep "^hint:   " stderr >hints &&
+	# 16 candidates, minus surrounding prose
+	test_line_count = 16 hints
 '
 
 test_expect_success 'ambiguity hints respect type' '
 	test_must_fail git rev-parse 000000000^{commit} 2>stderr &&
-	grep ^hint: stderr >hints &&
-	# 5 commits, 1 tag (which is a committish), plus intro line
-	test_line_count = 7 hints
+	grep "^hint:   " stderr >hints &&
+	# 5 commits, 1 tag (which is a committish), minus surrounding prose
+	test_line_count = 6 hints
 '
 
 test_expect_success 'failed type-selector still shows hint' '
@@ -352,8 +352,8 @@ test_expect_success 'failed type-selector still shows hint' '
 	echo 851 | git hash-object --stdin -w &&
 	echo 872 | git hash-object --stdin -w &&
 	test_must_fail git rev-parse ee3d^{commit} 2>stderr &&
-	grep ^hint: stderr >hints &&
-	test_line_count = 3 hints
+	grep "^hint:   " stderr >hints &&
+	test_line_count = 2 hints
 '
 
 test_expect_success 'core.disambiguate config can prefer types' '
