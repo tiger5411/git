@@ -7,8 +7,8 @@
 struct string_list;
 
 int git_default_advice_config(const char *var, const char *value);
-__attribute__((format (printf, 1, 2)))
-void advise(const char *advice, ...);
+__attribute__((format (printf, 2, 3)))
+void advise(enum advice_type type, const char *advice, ...);
 
 /**
  * Checks if advice type is enabled (can be printed to the user).

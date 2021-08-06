@@ -25,7 +25,8 @@ const char *find_hook(const char *name)
 
 			if (!string_list_lookup(&advise_given, name)) {
 				string_list_insert(&advise_given, name);
-				advise(_("The '%s' hook was ignored because "
+				advise(ADVICE_IGNORED_HOOK,
+				       _("The '%s' hook was ignored because "
 					 "it's not set as executable.\n"
 					 "You can disable this warning with "
 					 "`git config advice.ignoredHook false`."),

@@ -194,7 +194,8 @@ static int read_graft_file(struct repository *r, const char *graft_file)
 		return -1;
 	if (!no_graft_file_deprecated_advice &&
 	    advice_enabled(ADVICE_GRAFT_FILE_DEPRECATED))
-		advise(_("Support for <GIT_DIR>/info/grafts is deprecated\n"
+		advise(ADVICE_GRAFT_FILE_DEPRECATED,
+		      _ ("Support for <GIT_DIR>/info/grafts is deprecated\n"
 			 "and will be removed in a future Git version.\n"
 			 "\n"
 			 "Please use \"git replace --convert-graft-file\"\n"

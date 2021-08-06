@@ -590,7 +590,8 @@ static enum get_oid_result get_short_oid(struct repository *r,
 		 * objects composed in show_ambiguous_object(). See
 		 * its "TRANSLATORS" comments for details.
 		 */
-		advise(_("The candidates are:\n%s"), out.advice.buf);
+		advise(ADVICE_OBJECT_AMBIGUOUS, _("The candidates are:\n%s"),
+		       out.advice.buf);
 
 		oid_array_clear(&collect);
 		strbuf_release(&out.advice);

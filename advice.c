@@ -72,7 +72,7 @@ static void vadvise(const char *advice, int display_instructions,
 	strbuf_release(&buf);
 }
 
-void advise(const char *advice, ...)
+void advise(enum advice_type type, const char *advice, ...)
 {
 	va_list params;
 	va_start(params, advice);
@@ -155,7 +155,8 @@ int error_resolve_conflict(const char *me)
 		 * Message used both when 'git commit' fails and when
 		 * other commands doing a merge do.
 		 */
-		advise(_("Fix them up in the work tree, and then use 'git add/rm <file>'\n"
+		advise(ADVICE_RESOLVE_CONFLICT,
+		       _("Fix them up in the work tree, and then use 'git add/rm <file>'\n"
 			 "as appropriate to mark resolution and make a commit."));
 	return -1;
 }

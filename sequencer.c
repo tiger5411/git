@@ -402,9 +402,10 @@ static void print_advice(struct repository *r, int show_hint,
 			 struct replay_opts *opts)
 {
 	char *msg = getenv("GIT_CHERRY_PICK_HELP");
+	const enum advice_type type = ADVICE_SEQUENCER_RESOLVE_CONFLICT;
 
 	if (msg) {
-		advise("%s\n", msg);
+		fprintf(stderr, "%s\n", msg);
 		/*
 		 * A conflict has occurred but the porcelain
 		 * (typically rebase --interactive) wants to take care
@@ -415,19 +416,22 @@ static void print_advice(struct repository *r, int show_hint,
 		return;
 	}
 
-	if (show_hint && advice_enabled(ADVICE_SEQUENCER_RESOLVE_CONFLICT)) {
+	if (show_hint && advice_enabled(type)) {
 		if (opts->no_commit)
-			advise(_("after resolving the conflicts, mark the corrected paths\n"
+			advise(type,
+			       _("after resolving the conflicts, mark the corrected paths\n"
 				 "with 'git add <paths>' or 'git rm <paths>'"));
 		else if (opts->action == REPLAY_PICK)
-			advise(_("After resolving the conflicts, mark them with\n"
+			advise(type,
+			       _("After resolving the conflicts, mark them with\n"
 				 "\"git add/rm <pathspec>\", then run\n"
 				 "\"git cherry-pick --continue\".\n"
 				 "You can instead skip this commit with \"git cherry-pick --skip\".\n"
 				 "To abort and get back to the state before \"git cherry-pick\",\n"
 				 "run \"git cherry-pick --abort\"."));
 		else if (opts->action == REPLAY_REVERT)
-			advise(_("After resolving the conflicts, mark them with\n"
+			advise(type,
+			       _("After resolving the conflicts, mark them with\n"
 				 "\"git add/rm <pathspec>\", then run\n"
 				 "\"git revert --continue\".\n"
 				 "You can instead skip this commit with \"git revert --skip\".\n"
@@ -500,7 +504,8 @@ static int error_dirty_index(struct repository *repo, struct replay_opts *opts)
 		_(action_name(opts)));
 
 	if (advice_enabled(ADVICE_COMMIT_BEFORE_MERGE))
-		advise(_("commit your changes or stash them to proceed."));
+		advise(ADVICE_COMMIT_BEFORE_MERGE,
+		       _("commit your changes or stash them to proceed."));
 	return -1;
 }
 
@@ -3059,8 +3064,9 @@ static int create_seq_dir(struct repository *r)
 	if (in_progress_error) {
 		error("%s", in_progress_error);
 		if (advice_enabled(ADVICE_SEQUENCER_IN_USE))
-			advise(in_progress_advice,
-				advise_skip ? "--skip | " : "");
+			advise(ADVICE_SEQUENCER_IN_USE,
+			       in_progress_advice,
+			       advise_skip ? "--skip | " : "");
 		return -1;
 	}
 	if (mkdir(git_path_seq_dir(), 0777) < 0)
@@ -3263,9 +3269,10 @@ give_advice:
 	error(_("there is nothing to skip"));
 
 	if (advice_enabled(ADVICE_RESOLVE_CONFLICT)) {
-		advise(_("have you committed already?\n"
+		advise(ADVICE_RESOLVE_CONFLICT,
+		       _("have you committed already?\n"
 			 "try \"git %s --continue\""),
-			 action == REPLAY_REVERT ? "revert" : "cherry-pick");
+		       action == REPLAY_REVERT ? "revert" : "cherry-pick");
 	}
 	return -1;
 }
@@ -4357,7 +4364,8 @@ static int pick_commits(struct repository *r,
 					get_item_line(todo_list,
 						      todo_list->current));
 				if (advice_enabled(ADVICE_SEQUENCER_RESCHEDULED))
-					advise("%s", _(rescheduled_advice));
+					advise(ADVICE_SEQUENCER_RESCHEDULED,
+					       "%s", _(rescheduled_advice));
 				todo_list->current--;
 				if (save_todo(todo_list, opts))
 					return -1;
@@ -4446,7 +4454,8 @@ static int pick_commits(struct repository *r,
 						     todo_list->current),
 				get_item_line(todo_list, todo_list->current));
 			if (advice_enabled(ADVICE_SEQUENCER_RESCHEDULED))
-				advise("%s",_(rescheduled_advice));
+				advise(ADVICE_SEQUENCER_RESCHEDULED,
+				       "%s",_(rescheduled_advice));
 			todo_list->current--;
 			if (save_todo(todo_list, opts))
 				return -1;

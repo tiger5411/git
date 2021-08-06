@@ -1209,7 +1209,8 @@ static const char *parse_remote_branch(const char *arg,
 
 	if (!remote && num_matches > 1) {
 	    if (advice_enabled(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME)) {
-		    advise(_("If you meant to check out a remote tracking branch on, e.g. 'origin',\n"
+		    advise(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME,
+			   _("If you meant to check out a remote tracking branch on, e.g. 'origin',\n"
 			     "you can do so by fully qualifying the name with the --track option:\n"
 			     "\n"
 			     "    git checkout --track origin/<name>\n"
@@ -1425,7 +1426,8 @@ static void die_expecting_a_branch(const struct branch_info *branch_info)
 		code = die_message(_("a branch is expected, got '%s'"), branch_info->name);
 
 	if (advice_enabled(ADVICE_SUGGEST_DETACHING_HEAD))
-		advise(_("If you want to detach HEAD at the commit, try again with the --detach option."));
+		advise(ADVICE_SUGGEST_DETACHING_HEAD,
+		       _("If you want to detach HEAD at the commit, try again with the --detach option."));
 
 	exit(code);
 }

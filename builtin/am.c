@@ -1872,7 +1872,8 @@ static void am_run(struct am_state *state, int resume)
 				linelen(state->msg), state->msg);
 
 			if (advice_enabled(ADVICE_AM_WORK_DIR))
-				advise(_("Use 'git am --show-current-patch=diff' to see the failed patch"));
+				advise(ADVICE_AM_WORK_DIR,
+				       _("Use 'git am --show-current-patch=diff' to see the failed patch"));
 
 			die_user_resolve(state);
 		}

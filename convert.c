@@ -282,7 +282,8 @@ static int validate_encoding(const char *path, const char *enc,
 					"mark (BOM). Please use UTF-%.*s as "
 					"working-tree-encoding.");
 				int stripped_len = strlen(stripped) - strlen("BE");
-				advise(advise_msg, path, stripped_len,
+				advise(ADVICE_CONVERT_BYTE_ORDER_MARK,
+				       advise_msg, path, stripped_len,
 				       stripped);
 			}
 
@@ -302,7 +303,8 @@ static int validate_encoding(const char *path, const char *enc,
 					"mark (BOM). Please use UTF-%sBE or UTF-%sLE "
 					"(depending on the byte order) as "
 					"working-tree-encoding.");
-				advise(advise_msg, path, stripped, stripped);
+				advise(ADVICE_CONVERT_BYTE_ORDER_MARK,
+				       advise_msg, path, stripped, stripped);
 			}
 
 			if (die_on_error)

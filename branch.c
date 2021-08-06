@@ -292,7 +292,8 @@ static void setup_tracking(const char *new_ref, const char *orig_ref,
 			 * TRANSLATORS: The second argument is a \n-delimited list of
 			 * duplicate refspecs, composed above.
 			 */
-			advise(_("There are multiple remotes whose fetch refspecs map to the remote\n"
+			advise(ADVICE_BRANCH_SET_UPSTREAM_FAILURE,
+			       _("There are multiple remotes whose fetch refspecs map to the remote\n"
 				 "tracking ref '%s':\n"
 				 "%s"
 				 "\n"
@@ -658,7 +659,8 @@ void create_branches_recursively(struct repository *r, const char *name,
 				_("submodule '%s': unable to find submodule"),
 				submodule_entry_list.entries[i].submodule->name);
 			if (advice_enabled(ADVICE_SUBMODULES_NOT_UPDATED))
-				advise(_("You may try updating the submodules using 'git checkout %s && git submodule update --init'"),
+				advise(ADVICE_SUBMODULES_NOT_UPDATED,
+				       _("You may try updating the submodules using 'git checkout %s && git submodule update --init'"),
 				       start_commitish);
 			exit(code);
 		}
