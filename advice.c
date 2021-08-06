@@ -44,9 +44,16 @@ static void vadvise(const char *advice, int display_instructions,
 	const char *cp, *np;
 
 	strbuf_vaddf(&buf, advice, params);
+	if (display_instructions) {
+		/*
+		 * Some messages end with "\n", others not. Let's
+		 * normalize them.
+		 */
+		strbuf_rtrim(&buf);
+		strbuf_addstr(&buf, "\n");
 
-	if (display_instructions)
 		strbuf_addf(&buf, turn_off_instructions, key);
+	}
 
 	for (cp = buf.buf; *cp; cp = np) {
 		int len;
