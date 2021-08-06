@@ -983,7 +983,7 @@ sub mw_import_revids {
 }
 
 sub error_non_fast_forward {
-	my $advice = run_git_quoted(["config", "--bool", "advice.pushNonFastForward"]);
+	my $advice = run_git_quoted(["config", "--bool", "advice.pushUpdateRejected"]);
 	chomp($advice);
 	if ($advice ne 'false') {
 		# Native git-push would show this after the summary.
