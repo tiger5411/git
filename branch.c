@@ -175,18 +175,18 @@ out_err:
 	strbuf_release(&key);
 	error(_("unable to write upstream branch configuration"));
 
-	advise(_("\nAfter fixing the error cause you may try to fix up\n"
+	error(_("\nAfter fixing the error cause you may try to fix up\n"
 		"the remote tracking information by invoking:"));
 	if (remotes->nr == 1)
-		advise("  git branch --set-upstream-to=%s%s%s",
+		error("  git branch --set-upstream-to=%s%s%s",
 			origin ? origin : "",
 			origin ? "/" : "",
 			remotes->items[0].string);
 	else {
-		advise("  git config --add branch.\"%s\".remote %s",
+		error("  git config --add branch.\"%s\".remote %s",
 			local, origin ? origin : ".");
 		for_each_string_list_item(item, remotes)
-			advise("  git config --add branch.\"%s\".merge %s",
+			error("  git config --add branch.\"%s\".merge %s",
 				local, item->string);
 	}
 
