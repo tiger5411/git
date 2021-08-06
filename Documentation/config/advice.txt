@@ -160,6 +160,10 @@ advice.*::
 	suggestDetachingHead::
 		Advice shown when linkgit:git-switch[1] refuses to detach HEAD
 		without the explicit `--detach` option.
+	transportIncompatibleVersion::
+		Advice shown when the server protocol version or the
+		presence of server options is incompatible with the
+		remote server protocol.
 	updateSparsePath::
 		Advice shown when either linkgit:git-add[1] or linkgit:git-rm[1]
 		is asked to update index entries outside the current sparse
