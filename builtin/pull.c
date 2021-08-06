@@ -980,6 +980,14 @@ static void show_advice_pull_non_ff(void)
 		 "invocation.\n"));
 }
 
+static void NORETURN die_conclude_merge(void)
+{
+	error(_("You have not concluded your merge (MERGE_HEAD exists)."));
+	if (advice_enabled(ADVICE_RESOLVE_CONFLICT))
+		advise(_("Please, commit your changes before merging."));
+	die(_("Exiting because of unfinished merge."));
+}
+
 int cmd_pull(int argc, const char **argv, const char *prefix)
 {
 	const char *repo, **refspecs;
