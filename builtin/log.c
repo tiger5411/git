@@ -1978,7 +1978,7 @@ int cmd_format_patch(int argc, const char **argv, const char *xprefix)
 			: xstrdup(fmt_patch_subject_prefix);
 
 		if (subject_prefix_cb.rfc)
-			strbuf_addstr(&sprefix, fmt_patch_rfc_prefix);
+			strbuf_addf(&sprefix, "%s ", fmt_patch_rfc_prefix);
 		if (subject_prefix_cb.reroll_count_int > -1) {
 			struct strbuf sb = STRBUF_INIT;
 			strbuf_addf(&sprefix, "%s v%d",
