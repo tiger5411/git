@@ -557,11 +557,21 @@ check_message_id () {
 	git format-patch --stdout "$@" >patch &&
 	perl -ne '
 		if (/^(message-id)/i) {
-			s/(<(?:patch|cover)-.*?-)[0-9a-f]{7,}-[0-9]{8}T[0-9]{6}Z-/$1-OID-YYYYMMDDTHHMMSSZ-/g;
+			s/(<(?:RFC-)?(?:patch|cover)-.*?-)[0-9a-f]{7,}-[0-9]{8}T[0-9]{6}Z-/$1-OID-YYYYMMDDTHHMMSSZ-/g;
+			print;
+		}
+	' <patch >actual &&
+	test_cmp expect actual &&
+
+	cat >expect <&3 &&
+	perl -ne '
+		if (s/^Subject: //) {
+			s/^\[(.*?)\].*/$1/;
 			print;
 		}
 	' <patch >actual &&
 	test_cmp expect actual
+
 }
 
 check_threading () {
@@ -2471,35 +2481,47 @@ test_expect_success 'interdiff: solo-patch' '
 '
 
 test_expect_success 'format-patch Message-ID format, one patch' '
-	check_message_id --thread=shallow HEAD~.. <<-EOF
+	check_message_id --thread=shallow HEAD~.. <<-EOF 3<<-\EOF_SUBJ
 	Message-Id: <patch-1.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	EOF
+	PATCH
+	EOF_SUBJ
 '
 
 test_expect_success 'format-patch Message-ID format, two patch series' '
-	check_message_id --thread=shallow HEAD~2.. <<-EOF
+	check_message_id --thread=shallow HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
 	Message-Id: <patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	EOF
+	PATCH 1/2
+	PATCH 2/2
+	EOF_SUBJ
 '
 
 test_expect_success 'format-patch Message-ID format, one patch with cover letter' '
-	check_message_id --thread=shallow --cover-letter HEAD~.. <<-EOF
+	check_message_id --thread=shallow --cover-letter HEAD~.. <<-\EOF 3<<-\EOF_SUBJ
 	Message-Id: <cover-0.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-1.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	EOF
+	PATCH 0/1
+	PATCH 1/1
+	EOF_SUBJ
 '
 
 test_expect_success 'format-patch Message-ID format, two patch series with cover letter' '
-	check_message_id --thread=shallow --cover-letter HEAD~2.. <<-EOF
+	check_message_id --thread=shallow --cover-letter HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
 	Message-Id: <cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	EOF
+	PATCH 0/2
+	PATCH 1/2
+	PATCH 2/2
+	EOF_SUBJ
 '
 
 test_expect_success 'format-patch Message-ID format, padded numbers' '
-	check_message_id --thread=shallow --cover-letter side~11..side <<-EOF
+	check_message_id --thread=shallow --cover-letter side~11..side <<-\EOF 3<<-\EOF_SUBJ
 	Message-Id: <cover-00.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-01.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-02.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
@@ -2513,6 +2535,55 @@ test_expect_success 'format-patch Message-ID format, padded numbers' '
 	Message-Id: <patch-10.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	Message-Id: <patch-11.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
 	EOF
+	PATCH 00/11
+	PATCH 01/11
+	PATCH 02/11
+	PATCH 03/11
+	PATCH 04/11
+	PATCH 05/11
+	PATCH 06/11
+	PATCH 07/11
+	PATCH 08/11
+	PATCH 09/11
+	PATCH 10/11
+	PATCH 11/11
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, --rfc' '
+	check_message_id --thread=shallow --cover-letter --rfc HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <RFC-cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	RFC PATCH 0/2
+	RFC PATCH 1/2
+	RFC PATCH 2/2
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, --rfc -vN' '
+	check_message_id --thread=shallow --cover-letter --rfc -v9 HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <RFC-cover-v9-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-v9-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-v9-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	RFC PATCH v9 0/2
+	RFC PATCH v9 1/2
+	RFC PATCH v9 2/2
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, --rfc -vN where N != int' '
+	check_message_id --thread=shallow --cover-letter --rfc -v9.1 HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <RFC-cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	RFC PATCH v9.1 0/2
+	RFC PATCH v9.1 1/2
+	RFC PATCH v9.1 2/2
+	EOF_SUBJ
 '
 
 test_done

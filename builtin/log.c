@@ -1061,7 +1061,8 @@ static void gen_message_id(struct subject_prefix_opt_callback_data *cb_data,
 
 	/* Figure out the right format width for START/END */
 	strbuf_addf(&tmp, "%d", total);
-	strbuf_addf(&fmt, "%%s%%s%%s-%%0%1$lud.%%0%1$lud-%%s-%%s-%%s", (unsigned long)tmp.len);
+	strbuf_addf(&fmt, "%%s%%s%%s-%%0%1$lud.%%0%1$lud-%%s-%%s-%%s",
+		    (unsigned long)tmp.len);
 	strbuf_reset(&tmp);
 
 	/* Have a pretty timestamp in the Message-Id */
