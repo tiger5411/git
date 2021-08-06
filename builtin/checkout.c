@@ -1208,17 +1208,15 @@ static const char *parse_remote_branch(const char *arg,
 	}
 
 	if (!remote && num_matches > 1) {
-	    if (advice_enabled(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME)) {
-		    advise(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME,
-			   _("If you meant to check out a remote tracking branch on, e.g. 'origin',\n"
-			     "you can do so by fully qualifying the name with the --track option:\n"
-			     "\n"
-			     "    git checkout --track origin/<name>\n"
-			     "\n"
-			     "If you'd like to always have checkouts of an ambiguous <name> prefer\n"
-			     "one remote, e.g. the 'origin' remote, consider setting\n"
-			     "checkout.defaultRemote=origin in your config."));
-	    }
+	    advise_if_enabled(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME,
+			      _("If you meant to check out a remote tracking branch on, e.g. 'origin',\n"
+				"you can do so by fully qualifying the name with the --track option:\n"
+				"\n"
+				"    git checkout --track origin/<name>\n"
+				"\n"
+				"If you'd like to always have checkouts of an ambiguous <name> prefer\n"
+				"one remote, e.g. the 'origin' remote, consider setting\n"
+				"checkout.defaultRemote=origin in your config."));
 
 	    die(_("'%s' matched multiple (%d) remote tracking branches"),
 		arg, num_matches);
@@ -1425,9 +1423,8 @@ static void die_expecting_a_branch(const struct branch_info *branch_info)
 		 */
 		code = die_message(_("a branch is expected, got '%s'"), branch_info->name);
 
-	if (advice_enabled(ADVICE_SUGGEST_DETACHING_HEAD))
-		advise(ADVICE_SUGGEST_DETACHING_HEAD,
-		       _("If you want to detach HEAD at the commit, try again with the --detach option."));
+	advise_if_enabled(ADVICE_SUGGEST_DETACHING_HEAD,
+			  _("If you want to detach HEAD at the commit, try again with the --detach option."));
 
 	exit(code);
 }

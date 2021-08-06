@@ -289,44 +289,44 @@ static const char message_advice_ref_needs_update[] =
 
 static void advise_pull_before_push(void)
 {
-	if (!advice_enabled(ADVICE_PUSH_NON_FF_CURRENT) || !advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
+	if (!advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
 		return;
-	advise(ADVICE_PUSH_NON_FF_CURRENT, _(message_advice_pull_before_push));
+	advise_if_enabled(ADVICE_PUSH_NON_FF_CURRENT, _(message_advice_pull_before_push));
 }
 
 static void advise_checkout_pull_push(void)
 {
-	if (!advice_enabled(ADVICE_PUSH_NON_FF_MATCHING) || !advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
+	if (!advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
 		return;
-	advise(ADVICE_PUSH_NON_FF_MATCHING, _(message_advice_checkout_pull_push));
+	advise_if_enabled(ADVICE_PUSH_NON_FF_MATCHING, _(message_advice_checkout_pull_push));
 }
 
 static void advise_ref_already_exists(void)
 {
-	if (!advice_enabled(ADVICE_PUSH_ALREADY_EXISTS) || !advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
+	if (!advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
 		return;
-	advise(ADVICE_PUSH_ALREADY_EXISTS, _(message_advice_ref_already_exists));
+	advise_if_enabled(ADVICE_PUSH_ALREADY_EXISTS, _(message_advice_ref_already_exists));
 }
 
 static void advise_ref_fetch_first(void)
 {
-	if (!advice_enabled(ADVICE_PUSH_FETCH_FIRST) || !advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
+	if (!advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
 		return;
-	advise(ADVICE_PUSH_FETCH_FIRST, _(message_advice_ref_fetch_first));
+	advise_if_enabled(ADVICE_PUSH_FETCH_FIRST, _(message_advice_ref_fetch_first));
 }
 
 static void advise_ref_needs_force(void)
 {
-	if (!advice_enabled(ADVICE_PUSH_NEEDS_FORCE) || !advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
+	if (!advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
 		return;
-	advise(ADVICE_PUSH_NEEDS_FORCE, _(message_advice_ref_needs_force));
+	advise_if_enabled(ADVICE_PUSH_NEEDS_FORCE, _(message_advice_ref_needs_force));
 }
 
 static void advise_ref_needs_update(void)
 {
-	if (!advice_enabled(ADVICE_PUSH_REF_NEEDS_UPDATE) || !advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
+	if (!advice_enabled(ADVICE_PUSH_UPDATE_REJECTED))
 		return;
-	advise(ADVICE_PUSH_REF_NEEDS_UPDATE, _(message_advice_ref_needs_update));
+	advise_if_enabled(ADVICE_PUSH_REF_NEEDS_UPDATE, _(message_advice_ref_needs_update));
 }
 
 static int push_with_options(struct transport *transport, struct refspec *rs,

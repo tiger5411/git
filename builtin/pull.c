@@ -964,9 +964,9 @@ static int already_up_to_date(struct object_id *orig_head,
 	return 1;
 }
 
-static void show_advice_pull_non_ff(void)
+static void show_advice_pull_non_ff_if_enabled(void)
 {
-	advise(ADVICE_PULL_NON_FF_CONFIG,
+	advise_if_enabled(ADVICE_PULL_NON_FF_CONFIG,
 	       _("You have divergent branches and need to specify how to reconcile them.\n"
 		 "You can do so by running one of the following commands sometime before\n"
 		 "your next pull:\n"
@@ -984,9 +984,8 @@ static void show_advice_pull_non_ff(void)
 static void NORETURN die_conclude_merge(void)
 {
 	error(_("You have not concluded your merge (MERGE_HEAD exists)."));
-	if (advice_enabled(ADVICE_RESOLVE_CONFLICT))
-		advise(ADVICE_RESOLVE_CONFLICT,
-		       _("Please, commit your changes before merging."));
+	advise_if_enabled(ADVICE_RESOLVE_CONFLICT,
+			  _("Please, commit your changes before merging."));
 	die(_("Exiting because of unfinished merge."));
 }
 
@@ -1126,8 +1125,7 @@ int cmd_pull(int argc, const char **argv, const char *prefix)
 	}
 	/* If no action specified and we can't fast forward, then warn. */
 	if (!opt_ff && rebase_unspecified && divergent) {
-		if (advice_enabled(ADVICE_PULL_NON_FF_CONFIG))
-			show_advice_pull_non_ff();
+		show_advice_pull_non_ff_if_enabled();
 		die(_("Need to specify how to reconcile divergent branches."));
 	}
 

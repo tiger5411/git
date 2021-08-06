@@ -503,9 +503,8 @@ static int error_dirty_index(struct repository *repo, struct replay_opts *opts)
 	error(_("your local changes would be overwritten by %s."),
 		_(action_name(opts)));
 
-	if (advice_enabled(ADVICE_COMMIT_BEFORE_MERGE))
-		advise(ADVICE_COMMIT_BEFORE_MERGE,
-		       _("commit your changes or stash them to proceed."));
+	advise_if_enabled(ADVICE_COMMIT_BEFORE_MERGE,
+			  _("commit your changes or stash them to proceed."));
 	return -1;
 }
 
@@ -3063,10 +3062,9 @@ static int create_seq_dir(struct repository *r)
 	}
 	if (in_progress_error) {
 		error("%s", in_progress_error);
-		if (advice_enabled(ADVICE_SEQUENCER_IN_USE))
-			advise(ADVICE_SEQUENCER_IN_USE,
-			       in_progress_advice,
-			       advise_skip ? "--skip | " : "");
+		advise_if_enabled(ADVICE_SEQUENCER_IN_USE,
+				  in_progress_advice,
+				  advise_skip ? "--skip | " : "");
 		return -1;
 	}
 	if (mkdir(git_path_seq_dir(), 0777) < 0)
@@ -3268,12 +3266,10 @@ int sequencer_skip(struct repository *r, struct replay_opts *opts)
 give_advice:
 	error(_("there is nothing to skip"));
 
-	if (advice_enabled(ADVICE_RESOLVE_CONFLICT)) {
-		advise(ADVICE_RESOLVE_CONFLICT,
-		       _("have you committed already?\n"
-			 "try \"git %s --continue\""),
-		       action == REPLAY_REVERT ? "revert" : "cherry-pick");
-	}
+	advise_if_enabled(ADVICE_RESOLVE_CONFLICT,
+			  _("have you committed already?\n"
+			    "try \"git %s --continue\""),
+			  action == REPLAY_REVERT ? "revert" : "cherry-pick");
 	return -1;
 }
 
@@ -4363,9 +4359,8 @@ static int pick_commits(struct repository *r,
 							     todo_list->current),
 					get_item_line(todo_list,
 						      todo_list->current));
-				if (advice_enabled(ADVICE_SEQUENCER_RESCHEDULED))
-					advise(ADVICE_SEQUENCER_RESCHEDULED,
-					       "%s", _(rescheduled_advice));
+				advise_if_enabled(ADVICE_SEQUENCER_RESCHEDULED,
+						  "%s",_(rescheduled_advice));
 				todo_list->current--;
 				if (save_todo(todo_list, opts))
 					return -1;
@@ -4453,9 +4448,8 @@ static int pick_commits(struct repository *r,
 				get_item_line_length(todo_list,
 						     todo_list->current),
 				get_item_line(todo_list, todo_list->current));
-			if (advice_enabled(ADVICE_SEQUENCER_RESCHEDULED))
-				advise(ADVICE_SEQUENCER_RESCHEDULED,
-				       "%s",_(rescheduled_advice));
+			advise_if_enabled(ADVICE_SEQUENCER_RESCHEDULED,
+					  "%s", _(rescheduled_advice));
 			todo_list->current--;
 			if (save_todo(todo_list, opts))
 				return -1;

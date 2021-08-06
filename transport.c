@@ -286,9 +286,8 @@ static void die_if_server_options(struct transport *transport)
 {
 	if (!transport->server_options || !transport->server_options->nr)
 		return;
-	if (advice_enabled(ADVICE_TRANSPORT_INCOMPATIBLE_VERSION))
-		advise(ADVICE_TRANSPORT_INCOMPATIBLE_VERSION,
-		       _("see protocol.version in 'git help config' for more details"));
+	advise_if_enabled(ADVICE_TRANSPORT_INCOMPATIBLE_VERSION,
+			  _("see protocol.version in 'git help config' for more details"));
 	die(_("server options require protocol version 2 or later"));
 }
 
