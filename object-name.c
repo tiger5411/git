@@ -351,9 +351,16 @@ static int init_object_disambiguation(struct repository *r,
 	return 0;
 }
 
+struct show_ambiguous_state {
+	const struct disambiguate_state *ds;
+	struct strbuf *advice;
+};
+
 static int show_ambiguous_object(const struct object_id *oid, void *data)
 {
-	const struct disambiguate_state *ds = data;
+	struct show_ambiguous_state *state = data;
+	const struct disambiguate_state *ds = state->ds;
+	struct strbuf *advice = state->advice;
 	struct strbuf desc = STRBUF_INIT;
 	int type;
 
@@ -366,18 +373,34 @@ static int show_ambiguous_object(const struct object_id *oid, void *data)
 		if (commit) {
 			struct pretty_print_context pp = {0};
 			pp.date_mode.type = DATE_SHORT;
-			format_commit_message(commit, " %ad - %s", &desc, &pp);
+			format_commit_message(commit, _(" %ad - %s"), &desc, &pp);
 		}
 	} else if (type == OBJ_TAG) {
 		struct tag *tag = lookup_tag(ds->repo, oid);
 		if (!parse_tag(tag) && tag->tag)
-			strbuf_addf(&desc, " %s", tag->tag);
+			strbuf_addf(&desc, _(" %s"), tag->tag);
 	}
 
-	advise("  %s %s%s",
-	       repo_find_unique_abbrev(ds->repo, oid, DEFAULT_ABBREV),
-	       type_name(type) ? type_name(type) : "unknown type",
-	       desc.buf);
+	strbuf_addf(advice,
+		    /*
+		     * TRANSLATORS: This is a line of ambiguous object
+		     * output. E.g.:
+		     *
+		     *    "deadbeef commit 2021-01-01 - Some Commit Message\n"
+		     *    "deadbeef tag Some Tag Message\n"
+		     *    "deadbeef tree\n"
+		     *
+		     * I.e. the first argument is a short OID, the
+		     * second is the type name of the object, and the
+		     * third a description of the object, if it's a
+		     * commit or tag. In that case the " %ad - %s" and
+		     * " %s" formats above will be used for the third
+		     * argument.
+		     */
+		    _("  %s %s%s\n"),
+		    repo_find_unique_abbrev(ds->repo, oid, DEFAULT_ABBREV),
+		    type_name(type) ? type_name(type) : "unknown type",
+		    desc.buf);
 
 	strbuf_release(&desc);
 	return 0;
@@ -475,7 +498,12 @@ static enum get_oid_result get_short_oid(struct repository *r,
 	}
 
 	if (!quietly && (status == SHORT_NAME_AMBIGUOUS)) {
+		struct strbuf sb = STRBUF_INIT;
 		struct oid_array collect = OID_ARRAY_INIT;
+		struct show_ambiguous_state as = {
+			.ds = &ds,
+			.advice = &sb,
+		};
 
 		error(_("short object ID %s is ambiguous"), ds.hex_pfx);
 
@@ -488,12 +516,19 @@ static enum get_oid_result get_short_oid(struct repository *r,
 		if (!ds.ambiguous)
 			ds.fn = NULL;
 
-		advise(_("The candidates are:"));
 		repo_for_each_abbrev(r, ds.hex_pfx, collect_ambiguous, &collect);
 		sort_ambiguous_oid_array(r, &collect);
 
-		if (oid_array_for_each(&collect, show_ambiguous_object, &ds))
+		if (oid_array_for_each(&collect, show_ambiguous_object, &as))
 			BUG("show_ambiguous_object shouldn't return non-zero");
+
+		/*
+		 * TRANSLATORS: The argument is the list of ambiguous
+		 * objects composed in show_ambiguous_object(). See
+		 * its "TRANSLATORS" comment for details.
+		 */
+		advise(_("The candidates are:\n\n%s"), sb.buf);
+
 		oid_array_clear(&collect);
 	}
 
