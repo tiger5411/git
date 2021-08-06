@@ -92,10 +92,15 @@ static void vadvise(const char *advice, int display_instructions,
 		strbuf_addf(&buf, turn_off_instructions, key);
 
 	for (cp = buf.buf; *cp; cp = np) {
+		int len;
+
 		np = strchrnul(cp, '\n');
-		fprintf(stderr,	_("%shint: %.*s%s\n"),
+		len = np - cp;
+
+		fprintf(stderr,	_("%shint:%s%.*s%s\n"),
 			advise_get_color(ADVICE_COLOR_HINT),
-			(int)(np - cp), cp,
+			len ? " " : "",
+			len, cp,
 			advise_get_color(ADVICE_COLOR_RESET));
 		if (*np)
 			np++;
