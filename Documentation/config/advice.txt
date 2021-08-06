@@ -66,6 +66,10 @@ advice.*::
 	objectNameWarning::
 		Advice shown when resolving a reference that looks
 		like an object ID, which was likely created by.
+	pullNonFFConfig::
+		Advice shown by linkgit:git-pull[1] when a pull cannot
+		fast-forward, and 'pull.rebase' and 'pull.ff' aren't
+		configured.
 	pushAlreadyExists::
 		Shown when linkgit:git-push[1] rejects an update that
 		does not qualify for fast-forwarding (e.g., a tag.)

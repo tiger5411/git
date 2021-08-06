@@ -1116,7 +1116,8 @@ int cmd_pull(int argc, const char **argv, const char *prefix)
 	}
 	/* If no action specified and we can't fast forward, then warn. */
 	if (!opt_ff && rebase_unspecified && divergent) {
-		show_advice_pull_non_ff();
+		if (advice_enabled(ADVICE_PULL_NON_FF_CONFIG))
+			show_advice_pull_non_ff();
 		die(_("Need to specify how to reconcile divergent branches."));
 	}
 
