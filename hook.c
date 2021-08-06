@@ -20,15 +20,14 @@ const char *find_hook(const char *name)
 			err = errno;
 #endif
 
-		if (err == EACCES && advice_ignored_hook) {
+		if (err == EACCES && advice_enabled(ADVICE_IGNORED_HOOK)) {
 			static struct string_list advise_given = STRING_LIST_INIT_DUP;
 
 			if (!string_list_lookup(&advise_given, name)) {
 				string_list_insert(&advise_given, name);
-				advise(_("The '%s' hook was ignored because "
-					 "it's not set as executable.\n"
-					 "You can disable this warning with "
-					 "`git config advice.ignoredHook false`."),
+				advise(ADVICE_IGNORED_HOOK,
+				       _("The '%s' hook was ignored because "
+					 "it's not set as executable.\n"),
 				       path.buf);
 			}
 		}
