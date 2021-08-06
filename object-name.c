@@ -355,7 +355,11 @@ static int show_ambiguous_object(const struct object_id *oid, void *data)
 {
 	const struct disambiguate_state *ds = data;
 	struct strbuf desc = STRBUF_INIT;
+	struct strbuf ci_ad = STRBUF_INIT;
+	struct strbuf ci_s = STRBUF_INIT;
 	int type;
+	const char *tag_desc = NULL;
+	const char *abbrev;
 
 	if (ds->fn && !ds->fn(ds->repo, oid, ds->cb_data))
 		return 0;
@@ -366,20 +370,76 @@ static int show_ambiguous_object(const struct object_id *oid, void *data)
 		if (commit) {
 			struct pretty_print_context pp = {0};
 			pp.date_mode.type = DATE_SHORT;
-			format_commit_message(commit, " %ad - %s", &desc, &pp);
+			format_commit_message(commit, "%ad", &ci_ad, &pp);
+			format_commit_message(commit, "%s", &ci_s, &pp);
 		}
 	} else if (type == OBJ_TAG) {
 		struct tag *tag = lookup_tag(ds->repo, oid);
 		if (!parse_tag(tag) && tag->tag)
-			strbuf_addf(&desc, " %s", tag->tag);
+			tag_desc = tag->tag;
 	}
 
-	advise("  %s %s%s",
-	       repo_find_unique_abbrev(ds->repo, oid, DEFAULT_ABBREV),
-	       type_name(type) ? type_name(type) : "unknown type",
-	       desc.buf);
+	abbrev = repo_find_unique_abbrev(ds->repo, oid, DEFAULT_ABBREV);
+	if (type == OBJ_COMMIT) {
+		/*
+		 * TRANSLATORS: This is a line of ambiguous commit
+		 * object output. E.g.:
+		 *
+		 *    "deadbeef commit 2021-01-01 - Some Commit Message"
+		 *
+		 * The second argument is the "commit" string from
+		 * object.c, it should (hopefully) already be
+		 * translated.
+		 */
+		strbuf_addf(&desc, _("%s %s %s - %s"), abbrev, ci_ad.buf,
+			    _(type_name(type)), ci_s.buf);
+	} else if (tag_desc) {
+		/*
+		 * TRANSLATORS: This is a line of
+		 * ambiguous tag object output. E.g.:
+		 *
+		 *    "deadbeef tag Some Tag Message"
+		 *
+		 * The second argument is the "tag" string from
+		 * object.c, it should (hopefully) already be
+		 * translated.
+		 */
+		strbuf_addf(&desc, _("%s %s %s"), abbrev, _(type_name(type)),
+			    tag_desc);
+	} else {
+		const char *tname = type_name(type) ? _(type_name(type)) :
+			_(unknown_type);
+		/*
+		 * TRANSLATORS: This is a line of ambiguous <type>
+		 * object output. Where <type> is one of the object
+		 * types of "tree", "blob", "tag" ("commit" is handled
+		 * above).
+		 *
+		 *    "deadbeef tree"
+		 *    "deadbeef blob"
+		 *    "deadbeef tag"
+		 *    "deadbeef unknown type"
+		 *
+		 * Note that annotated tags use a separate format
+		 * outlined above.
+		 *
+		 * The second argument is the "tree", "blob" or "tag"
+		 * string from object.c, or the "unknown type" string
+		 * in the case of an unknown type. All of them should
+		 * (hopefully) already be translated.
+		 */
+		strbuf_addf(&desc, _("%s %s"), abbrev, tname);
+	}
+
+	/*
+	 * TRANSLATORS: This is line item of ambiguous object output,
+	 * translated above.
+	 */
+	advise(_("  %s\n"), desc.buf);
 
 	strbuf_release(&desc);
+	strbuf_release(&ci_ad);
+	strbuf_release(&ci_s);
 	return 0;
 }
 
