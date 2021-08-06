@@ -189,7 +189,7 @@ void advise_on_updating_sparse_paths(struct string_list *pathspec_list)
 void detach_advice(const char *new_name)
 {
 	const char *fmt =
-	_("Note: switching to '%s'.\n"
+	_("Switching to '%s'.\n"
 	"\n"
 	"You are in 'detached HEAD' state. You can look around, make experimental\n"
 	"changes and commit them, and you can discard any commits you make in this\n"
@@ -202,9 +202,7 @@ void detach_advice(const char *new_name)
 	"\n"
 	"Or undo this operation with:\n"
 	"\n"
-	"  git switch -\n"
-	"\n"
-	"Turn off this advice by setting config variable advice.detachedHead to false\n\n");
+	"  git switch -\n");
 
-	fprintf(stderr, fmt, new_name);
+	advise_if_enabled(ADVICE_DETACHED_HEAD, fmt, new_name);
 }

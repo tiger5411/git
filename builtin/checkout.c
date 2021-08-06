@@ -942,7 +942,7 @@ static void update_refs_for_switch(const struct checkout_opts *opts,
 			   REF_NO_DEREF, UPDATE_REFS_DIE_ON_ERR);
 		if (!opts->quiet) {
 			if (old_branch_info->path &&
-			    advice_enabled(ADVICE_DETACHED_HEAD) && !opts->force_detach)
+			    !opts->force_detach)
 				detach_advice(new_branch_info->name);
 			describe_detached_head(_("HEAD is now at"), new_branch_info->commit);
 		}
@@ -1035,20 +1035,19 @@ static void suggest_reattach(struct commit *commit, struct rev_info *revs)
 		sb.buf);
 	strbuf_release(&sb);
 
-	if (advice_enabled(ADVICE_DETACHED_HEAD))
-		fprintf(stderr,
-			Q_(
-			/* The singular version */
-			"If you want to keep it by creating a new branch, "
-			"this may be a good time\nto do so with:\n\n"
-			" git branch <new-branch-name> %s\n\n",
-			/* The plural version */
-			"If you want to keep them by creating a new branch, "
-			"this may be a good time\nto do so with:\n\n"
-			" git branch <new-branch-name> %s\n\n",
-			/* Give ngettext() the count */
-			lost),
-			find_unique_abbrev(&commit->object.oid, DEFAULT_ABBREV));
+	advise_if_enabled(ADVICE_DETACHED_HEAD,
+			  Q_(
+				  /* The singular version */
+				  "If you want to keep it by creating a new branch, "
+				  "this may be a good time\nto do so with:\n\n"
+				  " git branch <new-branch-name> %s\n",
+				  /* The plural version */
+				  "If you want to keep them by creating a new branch, "
+				  "this may be a good time\nto do so with:\n\n"
+				  " git branch <new-branch-name> %s\n",
+				  /* Give ngettext() the count */
+				  lost),
+			  find_unique_abbrev(&commit->object.oid, DEFAULT_ABBREV));
 }
 
 /*
