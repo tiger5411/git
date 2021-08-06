@@ -584,7 +584,8 @@ char *repo_default_branch_name(struct repository *r, int quiet)
 
 	if (!ret) {
 		ret = xstrdup("master");
-		if (!quiet)
+		if (!quiet &&
+		    advice_enabled(ADVICE_INIT_INITIAL_BRANCH_NAME_IS_MASTER))
 			advise(_(default_branch_name_advice), ret);
 	}
 

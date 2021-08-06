@@ -57,6 +57,10 @@ advice.*::
 		Advice on how to set your identity configuration when
 		your information is guessed from the system username and
 		domain name.
+	initInitialBranchNameIsMaster::
+		Advice shown if linkgit:git-init[1] picked a branch
+		name of "master" for you, without that being
+		explicitly configured via 'init.defaultBranch'.
 	nestedTag::
 		Advice shown if a user attempts to recursively tag a tag object.
 	objectAmbiguous::
