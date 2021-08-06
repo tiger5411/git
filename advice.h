@@ -29,9 +29,12 @@ int advice_enabled(enum advice_type type);
  *
  *	if (advice_enabled(TYPE))
  * 		advise(TYPE, ...);
+ *
+ * The return value is the same as that of advice_enabled(). I.e. you
+ * can use it to check if the message was emitted.
  */
 __attribute__((format (printf, 2, 3)))
-void advise_if_enabled(enum advice_type type, const char *advice, ...);
+int advise_if_enabled(enum advice_type type, const char *advice, ...);
 
 int error_resolve_conflict(const char *me);
 void NORETURN die_resolve_conflict(const char *me);

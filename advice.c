@@ -84,16 +84,18 @@ int advice_enabled(enum advice_type type)
 	return !advice_setting[type].disabled;
 }
 
-void advise_if_enabled(enum advice_type type, const char *advice, ...)
+int advise_if_enabled(enum advice_type type, const char *advice, ...)
 {
 	va_list params;
 
 	if (!advice_enabled(type))
-		return;
+		return 0;
 
 	va_start(params, advice);
 	vadvise(&type, advice, params);
 	va_end(params);
+
+	return 1;
 }
 
 int git_default_advice_config(const char *var, const char *value)

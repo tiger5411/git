@@ -435,11 +435,9 @@ static void check_embedded_repo(const char *path)
 
 	warning(_("adding embedded git repository: %s"), name.buf);
 	if (!adviced_on_embedded_repo &&
-	    advice_enabled(ADVICE_ADD_EMBEDDED_REPO)) {
-		advise(ADVICE_ADD_EMBEDDED_REPO,
-		       embedded_advice, name.buf, name.buf);
+	    advise_if_enabled(ADVICE_ADD_EMBEDDED_REPO, embedded_advice,
+			      name.buf, name.buf))
 		adviced_on_embedded_repo = 1;
-	}
 
 	strbuf_release(&name);
 }
