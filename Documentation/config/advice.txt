@@ -59,6 +59,10 @@ advice.*::
 		domain name.
 	nestedTag::
 		Advice shown if a user attempts to recursively tag a tag object.
+	objectAmbiguous::
+		Advice shown when on object ID is ambigious, to
+		suggest likely candidates based on the provided
+		ambiguous object prefix.
 	objectNameWarning::
 		Advice shown when resolving a reference that looks
 		like an object ID, which was likely created by.

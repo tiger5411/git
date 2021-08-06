@@ -567,6 +567,8 @@ static enum get_oid_result get_short_oid(struct repository *r,
 		};
 
 		error(_("short object ID %s is ambiguous"), ds.hex_pfx);
+		if (!advice_enabled(ADVICE_OBJECT_AMBIGUOUS))
+			return status;
 
 		/*
 		 * We may still have ambiguity if we simply saw a series of
