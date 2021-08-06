@@ -455,9 +455,7 @@ static int add_files(struct dir_struct *dir, int flags)
 			fprintf(stderr, "%s\n", dir->ignored[i]->name);
 		if (advice_enabled(ADVICE_ADD_IGNORED_FILE))
 			advise(ADVICE_ADD_IGNORED_FILE,
-			       _("Use -f if you really want to add them.\n"
-				 "Turn this message off by running\n"
-				 "\"git config advice.addIgnoredFile false\""));
+			       _("Use -f if you really want to add them."));
 		exit_status = 1;
 	}
 

@@ -895,8 +895,7 @@ static int get_oid_basic(struct repository *r, const char *str, int len,
 	"  git switch -c $br $(git rev-parse ...)\n"
 	"\n"
 	"where \"$br\" is somehow empty and a 40-hex ref is created. Please\n"
-	"examine these refs and maybe delete them. Turn this message off by\n"
-	"running \"git config advice.objectNameWarning false\"");
+	"examine these refs and maybe delete them.\n");
 	struct object_id tmp_oid;
 	char *real_ref = NULL;
 	int refs_found = 0;

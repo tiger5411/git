@@ -1057,6 +1057,8 @@ test_expect_success 'avoid ambiguous track and advise' '
 	hint: To support setting up tracking branches, ensure that
 	hint: different remotes'\'' fetch refspecs map into different
 	hint: tracking namespaces.
+	hint:
+	hint: Disable this message with "git config advice.branchSetUpstreamFailure false"
 	EOF
 	test_must_fail git branch all1 main 2>actual &&
 	test_cmp expected actual &&

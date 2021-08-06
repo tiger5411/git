@@ -7,6 +7,14 @@
 struct string_list;
 
 int git_default_advice_config(const char *var, const char *value);
+
+/**
+ * Takes a given advice type already checked with advice_enabled() and
+ * prints out a message.
+ *
+ * The advice type is used to emit a trailing "Disable this message
+ * with <config instructions>" at the end.
+ */
 __attribute__((format (printf, 2, 3)))
 void advise(enum advice_type type, const char *advice, ...);
 
@@ -17,7 +25,10 @@ void advise(enum advice_type type, const char *advice, ...);
 int advice_enabled(enum advice_type type);
 
 /**
- * Checks the visibility of the advice before printing.
+ * advise_if_enabled(TYPE, ...) is a shorthand for:
+ *
+ *	if (advice_enabled(TYPE))
+ * 		advise(TYPE, ...);
  */
 __attribute__((format (printf, 2, 3)))
 void advise_if_enabled(enum advice_type type, const char *advice, ...);

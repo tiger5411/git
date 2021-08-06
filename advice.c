@@ -37,14 +37,13 @@ static const char turn_off_instructions[] =
 N_("\n"
    "Disable this message with \"git config %s false\"");
 
-static void vadvise(const char *advice, int display_instructions,
-		    const char *key, va_list params)
+static void vadvise(enum advice_type *type, const char *advice, va_list params)
 {
 	struct strbuf buf = STRBUF_INIT;
 	const char *cp, *np;
 
 	strbuf_vaddf(&buf, advice, params);
-	if (display_instructions) {
+	if (type) {
 		/*
 		 * Some messages end with "\n", others not. Let's
 		 * normalize them.
@@ -52,7 +51,7 @@ static void vadvise(const char *advice, int display_instructions,
 		strbuf_rtrim(&buf);
 		strbuf_addstr(&buf, "\n");
 
-		strbuf_addf(&buf, turn_off_instructions, key);
+		strbuf_addf(&buf, _(turn_off_instructions), advice_setting[*type].key);
 	}
 
 	for (cp = buf.buf; *cp; cp = np) {
@@ -76,7 +75,7 @@ void advise(enum advice_type type, const char *advice, ...)
 {
 	va_list params;
 	va_start(params, advice);
-	vadvise(advice, 0, "", params);
+	vadvise(&type, advice, params);
 	va_end(params);
 }
 
@@ -93,7 +92,7 @@ void advise_if_enabled(enum advice_type type, const char *advice, ...)
 		return;
 
 	va_start(params, advice);
-	vadvise(advice, 1, advice_setting[type].key, params);
+	vadvise(&type, advice, params);
 	va_end(params);
 }
 

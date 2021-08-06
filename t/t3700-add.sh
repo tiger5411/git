@@ -334,8 +334,8 @@ cat >expect.err <<\EOF
 The following paths are ignored by one of your .gitignore files:
 ignored-file
 hint: Use -f if you really want to add them.
-hint: Turn this message off by running
-hint: "git config advice.addIgnoredFile false"
+hint:
+hint: Disable this message with "git config advice.addIgnoredFile false"
 EOF
 cat >expect.out <<\EOF
 add 'track-this'
