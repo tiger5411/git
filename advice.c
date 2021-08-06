@@ -35,7 +35,7 @@ static const char *advise_get_color(enum color_advice ix)
 
 static const char turn_off_instructions[] =
 N_("\n"
-   "Disable this message with \"git config advice.%s false\"");
+   "Disable this message with \"git config %s false\"");
 
 static void vadvise(const char *advice, int display_instructions,
 		    const char *key, va_list params)
@@ -70,7 +70,7 @@ void advise(const char *advice, ...)
 
 int advice_enabled(enum advice_type type)
 {
-	return advice_setting[type].enabled;
+	return !advice_setting[type].disabled;
 }
 
 void advise_if_enabled(enum advice_type type, const char *advice, ...)
@@ -87,7 +87,7 @@ void advise_if_enabled(enum advice_type type, const char *advice, ...)
 
 int git_default_advice_config(const char *var, const char *value)
 {
-	const char *k, *slot_name;
+	const char *slot_name;
 	int i;
 
 	if (!strcmp(var, "color.advice")) {
@@ -104,13 +104,10 @@ int git_default_advice_config(const char *var, const char *value)
 		return color_parse(value, advice_colors[slot]);
 	}
 
-	if (!skip_prefix(var, "advice.", &k))
-		return 0;
-
 	for (i = 0; i < ARRAY_SIZE(advice_setting); i++) {
-		if (strcasecmp(k, advice_setting[i].key))
+		if (strcasecmp(var, advice_setting[i].key))
 			continue;
-		advice_setting[i].enabled = git_config_bool(var, value);
+		advice_setting[i].disabled = !git_config_bool(var, value);
 		return 0;
 	}
 
