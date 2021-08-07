@@ -70,9 +70,9 @@ static int launch_specified_editor(const char *editor, const char *path,
 			 */
 			const char term = is_terminal_dumb() ? '\n' : ' ';
 
-			fprintf(stderr,
-				_("hint: Waiting for your editor to close the file...%c"),
-				term);
+			advise(ADVICE_WAITING_FOR_EDITOR,
+			       _("Waiting for your editor to close the file...%c"),
+			       term);
 			fflush(stderr);
 		}
 
