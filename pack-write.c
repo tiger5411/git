@@ -490,17 +490,17 @@ void finish_tmp_packfile(struct strbuf *name_buffer,
 
 	strbuf_setlen(name_buffer, basename_len);
 
-	strbuf_addf(name_buffer, "%s.idx", hash_to_hex(hash));
-	if (rename(idx_tmp_name, name_buffer->buf))
-		die_errno("unable to rename temporary index file");
-
-	strbuf_setlen(name_buffer, basename_len);
-
 	if (rev_tmp_name) {
 		strbuf_addf(name_buffer, "%s.rev", hash_to_hex(hash));
 		if (rename(rev_tmp_name, name_buffer->buf))
 			die_errno("unable to rename temporary reverse-index file");
+
+		strbuf_setlen(name_buffer, basename_len);
 	}
+
+	strbuf_addf(name_buffer, "%s.idx", hash_to_hex(hash));
+	if (rename(idx_tmp_name, name_buffer->buf))
+		die_errno("unable to rename temporary index file");
 
 	strbuf_setlen(name_buffer, basename_len);
 
