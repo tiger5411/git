@@ -194,7 +194,7 @@ grep -v \
 pushed=
 while read -r branch
 do
-	if test -n "$no_sanity$only_range_diff"
+	if test -n "$no_sanity$only_range_diff$only_merge"
 	then
 		continue
 	fi
@@ -371,7 +371,7 @@ fi
 # Check what's already merged
 while read -r branch
 do
-	if test -n "$no_range_diff"
+	if test -n "$no_range_diff$only_merge"
 	then
 		continue
 	fi
