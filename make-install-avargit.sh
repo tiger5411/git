@@ -284,8 +284,17 @@ do
 	# --check sanity
 	if ! git -P log --oneline --check $upstream..$branch >/dev/null
 	then
-		echo "Have bad --check output for $branch:"
-		git -P log --oneline --check $upstream..$branch
+		# Whitelist branches that have legitimate whitespace
+		# issues but have .gitattributes files. TODO: Make
+		# "git log" accept a .gitattributes from a given HEAD?
+		case "$branch" in
+		"avar-hanwen/reftable")
+			;;
+		*)
+			echo "Have bad --check output for $branch:"
+			git -P log --oneline --check $upstream..$branch
+			;;
+		esac
 	fi
 
 	# For my own branches not based on "master"
