@@ -714,6 +714,24 @@ out:
 static int refcol_width = 10;
 static int compact_format;
 
+static int prepared_compact_format;
+static void prepare_compact_format(void)
+{
+	const char *format = "full";
+
+	if (prepared_compact_format++)
+		return;
+
+	git_config_get_string_tmp("fetch.output", &format);
+	if (!strcasecmp(format, "full"))
+		compact_format = 0;
+	else if (!strcasecmp(format, "compact"))
+		compact_format = 1;
+	else
+		die(_("configuration fetch.output contains invalid value %s"),
+		    format);
+}
+
 static void adjust_refcol_width(const struct ref *ref)
 {
 	int max, rlen, llen, len;
@@ -733,6 +751,7 @@ static void adjust_refcol_width(const struct ref *ref)
 	 * anyway because we don't know if the error explanation part
 	 * will be printed in update_local_ref)
 	 */
+	prepare_compact_format();
 	if (compact_format) {
 		llen = 0;
 		max = max * 2 / 3;
@@ -750,22 +769,13 @@ static void adjust_refcol_width(const struct ref *ref)
 		refcol_width = rlen;
 }
 
-static void prepare_format_display(struct ref *ref_map)
+static int prepared_refcol_width;
+static void prepare_refcol_width(struct ref *ref_map)
 {
 	struct ref *rm;
-	const char *format = "full";
 
-	if (verbosity < 0)
+	if (prepared_refcol_width++)
 		return;
-
-	git_config_get_string_tmp("fetch.output", &format);
-	if (!strcasecmp(format, "full"))
-		compact_format = 0;
-	else if (!strcasecmp(format, "compact"))
-		compact_format = 1;
-	else
-		die(_("configuration fetch.output contains invalid value %s"),
-		    format);
 
 	for (rm = ref_map; rm; rm = rm->next) {
 		if (rm->status == REF_STATUS_REJECT_SHALLOW ||
@@ -777,9 +787,10 @@ static void prepare_format_display(struct ref *ref_map)
 	}
 }
 
-static void print_remote_to_local(struct strbuf *display,
+static void print_remote_to_local(struct ref *ref_map, struct strbuf *display,
 				  const char *remote, const char *local)
 {
+	prepare_refcol_width(ref_map);
 	strbuf_addf(display, "%-*s -> %s", refcol_width, remote, local);
 }
 
@@ -810,7 +821,7 @@ static int find_and_replace(struct strbuf *haystack,
 	return 1;
 }
 
-static void print_compact(struct strbuf *display,
+static void print_compact(struct ref *ref_map, struct strbuf *display,
 			  const char *remote, const char *local)
 {
 	struct strbuf r = STRBUF_INIT;
@@ -826,13 +837,14 @@ static void print_compact(struct strbuf *display,
 
 	if (!find_and_replace(&r, local, "*"))
 		find_and_replace(&l, remote, "*");
-	print_remote_to_local(display, r.buf, l.buf);
+	print_remote_to_local(ref_map, display, r.buf, l.buf);
 
 	strbuf_release(&r);
 	strbuf_release(&l);
 }
 
-static void format_display(struct strbuf *display, char code,
+static void format_display(struct ref *ref_map,
+			   struct strbuf *display, char code,
 			   const char *summary, const char *error,
 			   const char *remote, const char *local,
 			   int summary_width)
@@ -845,15 +857,17 @@ static void format_display(struct strbuf *display, char code,
 	width = (summary_width + strlen(summary) - gettext_width(summary));
 
 	strbuf_addf(display, "%c %-*s ", code, width, summary);
+	prepare_compact_format();
 	if (!compact_format)
-		print_remote_to_local(display, remote, local);
+		print_remote_to_local(ref_map, display, remote, local);
 	else
-		print_compact(display, remote, local);
+		print_compact(ref_map, display, remote, local);
 	if (error)
 		strbuf_addf(display, "  (%s)", error);
 }
 
-static int update_local_ref(struct ref *ref,
+static int update_local_ref(struct ref *ref_map,
+			    struct ref *ref,
 			    struct ref_transaction *transaction,
 			    const char *remote, const struct ref *remote_ref,
 			    struct strbuf *display, int summary_width,
@@ -869,7 +883,7 @@ static int update_local_ref(struct ref *ref,
 
 	if (oideq(&ref->old_oid, &ref->new_oid)) {
 		if (verbosity > 0)
-			format_display(display, '=', _("[up to date]"), NULL,
+			format_display(ref_map, display, '=', _("[up to date]"), NULL,
 				       remote, pretty_ref, summary_width);
 		return 0;
 	}
@@ -881,7 +895,7 @@ static int update_local_ref(struct ref *ref,
 		 * If this is the head, and it's not okay to update
 		 * the head, and the old value of the head isn't empty...
 		 */
-		format_display(display, '!', _("[rejected]"),
+		format_display(ref_map, display, '!', _("[rejected]"),
 			       wt->is_current ?
 				       _("can't fetch in current branch") :
 				       _("checked out in another worktree"),
@@ -894,12 +908,12 @@ static int update_local_ref(struct ref *ref,
 		if (force || ref->force) {
 			int r;
 			r = s_update_ref("updating tag", ref, transaction, 0);
-			format_display(display, r ? '!' : 't', _("[tag update]"),
+			format_display(ref_map, display, r ? '!' : 't', _("[tag update]"),
 				       r ? _("unable to update local ref") : NULL,
 				       remote, pretty_ref, summary_width);
 			return r;
 		} else {
-			format_display(display, '!', _("[rejected]"), _("would clobber existing tag"),
+			format_display(ref_map, display, '!', _("[rejected]"), _("would clobber existing tag"),
 				       remote, pretty_ref, summary_width);
 			return 1;
 		}
@@ -931,7 +945,7 @@ static int update_local_ref(struct ref *ref,
 		}
 
 		r = s_update_ref(msg, ref, transaction, 0);
-		format_display(display, r ? '!' : '*', what,
+		format_display(ref_map, display, r ? '!' : '*', what,
 			       r ? _("unable to update local ref") : NULL,
 			       remote, pretty_ref, summary_width);
 		return r;
@@ -953,7 +967,7 @@ static int update_local_ref(struct ref *ref,
 		strbuf_addstr(&quickref, "..");
 		strbuf_add_unique_abbrev(&quickref, &ref->new_oid, DEFAULT_ABBREV);
 		r = s_update_ref("fast-forward", ref, transaction, 1);
-		format_display(display, r ? '!' : ' ', quickref.buf,
+		format_display(ref_map, display, r ? '!' : ' ', quickref.buf,
 			       r ? _("unable to update local ref") : NULL,
 			       remote, pretty_ref, summary_width);
 		strbuf_release(&quickref);
@@ -965,13 +979,13 @@ static int update_local_ref(struct ref *ref,
 		strbuf_addstr(&quickref, "...");
 		strbuf_add_unique_abbrev(&quickref, &ref->new_oid, DEFAULT_ABBREV);
 		r = s_update_ref("forced-update", ref, transaction, 1);
-		format_display(display, r ? '!' : '+', quickref.buf,
+		format_display(ref_map, display, r ? '!' : '+', quickref.buf,
 			       r ? _("unable to update local ref") : _("forced update"),
 			       remote, pretty_ref, summary_width);
 		strbuf_release(&quickref);
 		return r;
 	} else {
-		format_display(display, '!', _("[rejected]"), _("non-fast-forward"),
+		format_display(ref_map, display, '!', _("[rejected]"), _("non-fast-forward"),
 			       remote, pretty_ref, summary_width);
 		return 1;
 	}
@@ -1123,8 +1137,6 @@ static int store_updated_refs(const char *raw_url, const char *remote_name,
 		}
 	}
 
-	prepare_format_display(ref_map);
-
 	/*
 	 * We do a pass for each fetch_head_status type in their enum order, so
 	 * merged entries are written before not-for-merge. That lets readers
@@ -1212,8 +1224,9 @@ static int store_updated_refs(const char *raw_url, const char *remote_name,
 
 			strbuf_reset(&note);
 			if (ref) {
-				rc |= update_local_ref(ref, transaction, what,
-						       rm, &note, summary_width,
+				rc |= update_local_ref(ref_map, ref,
+						       transaction, what, rm,
+						       &note, summary_width,
 						       worktrees);
 				free(ref);
 			} else if (write_fetch_head || dry_run) {
@@ -1222,7 +1235,7 @@ static int store_updated_refs(const char *raw_url, const char *remote_name,
 				 * would be written to FETCH_HEAD, if --dry-run
 				 * is set).
 				 */
-				format_display(&note, '*',
+				format_display(ref_map, &note, '*',
 					       *kind ? kind : "branch", NULL,
 					       *what ? what : "HEAD",
 					       "FETCH_HEAD", summary_width);
@@ -1380,7 +1393,7 @@ static int prune_refs(struct refspec *rs, struct ref *ref_map,
 				fprintf(stderr, _("From %.*s\n"), url_len, url);
 				shown_url = 1;
 			}
-			format_display(&sb, '-', _("[deleted]"), NULL,
+			format_display(ref_map, &sb, '-', _("[deleted]"), NULL,
 				       _("(none)"), prettify_refname(ref->name),
 				       summary_width);
 			fprintf(stderr, " %s\n",sb.buf);
