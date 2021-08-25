@@ -290,7 +290,7 @@ int parse_opt_passthru_argv(const struct option *opt, const char *arg, int unset
 	if (recreate_opt(&sb, opt, arg, unset) < 0)
 		return -1;
 
-	strvec_push(opt_value, sb.buf);
+	strvec_push_nodup(opt_value, strbuf_detach(&sb, NULL));
 
 	return 0;
 }

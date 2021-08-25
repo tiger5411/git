@@ -16,6 +16,9 @@
  *
  * Each `strvec` manages its own memory. Any strings pushed into the
  * array are duplicated, and all memory is freed by strvec_clear().
+ *
+ * The strvec_push_nopdup() function is an exception to the
+ * duplication rule, use it to push e.g. a strbuf_detach()'d string.
  */
 
 extern const char *empty_strvec[];
@@ -43,8 +46,14 @@ struct strvec {
  */
 void strvec_init(struct strvec *);
 
-/* Push a copy of a string onto the end of the array. */
+/**
+ * Push a copy of a string onto the end of the array. The
+ * strvec_push() function is the most commonly used, it's a thin
+ * wrapper for strvec_push_nodup() which does a xstrdup() on the
+ * provided value.
+ */
 const char *strvec_push(struct strvec *, const char *);
+const char *strvec_push_nodup(struct strvec *, const char *);
 
 /**
  * Format a string and push it onto the end of the array. This is a

@@ -644,16 +644,14 @@ static int filter_buffer_or_fd(int in, int out, void *data)
 	strbuf_expand(&cmd, params->cmd, strbuf_expand_dict_cb, &dict);
 	strbuf_release(&path);
 
-	strvec_push(&child_process.args, cmd.buf);
+	strvec_push_nodup(&child_process.args, strbuf_detach(&cmd, NULL));
 	child_process.use_shell = 1;
 	child_process.in = -1;
 	child_process.out = out;
 
-	if (start_command(&child_process)) {
-		strbuf_release(&cmd);
+	if (start_command(&child_process))
 		return error(_("cannot fork to run external filter '%s'"),
 			     params->cmd);
-	}
 
 	sigchain_push(SIGPIPE, SIG_IGN);
 
@@ -680,7 +678,6 @@ static int filter_buffer_or_fd(int in, int out, void *data)
 	if (status)
 		error(_("external filter '%s' failed %d"), params->cmd, status);
 
-	strbuf_release(&cmd);
 	return (write_err || status);
 }
 

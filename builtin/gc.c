@@ -1632,22 +1632,19 @@ static char *launchctl_service_filename(const char *name)
 	return expanded;
 }
 
-static char *launchctl_get_uid(void)
-{
-	return xstrfmt("gui/%d", getuid());
-}
-
 static int launchctl_boot_plist(int enable, const char *filename)
 {
 	const char *cmd = "launchctl";
-	int result;
 	struct child_process child = CHILD_PROCESS_INIT;
-	char *uid = launchctl_get_uid();
 
 	get_schedule_cmd(&cmd, NULL);
 	strvec_split(&child.args, cmd);
-	strvec_pushl(&child.args, enable ? "bootstrap" : "bootout", uid,
-		     filename, NULL);
+	if (enable)
+		strvec_push(&child.args, "bootstrap");
+	else
+		strvec_push(&child.args, "bootout");
+	strvec_push_nodup(&child.args, xstrfmt("gui/%d", getuid()));
+	strvec_push(&child.args, filename);
 
 	child.no_stderr = 1;
 	child.no_stdout = 1;
@@ -1655,10 +1652,7 @@ static int launchctl_boot_plist(int enable, const char *filename)
 	if (start_command(&child))
 		die(_("failed to start launchctl"));
 
-	result = finish_command(&child);
-
-	free(uid);
-	return result;
+	return finish_command(&child);
 }
 
 static int launchctl_remove_plist(enum schedule_priority schedule)
