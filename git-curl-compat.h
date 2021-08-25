@@ -20,9 +20,25 @@
  * GIT_CURL_HAVE_X. If multiple similar symbols with the same prefix
  * were defined in the same version we pick one and check for that name.
  *
+ * We may also define a missing CURL_* symbol to its known value, if
+ * doing so is sufficient to add support for it to older versions that
+ * don't have it.
+ *
  * Keep any symbols in date order of when their support was
  * introduced, oldest first, in the official version of cURL library.
  */
+
+/**
+ * CURL_SOCKOPT_OK was added in 7.21.5, released in April 2011.
+ *
+ * This should be safe as CURL_SOCKOPT_OK has always been a macro, not
+ * an enum field (checked on curl version 7.78.0, released on July 19,
+ * 2021). Even if that were to change the value of "0" for "OK" is
+ * unlikely to change.
+ */
+#ifndef CURL_SOCKOPT_OK
+#define CURL_SOCKOPT_OK 0
+#endif
 
 /**
  * CURLOPT_TCP_KEEPALIVE was added in 7.25.0, released in March 2012.
