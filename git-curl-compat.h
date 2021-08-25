@@ -17,6 +17,10 @@
  * GIT_CURL_HAVE_X_and_Y, where the "Y" in "X_and_Y" is only the part
  * of the symbol name that "X" and "Y" don't have in common.
  *
+ * We may also define a missing CURL_* symbol to its known value, if
+ * doing so is sufficient to add support for it to older versions that
+ * don't have it.
+ *
  * We avoid comparisons against LIBCURL_VERSION_NUM, enterprise
  * distros have been known to backport symbols to their older curl
  * versions.
@@ -24,6 +28,13 @@
  * Keep any symbols in date order of when their support was
  * introduced, oldest first, in the official version of cURL library.
  */
+
+/**
+ * CURL_SOCKOPT_OK was added in 7.21.5, released in April 2011.
+ */
+#ifndef CURL_SOCKOPT_OK
+#define CURL_SOCKOPT_OK 0
+#endif
 
 /**
  * CURLOPT_TCP_KEEPALIVE was added in 7.25.0, released in March 2012.
