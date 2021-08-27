@@ -288,7 +288,7 @@ do
 		# issues but have .gitattributes files. TODO: Make
 		# "git log" accept a .gitattributes from a given HEAD?
 		case "$branch" in
-		"avar-hanwen/reftable")
+		avar-hanwen/reftable*)
 			;;
 		*)
 			echo "Have bad --check output for $branch:"
