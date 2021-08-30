@@ -906,6 +906,23 @@ test_expect_success 'format-patch with multiple notes refs in config' '
 	grep "this is note 2" out
 '
 
+test_expect_success 'format-patch --notes does not indent empty lines' '
+	git notes add --file=- HEAD <<-\EOF &&
+	paragraph 1
+
+	paragraph 2
+	EOF
+	test_when_finished "git notes remove HEAD" &&
+	git format-patch -1 --stdout --notes >out &&
+	sed -n "/^[ 	]*paragraph 1$/,/^[ 	]*paragraph 2$/{s/^[ 	][ 	]*/[indent]/;p;}" out >actual &&
+	cat >expect <<-\EOF &&
+	[indent]paragraph 1
+
+	[indent]paragraph 2
+	EOF
+	test_cmp expect actual
+'
+
 echo "fatal: --name-only does not make sense" >expect.name-only
 echo "fatal: --name-status does not make sense" >expect.name-status
 echo "fatal: --check does not make sense" >expect.check
