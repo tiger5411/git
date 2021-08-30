@@ -259,29 +259,31 @@ EOF
 
 INPUT_END
 
-whitespace="    "
-
 cat >expect <<EXPECT_END
-    fourth commit
-    pre-prefix of note for fourth commit
-$whitespace
-    prefix of note for fourth commit
-$whitespace
-    third note for fourth commit
-    third commit
-    prefix of note for third commit
-$whitespace
-    third note for third commit
-    second commit
-    third note for second commit
-    first commit
-    third note for first commit
+fourth commit
+pre-prefix of note for fourth commit
+
+prefix of note for fourth commit
+
+third note for fourth commit
+
+third commit
+prefix of note for third commit
+
+third note for third commit
+
+second commit
+third note for second commit
+
+first commit
+third note for first commit
+
 EXPECT_END
 
 test_expect_success 'add concatenation notes with M command' '
 
 	git fast-import <input &&
-	GIT_NOTES_REF=refs/notes/test git log | grep "^    " > actual &&
+	GIT_NOTES_REF=refs/notes/test git log --format="tformat:%B%N" >actual &&
 	test_cmp expect actual
 
 '
