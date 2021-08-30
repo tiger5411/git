@@ -1295,7 +1295,7 @@ static void format_note(struct notes_tree *t, const struct object_id *object_oid
 	for (msg_p = msg; msg_p < msg + msglen; msg_p += linelen + 1) {
 		linelen = strchrnul(msg_p, '\n') - msg_p;
 
-		if (!raw)
+		if (!raw && linelen)
 			strbuf_addstr(sb, "    ");
 		strbuf_add(sb, msg_p, linelen);
 		strbuf_addch(sb, '\n');

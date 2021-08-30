@@ -326,7 +326,7 @@ test_expect_success 'show -m notes' '
 
 		Notes:
 		${indent}spam
-		${indent}
+
 		${indent}foo
 		${indent}bar
 		${indent}baz
@@ -849,7 +849,7 @@ test_expect_success 'append to note from other note with "git notes append -C"' 
 
 		Notes:
 		${indent}yet another note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	note=$(git notes list HEAD^) &&
@@ -887,7 +887,7 @@ test_expect_success 'append to note from other note with "git notes append -c"' 
 
 		Notes:
 		${indent}other note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	note=$(git notes list HEAD) &&
@@ -928,7 +928,7 @@ test_expect_success 'copy note with "git notes copy" with default' '
 
 		Notes:
 		${indent}other note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	git notes copy HEAD^ &&
@@ -950,7 +950,7 @@ test_expect_success 'prevent overwrite with "git notes copy"' '
 
 		Notes:
 		${indent}other note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	git log -1 >actual &&
@@ -991,7 +991,7 @@ test_expect_success 'allow overwrite with "git notes copy -f" with default' '
 
 		Notes:
 		${indent}yet another note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	git notes copy -f HEAD~2 &&
@@ -1020,7 +1020,7 @@ test_expect_success 'git notes copy --stdin' '
 
 		Notes:
 		${indent}yet another note
-		${indent}
+
 		${indent}yet another note
 
 		commit $parent
@@ -1031,7 +1031,7 @@ test_expect_success 'git notes copy --stdin' '
 
 		Notes:
 		${indent}other note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	from=$(git rev-parse HEAD~3) &&
@@ -1092,7 +1092,7 @@ test_expect_success 'git notes copy --for-rewrite (enabled)' '
 
 		Notes:
 		${indent}yet another note
-		${indent}
+
 		${indent}yet another note
 
 		commit $parent
@@ -1103,7 +1103,7 @@ test_expect_success 'git notes copy --for-rewrite (enabled)' '
 
 		Notes:
 		${indent}other note
-		${indent}
+
 		${indent}yet another note
 	EOF
 	test_config notes.rewriteMode overwrite &&
@@ -1174,7 +1174,7 @@ test_expect_success 'git notes copy --for-rewrite (append)' '
 
 		Notes:
 		${indent}a fresh note
-		${indent}
+
 		${indent}another fresh note
 	EOF
 	git notes add -f -m"another fresh note" HEAD^ &&
@@ -1199,11 +1199,11 @@ test_expect_success 'git notes copy --for-rewrite (append two to one)' '
 
 		Notes:
 		${indent}a fresh note
-		${indent}
+
 		${indent}another fresh note
-		${indent}
+
 		${indent}append 1
-		${indent}
+
 		${indent}append 2
 	EOF
 	git notes add -f -m"append 1" HEAD^ &&
