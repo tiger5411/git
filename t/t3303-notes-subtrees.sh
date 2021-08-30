@@ -171,13 +171,16 @@ INPUT_END
 }
 
 verify_concatenated_notes () {
-	git log | grep "^    " > output &&
+	git log --format="tformat:%B%N" >output &&
 	i=$number_of_commits &&
 	while [ $i -gt 0 ]; do
-		echo "    commit #$i" &&
-		echo "    first note for commit #$i" &&
-		echo "    " &&
-		echo "    second note for commit #$i" &&
+		cat <<-EOF &&
+		commit #$i
+		first note for commit #$i
+
+		second note for commit #$i
+
+		EOF
 		i=$(($i-1));
 	done > expect &&
 	test_cmp expect output
