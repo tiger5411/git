@@ -2,6 +2,7 @@
 
 test_description=gitattributes
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 attr_check_basic () {

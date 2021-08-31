@@ -2,6 +2,7 @@
 
 test_description=check-ignore
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 init_vars () {

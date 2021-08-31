@@ -1,6 +1,8 @@
 #!/bin/sh
 
 test_description='signals work as we expect'
+
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 cat >expect <<EOF

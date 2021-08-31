@@ -2,6 +2,7 @@
 
 test_description='detect unwritable repository and fail correctly'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success setup '

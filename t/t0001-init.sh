@@ -2,6 +2,7 @@
 
 test_description='git init'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 check_config () {
