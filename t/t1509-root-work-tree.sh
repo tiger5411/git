@@ -9,6 +9,7 @@ Script t1509/prepare-chroot.sh may help you setup chroot, then you
 can chroot in and execute this test from there.
 '
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_cmp_val() {

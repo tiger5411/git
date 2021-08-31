@@ -2,6 +2,7 @@
 
 test_description='cd_to_toplevel'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 EXEC_PATH="$(git --exec-path)"

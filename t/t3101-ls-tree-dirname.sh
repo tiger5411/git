@@ -19,6 +19,7 @@ This test runs git ls-tree with the following in a tree.
 Test the handling of multiple directories which have matching file
 entries.  Also test odd filename and missing entries handling.
 '
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success 'setup' '

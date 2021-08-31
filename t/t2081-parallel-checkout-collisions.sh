@@ -11,6 +11,7 @@ The tests in this file exercise parallel checkout's collision detection code in
 both these mechanics.
 "
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 . "$TEST_DIRECTORY/lib-parallel-checkout.sh"
 

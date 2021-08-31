@@ -6,6 +6,7 @@
 test_description='Test diff raw-output.
 
 '
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 . "$TEST_DIRECTORY"/lib-read-tree-m-3way.sh

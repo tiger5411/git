@@ -6,6 +6,7 @@ This test runs git ls-files with various unusual or malformed
 command-line arguments.
 '
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success 'ls-files in empty repository' '

@@ -22,6 +22,7 @@ and tries to git update-index --add the following:
 All of the attempts should fail.
 '
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 mkdir path2 path3

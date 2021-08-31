@@ -4,6 +4,7 @@
 #
 
 test_description='Test diff/status color escape codes'
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 ESC=$(printf '\033')

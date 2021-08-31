@@ -12,6 +12,7 @@ Also make sure that command line parser understands the normal
 "flags first and then non flag arguments" command line.
 '
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 cat >expected <<EOF

@@ -2,6 +2,7 @@
 
 test_description='more git add -u'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success setup '

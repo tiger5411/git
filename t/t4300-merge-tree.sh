@@ -4,6 +4,7 @@
 #
 
 test_description='git merge-tree'
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success setup '

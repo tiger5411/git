@@ -5,6 +5,7 @@
 
 test_description='quoted output'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 FN='濱野'
