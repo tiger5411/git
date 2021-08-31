@@ -193,7 +193,6 @@ static int git_commit_graph_write_config(const char *var, const char *value,
 static int graph_write(int argc, const char **argv)
 {
 	struct string_list pack_indexes = STRING_LIST_INIT_NODUP;
-	struct strbuf buf = STRBUF_INIT;
 	struct oidset commits = OIDSET_INIT;
 	struct object_directory *odb = NULL;
 	int result = 0;
@@ -272,10 +271,14 @@ static int graph_write(int argc, const char **argv)
 	}
 
 	if (opts.stdin_packs) {
+		struct strbuf buf = STRBUF_INIT;
 		while (strbuf_getline(&buf, stdin) != EOF)
 			string_list_append(&pack_indexes,
 					   strbuf_detach(&buf, NULL));
+		strbuf_release(&buf);
 	} else if (opts.stdin_commits) {
+		struct strbuf buf = STRBUF_INIT;
+
 		oidset_init(&commits, 0);
 		if (opts.progress)
 			progress = start_delayed_progress(
@@ -283,12 +286,13 @@ static int graph_write(int argc, const char **argv)
 
 		while (strbuf_getline(&buf, stdin) != EOF) {
 			if (read_one_commit(&commits, progress, buf.buf)) {
-				result = 1;
-				goto cleanup;
+				strbuf_release(&buf);
+				return 1;
 			}
 		}
 
 		stop_progress(&progress);
+		strbuf_release(&buf);
 	}
 
 	if (write_commit_graph(odb,
@@ -298,10 +302,9 @@ static int graph_write(int argc, const char **argv)
 			       &write_opts))
 		result = 1;
 
-cleanup:
 	FREE_AND_NULL(options);
+	pack_indexes.strdup_strings = 1;
 	string_list_clear(&pack_indexes, 0);
-	strbuf_release(&buf);
 	return result;
 }
 
