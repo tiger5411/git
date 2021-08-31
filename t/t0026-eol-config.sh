@@ -2,6 +2,7 @@
 
 test_description='CRLF conversion'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 has_cr() {

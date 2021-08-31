@@ -2,6 +2,7 @@
 
 test_description='test the Windows-only core.unsetenvvars setting'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 if ! test_have_prereq MINGW

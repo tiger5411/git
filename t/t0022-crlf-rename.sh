@@ -2,6 +2,7 @@
 
 test_description='ignore CR in CRLF sequence while computing similiarity'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success setup '
