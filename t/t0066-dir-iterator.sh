@@ -2,6 +2,7 @@
 
 test_description='Test the dir-iterator functionality'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_expect_success 'setup' '

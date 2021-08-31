@@ -5,6 +5,7 @@
 
 test_description='git stripspace'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 t40='A quick brown fox jumps over the lazy do'

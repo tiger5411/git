@@ -5,6 +5,7 @@
 
 test_description='Test run command'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 cat >hello-script <<-EOF

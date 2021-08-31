@@ -5,6 +5,7 @@
 
 test_description='Test string list functionality'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_split () {
