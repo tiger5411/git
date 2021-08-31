@@ -1,6 +1,7 @@
 #!/bin/sh
 
 test_description='test sha1 collision detection'
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 TEST_DATA="$TEST_DIRECTORY/t0013"
 

@@ -2,6 +2,7 @@
 
 test_description='racy GIT'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 # This test can give false success if your machine is sufficiently

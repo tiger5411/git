@@ -1,6 +1,7 @@
 #!/bin/sh
 
 test_description='test hashmap and string hash functions'
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 test_hashmap() {

@@ -2,6 +2,7 @@
 
 test_description='test env--helper'
 
+. ./test-pragma-SANITIZE=leak-ok.sh
 . ./test-lib.sh
 
 
