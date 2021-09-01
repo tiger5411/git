@@ -383,11 +383,6 @@ static int parse_opt_keep_empty(const struct option *opt, const char *arg,
 	return 0;
 }
 
-static int is_merge(struct rebase_options *opts)
-{
-	return opts->type == REBASE_MERGE;
-}
-
 static void imply_merge(struct rebase_options *opts, const char *option)
 {
 	switch (opts->type) {
@@ -909,8 +904,7 @@ static int parse_opt_merge(const struct option *opt, const char *arg, int unset)
 	BUG_ON_OPT_NEG(unset);
 	BUG_ON_OPT_ARG(arg);
 
-	if (!is_merge(opts))
-		opts->type = REBASE_MERGE;
+	opts->type = REBASE_MERGE;
 
 	return 0;
 }
@@ -988,7 +982,7 @@ static void set_reflog_action(struct rebase_options *options)
 	const char *env;
 	struct strbuf buf = STRBUF_INIT;
 
-	if (!is_merge(options))
+	if (options->type != REBASE_MERGE)
 		return;
 
 	env = getenv(GIT_REFLOG_ACTION_ENVIRONMENT);
@@ -1208,12 +1202,12 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		die(_("No rebase in progress?"));
 	setenv(GIT_REFLOG_ACTION_ENVIRONMENT, "rebase", 0);
 
-	if (action == ACTION_EDIT_TODO && !is_merge(&options))
+	if (action == ACTION_EDIT_TODO && options.type != REBASE_MERGE)
 		die(_("The --edit-todo action can only be used during "
 		      "interactive rebase."));
 
 	if (trace2_is_enabled()) {
-		if (is_merge(&options))
+		if (options.type == REBASE_MERGE)
 			trace2_cmd_mode("interactive");
 		else if (exec.nr)
 			trace2_cmd_mode("interactive-exec");
@@ -1465,7 +1459,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 				break;
 
 		if (i >= 0) {
-			if (is_merge(&options))
+			if (options.type == REBASE_MERGE)
 				die(_("cannot combine apply options with "
 				      "merge options"));
 			else
@@ -1507,7 +1501,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		else
 			options.empty = EMPTY_DROP;
 	}
-	if (reschedule_failed_exec > 0 && !is_merge(&options))
+	if (reschedule_failed_exec > 0 && options.type != REBASE_MERGE)
 		die(_("--reschedule-failed-exec requires "
 		      "--exec or --interactive"));
 	if (reschedule_failed_exec >= 0)
@@ -1746,7 +1740,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		diff_flush(&opts);
 	}
 
-	if (is_merge(&options))
+	if (options.type == REBASE_MERGE)
 		goto run_rebase;
 
 	/* Detach HEAD and reset the tree */
