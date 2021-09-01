@@ -741,7 +741,6 @@ static int run_am(struct rebase_options *opts)
 
 static int run_specific_rebase(struct rebase_options *opts, enum action action)
 {
-	struct strbuf script_snippet = STRBUF_INIT;
 	int status;
 
 	if (opts->type == REBASE_MERGE) {
@@ -780,8 +779,6 @@ static int run_specific_rebase(struct rebase_options *opts, enum action action)
 		strbuf_release(&dir);
 		die("Nothing to do");
 	}
-
-	strbuf_release(&script_snippet);
 
 	return status ? -1 : 0;
 }
