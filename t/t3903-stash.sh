@@ -10,6 +10,17 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
 . ./test-lib.sh
 
+test_expect_success 'usage' '
+	test_expect_code 129 git stash -h >out &&
+	grep "or: git stash" out &&
+
+	test_expect_code 129 git stash --invalid-option >out 2>err &&
+	grep "or: git stash" err &&
+
+	test_expect_code 129 git stash push --invalid-option >out 2>err &&
+	! grep "or: git stash" err
+'
+
 diff_cmp () {
 	for i in "$1" "$2"
 	do
