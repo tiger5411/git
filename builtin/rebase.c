@@ -45,12 +45,6 @@ static GIT_PATH_FUNC(path_interactive, "rebase-merge/interactive")
 static GIT_PATH_FUNC(apply_dir, "rebase-apply")
 static GIT_PATH_FUNC(merge_dir, "rebase-merge")
 
-enum rebase_type {
-	REBASE_UNSPECIFIED = -1,
-	REBASE_APPLY,
-	REBASE_MERGE
-};
-
 enum empty_type {
 	EMPTY_UNSPECIFIED = -1,
 	EMPTY_DROP,
@@ -59,7 +53,9 @@ enum empty_type {
 };
 
 struct rebase_options {
-	enum rebase_type type;
+	int rebase_unspecified;
+	int rebase_merge;
+	int rebase_apply;
 	enum empty_type empty;
 	const char *default_backend;
 	const char *state_dir;
@@ -104,7 +100,7 @@ struct rebase_options {
 };
 
 #define REBASE_OPTIONS_INIT {			  	\
-		.type = REBASE_UNSPECIFIED,	  	\
+		.rebase_unspecified = 1,		\
 		.empty = EMPTY_UNSPECIFIED,	  	\
 		.keep_empty = 1,			\
 		.default_backend = "merge",	  	\
@@ -379,22 +375,17 @@ static int parse_opt_keep_empty(const struct option *opt, const char *arg,
 
 	imply_merge(opts, unset ? "--no-keep-empty" : "--keep-empty");
 	opts->keep_empty = !unset;
-	opts->type = REBASE_MERGE;
+	opts->rebase_merge = 1;
+	opts->rebase_unspecified = 0;
 	return 0;
 }
 
 static void imply_merge(struct rebase_options *opts, const char *option)
 {
-	switch (opts->type) {
-	case REBASE_APPLY:
+	if (opts->rebase_apply)
 		die(_("%s requires the merge backend"), option);
-		break;
-	case REBASE_MERGE:
-		break;
-	default:
-		opts->type = REBASE_MERGE; /* implied */
-		break;
-	}
+	opts->rebase_merge = 1;
+	opts->rebase_unspecified = 0;
 }
 
 /* Returns the filename prefixed by the state_dir */
@@ -553,12 +544,12 @@ static int finish_rebase(struct rebase_options *opts)
 	 * user should see them.
 	 */
 	run_auto_maintenance(!(opts->flags & (REBASE_NO_QUIET|REBASE_VERBOSE)));
-	if (opts->type == REBASE_MERGE) {
+	if (opts->rebase_merge) {
 		struct replay_opts replay = REPLAY_OPTS_INIT;
 
 		replay.action = REPLAY_INTERACTIVE_REBASE;
 		ret = sequencer_remove_state(&replay);
-	} else {
+	} else if (opts->rebase_apply || opts->rebase_unspecified) {
 		strbuf_addstr(&dir, opts->state_dir);
 		if (remove_dir_recursively(&dir, 0))
 			ret = error(_("could not remove '%s'"),
@@ -738,7 +729,7 @@ static int run_specific_rebase(struct rebase_options *opts, enum action action)
 {
 	int status;
 
-	if (opts->type == REBASE_MERGE) {
+	if (opts->rebase_merge) {
 		/* Run sequencer-based rebase */
 		setenv("GIT_CHERRY_PICK_HELP", resolvemsg, 1);
 		if (!(opts->flags & REBASE_INTERACTIVE_EXPLICIT)) {
@@ -753,14 +744,13 @@ static int run_specific_rebase(struct rebase_options *opts, enum action action)
 		}
 
 		status = run_sequencer_rebase(opts, action);
-	} else if (opts->type == REBASE_APPLY)
+	} else if (opts->rebase_apply) {
 		status = run_am(opts);
-	else
-		BUG("Unhandled rebase type %d", opts->type);
+	}
 
 	if (opts->dont_finish_rebase)
 		; /* do nothing */
-	else if (opts->type == REBASE_MERGE)
+	else if (opts->rebase_merge)
 		; /* merge backend cleans up after itself */
 	else if (status == 0) {
 		if (!file_exists(state_dir_path("stopped-sha", opts)))
@@ -891,7 +881,8 @@ static int parse_opt_am(const struct option *opt, const char *arg, int unset)
 	BUG_ON_OPT_NEG(unset);
 	BUG_ON_OPT_ARG(arg);
 
-	opts->type = REBASE_APPLY;
+	opts->rebase_apply = 1;
+	opts->rebase_unspecified = 0;
 
 	return 0;
 }
@@ -904,7 +895,8 @@ static int parse_opt_merge(const struct option *opt, const char *arg, int unset)
 	BUG_ON_OPT_NEG(unset);
 	BUG_ON_OPT_ARG(arg);
 
-	opts->type = REBASE_MERGE;
+	opts->rebase_merge = 1;
+	opts->rebase_unspecified = 0;
 
 	return 0;
 }
@@ -918,7 +910,8 @@ static int parse_opt_interactive(const struct option *opt, const char *arg,
 	BUG_ON_OPT_NEG(unset);
 	BUG_ON_OPT_ARG(arg);
 
-	opts->type = REBASE_MERGE;
+	opts->rebase_merge = 1;
+	opts->rebase_unspecified = 0;
 	opts->flags |= REBASE_INTERACTIVE_EXPLICIT;
 
 	return 0;
@@ -982,7 +975,7 @@ static void set_reflog_action(struct rebase_options *options)
 	const char *env;
 	struct strbuf buf = STRBUF_INIT;
 
-	if (options->type != REBASE_MERGE)
+	if (!options->rebase_merge)
 		return;
 
 	env = getenv(GIT_REFLOG_ACTION_ENVIRONMENT);
@@ -1152,7 +1145,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		die(_("It looks like 'git am' is in progress. Cannot rebase."));
 
 	if (is_directory(apply_dir())) {
-		options.type = REBASE_APPLY;
+		options.rebase_apply = 1;
+		options.rebase_unspecified = 0;
 		options.state_dir = apply_dir();
 	} else if (is_directory(merge_dir())) {
 		strbuf_reset(&buf);
@@ -1162,16 +1156,15 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		} else {
 			strbuf_reset(&buf);
 			strbuf_addf(&buf, "%s/interactive", merge_dir());
-			if(file_exists(buf.buf)) {
-				options.type = REBASE_MERGE;
+			options.rebase_merge = 1;
+			options.rebase_unspecified = 0;
+			if(file_exists(buf.buf))
 				options.flags |= REBASE_INTERACTIVE_EXPLICIT;
-			} else
-				options.type = REBASE_MERGE;
 		}
 		options.state_dir = merge_dir();
 	}
 
-	if (options.type != REBASE_UNSPECIFIED)
+	if (!options.rebase_unspecified)
 		in_progress = 1;
 
 	total_argc = argc;
@@ -1202,12 +1195,13 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		die(_("No rebase in progress?"));
 	setenv(GIT_REFLOG_ACTION_ENVIRONMENT, "rebase", 0);
 
-	if (action == ACTION_EDIT_TODO && options.type != REBASE_MERGE)
+	if (action == ACTION_EDIT_TODO && (options.rebase_unspecified ||
+					   options.rebase_apply))
 		die(_("The --edit-todo action can only be used during "
 		      "interactive rebase."));
 
 	if (trace2_is_enabled()) {
-		if (options.type == REBASE_MERGE)
+		if (options.rebase_merge)
 			trace2_cmd_mode("interactive");
 		else if (exec.nr)
 			trace2_cmd_mode("interactive-exec");
@@ -1284,7 +1278,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	}
 	case ACTION_QUIT: {
 		save_autostash(state_dir_path("autostash", &options));
-		if (options.type == REBASE_MERGE) {
+		if (options.rebase_merge) {
 			struct replay_opts replay = REPLAY_OPTS_INIT;
 
 			replay.action = REPLAY_INTERACTIVE_REBASE;
@@ -1345,8 +1339,10 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	for (i = 0; i < options.git_am_opts.nr; i++) {
 		const char *option = options.git_am_opts.v[i], *p;
 		if (!strcmp(option, "--whitespace=fix") ||
-		    !strcmp(option, "--whitespace=strip"))
+		    !strcmp(option, "--whitespace=strip")) {
+			options.rebase_merge = 1;
 			allow_preemptive_ff = 0;
+		}
 		else if (skip_prefix(option, "-C", &p)) {
 			while (*p)
 				if (!isdigit(*(p++)))
@@ -1397,7 +1393,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		imply_merge(&options, "--rebase-merges");
 	}
 
-	if (options.type == REBASE_APPLY) {
+	if (options.rebase_apply) {
 		if (ignore_whitespace)
 			strvec_push(&options.git_am_opts,
 				    "--ignore-whitespace");
@@ -1406,12 +1402,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 				    "--committer-date-is-author-date");
 		if (options.ignore_date)
 			strvec_push(&options.git_am_opts, "--ignore-date");
-	} else {
-		/* REBASE_MERGE and PRESERVE_MERGES */
-		if (ignore_whitespace) {
-			string_list_append(&strategy_options,
-					   "ignore-space-change");
-		}
+	} else if (ignore_whitespace) {
+		string_list_append(&strategy_options, "ignore-space-change");
 	}
 
 	if (strategy_options.nr) {
@@ -1427,23 +1419,13 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		options.strategy_opts = xstrdup(buf.buf);
 	}
 
-	if (options.strategy) {
-		options.strategy = xstrdup(options.strategy);
-		switch (options.type) {
-		case REBASE_APPLY:
-			die(_("--strategy requires --merge or --interactive"));
-		case REBASE_MERGE:
-			/* compatible */
-			break;
-		case REBASE_UNSPECIFIED:
-			options.type = REBASE_MERGE;
-			break;
-		default:
-			BUG("unhandled rebase type (%d)", options.type);
-		}
-	}
+	if (options.strategy && options.rebase_apply)
+		die(_("--strategy requires --merge or --interactive"));
 
-	if (options.type == REBASE_MERGE)
+	if (options.strategy)
+		options.strategy = xstrdup(options.strategy);
+
+	if (options.rebase_merge)
 		imply_merge(&options, "--merge");
 
 	if (options.root && !options.onto_name)
@@ -1452,46 +1434,38 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 	if (isatty(2) && options.flags & REBASE_NO_QUIET)
 		strbuf_addstr(&options.git_format_patch_opt, " --progress");
 
-	if (options.git_am_opts.nr || options.type == REBASE_APPLY) {
+	if (options.git_am_opts.nr || options.rebase_apply) {
 		/* all am options except -q are compatible only with --apply */
 		for (i = options.git_am_opts.nr - 1; i >= 0; i--)
 			if (strcmp(options.git_am_opts.v[i], "-q"))
 				break;
 
 		if (i >= 0) {
-			if (options.type == REBASE_MERGE)
+			if (options.rebase_merge)
 				die(_("cannot combine apply options with "
 				      "merge options"));
-			else
-				options.type = REBASE_APPLY;
+			options.rebase_apply = 1;
+			options.rebase_unspecified = 0;
 		}
 	}
 
-	if (options.type == REBASE_UNSPECIFIED) {
+	if (options.rebase_unspecified) {
 		if (!strcmp(options.default_backend, "merge"))
 			imply_merge(&options, "--merge");
-		else if (!strcmp(options.default_backend, "apply"))
-			options.type = REBASE_APPLY;
-		else
+		else if (!strcmp(options.default_backend, "apply")) {
+			options.rebase_apply = 1;
+			options.rebase_unspecified = 0;
+		} else
 			die(_("Unknown rebase backend: %s"),
 			    options.default_backend);
 	}
 
-	if (options.type == REBASE_MERGE &&
+	if (options.rebase_merge &&
 	    !options.strategy &&
 	    getenv("GIT_TEST_MERGE_ALGORITHM"))
 		options.strategy = xstrdup(getenv("GIT_TEST_MERGE_ALGORITHM"));
 
-	switch (options.type) {
-	case REBASE_MERGE:
-		options.state_dir = merge_dir();
-		break;
-	case REBASE_APPLY:
-		options.state_dir = apply_dir();
-		break;
-	default:
-		BUG("options.type was just set above; should be unreachable.");
-	}
+	options.state_dir = options.rebase_apply ? apply_dir() : merge_dir();
 
 	if (options.empty == EMPTY_UNSPECIFIED) {
 		if (options.flags & REBASE_INTERACTIVE_EXPLICIT)
@@ -1501,7 +1475,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		else
 			options.empty = EMPTY_DROP;
 	}
-	if (reschedule_failed_exec > 0 && options.type != REBASE_MERGE)
+	if (reschedule_failed_exec > 0 && !options.rebase_merge)
 		die(_("--reschedule-failed-exec requires "
 		      "--exec or --interactive"));
 	if (reschedule_failed_exec >= 0)
@@ -1740,7 +1714,7 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		diff_flush(&opts);
 	}
 
-	if (options.type == REBASE_MERGE)
+	if (options.rebase_merge)
 		goto run_rebase;
 
 	/* Detach HEAD and reset the tree */
