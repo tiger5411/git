@@ -379,15 +379,3 @@ if test -z "$NONGIT_OK"
 then
 	git_dir_init
 fi
-
-peel_committish () {
-	case "$1" in
-	:/*)
-		peeltmp=$(git rev-parse --verify "$1") &&
-		git rev-parse --verify "${peeltmp}^0"
-		;;
-	*)
-		git rev-parse --verify "${1}^0"
-		;;
-	esac
-}
