@@ -52,12 +52,6 @@ require_work_tree::
 	checks if the current directory is within the working tree
 	of the repository, and otherwise dies.
 
-require_work_tree_exists::
-	checks if the working tree associated with the repository
-	exists, and otherwise dies.  Often done before calling
-	cd_to_toplevel, which is impossible to do if there is no
-	working tree.
-
 require_clean_work_tree <action> [<hint>]::
 	checks that the working tree and index associated with the
 	repository have no uncommitted changes to tracked files.
