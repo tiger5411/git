@@ -35,6 +35,9 @@ fi
 
 tmp=$(mktemp /tmp/config.mak-XXXXX)
 cat >$tmp <<EOF
+# CC
+CC = ccache cc
+
 # Core flags
 CFLAGS=-O0 -g
 DEVELOPER=1
