@@ -40,13 +40,6 @@ die::
 usage::
 	die with the usage message.
 
-set_reflog_action::
-	Set `GIT_REFLOG_ACTION` environment to a given string (typically
-	the name of the program) unless it is already set.  Whenever
-	the script runs a `git` command that updates refs, a reflog
-	entry is created using the value of this string to leave the
-	record of what command updated the ref.
-
 git_editor::
 	runs an editor of user's choice (GIT_EDITOR, core.editor, VISUAL or
 	EDITOR) on a given file, but error out if no editor is specified
