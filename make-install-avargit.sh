@@ -8,6 +8,7 @@ only_sanity=
 range_diff_to=origin/master
 only_range_diff=
 only_merge=
+no_merge_compile=
 only_compile=
 only_basic_test=
 only_test=
@@ -36,6 +37,9 @@ do
 		;;
 	--only-merge)
 		only_merge=yes
+		;;
+	--no-merge-compile)
+		no_merge_compile=yes
 		;;
 	--only-compile)
 		only_compile=yes
@@ -394,6 +398,9 @@ test -n "$only_range_diff" && exit
 # Checkout work area
 reset_it
 
+# Configure
+~/g/git.meta/config.mak.sh --prefix /home/avar/local
+
 # Merge it all together
 set -x
 while read -r branch
@@ -402,11 +409,14 @@ do
 	# will continue the merge. TODO: make --continue support
 	# --no-edit
 	git merge --no-edit $branch || EDITOR=cat git merge --continue
+
+	# Make sure this merge at least compiles
+	if test -z "$no_merge_compile"
+	then
+		make -j $(nproc) git-objs check-docs
+	fi
 done <$series_list
 test -n "$only_merge" && exit
-
-# Configure
-~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Compile
 make -j $(nproc) all check-docs
