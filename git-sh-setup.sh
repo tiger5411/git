@@ -106,22 +106,6 @@ $LONG_USAGE")"
 	esac
 fi
 
-git_pager() {
-	if test -t 1
-	then
-		GIT_PAGER=$(git var GIT_PAGER)
-	else
-		GIT_PAGER=cat
-	fi
-	for vardef in @@PAGER_ENV@@
-	do
-		var=${vardef%%=*}
-		eval ": \"\${$vardef}\" && export $var"
-	done
-
-	eval "$GIT_PAGER" '"$@"'
-}
-
 sane_grep () {
 	GREP_OPTIONS= LC_ALL=C grep @@SANE_TEXT_GREP@@ "$@"
 }
