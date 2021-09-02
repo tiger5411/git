@@ -106,15 +106,6 @@ $LONG_USAGE")"
 	esac
 fi
 
-git_editor() {
-	if test -z "${GIT_EDITOR:+set}"
-	then
-		GIT_EDITOR="$(git var GIT_EDITOR)" || return $?
-	fi
-
-	eval "$GIT_EDITOR" '"$@"'
-}
-
 git_pager() {
 	if test -t 1
 	then
