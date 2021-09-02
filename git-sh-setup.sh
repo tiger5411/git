@@ -157,22 +157,6 @@ git_editor() {
 	eval "$GIT_EDITOR" '"$@"'
 }
 
-git_pager() {
-	if test -t 1
-	then
-		GIT_PAGER=$(git var GIT_PAGER)
-	else
-		GIT_PAGER=cat
-	fi
-	for vardef in @@PAGER_ENV@@
-	do
-		var=${vardef%%=*}
-		eval ": \"\${$vardef}\" && export $var"
-	done
-
-	eval "$GIT_PAGER" '"$@"'
-}
-
 is_bare_repository () {
 	git rev-parse --is-bare-repository
 }
