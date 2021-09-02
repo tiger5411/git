@@ -68,7 +68,7 @@ static NORETURN void die_initial_contact(int unexpected)
 /* Checks if the server supports the capability 'c' */
 int server_supports_v2(const char *c, int die_on_error)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < server_capabilities_v2.nr; i++) {
 		const char *out;
@@ -85,7 +85,7 @@ int server_supports_v2(const char *c, int die_on_error)
 
 int server_feature_v2(const char *c, const char **v)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < server_capabilities_v2.nr; i++) {
 		const char *out;
@@ -101,7 +101,7 @@ int server_feature_v2(const char *c, const char **v)
 int server_supports_feature(const char *c, const char *feature,
 			    int die_on_error)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < server_capabilities_v2.nr; i++) {
 		const char *out;
@@ -479,7 +479,7 @@ struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
 			     const struct string_list *server_options,
 			     int stateless_rpc)
 {
-	int i;
+	size_t i;
 	const char *hash_name;
 	struct strvec *ref_prefixes = transport_options ?
 		&transport_options->ref_prefixes : NULL;

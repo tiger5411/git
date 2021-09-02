@@ -1153,7 +1153,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			 N_("apply all changes, even those already present upstream")),
 		OPT_END(),
 	};
-	int i;
+	size_t i;
+	unsigned int j;
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(builtin_rebase_usage,
@@ -1385,8 +1386,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		}
 	}
 
-	for (i = 0; i < exec.nr; i++)
-		if (check_exec_cmd(exec.items[i].string))
+	for (j = 0; j < exec.nr; j++)
+		if (check_exec_cmd(exec.items[j].string))
 			exit(1);
 
 	if (!(options.flags & REBASE_NO_QUIET))

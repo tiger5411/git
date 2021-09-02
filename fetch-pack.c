@@ -955,7 +955,7 @@ static int get_pack(struct fetch_pack_args *args,
 	}
 
 	if (index_pack_args) {
-		int i;
+		size_t i;
 
 		for (i = 0; i < cmd.args.nr; i++)
 			strvec_push(index_pack_args, cmd.args.v[i]);
@@ -1701,7 +1701,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	}
 
 	for (i = 0; i < packfile_uris.nr; i++) {
-		int j;
+		size_t j;
 		struct child_process cmd = CHILD_PROCESS_INIT;
 		char packname[GIT_MAX_HEXSZ + 1];
 		const char *uri = packfile_uris.items[i].string +

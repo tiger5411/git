@@ -921,7 +921,7 @@ static char *get_author(const char *message)
 
 static const char *author_date_from_env_array(const struct strvec *env)
 {
-	int i;
+	size_t i;
 	const char *date;
 
 	for (i = 0; i < env->nr; i++)

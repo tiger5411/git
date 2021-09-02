@@ -1292,7 +1292,7 @@ static int push_dav(struct strvec *specs)
 static int push_git(struct discovery *heads, struct strvec *specs)
 {
 	struct rpc_state rpc;
-	int i;
+	size_t i;
 	int err;
 	struct strvec args;
 	struct string_list_item *cas_option;
