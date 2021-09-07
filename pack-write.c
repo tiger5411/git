@@ -469,15 +469,32 @@ void finish_tmp_packfile(const struct strbuf *tmp_basename,
 			 struct pack_idx_option *pack_idx_opts,
 			 unsigned char hash[])
 {
+	char *idx_tmp_name = NULL;
+
+	stage_tmp_packfile(tmp_basename, pack_tmp_name, written_list,
+			   nr_written, pack_idx_opts, hash, &idx_tmp_name);
+	rename_tmp_packfile_idx(tmp_basename, hash, &idx_tmp_name);
+
+	free(idx_tmp_name);
+}
+
+void stage_tmp_packfile(const struct strbuf *tmp_basename,
+			const char *pack_tmp_name,
+			struct pack_idx_entry **written_list,
+			uint32_t nr_written,
+			struct pack_idx_option *pack_idx_opts,
+			unsigned char hash[],
+			char **idx_tmp_name)
+{
 	struct strbuf sb = STRBUF_INIT;
-	const char *idx_tmp_name, *rev_tmp_name = NULL;
+	const char *rev_tmp_name = NULL;
 
 	if (adjust_shared_perm(pack_tmp_name))
 		die_errno("unable to make temporary pack file readable");
 
-	idx_tmp_name = write_idx_file(NULL, written_list, nr_written,
-				      pack_idx_opts, hash);
-	if (adjust_shared_perm(idx_tmp_name))
+	*idx_tmp_name = (char *)write_idx_file(NULL, written_list, nr_written,
+					       pack_idx_opts, hash);
+	if (adjust_shared_perm(*idx_tmp_name))
 		die_errno("unable to make temporary index file readable");
 
 	rev_tmp_name = write_rev_file(NULL, written_list, nr_written, hash,
@@ -496,12 +513,18 @@ void finish_tmp_packfile(const struct strbuf *tmp_basename,
 		strbuf_reset(&sb);
 	}
 
-	strbuf_addf(&sb, "%s%s.idx", tmp_basename->buf, hash_to_hex(hash));
-	if (rename(idx_tmp_name, sb.buf))
-		die_errno("unable to rename temporary index file");
-	strbuf_reset(&sb);
+	strbuf_release(&sb);
+}
 
-	free((void *)idx_tmp_name);
+void rename_tmp_packfile_idx(const struct strbuf *tmp_basename,
+			     unsigned char hash[], char **idx_tmp_name)
+{
+	struct strbuf sb = STRBUF_INIT;
+
+	strbuf_addf(&sb, "%s%s.idx", tmp_basename->buf, hash_to_hex(hash));
+	if (rename(*idx_tmp_name, sb.buf))
+		die_errno("unable to rename temporary index file");
+	strbuf_release(&sb);
 }
 
 void write_promisor_file(const char *promisor_name, struct ref **sought, int nr_sought)
