@@ -23,6 +23,22 @@ static struct bulk_checkin_state {
 	uint32_t nr_written;
 } state;
 
+static void finish_tmp_packfile(struct strbuf *basename,
+				const char *pack_tmp_name,
+				struct pack_idx_entry **written_list,
+				uint32_t nr_written,
+				struct pack_idx_option *pack_idx_opts,
+				unsigned char hash[])
+{
+	char *idx_tmp_name = NULL;
+
+	stage_tmp_packfiles(basename, pack_tmp_name, written_list, nr_written,
+			    pack_idx_opts, hash, &idx_tmp_name);
+	rename_tmp_packfile_idx(basename, &idx_tmp_name);
+
+	free(idx_tmp_name);
+}
+
 static void finish_bulk_checkin(struct bulk_checkin_state *state)
 {
 	struct object_id oid;
@@ -46,7 +62,8 @@ static void finish_bulk_checkin(struct bulk_checkin_state *state)
 		close(fd);
 	}
 
-	strbuf_addf(&packname, "%s/pack/pack-", get_object_directory());
+	strbuf_addf(&packname, "%s/pack/pack-%s.", get_object_directory(),
+		    oid_to_hex(&oid));
 	finish_tmp_packfile(&packname, state->pack_tmp_name,
 			    state->written, state->nr_written,
 			    &state->pack_idx_opts, oid.hash);
