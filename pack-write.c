@@ -462,15 +462,15 @@ struct hashfile *create_tmp_packfile(char **pack_tmp_name)
 	return hashfd(fd, *pack_tmp_name);
 }
 
-void finish_tmp_packfile(struct strbuf *name_buffer,
+void finish_tmp_packfile(const struct strbuf *tmp_basename,
 			 const char *pack_tmp_name,
 			 struct pack_idx_entry **written_list,
 			 uint32_t nr_written,
 			 struct pack_idx_option *pack_idx_opts,
 			 unsigned char hash[])
 {
+	struct strbuf sb = STRBUF_INIT;
 	const char *idx_tmp_name, *rev_tmp_name = NULL;
-	int basename_len = name_buffer->len;
 
 	if (adjust_shared_perm(pack_tmp_name))
 		die_errno("unable to make temporary pack file readable");
@@ -483,26 +483,23 @@ void finish_tmp_packfile(struct strbuf *name_buffer,
 	rev_tmp_name = write_rev_file(NULL, written_list, nr_written, hash,
 				      pack_idx_opts->flags);
 
-	strbuf_addf(name_buffer, "%s.pack", hash_to_hex(hash));
-
-	if (rename(pack_tmp_name, name_buffer->buf))
+	strbuf_addf(&sb, "%s%s.pack", tmp_basename->buf, hash_to_hex(hash));
+	if (rename(pack_tmp_name, sb.buf))
 		die_errno("unable to rename temporary pack file");
-
-	strbuf_setlen(name_buffer, basename_len);
+	strbuf_reset(&sb);
 
 	if (rev_tmp_name) {
-		strbuf_addf(name_buffer, "%s.rev", hash_to_hex(hash));
-		if (rename(rev_tmp_name, name_buffer->buf))
+		strbuf_addf(&sb, "%s%s.rev", tmp_basename->buf,
+			    hash_to_hex(hash));
+		if (rename(rev_tmp_name, sb.buf))
 			die_errno("unable to rename temporary reverse-index file");
-
-		strbuf_setlen(name_buffer, basename_len);
+		strbuf_reset(&sb);
 	}
 
-	strbuf_addf(name_buffer, "%s.idx", hash_to_hex(hash));
-	if (rename(idx_tmp_name, name_buffer->buf))
+	strbuf_addf(&sb, "%s%s.idx", tmp_basename->buf, hash_to_hex(hash));
+	if (rename(idx_tmp_name, sb.buf))
 		die_errno("unable to rename temporary index file");
-
-	strbuf_setlen(name_buffer, basename_len);
+	strbuf_reset(&sb);
 
 	free((void *)idx_tmp_name);
 }

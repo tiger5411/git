@@ -1216,7 +1216,7 @@ static void write_pack_file(void)
 
 		if (!pack_to_stdout) {
 			struct stat st;
-			struct strbuf tmpname = STRBUF_INIT;
+			struct strbuf tmp_basename = STRBUF_INIT;
 
 			/*
 			 * Packs are runtime accessed in their mtime
@@ -1237,7 +1237,7 @@ static void write_pack_file(void)
 					warning_errno(_("failed utime() on %s"), pack_tmp_name);
 			}
 
-			strbuf_addf(&tmpname, "%s-", base_name);
+			strbuf_addf(&tmp_basename, "%s-", base_name);
 
 			if (write_bitmap_index) {
 				bitmap_writer_set_checksum(hash);
@@ -1245,12 +1245,16 @@ static void write_pack_file(void)
 					&to_pack, written_list, nr_written);
 			}
 
-			finish_tmp_packfile(&tmpname, pack_tmp_name,
+			finish_tmp_packfile(&tmp_basename, pack_tmp_name,
 					    written_list, nr_written,
 					    &pack_idx_opts, hash);
 
 			if (write_bitmap_index) {
-				strbuf_addf(&tmpname, "%s.bitmap", hash_to_hex(hash));
+				struct strbuf sb = STRBUF_INIT;
+
+				strbuf_addf(&sb, "%s%s.bitmap",
+					    tmp_basename.buf,
+					    hash_to_hex(hash));
 
 				stop_progress(&progress_state);
 
@@ -1258,11 +1262,12 @@ static void write_pack_file(void)
 				bitmap_writer_select_commits(indexed_commits, indexed_commits_nr, -1);
 				bitmap_writer_build(&to_pack);
 				bitmap_writer_finish(written_list, nr_written,
-						     tmpname.buf, write_bitmap_options);
+						     sb.buf, write_bitmap_options);
 				write_bitmap_index = 0;
+				strbuf_release(&sb);
 			}
 
-			strbuf_release(&tmpname);
+			strbuf_release(&tmp_basename);
 			free(pack_tmp_name);
 			puts(hash_to_hex(hash));
 		}
