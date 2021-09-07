@@ -1249,7 +1249,6 @@ static void write_pack_file(void)
 			stage_tmp_packfile(&tmp_basename, pack_tmp_name,
 					   written_list, nr_written,
 					   &pack_idx_opts, hash, &idx_tmp_name);
-			rename_tmp_packfile_idx(&tmp_basename, hash, &idx_tmp_name);
 
 			if (write_bitmap_index) {
 				struct strbuf sb = STRBUF_INIT;
@@ -1268,6 +1267,16 @@ static void write_pack_file(void)
 				write_bitmap_index = 0;
 				strbuf_release(&sb);
 			}
+
+			/*
+			 * We must write the *.idx last, so that anything that expects
+			 * an accompanying *.rev, *.bitmap etc. can count on it being
+			 * present.
+			 *
+			 * See also corresponding logic in the "exts"
+			 * struct in builtin/repack.c
+			 */
+			rename_tmp_packfile_idx(&tmp_basename, hash, &idx_tmp_name);
 
 			free(idx_tmp_name);
 			strbuf_release(&tmp_basename);

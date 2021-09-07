@@ -211,6 +211,14 @@ static struct {
 	{".rev", 1},
 	{".bitmap", 1},
 	{".promisor", 1},
+	/*
+	 * We must write the *.idx last, so that anything that expects
+	 * an accompanying *.rev, *.bitmap etc. can count on it being
+	 * present.
+	 *
+	 * See also corresponding logic in write_pack_file() in
+	 * builtin/pack-objects.c
+	 */
 	{".idx"},
 };
 
