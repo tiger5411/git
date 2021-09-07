@@ -1250,7 +1250,10 @@ static void write_pack_file(void)
 					    &pack_idx_opts, hash);
 
 			if (write_bitmap_index) {
-				strbuf_addf(&tmpname, "%s.bitmap", hash_to_hex(hash));
+				struct strbuf sb = STRBUF_INIT;
+
+				strbuf_addf(&sb, "%s%s.bitmap", tmpname.buf,
+					    hash_to_hex(hash));
 
 				stop_progress(&progress_state);
 
@@ -1258,8 +1261,9 @@ static void write_pack_file(void)
 				bitmap_writer_select_commits(indexed_commits, indexed_commits_nr, -1);
 				bitmap_writer_build(&to_pack);
 				bitmap_writer_finish(written_list, nr_written,
-						     tmpname.buf, write_bitmap_options);
+						     sb.buf, write_bitmap_options);
 				write_bitmap_index = 0;
+				strbuf_release(&sb);
 			}
 
 			strbuf_release(&tmpname);
