@@ -1249,7 +1249,6 @@ static void write_pack_file(void)
 			stage_tmp_packfiles(&tmpname, pack_tmp_name,
 					    written_list, nr_written,
 					    &pack_idx_opts, hash, &idx_tmp_name);
-			rename_tmp_packfile_idx(&tmpname, hash, &idx_tmp_name);
 
 			if (write_bitmap_index) {
 				struct strbuf sb = STRBUF_INIT;
@@ -1267,6 +1266,8 @@ static void write_pack_file(void)
 				write_bitmap_index = 0;
 				strbuf_release(&sb);
 			}
+
+			rename_tmp_packfile_idx(&tmpname, hash, &idx_tmp_name);
 
 			free(idx_tmp_name);
 			strbuf_release(&tmpname);
