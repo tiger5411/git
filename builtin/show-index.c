@@ -23,7 +23,8 @@ int cmd_show_index(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	argc = parse_options(argc, argv, prefix, show_index_options, show_index_usage, 0);
+	parse_options(argc, argv, prefix, show_index_options, show_index_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (hash_name) {
 		hash_algo = hash_algo_by_name(hash_name);

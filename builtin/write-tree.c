@@ -35,8 +35,8 @@ int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 	};
 
 	git_config(git_default_config, NULL);
-	argc = parse_options(argc, argv, cmd_prefix, write_tree_options,
-			     write_tree_usage, 0);
+	parse_options(argc, argv, cmd_prefix, write_tree_options,
+		      write_tree_usage, PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	ret = write_cache_as_tree(&oid, flags, tree_prefix);
 	switch (ret) {
