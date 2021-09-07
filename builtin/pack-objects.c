@@ -1217,6 +1217,7 @@ static void write_pack_file(void)
 		if (!pack_to_stdout) {
 			struct stat st;
 			struct strbuf tmpname = STRBUF_INIT;
+			char *idx_tmp_name = NULL;
 
 			/*
 			 * Packs are runtime accessed in their mtime
@@ -1245,9 +1246,10 @@ static void write_pack_file(void)
 					&to_pack, written_list, nr_written);
 			}
 
-			finish_tmp_packfile(&tmpname, pack_tmp_name,
+			stage_tmp_packfiles(&tmpname, pack_tmp_name,
 					    written_list, nr_written,
-					    &pack_idx_opts, hash);
+					    &pack_idx_opts, hash, &idx_tmp_name);
+			rename_tmp_packfile_idx(&tmpname, hash, &idx_tmp_name);
 
 			if (write_bitmap_index) {
 				struct strbuf sb = STRBUF_INIT;
@@ -1266,6 +1268,7 @@ static void write_pack_file(void)
 				strbuf_release(&sb);
 			}
 
+			free(idx_tmp_name);
 			strbuf_release(&tmpname);
 			free(pack_tmp_name);
 			puts(hash_to_hex(hash));
