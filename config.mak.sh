@@ -86,6 +86,9 @@ DEFAULT_TEST_TARGET=prove
 ## I set these options on individual command-lines, if only there was
 ## a GIT_PROVE_OPTS_EXTRA...
 #GIT_PROVE_OPTS=--jobs 8 --state=failed,slow,save --timer
+
+## The optional "scalar" (MSFT "git-ng") interface
+CONTRIB_SCALAR = Y
 EOF
 
 if ! diff -u $toplevel/config.mak $tmp
