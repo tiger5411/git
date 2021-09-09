@@ -1477,6 +1477,22 @@ static void write_special_file(const char *suffix, const char *msg,
 	strbuf_release(&name_buf);
 }
 
+static void rename_tmp_packfile(const char **final_xyz_name,
+				const char *curr_xyz_name,
+				struct strbuf *xyz_name, unsigned char *hash,
+				const char *ext, int else_chmod_if)
+{
+	if (*final_xyz_name != curr_xyz_name) {
+		if (!*final_xyz_name)
+			*final_xyz_name = odb_pack_name(xyz_name, hash, ext);
+		if (finalize_object_file(curr_xyz_name, *final_xyz_name))
+			die(_("unable to rename temporary '*.%s' file to '%s"),
+			    ext, *final_xyz_name);
+	} else if (else_chmod_if) {
+		chmod(*final_xyz_name, 0444);
+	}
+}
+
 static void final(const char *final_pack_name, const char *curr_pack_name,
 		  const char *final_index_name, const char *curr_index_name,
 		  const char *final_rev_index_name, const char *curr_rev_index_name,
@@ -1505,31 +1521,13 @@ static void final(const char *final_pack_name, const char *curr_pack_name,
 		write_special_file("promisor", promisor_msg, final_pack_name,
 				   hash, NULL);
 
-	if (final_pack_name != curr_pack_name) {
-		if (!final_pack_name)
-			final_pack_name = odb_pack_name(&pack_name, hash, "pack");
-		if (finalize_object_file(curr_pack_name, final_pack_name))
-			die(_("cannot store pack file"));
-	} else if (from_stdin)
-		chmod(final_pack_name, 0444);
-
-	if (final_index_name != curr_index_name) {
-		if (!final_index_name)
-			final_index_name = odb_pack_name(&index_name, hash, "idx");
-		if (finalize_object_file(curr_index_name, final_index_name))
-			die(_("cannot store index file"));
-	} else
-		chmod(final_index_name, 0444);
-
-	if (curr_rev_index_name) {
-		if (final_rev_index_name != curr_rev_index_name) {
-			if (!final_rev_index_name)
-				final_rev_index_name = odb_pack_name(&rev_index_name, hash, "rev");
-			if (finalize_object_file(curr_rev_index_name, final_rev_index_name))
-				die(_("cannot store reverse index file"));
-		} else
-			chmod(final_rev_index_name, 0444);
-	}
+	rename_tmp_packfile(&final_pack_name, curr_pack_name, &pack_name,
+			    hash, "pack", from_stdin);
+	rename_tmp_packfile(&final_index_name, curr_index_name, &index_name,
+			    hash, "idx", 1);
+	if (curr_rev_index_name)
+		rename_tmp_packfile(&final_rev_index_name, curr_rev_index_name,
+				    &rev_index_name, hash, "rev", 1);
 
 	if (do_fsck_object) {
 		struct packed_git *p;
