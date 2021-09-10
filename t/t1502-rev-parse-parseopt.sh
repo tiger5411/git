@@ -6,8 +6,6 @@ test_description='test git rev-parse --parseopt'
 test_expect_success 'setup optionspec' '
 	sed -e "s/^|//" >optionspec <<\EOF
 |some-command [options] <args>...
-|
-|some-command does foo and bar!
 |--
 |h,help    show the help
 |
@@ -41,8 +39,6 @@ EOF
 test_expect_success 'setup optionspec-no-switches' '
 	sed -e "s/^|//" >optionspec_no_switches <<\EOF
 |some-command [options] <args>...
-|
-|some-command does foo and bar!
 |--
 EOF
 '
@@ -50,8 +46,6 @@ EOF
 test_expect_success 'setup optionspec-only-hidden-switches' '
 	sed -e "s/^|//" >optionspec_only_hidden_switches <<\EOF
 |some-command [options] <args>...
-|
-|some-command does foo and bar!
 |--
 |hidden1* A hidden switch
 EOF
@@ -61,8 +55,6 @@ test_expect_success 'test --parseopt help output' '
 	sed -e "s/^|//" >expect <<\END_EXPECT &&
 |cat <<\EOF
 |usage: some-command [options] <args>...
-|
-|    some-command does foo and bar!
 |
 |    -h, --help            show the help
 |    --foo                 some nifty option --foo
@@ -103,8 +95,6 @@ test_expect_success 'test --parseopt help output no switches' '
 |cat <<\EOF
 |usage: some-command [options] <args>...
 |
-|    some-command does foo and bar!
-|
 |EOF
 END_EXPECT
 	test_expect_code 129 git rev-parse --parseopt -- -h > output < optionspec_no_switches &&
@@ -116,8 +106,6 @@ test_expect_success 'test --parseopt help output hidden switches' '
 |cat <<\EOF
 |usage: some-command [options] <args>...
 |
-|    some-command does foo and bar!
-|
 |EOF
 END_EXPECT
 	test_expect_code 129 git rev-parse --parseopt -- -h > output < optionspec_only_hidden_switches &&
@@ -128,8 +116,6 @@ test_expect_success 'test --parseopt help-all output hidden switches' '
 	sed -e "s/^|//" >expect <<\END_EXPECT &&
 |cat <<\EOF
 |usage: some-command [options] <args>...
-|
-|    some-command does foo and bar!
 |
 |    --hidden1             A hidden switch
 |
@@ -143,8 +129,6 @@ test_expect_success 'test --parseopt invalid switch help output' '
 	sed -e "s/^|//" >expect <<\END_EXPECT &&
 |error: unknown option `does-not-exist'\''
 |usage: some-command [options] <args>...
-|
-|    some-command does foo and bar!
 |
 |    -h, --help            show the help
 |    --foo                 some nifty option --foo
@@ -280,6 +264,24 @@ test_expect_success 'test --parseopt --stuck-long and long option with unset opt
 test_expect_success 'test --parseopt --stuck-long and short option with unset optional argument' '
 	git rev-parse --parseopt --stuck-long -- -d arg -b <optionspec >output &&
 	test_cmp expect output
+'
+
+test_expect_success 'test --parseopt help output hidden switches' '
+	sed -e "s/^|//" >optionspec-trailing-line <<-\EOF &&
+	|some-command [options] <args>...
+	|
+	|
+	|--
+	|h,help    show the help
+	EOF
+
+	cat >expect <<-\EOF &&
+	fatal: empty lines are not permitted before the `--'"'"' separator
+	EOF
+
+	test_must_fail git rev-parse --parseopt -- -h >out < optionspec-trailing-line 2>actual &&
+	test_must_be_empty out &&
+	test_cmp expect actual
 '
 
 test_done

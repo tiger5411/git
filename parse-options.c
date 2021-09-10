@@ -924,18 +924,12 @@ static int usage_with_options_internal(struct parse_opt_ctx_t *ctx,
 		fprintf(outfile, "cat <<\\EOF\n");
 
 	fprintf_ln(outfile, _("usage: %s"), _(*usagestr++));
-	while (*usagestr && **usagestr)
+	while (*usagestr) {
 		/*
 		 * TRANSLATORS: the colon here should align with the
 		 * one in "usage: %s" translation.
 		 */
 		fprintf_ln(outfile, _("   or: %s"), _(*usagestr++));
-	while (*usagestr) {
-		if (**usagestr)
-			fprintf_ln(outfile, _("    %s"), _(*usagestr));
-		else
-			fputc('\n', outfile);
-		usagestr++;
 	}
 
 	need_newline = 1;

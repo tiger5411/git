@@ -102,8 +102,6 @@ int cmd__parse_options(int argc, const char **argv)
 	const char *prefix = "prefix/";
 	const char *usage[] = {
 		"test-tool parse-options <options>",
-		"",
-		"A helper function for the parse-options API.",
 		NULL
 	};
 	struct string_list expect = STRING_LIST_INIT_NODUP;
