@@ -17,6 +17,7 @@
 #define SUPPORT_SUPER_PREFIX	(1<<4)
 #define DELAY_PAGER_CONFIG	(1<<5)
 #define NO_PARSEOPT		(1<<6) /* parse-options is not used */
+#define NEED_UNIX_SOCKETS	(1<<7) /* Works unless -DNO_UNIX_SOCKETS */
 
 struct cmd_struct {
 	const char *cmd;
@@ -66,6 +67,10 @@ static int list_cmds(const char *spec)
 	struct string_list list = STRING_LIST_INIT_DUP;
 	int i;
 	int nongit;
+	unsigned int exclude_option = 0;
+#ifdef NO_UNIX_SOCKETS
+	exclude_option |= NEED_UNIX_SOCKETS;
+#endif
 
 	/*
 	* Set up the repository so we can pick up any repo-level config (like
@@ -78,7 +83,7 @@ static int list_cmds(const char *spec)
 		int len = sep - spec;
 
 		if (match_token(spec, len, "builtins"))
-			list_builtins(&list, 0);
+			list_builtins(&list, exclude_option);
 		else if (match_token(spec, len, "main"))
 			list_all_main_cmds(&list);
 		else if (match_token(spec, len, "others"))
@@ -423,6 +428,10 @@ static int run_builtin(struct cmd_struct *p, int argc, const char **argv)
 	const char *prefix;
 
 	prefix = NULL;
+#ifdef NO_UNIX_SOCKETS
+	if (p->option & NEED_UNIX_SOCKETS)
+		die(_("%s is unavailable; there is no UNIX socket support in this build of Git"), p->cmd);
+#endif
 	help = argc == 2 && !strcmp(argv[1], "-h");
 	if (!help) {
 		if (p->option & RUN_SETUP)
@@ -513,8 +522,8 @@ static struct cmd_struct commands[] = {
 	{ "config", cmd_config, RUN_SETUP_GENTLY | DELAY_PAGER_CONFIG },
 	{ "count-objects", cmd_count_objects, RUN_SETUP },
 	{ "credential", cmd_credential, RUN_SETUP_GENTLY | NO_PARSEOPT },
-	{ "credential-cache", cmd_credential_cache },
-	{ "credential-cache--daemon", cmd_credential_cache_daemon },
+	{ "credential-cache", cmd_credential_cache, NEED_UNIX_SOCKETS },
+	{ "credential-cache--daemon", cmd_credential_cache_daemon, NEED_UNIX_SOCKETS },
 	{ "credential-store", cmd_credential_store },
 	{ "describe", cmd_describe, RUN_SETUP },
 	{ "diff", cmd_diff, NO_PARSEOPT },

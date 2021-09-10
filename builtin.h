@@ -63,6 +63,12 @@
  *	more informed decision, e.g., by ignoring `pager.<cmd>` for
  *	certain subcommands.
  *
+ * `NEED_UNIX_SOCKETS`:
+ *
+ *	This built-in will not work if NO_UNIX_SOCKETS is defined. It
+ *	will be recognized for emitting error messages, but won't be
+ *	listed in --list-cmds=builtins.
+ *
  * . Add `builtin/foo.o` to `BUILTIN_OBJS` in `Makefile`.
  *
  * Additionally, if `foo` is a new command, there are 4 more things to do:

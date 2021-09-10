@@ -85,4 +85,14 @@ do
 	'
 done <builtins
 
+test_expect_success UNIX_SOCKETS 'builtin list includes NEED_UNIX_SOCKETS under UNIX_SOCKETS' '
+	grep ^credential-cache$ builtins &&
+	grep ^credential-cache--daemon$ builtins
+'
+
+test_expect_success !UNIX_SOCKETS 'builtin list excludes NEED_UNIX_SOCKETS under !UNIX_SOCKETS' '
+	! grep ^credential-cache$ builtins &&
+	! grep ^credential-cache--daemon$ builtins
+'
+
 test_done
