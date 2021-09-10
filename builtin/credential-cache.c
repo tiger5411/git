@@ -1,8 +1,5 @@
 #include "builtin.h"
 #include "parse-options.h"
-
-#ifndef NO_UNIX_SOCKETS
-
 #include "credential.h"
 #include "string-list.h"
 #include "unix-socket.h"
@@ -137,21 +134,3 @@ int cmd_credential_cache(int argc, const char **argv, const char *prefix)
 
 	return 0;
 }
-
-#else
-
-int cmd_credential_cache(int argc, const char **argv, const char *prefix)
-{
-	const char * const usage[] = {
-		"git credential-cache [options] <action>",
-		"",
-		"credential-cache is disabled in this build of Git",
-		NULL
-	};
-	struct option options[] = { OPT_END() };
-
-	argc = parse_options(argc, argv, prefix, options, usage, 0);
-	die(_("credential-cache unavailable; no unix socket support"));
-}
-
-#endif /* NO_UNIX_SOCKETS */

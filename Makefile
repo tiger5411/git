@@ -1086,8 +1086,10 @@ BUILTIN_OBJS += builtin/commit-tree.o
 BUILTIN_OBJS += builtin/commit.o
 BUILTIN_OBJS += builtin/config.o
 BUILTIN_OBJS += builtin/count-objects.o
+ifndef NO_UNIX_SOCKETS
 BUILTIN_OBJS += builtin/credential-cache--daemon.o
 BUILTIN_OBJS += builtin/credential-cache.o
+endif
 BUILTIN_OBJS += builtin/credential-store.o
 BUILTIN_OBJS += builtin/credential.o
 BUILTIN_OBJS += builtin/describe.o
@@ -1693,6 +1695,7 @@ ifdef NO_INET_PTON
 endif
 ifdef NO_UNIX_SOCKETS
 	BASIC_CFLAGS += -DNO_UNIX_SOCKETS
+	EXCLUDED_PROGRAMS += git-credential-cache git-credential-cache--daemon
 else
 	LIB_OBJS += unix-socket.o
 	LIB_OBJS += unix-stream-server.o
