@@ -142,14 +142,6 @@ static int handle_options(const char ***argv, int *argc, int *envchanged)
 			break;
 
 		/*
-		 * For legacy reasons, the "version" and "help"
-		 * commands can be written with "--" prepended
-		 * to make them look like flags.
-		 */
-		if (!strcmp(cmd, "--help") || !strcmp(cmd, "--version"))
-			break;
-
-		/*
 		 * Check remaining flags.
 		 */
 		if (skip_prefix(cmd, "--exec-path", &cmd)) {
@@ -537,6 +529,7 @@ static struct cmd_struct commands[] = {
 	{ "get-tar-commit-id", cmd_get_tar_commit_id, NO_PARSEOPT },
 	{ "grep", cmd_grep, RUN_SETUP_GENTLY },
 	{ "hash-object", cmd_hash_object },
+	{ "h", cmd_help },
 	{ "help", cmd_help },
 	{ "index-pack", cmd_index_pack, RUN_SETUP_GENTLY | NO_PARSEOPT },
 	{ "init", cmd_init_db },
@@ -853,17 +846,12 @@ static int run_argv(int *argcp, const char ***argv)
 
 int cmd_main(int argc, const char **argv)
 {
-	const char *cmd;
+	const char *cmd = argv[0];
+	const char *slash = find_last_dir_sep(cmd);
 	int done_help = 0;
 
-	cmd = argv[0];
-	if (!cmd)
-		cmd = "git-help";
-	else {
-		const char *slash = find_last_dir_sep(cmd);
-		if (slash)
-			cmd = slash + 1;
-	}
+	if (slash)
+		cmd = slash + 1;
 
 	trace_command_performance(argv);
 
@@ -886,17 +874,25 @@ int cmd_main(int argc, const char **argv)
 	/* Look for flags.. */
 	argv++;
 	argc--;
+
+	/*
+	 * Pretend that --help and --version are "help" and "version",
+	 * and understand "-h" as "help"
+	 */
+	if (argc) {
+		if (!strcmp(argv[0], "--help") ||
+		    !strcmp(argv[0], "--version"))
+			skip_prefix(argv[0], "--", &argv[0]);
+		else if (!strcmp(argv[0], "-h"))
+			argv[0] = "help";
+	}
+
 	handle_options(&argv, &argc, NULL);
-	if (argc > 0) {
-		/* translate --help and --version into commands */
-		skip_prefix(argv[0], "--", &argv[0]);
-	} else {
+	if (!argc) {
 		/* The user didn't specify a command; give them help */
-		commit_pager_choice();
-		printf(_("usage: %s\n\n"), git_usage_string);
-		list_common_cmds_help();
-		printf("\n%s\n", _(git_more_info_string));
-		exit(1);
+		argv[0] = "help";
+		argv[1] = "--implicit";
+		argc = 2;
 	}
 	cmd = argv[0];
 

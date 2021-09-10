@@ -36,6 +36,7 @@ enum help_format {
 
 static const char *html_path;
 
+static int implicit;
 static int show_all = 0;
 static int show_guides = 0;
 static int show_config;
@@ -44,6 +45,7 @@ static unsigned int colopts;
 static enum help_format help_format = HELP_FORMAT_NONE;
 static int exclude_guides;
 static struct option builtin_help_options[] = {
+	OPT_HIDDEN_BOOL(0, "implicit", &implicit, N_("running as 'git', not 'git help'")),
 	OPT_BOOL('a', "all", &show_all, N_("print all available commands")),
 	OPT_HIDDEN_BOOL(0, "exclude-guides", &exclude_guides, N_("exclude guides")),
 	OPT_BOOL('g', "guides", &show_guides, N_("print list of useful guides")),
@@ -591,7 +593,7 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 		printf(_("usage: %s%s"), _(git_usage_string), "\n\n");
 		list_common_cmds_help();
 		printf("\n%s\n", _(git_more_info_string));
-		return 0;
+		return implicit;
 	}
 
 	setup_git_directory_gently(&nongit);
