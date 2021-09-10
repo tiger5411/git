@@ -103,13 +103,6 @@ tag_it() {
 	git mktag --strict <$tmp
 }
 
-show_built_from() {
-	built_from=$(git version --build-options | grep -P -o '(?<=built from commit: ).*')
-	echo "Info:"
-	echo "  - Now running: $(git version)"
-	echo "  - Now running built from: $(git reference $built_from)"
-}
-
 reset_it() {
 	git reset --hard
 	git checkout build-master || git checkout -b build-master -t origin/master
@@ -178,7 +171,6 @@ EOF
 	exit 1
 }
 
-show_built_from
 reset_it
 
 # The list of topics I'm merging
@@ -463,7 +455,6 @@ new_tagname=$(tag_name)
 new_tag=$(tag_it "$new_version" "$new_tagname")
 last_version=$(git rev-parse avar/private)
 make -j $(nproc) install install-man
-show_built_from
 
 # Post-install & report
 echo "Range-diff between last built and what I've got now:"
