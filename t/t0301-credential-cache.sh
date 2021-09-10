@@ -4,10 +4,11 @@ test_description='credential-cache tests'
 . ./test-lib.sh
 . "$TEST_DIRECTORY"/lib-credential.sh
 
-test -z "$NO_UNIX_SOCKETS" || {
+if ! test_have_prereq UNIX_SOCKETS
+then
 	skip_all='skipping credential-cache tests, unix sockets not available'
 	test_done
-}
+fi
 
 # don't leave a stale daemon running
 test_atexit 'git credential-cache exit'

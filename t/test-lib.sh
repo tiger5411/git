@@ -1533,6 +1533,7 @@ test -z "$NO_PYTHON" && test_set_prereq PYTHON
 test -n "$USE_LIBPCRE2" && test_set_prereq PCRE
 test -n "$USE_LIBPCRE2" && test_set_prereq LIBPCRE2
 test -z "$NO_GETTEXT" && test_set_prereq GETTEXT
+test -z "$NO_UNIX_SOCKETS" && test_set_prereq UNIX_SOCKETS
 
 if test -z "$GIT_TEST_CHECK_CACHE_TREE"
 then
