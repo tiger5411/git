@@ -29,12 +29,8 @@
 #include "refs.h"
 #include "tag.h"
 
-static char blame_usage[] = N_("git blame [<options>] [<rev-opts>] [<rev>] [--] <file>");
-
 static const char *blame_opt_usage[] = {
-	blame_usage,
-	"",
-	N_("<rev-opts> are documented in git-rev-list(1)"),
+	N_("git blame [<options>] [<git rev-list args>] [<rev>] [--] <file>"),
 	NULL
 };
 
@@ -1107,7 +1103,8 @@ parse_done:
 				    nth_line_cb, &sb, lno, anchor,
 				    &bottom, &top, sb.path,
 				    the_repository->index))
-			usage(blame_usage);
+			usage_msg_opt(_("Invalid -L <range> parameter"),
+				      blame_opt_usage, options);
 		if ((!lno && (top || bottom)) || lno < bottom)
 			die(Q_("file %s has only %lu line",
 			       "file %s has only %lu lines",
