@@ -436,7 +436,10 @@ static int cmd_parseopt(int argc, const char **argv, const char *prefix)
 	for (;;) {
 		if (strbuf_getline(&sb, stdin) == EOF)
 			die(_("premature end of input"));
+		if (!sb.len)
+			die(_("empty lines are not permitted before the `--' separator"));
 		ALLOC_GROW(usage, unb + 1, usz);
+
 		if (!strcmp("--", sb.buf)) {
 			if (unb < 1)
 				die(_("no usage string given before the `--' separator"));

@@ -10,8 +10,6 @@ test_description='our own option parser'
 cat >expect <<\EOF
 usage: test-tool parse-options <options>
 
-    A helper function for the parse-options API.
-
     --yes                 get a boolean
     -D, --no-doubt        begins with 'no-'
     -B, --no-fear         be brave
