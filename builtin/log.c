@@ -2095,7 +2095,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	}
 
 	if (creation_factor < 0)
-		creation_factor = RANGE_DIFF_CREATION_FACTOR_DEFAULT;
+		creation_factor = 100;
 	else if (!rdiff_prev)
 		die(_("--creation-factor requires --range-diff"));
 
