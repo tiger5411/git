@@ -3714,7 +3714,7 @@ static void mark_bitmap_preferred_tips(void)
 	}
 }
 
-static void get_object_list(int ac, const char **av)
+static void get_object_list(struct strvec *rp)
 {
 	struct rev_info revs;
 	struct setup_revision_opt s_r_opt = {
@@ -3726,7 +3726,8 @@ static void get_object_list(int ac, const char **av)
 
 	repo_init_revisions(the_repository, &revs, NULL);
 	save_commit_buffer = 0;
-	setup_revisions(ac, av, &revs, &s_r_opt);
+	setup_revisions(rp->nr, rp->v, &revs, &s_r_opt);
+
 	list_objects_filter_copy(&revs.filter, &filter_options);
 
 	/* make sure shallows are read */
@@ -4154,7 +4155,7 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
 	} else if (!use_internal_rev_list) {
 		read_object_list_from_stdin();
 	} else {
-		get_object_list(rp.nr, rp.v);
+		get_object_list(&rp);
 	}
 	cleanup_preferred_base();
 	if (include_tag && nr_result)
