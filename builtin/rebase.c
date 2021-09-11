@@ -1480,16 +1480,14 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 
 	if (options.git_am_opts.nr || options.type == REBASE_APPLY) {
 		/* all am options except -q are compatible only with --apply */
-		for (i = options.git_am_opts.nr - 1; i >= 0; i--)
-			if (strcmp(options.git_am_opts.v[i], "-q"))
-				break;
-
-		if (i >= 0) {
-			if (is_merge(&options))
-				die(_("apply options and merge options "
-					  "cannot be used together"));
-			else
+		for (i = 0; i < options.git_am_opts.nr; i++) {
+			if (strcmp(options.git_am_opts.v[i], "-q")) {
+				if (is_merge(&options))
+					die(_("apply options and merge options "
+					      "cannot be used together"));
 				options.type = REBASE_APPLY;
+				break;
+			}
 		}
 	}
 
