@@ -15,6 +15,7 @@
 #include "list-objects.h"
 #include "commit-reach.h"
 #include "shallow.h"
+#include "strvec.h"
 
 void set_alternate_shallow_file(struct repository *r, const char *path, int override)
 {
@@ -196,7 +197,7 @@ static void show_commit(struct commit *commit, void *data)
  * are marked with shallow_flag. The list of border/shallow commits
  * are also returned.
  */
-struct commit_list *get_shallow_commits_by_rev_list(int ac, const char **av,
+struct commit_list *get_shallow_commits_by_rev_list(struct strvec *args,
 						    int shallow_flag,
 						    int not_shallow_flag)
 {
@@ -215,7 +216,7 @@ struct commit_list *get_shallow_commits_by_rev_list(int ac, const char **av,
 
 	repo_init_revisions(the_repository, &revs, NULL);
 	save_commit_buffer = 0;
-	setup_revisions(ac, av, &revs, NULL);
+	setup_revisions(args->nr, args->v, &revs, NULL);
 
 	if (prepare_revision_walk(&revs))
 		die("revision walk setup failed");
