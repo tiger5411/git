@@ -186,7 +186,7 @@ void setup_unpack_trees_porcelain(struct unpack_trees_options *opts,
 	opts->show_all_errors = 1;
 	/* rejected paths may not have a static buffer */
 	for (i = 0; i < ARRAY_SIZE(opts->unpack_rejects); i++)
-		opts->unpack_rejects[i].strdup_strings = 1;
+		opts->unpack_rejects[i].strdup_strings2 = 1;
 }
 
 void clear_unpack_trees_porcelain(struct unpack_trees_options *opts)

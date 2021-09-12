@@ -16,7 +16,7 @@ void record_resolve_undo(struct index_state *istate, struct cache_entry *ce)
 
 	if (!istate->resolve_undo) {
 		CALLOC_ARRAY(resolve_undo, 1);
-		resolve_undo->strdup_strings = 1;
+		string_list_init_dup(resolve_undo);
 		istate->resolve_undo = resolve_undo;
 	}
 	resolve_undo = istate->resolve_undo;
@@ -58,7 +58,7 @@ struct string_list *resolve_undo_read(const char *data, unsigned long size)
 	const unsigned rawsz = the_hash_algo->rawsz;
 
 	CALLOC_ARRAY(resolve_undo, 1);
-	resolve_undo->strdup_strings = 1;
+	string_list_init_dup(resolve_undo);
 
 	while (size) {
 		struct string_list_item *lost;

@@ -113,7 +113,7 @@ static void dir_rename_entry_init(struct dir_rename_entry *entry,
 	entry->dir = directory;
 	entry->non_unique_new_dir = 0;
 	strbuf_init(&entry->new_dir, 0);
-	string_list_init_nodup(&entry->possible_new_dirs);
+	string_list_init_dup(&entry->possible_new_dirs);
 }
 
 struct collision_entry {
@@ -513,7 +513,7 @@ static struct string_list *get_unmerged(struct index_state *istate)
 	struct string_list *unmerged = xcalloc(1, sizeof(struct string_list));
 	int i;
 
-	unmerged->strdup_strings = 1;
+	unmerged->strdup_strings2 = 1;
 
 	/* TODO: audit for interaction with sparse-index. */
 	ensure_full_index(istate);
@@ -2283,7 +2283,7 @@ static struct hashmap *get_directory_renames(struct diff_queue_struct *pairs)
 		}
 		item = string_list_lookup(&entry->possible_new_dirs, new_dir);
 		if (!item) {
-			item = string_list_insert(&entry->possible_new_dirs,
+			item = string_list_insert_nodup(&entry->possible_new_dirs,
 						  new_dir);
 			item->util = xcalloc(1, sizeof(int));
 		} else {
@@ -2324,15 +2324,6 @@ static struct hashmap *get_directory_renames(struct diff_queue_struct *pairs)
 			assert(entry->new_dir.len == 0);
 			strbuf_addstr(&entry->new_dir, best);
 		}
-		/*
-		 * The relevant directory sub-portion of the original full
-		 * filepaths were xstrndup'ed before inserting into
-		 * possible_new_dirs, and instead of manually iterating the
-		 * list and free'ing each, just lie and tell
-		 * possible_new_dirs that it did the strdup'ing so that it
-		 * will free them for us.
-		 */
-		entry->possible_new_dirs.strdup_strings = 1;
 		string_list_clear(&entry->possible_new_dirs, 1);
 	}
 

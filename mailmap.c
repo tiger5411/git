@@ -51,7 +51,6 @@ static void free_mailmap_entry(void *p, const char *s)
 	free(me->name);
 	free(me->email);
 
-	me->namemap.strdup_strings = 1;
 	string_list_clear_func(&me->namemap, free_mailmap_info);
 	free(me);
 }
@@ -87,7 +86,7 @@ static void add_mapping(struct string_list *map,
 		me = (struct mailmap_entry *)item->util;
 	} else {
 		CALLOC_ARRAY(me, 1);
-		me->namemap.strdup_strings = 1;
+		string_list_init_dup(&me->namemap);
 		me->namemap.cmp = namemap_cmp;
 		item->util = me;
 	}
@@ -232,7 +231,7 @@ int read_mailmap(struct string_list *map)
 {
 	int err = 0;
 
-	map->strdup_strings = 1;
+	assert(map->strdup_strings2);
 	map->cmp = namemap_cmp;
 
 	if (!git_mailmap_blob && is_bare_repository())
@@ -251,7 +250,6 @@ int read_mailmap(struct string_list *map)
 void clear_mailmap(struct string_list *map)
 {
 	debug_mm("mailmap: clearing %d entries...\n", map->nr);
-	map->strdup_strings = 1;
 	string_list_clear_func(map, free_mailmap_entry);
 	debug_mm("mailmap: cleared\n");
 }

@@ -143,7 +143,8 @@ static int testsuite(int argc, const char **argv)
 	};
 
 	memset(&suite, 0, sizeof(suite));
-	suite.tests.strdup_strings = suite.failed.strdup_strings = 1;
+	string_list_init_dup(&suite.tests);
+	string_list_init_dup(&suite.failed);
 
 	argc = parse_options(argc, argv, NULL, options,
 			testsuite_usage, PARSE_OPT_STOP_AT_NON_OPTION);

@@ -47,7 +47,8 @@ static int get_entry_index(const struct string_list *list, const char *string,
 }
 
 /* returns -1-index if already exists */
-static int add_entry(int insert_at, struct string_list *list, const char *string)
+static int add_entry(int insert_at, struct string_list *list, const char *string,
+		     int strdup_strings)
 {
 	int exact_match = 0;
 	int index = insert_at != -1 ? insert_at : get_entry_index(list, string, &exact_match);
@@ -59,7 +60,7 @@ static int add_entry(int insert_at, struct string_list *list, const char *string
 	if (index < list->nr)
 		MOVE_ARRAY(list->items + index + 1, list->items + index,
 			   list->nr - index);
-	list->items[index].string = list->strdup_strings ?
+	list->items[index].string = strdup_strings ?
 		xstrdup(string) : (char *)string;
 	list->items[index].util = NULL;
 	list->nr++;
@@ -67,14 +68,27 @@ static int add_entry(int insert_at, struct string_list *list, const char *string
 	return index;
 }
 
-struct string_list_item *string_list_insert(struct string_list *list, const char *string)
+static struct string_list_item *string_list_insert_1(struct string_list *list,
+						     const char *string,
+						     int strdup_strings)
 {
-	int index = add_entry(-1, list, string);
+
+	int index = add_entry(-1, list, string, strdup_strings);
 
 	if (index < 0)
 		index = -1 - index;
 
 	return list->items + index;
+}
+
+struct string_list_item *string_list_insert(struct string_list *list, const char *string)
+{
+	return string_list_insert_1(list, string, list->strdup_strings2);
+}
+
+struct string_list_item *string_list_insert_nodup(struct string_list *list, const char *string)
+{
+	return string_list_insert_1(list, string, 1);
 }
 
 void string_list_remove(struct string_list *list, const char *string,
@@ -84,7 +98,7 @@ void string_list_remove(struct string_list *list, const char *string,
 	int i = get_entry_index(list, string, &exact_match);
 
 	if (exact_match) {
-		if (list->strdup_strings)
+		if (list->strdup_strings2)
 			free(list->items[i].string);
 		if (free_util)
 			free(list->items[i].util);
@@ -126,7 +140,7 @@ void string_list_remove_duplicates(struct string_list *list, int free_util)
 		compare_strings_fn cmp = list->cmp ? list->cmp : strcmp;
 		for (src = dst = 1; src < list->nr; src++) {
 			if (!cmp(list->items[dst - 1].string, list->items[src].string)) {
-				if (list->strdup_strings)
+				if (list->strdup_strings2)
 					free(list->items[src].string);
 				if (free_util)
 					free(list->items[src].util);
@@ -155,7 +169,7 @@ void filter_string_list(struct string_list *list, int free_util,
 		if (want(&list->items[src], cb_data)) {
 			list->items[dst++] = list->items[src];
 		} else {
-			if (list->strdup_strings)
+			if (list->strdup_strings2)
 				free(list->items[src].string);
 			if (free_util)
 				free(list->items[src].util);
@@ -178,7 +192,7 @@ void string_list_clear(struct string_list *list, int free_util)
 {
 	if (list->items) {
 		int i;
-		if (list->strdup_strings) {
+		if (list->strdup_strings2) {
 			for (i = 0; i < list->nr; i++)
 				free(list->items[i].string);
 		}
@@ -200,7 +214,7 @@ void string_list_clear_func(struct string_list *list, string_list_clear_func_t c
 			for (i = 0; i < list->nr; i++)
 				clearfunc(list->items[i].util, list->items[i].string);
 		}
-		if (list->strdup_strings) {
+		if (list->strdup_strings2) {
 			for (i = 0; i < list->nr; i++)
 				free(list->items[i].string);
 		}
@@ -226,7 +240,7 @@ struct string_list_item *string_list_append(struct string_list *list,
 {
 	return string_list_append_nodup(
 			list,
-			list->strdup_strings ? xstrdup(string) : (char *)string);
+			list->strdup_strings2 ? xstrdup(string) : (char *)string);
 }
 
 /*
@@ -273,7 +287,7 @@ int unsorted_string_list_has_string(struct string_list *list,
 
 void unsorted_string_list_delete_item(struct string_list *list, int i, int free_util)
 {
-	if (list->strdup_strings)
+	if (list->strdup_strings2)
 		free(list->items[i].string);
 	if (free_util)
 		free(list->items[i].util);
@@ -287,9 +301,9 @@ int string_list_split(struct string_list *list, const char *string,
 	int count = 0;
 	const char *p = string, *end;
 
-	if (!list->strdup_strings)
+	if (!list->strdup_strings2)
 		die("internal error in string_list_split(): "
-		    "list->strdup_strings must be set");
+		    "list->strdup_strings2 must be set");
 	for (;;) {
 		count++;
 		if (maxsplit >= 0 && count > maxsplit) {
@@ -313,9 +327,9 @@ int string_list_split_in_place(struct string_list *list, char *string,
 	int count = 0;
 	char *p = string, *end;
 
-	if (list->strdup_strings)
+	if (list->strdup_strings2)
 		die("internal error in string_list_split_in_place(): "
-		    "list->strdup_strings must not be set");
+		    "list->strdup_strings2 must not be set");
 	for (;;) {
 		count++;
 		if (maxsplit >= 0 && count > maxsplit) {

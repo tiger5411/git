@@ -315,7 +315,7 @@ struct notes_tree **load_notes_trees(struct string_list *refs, int flags);
 /*
  * Add all refs that match 'glob' to the 'list'.
  */
-void string_list_add_refs_by_glob(struct string_list *list, const char *glob);
+void string_list_add_refs_by_glob(struct string_list *list, char *glob);
 
 /*
  * Add all refs from a colon-separated glob list 'globs' to the end of

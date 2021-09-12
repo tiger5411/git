@@ -81,9 +81,12 @@ static void insert_one_record(struct shortlog *log,
 		format_subject(&subject, oneline, " ");
 		buffer = strbuf_detach(&subject, NULL);
 
-		if (item->util == NULL)
-			item->util = xcalloc(1, sizeof(struct string_list));
-		string_list_append(item->util, buffer);
+		if (item->util == NULL) {
+			struct string_list *list = xcalloc(1, sizeof(struct string_list));;
+			list->strdup_strings2 = 1;
+			item->util = list;
+		}
+		string_list_append_nodup(item->util, buffer);
 	}
 }
 
@@ -332,11 +335,11 @@ void shortlog_init(struct shortlog *log)
 
 	read_mailmap(&log->mailmap);
 
-	log->list.strdup_strings = 1;
+	log->list.strdup_strings2 = 1;
 	log->wrap = DEFAULT_WRAPLEN;
 	log->in1 = DEFAULT_INDENT1;
 	log->in2 = DEFAULT_INDENT2;
-	log->trailers.strdup_strings = 1;
+	log->trailers.strdup_strings2 = 1;
 	log->trailers.cmp = strcasecmp;
 }
 
@@ -458,7 +461,6 @@ void shortlog_output(struct shortlog *log)
 					fprintf(log->file, "      %s\n", msg);
 			}
 			putc('\n', log->file);
-			onelines->strdup_strings = 1;
 			string_list_clear(onelines, 0);
 			free(onelines);
 		}
@@ -467,7 +469,6 @@ void shortlog_output(struct shortlog *log)
 	}
 
 	strbuf_release(&sb);
-	log->list.strdup_strings = 1;
 	string_list_clear(&log->list, 1);
 	clear_mailmap(&log->mailmap);
 }

@@ -1830,9 +1830,9 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	extra_hdr.strdup_strings = 1;
-	extra_to.strdup_strings = 1;
-	extra_cc.strdup_strings = 1;
+	extra_hdr.strdup_strings2 = 1;
+	extra_to.strdup_strings2 = 1;
+	extra_cc.strdup_strings2 = 1;
 	init_log_defaults();
 	init_display_notes(&notes_opt);
 	git_config(git_format_config, NULL);

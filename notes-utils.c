@@ -110,7 +110,7 @@ static int notes_rewrite_config(const char *k, const char *v, void *cb)
 		/* note that a refs/ prefix is implied in the
 		 * underlying for_each_glob_ref */
 		if (starts_with(v, "refs/notes/"))
-			string_list_add_refs_by_glob(c->refs, v);
+			string_list_add_refs_by_glob(c->refs, (char *)v);
 		else
 			warning(_("Refusing to rewrite notes in %s"
 				" (outside of refs/notes/)"), v);
@@ -130,7 +130,7 @@ struct notes_rewrite_cfg *init_copy_notes_for_rewrite(const char *cmd)
 	c->enabled = 1;
 	c->combine = combine_notes_concatenate;
 	CALLOC_ARRAY(c->refs, 1);
-	c->refs->strdup_strings = 1;
+	c->refs->strdup_strings2 = 1;
 	c->refs_from_env = 0;
 	c->mode_from_env = 0;
 	if (rewrite_mode_env) {

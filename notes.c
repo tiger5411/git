@@ -75,7 +75,7 @@ struct non_note {
 
 struct notes_tree default_notes_tree;
 
-static struct string_list display_notes_refs = STRING_LIST_INIT_NODUP;
+static struct string_list display_notes_refs = STRING_LIST_INIT_DUP;
 static struct notes_tree **display_notes_trees;
 
 static void load_subtree(struct notes_tree *t, struct leaf_node *subtree,
@@ -936,9 +936,8 @@ static int string_list_add_one_ref(const char *refname, const struct object_id *
 /*
  * The list argument must have strdup_strings set on it.
  */
-void string_list_add_refs_by_glob(struct string_list *list, const char *glob)
+void string_list_add_refs_by_glob(struct string_list *list, char *glob)
 {
-	assert(list->strdup_strings);
 	if (has_glob_specials(glob)) {
 		for_each_glob_ref(string_list_add_one_ref, glob, list);
 	} else {
@@ -946,7 +945,7 @@ void string_list_add_refs_by_glob(struct string_list *list, const char *glob)
 		if (get_oid(glob, &oid))
 			warning("notes ref %s is invalid", glob);
 		if (!unsorted_string_list_has_string(list, glob))
-			string_list_append(list, glob);
+			string_list_append_nodup(list, glob);
 	}
 }
 
@@ -974,7 +973,7 @@ static int notes_display_config(const char *k, const char *v, void *cb)
 	if (*load_refs && !strcmp(k, "notes.displayref")) {
 		if (!v)
 			return config_error_nonbool(k);
-		string_list_add_refs_by_glob(&display_notes_refs, v);
+		string_list_add_refs_by_glob(&display_notes_refs, (char *)v);
 	}
 
 	return 0;
@@ -1050,6 +1049,7 @@ struct notes_tree **load_notes_trees(struct string_list *refs, int flags)
 void init_display_notes(struct display_notes_opt *opt)
 {
 	memset(opt, 0, sizeof(*opt));
+	string_list_init_dup(&opt->extra_notes_refs);
 	opt->use_default_notes = -1;
 }
 
@@ -1064,19 +1064,15 @@ void enable_ref_display_notes(struct display_notes_opt *opt, int *show_notes,
 	struct strbuf buf = STRBUF_INIT;
 	strbuf_addstr(&buf, ref);
 	expand_notes_ref(&buf);
-	string_list_append(&opt->extra_notes_refs,
-			strbuf_detach(&buf, NULL));
+	string_list_append_nodup(&opt->extra_notes_refs,
+				 strbuf_detach(&buf, NULL));
 	*show_notes = 1;
 }
 
 void disable_display_notes(struct display_notes_opt *opt, int *show_notes)
 {
 	opt->use_default_notes = -1;
-	/* we have been strdup'ing ourselves, so trick
-	 * string_list into free()ing strings */
-	opt->extra_notes_refs.strdup_strings = 1;
 	string_list_clear(&opt->extra_notes_refs, 0);
-	opt->extra_notes_refs.strdup_strings = 0;
 	*show_notes = 0;
 }
 
@@ -1084,7 +1080,6 @@ void load_display_notes(struct display_notes_opt *opt)
 {
 	char *display_ref_env;
 	int load_config_refs = 0;
-	display_notes_refs.strdup_strings = 1;
 
 	assert(!display_notes_trees);
 

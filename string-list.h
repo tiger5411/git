@@ -87,12 +87,12 @@ typedef int (*compare_strings_fn)(const char *, const char *);
 struct string_list {
 	struct string_list_item *items;
 	unsigned int nr, alloc;
-	unsigned int strdup_strings:1;
+	unsigned int strdup_strings2:1;
 	compare_strings_fn cmp; /* NULL uses strcmp() */
 };
 
 #define STRING_LIST_INIT_NODUP { 0 }
-#define STRING_LIST_INIT_DUP   { .strdup_strings = 1 }
+#define STRING_LIST_INIT_DUP   { .strdup_strings2 = 1 }
 
 /* General functions which work with both sorted and unsorted lists. */
 
@@ -177,6 +177,13 @@ int string_list_find_insert_index(const struct string_list *list, const char *st
  * write `string_list_insert(...)->util = ...;`.
  */
 struct string_list_item *string_list_insert(struct string_list *list, const char *string);
+
+
+/**
+ * Like string_list_insert() but won't duplicate the string, see
+ * string_list_append_nodup() for the use-case.
+ */
+struct string_list_item *string_list_insert_nodup(struct string_list *list, const char *string);
 
 /**
  * Remove the given string from the sorted list.  If the string
