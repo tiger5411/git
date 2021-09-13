@@ -2919,10 +2919,11 @@ HCC = $(HCO:hco=hcc)
 		echo '#include "$<"'; \
 	} >$@
 
-$(HCO): %.hco: %.hcc FORCE
-	$(QUIET_HDR)$(CC) $(ALL_CFLAGS) -o /dev/null -c -xc $<
+$(HCO): %.hco: %.hcc
+	$(QUIET_HDR)$(CC) $(ALL_CFLAGS) -o /dev/null -c -xc $< && \
+	>$@
 
-.PHONY: hdr-check $(HCO)
+.PHONY: hdr-check
 hdr-check: $(HCO)
 
 .PHONY: style
