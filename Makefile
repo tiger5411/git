@@ -2896,11 +2896,13 @@ check-sha1:: t/helper/test-tool$X
 
 SP_OBJ = $(patsubst %.o,%.sp,$(C_OBJ))
 
-$(SP_OBJ): %.sp: %.c GIT-CFLAGS FORCE
+$(SP_OBJ): %.sp: %.c GIT-CFLAGS
 	$(QUIET_SP)cgcc -no-compile $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) \
-		$(SPARSE_FLAGS) $(SP_EXTRA_FLAGS) $<
+		-Wsparse-error \
+		$(SPARSE_FLAGS) $(SP_EXTRA_FLAGS) $< && \
+	>$@
 
-.PHONY: sparse $(SP_OBJ)
+.PHONY: sparse
 sparse: $(SP_OBJ)
 
 EXCEPT_HDRS := command-list.h config-list.h unicode-width.h compat/% xdiff/%
