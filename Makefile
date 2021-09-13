@@ -2896,12 +2896,25 @@ check-sha1:: t/helper/test-tool$X
 
 SP_OBJ = $(patsubst %.o,%.sp,$(C_OBJ))
 
-$(SP_OBJ): %.sp: %.c GIT-CFLAGS FORCE
+define cmd_run_sparse
 	$(QUIET_SP)cgcc -no-compile $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) \
 		$(SPARSE_FLAGS) $(SP_EXTRA_FLAGS) $<
+endef
 
-.PHONY: sparse $(SP_OBJ)
+ifneq ($(filter sparse-incr,$(MAKECMDGOALS)),sparse-incr)
+ifneq ($(filter sparse,$(MAKECMDGOALS)),)
+$(error The sparse and sparse-incr targets cannot be combined!)
+endif
+$(SP_OBJ): %.sp: %.c GIT-CFLAGS FORCE
+	$(cmd_run_sparse)
+else
+$(SP_OBJ): %.sp: %.c %.o GIT-CFLAGS
+	$(cmd_run_sparse) >$@
+endif
+
+.PHONY: sparse sparse-incr
 sparse: $(SP_OBJ)
+sparse-incr: $(SP_OBJ)
 
 EXCEPT_HDRS := command-list.h config-list.h unicode-width.h compat/% xdiff/%
 ifndef GCRYPT_SHA256
@@ -3227,6 +3240,7 @@ clean: profile-clean coverage-clean cocciclean
 	$(RM) $(ALL_PROGRAMS) $(SCRIPT_LIB) $(BUILT_INS) git$X
 	$(RM) $(TEST_PROGRAMS)
 	$(RM) $(FUZZ_PROGRAMS)
+	$(RM) $(SP_OBJ)
 	$(RM) $(HCC)
 	$(RM) -r bin-wrappers $(dep_dirs) $(compdb_dir) compile_commands.json
 	$(RM) -r po/build/
