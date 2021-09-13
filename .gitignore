@@ -220,6 +220,7 @@
 /cscope*
 /compile_commands.json
 *.hcc
+*.hco
 *.obj
 *.lib
 *.res
