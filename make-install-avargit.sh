@@ -412,6 +412,7 @@ test -n "$only_merge" && exit
 
 # Compile
 make -j $(nproc) all check-docs
+make -j $(nproc) sparse hdr-check
 make -j $(nproc) man
 test -n "$only_compile" && exit
 
