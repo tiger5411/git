@@ -602,6 +602,7 @@ LIB_OBJS =
 LIB_OBJS_NO_COMPAT_OBJS =
 OBJECTS =
 PROGRAM_OBJS =
+SCALAR_OBJS =
 SCRIPT_LIB =
 SCRIPT_PERL =
 SCRIPT_PROGRAMS =
@@ -806,6 +807,7 @@ BUILT_INS += $(BUILT_INS_EXTRA)
 
 # what 'all' will build but not install in gitexecdir
 OTHER_PROGRAMS = git$X
+OTHER_PROGRAMS += scalar$X
 ARTIFACTS_TAR += $(OTHER_PROGRAMS)
 
 # what test wrappers are needed and 'install' will install, in bindir
@@ -817,12 +819,18 @@ BINDIR_PROGRAMS_NEED_X += git-upload-pack
 
 BINDIR_PROGRAMS_NO_X += git-cvsserver
 
+ifdef INSTALL_SCALAR
+BINDIR_PROGRAMS_NEED_X += scalar
+endif
 INSTALL_BINDIR_XPROGRAMS += $(patsubst %,%$X,$(BINDIR_PROGRAMS_NEED_X))
 INSTALL_BINDIR_PROGRAMS += $(INSTALL_BINDIR_XPROGRAMS) $(BINDIR_PROGRAMS_NO_X)
 
 # We have bin-wrappers for programs that we don't install
 TEST_BINDIR_PROGRAMS_NEED_X += $(BINDIR_PROGRAMS_NEED_X)
 TEST_BINDIR_PROGRAMS_NEED_X += $(TEST_PROGRAMS_NEED_X)
+ifndef INSTALL_SCALAR
+TEST_BINDIR_PROGRAMS_NEED_X += scalar$X
+endif
 
 TEST_BINDIR_PROGRAMS += $(TEST_BINDIR_PROGRAMS_NEED_X)
 TEST_BINDIR_PROGRAMS += $(BINDIR_PROGRAMS_NO_X)
@@ -2239,7 +2247,7 @@ please_set_SHELL_PATH_to_a_more_modern_shell:
 
 shell_compatibility_test: please_set_SHELL_PATH_to_a_more_modern_shell
 
-strip: $(BIN_PROGRAMS) git$X
+strip: $(BIN_PROGRAMS) git$X scalar$X
 	$(STRIP) $(STRIP_OPTS) $^
 
 ### Flags affecting all rules
@@ -2292,6 +2300,10 @@ git.sp git.s git.o: EXTRA_CPPFLAGS = \
 	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
 
 git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
+	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
+		$(filter %.o,$^) $(LIBS)
+
+scalar$X: scalar.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
 		$(filter %.o,$^) $(LIBS)
 
@@ -2530,7 +2542,12 @@ GIT_OBJS += git.o
 .PHONY: git-objs
 git-objs: $(GIT_OBJS)
 
+SCALAR_OBJS += scalar.o
+.PHONY: scalar-objs
+scalar-objs: $(SCALAR_OBJS)
+
 OBJECTS += $(GIT_OBJS)
+OBJECTS += $(SCALAR_OBJS)
 OBJECTS += $(PROGRAM_OBJS)
 OBJECTS += $(TEST_OBJS)
 OBJECTS += $(XDIFF_OBJS)
@@ -2538,9 +2555,6 @@ OBJECTS += $(FUZZ_OBJS)
 ifndef NO_CURL
 	OBJECTS += http.o http-walker.o remote-curl.o
 endif
-
-SCALAR_SOURCES := contrib/scalar/scalar.c
-SCALAR_OBJECTS := $(SCALAR_SOURCES:c=o)
 OBJECTS += $(SCALAR_OBJECTS)
 
 .PHONY: objects
@@ -2675,10 +2689,6 @@ $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
-
-contrib/scalar/scalar$X: $(SCALAR_OBJECTS) GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
-		$(filter %.o,$^) $(LIBS)
 
 $(LIB_FILE): $(LIB_OBJS) $(LIB_COMPAT_OBJS)
 	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
@@ -3215,11 +3225,17 @@ endif
 install-gitweb:
 	$(MAKE) -C gitweb install
 
+ifdef INSTALL_SCALAR
+NO_INSTALL_SCALAR_DOC =
+else
+NO_INSTALL_SCALAR_DOC = NoScalarPlease
+endif
+
 install-doc: install-man-perl
-	$(MAKE) -C Documentation install
+	$(MAKE) -C Documentation install NO_INSTALL_SCALAR_DOC=$(NO_INSTALL_SCALAR_DOC)
 
 install-man: install-man-perl
-	$(MAKE) -C Documentation install-man
+	$(MAKE) -C Documentation install-man NO_INSTALL_SCALAR_DOC=$(NO_INSTALL_SCALAR_DOC)
 
 install-man-perl: man-perl
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(mandir_SQ)/man3'
@@ -3227,13 +3243,13 @@ install-man-perl: man-perl
 	(cd '$(DESTDIR_SQ)$(mandir_SQ)/man3' && umask 022 && $(TAR) xof -)
 
 install-html:
-	$(MAKE) -C Documentation install-html
+	$(MAKE) -C Documentation install-html NO_INSTALL_SCALAR_DOC=$(NO_INSTALL_SCALAR_DOC)
 
 install-info:
-	$(MAKE) -C Documentation install-info
+	$(MAKE) -C Documentation install-info NO_INSTALL_SCALAR_DOC=$(NO_INSTALL_SCALAR_DOC)
 
 install-pdf:
-	$(MAKE) -C Documentation install-pdf
+	$(MAKE) -C Documentation install-pdf NO_INSTALL_SCALAR_DOC=$(NO_INSTALL_SCALAR_DOC)
 
 quick-install-doc:
 	$(MAKE) -C Documentation quick-install
