@@ -492,6 +492,12 @@ all::
 #    no-pedantic:
 #
 #        Disable -pedantic compilation.
+#
+#    no-assert-makefile:
+#
+#        Disabled internal assertions in the Makefile itself,
+#        e.g. checking that hardcoded variables are sorted, that globs
+#        match expected "git ls-files" commands etc.
 
 GIT-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./GIT-VERSION-GEN
@@ -3405,3 +3411,33 @@ $(FUZZ_PROGRAMS): all
 		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@
 
 fuzz-all: $(FUZZ_PROGRAMS)
+
+### Assert the correctness of the Makefile itself
+define check-sort-template
+ifeq ($$($1),)
+$$(error "$1 is an empty list, typo?")
+endif
+SORTED_$1 = $$(sort $$($1))
+ifneq ($$($1),$$(SORTED_$1))
+$$(error "please sort and de-duplicate $1!")
+endif
+endef
+check-sort = $(eval $(call check-sort-template,$1))
+
+#### => Check that variables are sorted
+ifdef DEVELOPER
+ifeq ($(filter no-assert-makefile,$(DEVOPTS)),)
+$(call check-sort,BINDIR_PROGRAMS_NEED_X)
+$(call check-sort,BUILTIN_OBJS)
+$(call check-sort,FUZZ_OBJS)
+$(call check-sort,FUZZ_PROGRAMS)
+$(call check-sort,GENERATED_H)
+$(call check-sort,SCRIPT_LIB)
+$(call check-sort,SCRIPT_PERL)
+$(call check-sort,SCRIPT_PYTHON)
+$(call check-sort,SCRIPT_SH)
+$(call check-sort,TEST_BUILTINS_OBJS)
+$(call check-sort,TEST_PROGRAMS_NEED_X)
+$(call check-sort,THIRD_PARTY_SOURCES)
+endif
+endif
