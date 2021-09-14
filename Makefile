@@ -572,10 +572,15 @@ export TCL_PATH TCLTK_PATH
 PTHREAD_LIBS = -lpthread
 
 # Guard against environment variables
+ALL_COMPAT_H =
+ALL_COMPAT_H_GLOB =
 BUILTIN_OBJS =
 BUILT_INS =
 BUILT_INS_EXTRA =
+LIB_H_GLOB =
 COMPAT_CFLAGS =
+COMPAT_H =
+COMPAT_H_GLOB =
 COMPAT_OBJS =
 EXCLUDED_PROGRAMS =
 EXTRA_CPPFLAGS =
@@ -584,6 +589,7 @@ FUZZ_PROGRAMS =
 GENERATED_H =
 GIT_OBJS =
 LIB_COMPAT_OBJS =
+LIB_H =
 LIB_OBJS =
 LIB_OBJS_NO_COMPAT_OBJS =
 OBJECTS =
@@ -830,12 +836,22 @@ GENERATED_H += hook-list.h
 .PHONY: generated-hdrs
 generated-hdrs: $(GENERATED_H)
 
-LIB_H := $(sort $(patsubst ./%,%,$(shell git ls-files '*.h' ':!t/' ':!Documentation/' 2>/dev/null || \
-	$(FIND) . \
-	-name .git -prune -o \
-	-name t -prune -o \
-	-name Documentation -prune -o \
-	-name '*.h' -print)))
+LIB_H_GLOB += *.h
+LIB_H_GLOB += compat/*.h
+LIB_H_GLOB += compat/*/*.h
+ifdef MSVC
+LIB_H_GLOB += compat/vcbuild/include/*.h
+LIB_H_GLOB += compat/vcbuild/include/sys/*.h
+else
+ALL_COMPAT_H_GLOB += compat/vcbuild/include/*.h
+ALL_COMPAT_H_GLOB += compat/vcbuild/include/sys/*.h
+endif
+LIB_H_GLOB += ewah/*.h
+LIB_H_GLOB += negotiator/*.h
+LIB_H_GLOB += refs/*.h
+LIB_H_GLOB += trace2/*.h
+LIB_H_GLOB += xdiff/*.h
+LIB_H += $(filter-out $(GENERATED_H), $(sort $(wildcard $(LIB_H_GLOB))))
 
 LIB_OBJS += abspath.o
 LIB_OBJS += add-interactive.o
@@ -1745,12 +1761,17 @@ ifdef OPENSSL_SHA1
 	EXTLIBS += $(LIB_4_CRYPTO)
 	BASIC_CFLAGS += -DSHA1_OPENSSL
 else
+
+ALL_COMPAT_H_GLOB += block-sha1/*.h
 ifdef BLK_SHA1
 	LIB_COMPAT_OBJS += block-sha1/sha1.o
+	COMPAT_H_GLOB += block-sha1/*.h
 	BASIC_CFLAGS += -DSHA1_BLK
 else
+ALL_COMPAT_H_GLOB += ppc/*.h
 ifdef PPC_SHA1
 	LIB_COMPAT_OBJS += ppc/sha1.o ppc/sha1ppc.o
+	COMPAT_H_GLOB += ppc/*.h
 	BASIC_CFLAGS += -DSHA1_PPC
 else
 ifdef APPLE_COMMON_CRYPTO
@@ -1769,13 +1790,17 @@ $(error Only set DC_SHA1_EXTERNAL or DC_SHA1_SUBMODULE, not both)
 	BASIC_CFLAGS += -DDC_SHA1_EXTERNAL
 	EXTLIBS += -lsha1detectcoll
 else
+ALL_COMPAT_H_GLOB += sha1collisiondetection/lib/*.h
+ALL_COMPAT_H_GLOB += sha1dc/*.h
 ifdef DC_SHA1_SUBMODULE
 	LIB_COMPAT_OBJS += sha1collisiondetection/lib/sha1.o
 	LIB_COMPAT_OBJS += sha1collisiondetection/lib/ubc_check.o
+	COMPAT_H_GLOB += sha1collisiondetection/lib/*.h
 	BASIC_CFLAGS += -DDC_SHA1_SUBMODULE
 else
 	LIB_COMPAT_OBJS += sha1dc/sha1.o
 	LIB_COMPAT_OBJS += sha1dc/ubc_check.o
+	COMPAT_H_GLOB += sha1dc/*.h
 endif
 	BASIC_CFLAGS += \
 		-DSHA1DC_NO_STANDARD_INCLUDES \
@@ -1788,6 +1813,8 @@ endif
 endif
 endif
 
+ALL_COMPAT_H_GLOB += sha256/*.h
+ALL_COMPAT_H_GLOB += sha256/block/*.h
 ifdef OPENSSL_SHA256
 	EXTLIBS += $(LIB_4_CRYPTO)
 	BASIC_CFLAGS += -DSHA256_OPENSSL
@@ -1797,6 +1824,8 @@ ifdef GCRYPT_SHA256
 	EXTLIBS += -lgcrypt
 else
 	LIB_COMPAT_OBJS += sha256/block/sha256.o
+	COMPAT_H_GLOB += sha256/*.h
+	COMPAT_H_GLOB += sha256/block/*.h
 	BASIC_CFLAGS += -DSHA256_BLK
 endif
 endif
@@ -1960,6 +1989,11 @@ PRINT_DIR = --no-print-directory
 else # "make -w"
 NO_SUBDIR = :
 endif
+
+# We've defined the last $(COMPAT_H_GLOB) and $(ALL_COMPAT_H_GLOB),
+# materialize them
+COMPAT_H += $(sort $(wildcard $(COMPAT_H_GLOB)))
+ALL_COMPAT_H += $(sort $(wildcard $(ALL_COMPAT_H_GLOB)))
 
 ifneq ($(findstring s,$(MAKEFLAGS)),s)
 ifndef V
@@ -2185,7 +2219,7 @@ strip: $(PROGRAMS) git$X
 
 # The generic compilation pattern rule and automatically
 # computed header dependencies (falling back to a dependency on
-# LIB_H) are enough to describe how most targets should be built,
+# {LIB,COMPAT}_H are enough to describe how most targets should be built,
 # but some targets are special enough to need something a little
 # different.
 #
@@ -2523,7 +2557,7 @@ ifneq ($(dep_files_present),)
 include $(dep_files_present)
 endif
 else
-$(OBJECTS): $(LIB_H) $(GENERATED_H)
+$(OBJECTS): $(LIB_H) $(COMPAT_H) $(GENERATED_H)
 endif
 
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
@@ -2645,7 +2679,7 @@ XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell \
 	--keyword=gettextln --keyword=eval_gettextln
 XGETTEXT_FLAGS_PERL = $(XGETTEXT_FLAGS) --language=Perl \
 	--keyword=__ --keyword=N__ --keyword="__n:1,2"
-LOCALIZED_C = $(C_OBJ:o=c) $(LIB_H) $(GENERATED_H)
+LOCALIZED_C = $(C_OBJ:o=c) $(LIB_H) $(COMPAT_H) $(GENERATED_H)
 LOCALIZED_SH = $(SCRIPT_SH)
 LOCALIZED_SH += git-sh-setup.sh
 LOCALIZED_PERL = $(SCRIPT_PERL)
@@ -2925,7 +2959,7 @@ EXCEPT_HDRS := $(GENERATED_H) unicode-width.h compat/% xdiff/%
 ifndef GCRYPT_SHA256
 	EXCEPT_HDRS += sha256/gcrypt.h
 endif
-CHK_HDRS = $(filter-out $(EXCEPT_HDRS),$(LIB_H))
+CHK_HDRS = $(filter-out $(EXCEPT_HDRS),$(LIB_H) $(COMPAT_H))
 HCO = $(patsubst %.h,%.hco,$(CHK_HDRS))
 HCC = $(HCO:hco=hcc)
 
@@ -3447,4 +3481,17 @@ $(call check-sort,TEST_BUILTINS_OBJS)
 $(call check-sort,TEST_PROGRAMS_NEED_X)
 $(call check-sort,THIRD_PARTY_SOURCES)
 endif
+
+#### => Have we missed listing any new *.h files?
+LIB_H_FIND := $(sort $(patsubst ./%,%,$(shell git ls-files '*.h' ':!t/' ':!Documentation/' 2>/dev/null || \
+	$(FIND) . \
+	-name .git -prune -o \
+	-name t -prune -o \
+	-name Documentation -prune -o \
+	-name '*.h' -print)))
+LIB_H_FIND_INTERESTING := $(filter-out $(LIB_H) $(wildcard $(ALL_COMPAT_H)), $(LIB_H_FIND))
+ifneq (,$(LIB_H_FIND_INTERESTING))
+$(error "found (new?) headers not listed by LIB_H_GLOB or in ALL_COMPAT_H: $(LIB_H_FIND_INTERESTING)")
+endif
+
 endif
