@@ -1265,7 +1265,8 @@ include config.mak.dev
 endif
 
 # what 'all' will build, excluding programs for built-in commands
-ALL_PROGRAMS = $(PROGRAMS) $(SCRIPTS)
+ALL_PROGRAMS += $(PROGRAMS)
+ALL_PROGRAMS += $(SCRIPTS)
 
 # what 'install' will install in gitexecdir,
 ALL_COMMANDS_TO_INSTALL += $(ALL_PROGRAMS)
