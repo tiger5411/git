@@ -79,7 +79,7 @@ subcommand into the Git tree.
 1. Don't forget to sign off your patch!
 
 2. Append your command name to one of the variables BUILTIN_OBJS,
-EXTRA_PROGRAMS, SCRIPT_SH, SCRIPT_PERL or SCRIPT_PYTHON.
+SCRIPT_SH, SCRIPT_PERL or SCRIPT_PYTHON.
 
 3. Drop its test in the t directory.
 
