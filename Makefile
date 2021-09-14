@@ -578,6 +578,7 @@ ALL_COMPAT_H =
 ALL_COMPAT_H_GLOB =
 ALL_COMPAT_S_GLOB =
 ALL_PROGRAMS =
+BIN_PROGRAMS =
 BUILTIN_OBJS =
 BUILT_INS =
 BUILT_INS_EXTRA =
@@ -599,10 +600,10 @@ LIB_H_GLOB =
 LIB_OBJS =
 LIB_OBJS_NO_COMPAT_OBJS =
 OBJECTS =
-PROGRAMS =
 PROGRAM_OBJS =
 SCRIPT_LIB =
 SCRIPT_PERL =
+SCRIPT_PROGRAMS =
 SCRIPT_PYTHON =
 SCRIPT_SH =
 TAGS_SOURCE =
@@ -681,11 +682,6 @@ clean-perl-script:
 clean-python-script:
 	$(RM) $(SCRIPT_PYTHON_GEN)
 
-SCRIPTS = $(SCRIPT_SH_GEN) \
-	  $(SCRIPT_PERL_GEN) \
-	  $(SCRIPT_PYTHON_GEN) \
-	  git-instaweb
-
 ETAGS_TARGET = TAGS
 
 FUZZ_OBJS += fuzz-commit-graph.o
@@ -709,8 +705,6 @@ program-objs: $(PROGRAM_OBJS)
 
 # Binary suffix, set to .exe for Windows builds
 X =
-
-PROGRAMS += $(patsubst %.o,git-%$X,$(PROGRAM_OBJS))
 
 TEST_BUILTINS_OBJS += test-advise.o
 TEST_BUILTINS_OBJS += test-bitmap.o
@@ -1282,8 +1276,13 @@ include config.mak.dev
 endif
 
 # what 'all' will build, excluding programs for built-in commands
-ALL_PROGRAMS += $(PROGRAMS)
-ALL_PROGRAMS += $(SCRIPTS)
+BIN_PROGRAMS += $(patsubst %.o,git-%$X,$(PROGRAM_OBJS))
+SCRIPT_PROGRAMS += $(SCRIPT_SH_GEN)
+SCRIPT_PROGRAMS += $(SCRIPT_PERL_GEN)
+SCRIPT_PROGRAMS += $(SCRIPT_PYTHON_GEN)
+SCRIPT_PROGRAMS += git-instaweb
+ALL_PROGRAMS += $(BIN_PROGRAMS)
+ALL_PROGRAMS += $(SCRIPT_PROGRAMS)
 
 # what 'install' will install in gitexecdir,
 ALL_COMMANDS_TO_INSTALL += $(ALL_PROGRAMS)
@@ -1479,7 +1478,7 @@ else
 	REMOTE_CURL_ALIASES = git-remote-https$X git-remote-ftp$X git-remote-ftps$X
 	REMOTE_CURL_NAMES = $(REMOTE_CURL_PRIMARY) $(REMOTE_CURL_ALIASES)
 	PROGRAM_OBJS += http-fetch.o
-	PROGRAMS += $(REMOTE_CURL_NAMES)
+	BIN_PROGRAMS += $(REMOTE_CURL_NAMES)
 	ifndef NO_EXPAT
 		PROGRAM_OBJS += http-push.o
 	endif
@@ -2234,7 +2233,7 @@ please_set_SHELL_PATH_to_a_more_modern_shell:
 
 shell_compatibility_test: please_set_SHELL_PATH_to_a_more_modern_shell
 
-strip: $(PROGRAMS) git$X
+strip: $(BIN_PROGRAMS) git$X
 	$(STRIP) $(STRIP_OPTS) $^
 
 ### Flags affecting all rules
@@ -3107,8 +3106,8 @@ INSTALL_STRIP =
 install: all
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(bindir_SQ)'
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
-	$(INSTALL) $(INSTALL_STRIP) $(PROGRAMS) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
-	$(INSTALL) $(SCRIPTS) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
+	$(INSTALL) $(INSTALL_STRIP) $(BIN_PROGRAMS) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
+	$(INSTALL) $(SCRIPT_PROGRAMS) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
 	$(INSTALL) -m 644 $(SCRIPT_LIB) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
 	$(INSTALL) $(INSTALL_STRIP) $(INSTALL_BINDIR_XPROGRAMS) '$(DESTDIR_SQ)$(bindir_SQ)'
 	$(INSTALL) $(BINDIR_PROGRAMS_NO_X) '$(DESTDIR_SQ)$(bindir_SQ)'
@@ -3118,7 +3117,7 @@ ifdef MSVC
 	# We DO NOT have pdb files for the builtin commands (like git-status.exe)
 	# because it is just a copy/hardlink of git.exe, rather than a unique binary.
 	$(INSTALL) $(patsubst %.exe,%.pdb,$(filter-out $(BUILT_INS),$(patsubst %,%$X,$(BINDIR_PROGRAMS_NEED_X)))) '$(DESTDIR_SQ)$(bindir_SQ)'
-	$(INSTALL) $(patsubst %.exe,%.pdb,$(filter-out $(BUILT_INS) $(REMOTE_CURL_ALIASES),$(PROGRAMS))) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
+	$(INSTALL) $(patsubst %.exe,%.pdb,$(filter-out $(BUILT_INS) $(REMOTE_CURL_ALIASES),$(BIN_PROGRAMS))) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
 ifndef DEBUG
 	$(INSTALL) $(vcpkg_rel_bin)/*.dll '$(DESTDIR_SQ)$(bindir_SQ)'
 	$(INSTALL) $(vcpkg_rel_bin)/*.pdb '$(DESTDIR_SQ)$(bindir_SQ)'
@@ -3367,9 +3366,9 @@ ifdef MSVC
 	$(RM) $(patsubst %.exe,%.pdb,$(OTHER_PROGRAMS))
 	$(RM) $(patsubst %.exe,%.iobj,$(OTHER_PROGRAMS))
 	$(RM) $(patsubst %.exe,%.ipdb,$(OTHER_PROGRAMS))
-	$(RM) $(patsubst %.exe,%.pdb,$(PROGRAMS))
-	$(RM) $(patsubst %.exe,%.iobj,$(PROGRAMS))
-	$(RM) $(patsubst %.exe,%.ipdb,$(PROGRAMS))
+	$(RM) $(patsubst %.exe,%.pdb,$(BIN_PROGRAMS))
+	$(RM) $(patsubst %.exe,%.iobj,$(BIN_PROGRAMS))
+	$(RM) $(patsubst %.exe,%.ipdb,$(BIN_PROGRAMS))
 	$(RM) $(patsubst %.exe,%.pdb,$(TEST_PROGRAMS))
 	$(RM) $(patsubst %.exe,%.iobj,$(TEST_PROGRAMS))
 	$(RM) $(patsubst %.exe,%.ipdb,$(TEST_PROGRAMS))
