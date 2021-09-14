@@ -583,7 +583,9 @@ FUZZ_OBJS =
 FUZZ_PROGRAMS =
 GENERATED_H =
 GIT_OBJS =
+LIB_COMPAT_OBJS =
 LIB_OBJS =
+LIB_OBJS_NO_COMPAT_OBJS =
 OBJECTS =
 PROGRAMS =
 PROGRAM_OBJS =
@@ -1679,18 +1681,18 @@ else
 endif
 endif
 ifdef NO_INET_NTOP
-	LIB_OBJS += compat/inet_ntop.o
+	LIB_COMPAT_OBJS += compat/inet_ntop.o
 	BASIC_CFLAGS += -DNO_INET_NTOP
 endif
 ifdef NO_INET_PTON
-	LIB_OBJS += compat/inet_pton.o
+	LIB_COMPAT_OBJS += compat/inet_pton.o
 	BASIC_CFLAGS += -DNO_INET_PTON
 endif
 ifdef NO_UNIX_SOCKETS
 	BASIC_CFLAGS += -DNO_UNIX_SOCKETS
 else
-	LIB_OBJS += unix-socket.o
-	LIB_OBJS += unix-stream-server.o
+	LIB_COMPAT_OBJS += unix-socket.o
+	LIB_COMPAT_OBJS += unix-stream-server.o
 endif
 
 # Simple IPC requires threads and platform-specific IPC support.
@@ -1706,14 +1708,14 @@ endif
 #
 ifdef USE_WIN32_IPC
 	BASIC_CFLAGS += -DSUPPORTS_SIMPLE_IPC
-	LIB_OBJS += compat/simple-ipc/ipc-shared.o
-	LIB_OBJS += compat/simple-ipc/ipc-win32.o
+	LIB_COMPAT_OBJS += compat/simple-ipc/ipc-shared.o
+	LIB_COMPAT_OBJS += compat/simple-ipc/ipc-win32.o
 else
 ifndef NO_PTHREADS
 ifndef NO_UNIX_SOCKETS
 	BASIC_CFLAGS += -DSUPPORTS_SIMPLE_IPC
-	LIB_OBJS += compat/simple-ipc/ipc-shared.o
-	LIB_OBJS += compat/simple-ipc/ipc-unix-socket.o
+	LIB_COMPAT_OBJS += compat/simple-ipc/ipc-shared.o
+	LIB_COMPAT_OBJS += compat/simple-ipc/ipc-unix-socket.o
 endif
 endif
 endif
@@ -1744,11 +1746,11 @@ ifdef OPENSSL_SHA1
 	BASIC_CFLAGS += -DSHA1_OPENSSL
 else
 ifdef BLK_SHA1
-	LIB_OBJS += block-sha1/sha1.o
+	LIB_COMPAT_OBJS += block-sha1/sha1.o
 	BASIC_CFLAGS += -DSHA1_BLK
 else
 ifdef PPC_SHA1
-	LIB_OBJS += ppc/sha1.o ppc/sha1ppc.o
+	LIB_COMPAT_OBJS += ppc/sha1.o ppc/sha1ppc.o
 	BASIC_CFLAGS += -DSHA1_PPC
 else
 ifdef APPLE_COMMON_CRYPTO
@@ -1757,7 +1759,7 @@ ifdef APPLE_COMMON_CRYPTO
 else
 	DC_SHA1 := YesPlease
 	BASIC_CFLAGS += -DSHA1_DC
-	LIB_OBJS += sha1dc_git.o
+	LIB_COMPAT_OBJS += sha1dc_git.o
 ifdef DC_SHA1_EXTERNAL
 	ifdef DC_SHA1_SUBMODULE
 		ifneq ($(DC_SHA1_SUBMODULE),auto)
@@ -1768,12 +1770,12 @@ $(error Only set DC_SHA1_EXTERNAL or DC_SHA1_SUBMODULE, not both)
 	EXTLIBS += -lsha1detectcoll
 else
 ifdef DC_SHA1_SUBMODULE
-	LIB_OBJS += sha1collisiondetection/lib/sha1.o
-	LIB_OBJS += sha1collisiondetection/lib/ubc_check.o
+	LIB_COMPAT_OBJS += sha1collisiondetection/lib/sha1.o
+	LIB_COMPAT_OBJS += sha1collisiondetection/lib/ubc_check.o
 	BASIC_CFLAGS += -DDC_SHA1_SUBMODULE
 else
-	LIB_OBJS += sha1dc/sha1.o
-	LIB_OBJS += sha1dc/ubc_check.o
+	LIB_COMPAT_OBJS += sha1dc/sha1.o
+	LIB_COMPAT_OBJS += sha1dc/ubc_check.o
 endif
 	BASIC_CFLAGS += \
 		-DSHA1DC_NO_STANDARD_INCLUDES \
@@ -1794,13 +1796,13 @@ ifdef GCRYPT_SHA256
 	BASIC_CFLAGS += -DSHA256_GCRYPT
 	EXTLIBS += -lgcrypt
 else
-	LIB_OBJS += sha256/block/sha256.o
+	LIB_COMPAT_OBJS += sha256/block/sha256.o
 	BASIC_CFLAGS += -DSHA256_BLK
 endif
 endif
 
 ifdef SHA1_MAX_BLOCK_SIZE
-	LIB_OBJS += compat/sha1-chunked.o
+	LIB_COMPAT_OBJS += compat/sha1-chunked.o
 	BASIC_CFLAGS += -DSHA1_MAX_BLOCK_SIZE="$(SHA1_MAX_BLOCK_SIZE)"
 endif
 ifdef NO_HSTRERROR
@@ -2074,6 +2076,7 @@ endif
 LIBS = $(filter-out %.o, $(GITLIBS)) $(EXTLIBS)
 
 BASIC_CFLAGS += $(COMPAT_CFLAGS)
+LIB_OBJS_NO_COMPAT_OBJS := $(LIB_OBJS)
 LIB_OBJS += $(COMPAT_OBJS)
 
 # Quote for C
@@ -2449,6 +2452,7 @@ TEST_OBJS := $(patsubst %$X,%.o,$(TEST_PROGRAMS)) $(patsubst %,t/helper/%,$(TEST
 test-objs: $(TEST_OBJS)
 
 GIT_OBJS += $(LIB_OBJS)
+GIT_OBJS += $(LIB_COMPAT_OBJS)
 GIT_OBJS += $(BUILTIN_OBJS)
 GIT_OBJS += common-main.o
 GIT_OBJS += git.o
@@ -2596,7 +2600,7 @@ $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
 
-$(LIB_FILE): $(LIB_OBJS)
+$(LIB_FILE): $(LIB_OBJS) $(LIB_COMPAT_OBJS)
 	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
 
 $(XDIFF_LIB): $(XDIFF_OBJS)
@@ -3408,7 +3412,7 @@ FUZZ_CXXFLAGS ?= $(CFLAGS)
 .PHONY: fuzz-all
 
 $(FUZZ_PROGRAMS): all
-	$(QUIET_LINK)$(CXX) $(FUZZ_CXXFLAGS) $(LIB_OBJS) $(BUILTIN_OBJS) \
+	$(QUIET_LINK)$(CXX) $(FUZZ_CXXFLAGS) $(LIB_OBJS) $(LIB_COMPAT_OBJS) $(BUILTIN_OBJS) \
 		$(XDIFF_OBJS) $(EXTLIBS) git.o $@.o $(LIB_FUZZING_ENGINE) -o $@
 
 fuzz-all: $(FUZZ_PROGRAMS)
@@ -3434,6 +3438,7 @@ $(call check-sort,BUILT_INS_EXTRA)
 $(call check-sort,FUZZ_OBJS)
 $(call check-sort,FUZZ_PROGRAMS)
 $(call check-sort,GENERATED_H)
+$(call check-sort,LIB_OBJS_NO_COMPAT_OBJS)
 $(call check-sort,SCRIPT_LIB)
 $(call check-sort,SCRIPT_PERL)
 $(call check-sort,SCRIPT_PYTHON)
