@@ -643,6 +643,7 @@ SCRIPT_SH += git-web--browse.sh
 SCRIPT_LIB += git-mergetool--lib
 SCRIPT_LIB += git-sh-i18n
 SCRIPT_LIB += git-sh-setup
+ARTIFACTS_TAR += $(SCRIPT_LIB)
 
 SCRIPT_PERL += git-add--interactive.perl
 SCRIPT_PERL += git-archimport.perl
@@ -783,6 +784,7 @@ TEST_PROGRAMS_NEED_X += test-fake-ssh
 TEST_PROGRAMS_NEED_X += test-tool
 
 TEST_PROGRAMS = $(patsubst %,t/helper/%$X,$(TEST_PROGRAMS_NEED_X))
+ARTIFACTS_TAR += $(TEST_PROGRAMS)
 
 BUILT_INS += $(patsubst builtin/%.o,git-%$X,$(BUILTIN_OBJS))
 # List built-in command $C whose implementation cmd_$C() is not in
@@ -804,6 +806,7 @@ BUILT_INS += $(BUILT_INS_EXTRA)
 
 # what 'all' will build but not install in gitexecdir
 OTHER_PROGRAMS = git$X
+ARTIFACTS_TAR += $(OTHER_PROGRAMS)
 
 # what test wrappers are needed and 'install' will install, in bindir
 BINDIR_PROGRAMS_NEED_X += git
@@ -823,6 +826,7 @@ TEST_BINDIR_PROGRAMS_NEED_X += $(TEST_PROGRAMS_NEED_X)
 
 TEST_BINDIR_PROGRAMS += $(TEST_BINDIR_PROGRAMS_NEED_X)
 TEST_BINDIR_PROGRAMS += $(BINDIR_PROGRAMS_NO_X)
+ARTIFACTS_TAR += $(TEST_BINDIR_PROGRAMS)
 
 TEST_BIN_WRAPPERS_PROGRAMS += $(patsubst %,bin-wrappers/%,$(TEST_BINDIR_PROGRAMS))
 
@@ -1297,6 +1301,7 @@ ALL_COMMANDS_TO_INSTALL += git-receive-pack$(X)
 ALL_COMMANDS_TO_INSTALL += git-upload-archive$(X)
 ALL_COMMANDS_TO_INSTALL += git-upload-pack$(X)
 endif
+ARTIFACTS_TAR += $(ALL_COMMANDS_TO_INSTALL)
 
 ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(CPPFLAGS) $(CFLAGS)
 ALL_LDFLAGS = $(LDFLAGS)
@@ -2887,6 +2892,7 @@ GIT-LDFLAGS: FORCE
 # We need to apply sq twice, once to protect from the shell
 # that runs GIT-BUILD-OPTIONS, and then again to protect it
 # and the first level quoting from the shell that runs "echo".
+ARTIFACTS_TAR += GIT-BUILD-OPTIONS
 GIT-BUILD-OPTIONS: FORCE
 	@echo SHELL_PATH=\''$(subst ','\'',$(SHELL_PATH_SQ))'\' >$@+
 	@echo TEST_SHELL_PATH=\''$(subst ','\'',$(TEST_SHELL_PATH_SQ))'\' >>$@+
@@ -3267,15 +3273,8 @@ rpm::
 .PHONY: rpm
 
 ifneq ($(INCLUDE_DLLS_IN_ARTIFACTS),)
-OTHER_PROGRAMS += $(shell echo *.dll t/helper/*.dll)
+ARTIFACTS_TAR += $(shell echo *.dll t/helper/*.dll)
 endif
-
-ARTIFACTS_TAR += GIT-BUILD-OPTIONS
-ARTIFACTS_TAR += $(ALL_COMMANDS_TO_INSTALL)
-ARTIFACTS_TAR += $(SCRIPT_LIB)
-ARTIFACTS_TAR += $(OTHER_PROGRAMS)
-ARTIFACTS_TAR += $(TEST_PROGRAMS)
-ARTIFACTS_TAR += $(TEST_BINDIR_PROGRAMS)
 
 artifacts-tar:: $(ARTIFACTS_TAR)
 	$(QUIET_SUBDIR0)templates $(QUIET_SUBDIR1) \
