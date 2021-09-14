@@ -18,6 +18,9 @@ MAN1_TXT += $(filter-out \
 MAN1_TXT += git.txt
 MAN1_TXT += gitk.txt
 MAN1_TXT += gitweb.txt
+ifndef NO_INSTALL_SCALAR_DOC
+MAN1_TXT += scalar.txt
+endif
 
 # man5 / man7 guides (note: new guides should also be added to command-list.txt)
 MAN5_TXT += gitattributes.txt
@@ -311,6 +314,7 @@ endif
 cmds_txt = cmds-ancillaryinterrogators.txt \
 	cmds-ancillarymanipulators.txt \
 	cmds-mainporcelain.txt \
+	cmds-optionalcontrib.txt \
 	cmds-plumbinginterrogators.txt \
 	cmds-plumbingmanipulators.txt \
 	cmds-synchingrepositories.txt \

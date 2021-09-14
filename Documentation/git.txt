@@ -337,6 +337,18 @@ The following documentation pages are guides about Git concepts.
 
 include::cmds-guide.txt[]
 
+Optional contrib commands
+-------------------------
+
+The following commands are included with the git sources, but may not
+be present in your installation.
+
+These should be considered "contrib"-level when it comes to
+maintenance and stability promises. They might not even be included in
+your installation, and may either drastically change in the future, or
+go away entirely.
+
+include::cmds-optionalcontrib.txt[]
 
 Configuration Mechanism
 -----------------------
