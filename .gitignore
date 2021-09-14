@@ -217,6 +217,7 @@
 /configure
 /.vscode/
 /tags
+/scalar
 /TAGS
 /cscope*
 /compile_commands.json

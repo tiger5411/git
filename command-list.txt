@@ -16,6 +16,7 @@
 #   synchingrepositories
 #   synchelpers
 #   purehelpers
+#   optionalcontrib
 #
 # The type names are self explanatory. But if you want to see what
 # command belongs to what group to get a better picture, have a look
@@ -215,3 +216,4 @@ gittutorial                             guide
 gittutorial-2                           guide
 gitweb                                  ancillaryinterrogators
 gitworkflows                            guide
+scalar                                  optionalcontrib

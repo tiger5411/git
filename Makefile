@@ -467,6 +467,11 @@ include shared.mak
 # INSTALL_STRIP can be set to "-s" to strip binaries during installation,
 # if your $(INSTALL) command supports the option.
 #
+# Define INSTALL_SCALAR if you would like to install the optional
+# "scalar" command. This command is considered "contrib"-level, see
+# 'Optional "contrib" commands' in the built (with "make man") git(1)
+# manual page.
+#
 # Define GENERATE_COMPILATION_DATABASE to "yes" to generate JSON compilation
 # database entries during compilation if your compiler supports it, using the
 # `-MJ` flag. The JSON entries will be placed in the `compile_commands/`
@@ -587,8 +592,10 @@ GIT_OBJS =
 LIB_OBJS =
 OBJECTS =
 PROGRAM_OBJS =
+OTHER_PROGRAMS =
 PROGRAMS =
 EXCLUDED_PROGRAMS =
+SCALAR_OBJS =
 SCRIPT_PERL =
 SCRIPT_PYTHON =
 SCRIPT_SH =
@@ -794,7 +801,8 @@ BUILT_INS += git-switch$X
 BUILT_INS += git-whatchanged$X
 
 # what 'all' will build but not install in gitexecdir
-OTHER_PROGRAMS = git$X
+OTHER_PROGRAMS += git$X
+OTHER_PROGRAMS += scalar$X
 
 # what test wrappers are needed and 'install' will install, in bindir
 BINDIR_PROGRAMS_NEED_X += git
@@ -802,6 +810,18 @@ BINDIR_PROGRAMS_NEED_X += git-receive-pack
 BINDIR_PROGRAMS_NEED_X += git-shell
 BINDIR_PROGRAMS_NEED_X += git-upload-archive
 BINDIR_PROGRAMS_NEED_X += git-upload-pack
+
+# Sometimes we only have a test wrapper, but not a program to
+# install. This isn't so pretty, and we could refactor the
+# bin-wrappers/% and install code to make it unnecessary.
+ifdef INSTALL_SCALAR
+PROGRAMS += scalar$X
+BINDIR_PROGRAMS_NEED_X += scalar
+endif
+TEST_BINDIR_PROGRAMS_NEED_X = $(BINDIR_PROGRAMS_NEED_X)
+ifndef INSTALL_SCALAR
+TEST_BINDIR_PROGRAMS_NEED_X += scalar
+endif
 
 BINDIR_PROGRAMS_NO_X += git-cvsserver
 
@@ -2220,9 +2240,13 @@ git.sp git.s git.o: EXTRA_CPPFLAGS = \
 	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
 	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
 
-git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
-		$(filter %.o,$^) $(LIBS)
+define top-level-cmd-rule
+$(1)$X: $(1).o GIT-LDFLAGS $$(GITLIBS) $(2)
+	$$(QUIET_LINK)$$(CC) $$(ALL_CFLAGS) -o $$@ $$(ALL_LDFLAGS) \
+		$$(filter %.o,$$^) $(LIBS)
+endef
+$(eval $(call top-level-cmd-rule,git,$(BUILTIN_OBJS)))
+$(eval $(call top-level-cmd-rule,scalar,))
 
 help.sp help.s help.o: command-list.h
 builtin/bugreport.sp builtin/bugreport.s builtin/bugreport.o: hook-list.h
@@ -2490,7 +2514,12 @@ GIT_OBJS += git.o
 .PHONY: git-objs
 git-objs: $(GIT_OBJS)
 
+SCALAR_OBJS += scalar.o
+.PHONY: scalar-objs
+scalar-objs: $(SCALAR_OBJS)
+
 OBJECTS += $(GIT_OBJS)
+OBJECTS += $(SCALAR_OBJS)
 OBJECTS += $(PROGRAM_OBJS)
 OBJECTS += $(TEST_OBJS)
 OBJECTS += $(XDIFF_OBJS)
@@ -2500,10 +2529,6 @@ OBJECTS += $(REFTABLE_OBJS) $(REFTABLE_TEST_OBJS)
 ifndef NO_CURL
 	OBJECTS += http.o http-walker.o remote-curl.o
 endif
-
-SCALAR_SOURCES := contrib/scalar/scalar.c
-SCALAR_OBJECTS := $(SCALAR_SOURCES:c=o)
-OBJECTS += $(SCALAR_OBJECTS)
 
 .PHONY: objects
 objects: $(OBJECTS)
@@ -2635,10 +2660,6 @@ $(REMOTE_CURL_ALIASES): $(REMOTE_CURL_PRIMARY)
 $(REMOTE_CURL_PRIMARY): remote-curl.o http.o http-walker.o GIT-LDFLAGS $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) $(filter %.o,$^) \
 		$(CURL_LIBCURL) $(EXPAT_LIBEXPAT) $(LIBS)
-
-contrib/scalar/scalar$X: $(SCALAR_OBJECTS) GIT-LDFLAGS $(GITLIBS)
-	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
-		$(filter %.o,$^) $(LIBS)
 
 $(LIB_FILE): $(LIB_OBJS)
 	$(QUIET_AR)$(RM) $@ && $(AR) $(ARFLAGS) $@ $^
@@ -2900,15 +2921,18 @@ GIT-PYTHON-VARS: FORCE
             fi
 endif
 
-test_bindir_programs := $(patsubst %,bin-wrappers/%,$(BINDIR_PROGRAMS_NEED_X) $(BINDIR_PROGRAMS_NO_X) $(TEST_PROGRAMS_NEED_X))
+test_bindir_programs := $(patsubst %,bin-wrappers/%,$(TEST_BINDIR_PROGRAMS_NEED_X) $(BINDIR_PROGRAMS_NO_X) $(TEST_PROGRAMS_NEED_X))
 
 all:: $(TEST_PROGRAMS) $(test_bindir_programs)
 
+# Substitution that's only done on programs named git-* in
+# bin-wrappers/*
+GIT_TEST_BINDIR_PROGRAMS_NEED_X = $(filter-out scalar,$(TEST_BINDIR_PROGRAMS_NEED_X))
 bin-wrappers/%: wrap-for-bin.sh
 	$(call mkdir_p_parent_template)
 	$(QUIET_GEN)sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
 	     -e 's|@@BUILD_DIR@@|$(shell pwd)|' \
-	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%$(X),$(@F))$(patsubst git%,$(X),$(filter $(@F),$(BINDIR_PROGRAMS_NEED_X)))|' < $< > $@ && \
+	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%$(X),$(@F))$(patsubst git%,$(X),$(filter $(@F),$(GIT_TEST_BINDIR_PROGRAMS_NEED_X)))|' < $< > $@ && \
 	chmod +x $@
 
 # GNU make supports exporting all variables by "export" without parameters.
@@ -3140,25 +3164,26 @@ endif
 install-gitweb:
 	$(MAKE) -C gitweb install
 
-install-doc: install-man-perl
-	$(MAKE) -C Documentation install
-
-install-man: install-man-perl
-	$(MAKE) -C Documentation install-man
+ifdef INSTALL_SCALAR
+NO_INSTALL_SCALAR_DOC =
+else
+NO_INSTALL_SCALAR_DOC = NoScalarPlease
+endif
 
 install-man-perl: man-perl
 	$(INSTALL) -d -m 755 '$(DESTDIR_SQ)$(mandir_SQ)/man3'
 	(cd perl/build/man/man3 && $(TAR) cf - .) | \
 	(cd '$(DESTDIR_SQ)$(mandir_SQ)/man3' && umask 022 && $(TAR) xof -)
 
-install-html:
-	$(MAKE) -C Documentation install-html
-
-install-info:
-	$(MAKE) -C Documentation install-info
-
-install-pdf:
-	$(MAKE) -C Documentation install-pdf
+define install-doc-rule
+$(1): $(3)
+	$$(MAKE) -C Documentation $(2) NO_INSTALL_SCALAR_DOC=$$(NO_INSTALL_SCALAR_DOC)
+endef
+$(eval $(call install-doc-rule,install-doc,install,install-man-perl))
+$(eval $(call install-doc-rule,install-man,install-man,install-man-perl))
+$(eval $(call install-doc-rule,install-html,install-html,))
+$(eval $(call install-doc-rule,install-info,install-info,))
+$(eval $(call install-doc-rule,install-pdf,install-pdf,))
 
 quick-install-doc:
 	$(MAKE) -C Documentation quick-install
@@ -3210,8 +3235,19 @@ ifneq ($(INCLUDE_DLLS_IN_ARTIFACTS),)
 OTHER_PROGRAMS += $(shell echo *.dll t/helper/*.dll)
 endif
 
-artifacts-tar:: $(ALL_COMMANDS_TO_INSTALL) $(SCRIPT_LIB) $(OTHER_PROGRAMS) \
-		GIT-BUILD-OPTIONS $(TEST_PROGRAMS) $(test_bindir_programs) \
+# No scalar in "cmake" yet, and since 4c2c38e800f (ci: modification of
+# main.yml to use cmake for vs-build job, 2020-06-26) the "vs-build"
+# job has a hard dependency on it. Let's fail in the tests instead of
+# in the "vs-build" job itself.
+ifeq ($(wildcard scalar),scalar)
+ARCHIVE_OTHER_PROGRAMS = $(OTHER_PROGRAMS)
+ARCHIVE_TEST_BINDIR_PROGRAMS = $(test_bindir_programs)
+else
+ARCHIVE_OTHER_PROGRAMS = $(filter-out scalar%, $(OTHER_PROGRAMS))
+ARCHIVE_TEST_BINDIR_PROGRAMS = $(filter-out bin-wrappers/scalar,$(test_bindir_programs))
+endif
+artifacts-tar:: $(ALL_COMMANDS_TO_INSTALL) $(SCRIPT_LIB) $(ARCHIVE_OTHER_PROGRAMS) \
+		GIT-BUILD-OPTIONS $(TEST_PROGRAMS) $(ARCHIVE_TEST_BINDIR_PROGRAMS) \
 		$(MOFILES)
 	$(QUIET_SUBDIR0)templates $(QUIET_SUBDIR1) \
 		SHELL_PATH='$(SHELL_PATH_SQ)' PERL_PATH='$(PERL_PATH_SQ)'
@@ -3354,7 +3390,7 @@ check-docs::
 		    -e 's/\.txt//'; \
 	) | while read how cmd; \
 	do \
-		case " $(patsubst %$X,%,$(ALL_COMMANDS) $(BUILT_INS) $(EXCLUDED_PROGRAMS)) " in \
+		case " $(patsubst %$X,%,$(ALL_COMMANDS) $(BUILT_INS) $(EXCLUDED_PROGRAMS) scalar) " in \
 		*" $$cmd "*)	;; \
 		*) echo "removed but $$how: $$cmd" ;; \
 		esac; \
