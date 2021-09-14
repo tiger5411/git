@@ -572,6 +572,7 @@ export TCL_PATH TCLTK_PATH
 PTHREAD_LIBS = -lpthread
 
 # Guard against environment variables
+ALL_COMMANDS_TO_INSTALL =
 ALL_COMPAT_C_GLOB =
 ALL_COMPAT_H =
 ALL_COMPAT_H_GLOB =
@@ -1263,10 +1264,12 @@ ifdef DEVELOPER
 include config.mak.dev
 endif
 
-# what 'all' will build and 'install' will install in gitexecdir,
-# excluding programs for built-in commands
+# what 'all' will build, excluding programs for built-in commands
 ALL_PROGRAMS = $(PROGRAMS) $(SCRIPTS)
-ALL_COMMANDS_TO_INSTALL = $(ALL_PROGRAMS)
+
+# what 'install' will install in gitexecdir,
+ALL_COMMANDS_TO_INSTALL += $(ALL_PROGRAMS)
+
 ifeq (,$(SKIP_DASHED_BUILT_INS))
 ALL_COMMANDS_TO_INSTALL += $(BUILT_INS)
 else
