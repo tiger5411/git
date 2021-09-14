@@ -729,7 +729,7 @@ if(CURL_FOUND)
 	endif()
 endif()
 
-parse_makefile_for_executables(git_builtin_extra "BUILT_INS")
+parse_makefile_for_executables(git_builtin_extra "BUILT_INS_EXTRA")
 
 option(SKIP_DASHED_BUILT_INS "Skip hardlinking the dashed versions of the built-ins")
 

@@ -574,6 +574,7 @@ PTHREAD_LIBS = -lpthread
 # Guard against environment variables
 BUILTIN_OBJS =
 BUILT_INS =
+BUILT_INS_EXTRA =
 COMPAT_CFLAGS =
 COMPAT_OBJS =
 EXCLUDED_PROGRAMS =
@@ -771,23 +772,23 @@ TEST_PROGRAMS_NEED_X += test-tool
 
 TEST_PROGRAMS = $(patsubst %,t/helper/%$X,$(TEST_PROGRAMS_NEED_X))
 
+BUILT_INS += $(patsubst builtin/%.o,git-%$X,$(BUILTIN_OBJS))
 # List built-in command $C whose implementation cmd_$C() is not in
 # builtin/$C.o but is linked in as part of some other command.
-BUILT_INS += $(patsubst builtin/%.o,git-%$X,$(BUILTIN_OBJS))
-
-BUILT_INS += git-cherry$X
-BUILT_INS += git-cherry-pick$X
-BUILT_INS += git-format-patch$X
-BUILT_INS += git-fsck-objects$X
-BUILT_INS += git-init$X
-BUILT_INS += git-maintenance$X
-BUILT_INS += git-merge-subtree$X
-BUILT_INS += git-restore$X
-BUILT_INS += git-show$X
-BUILT_INS += git-stage$X
-BUILT_INS += git-status$X
-BUILT_INS += git-switch$X
-BUILT_INS += git-whatchanged$X
+BUILT_INS_EXTRA += git-cherry$X
+BUILT_INS_EXTRA += git-cherry-pick$X
+BUILT_INS_EXTRA += git-format-patch$X
+BUILT_INS_EXTRA += git-fsck-objects$X
+BUILT_INS_EXTRA += git-init$X
+BUILT_INS_EXTRA += git-maintenance$X
+BUILT_INS_EXTRA += git-merge-subtree$X
+BUILT_INS_EXTRA += git-restore$X
+BUILT_INS_EXTRA += git-show$X
+BUILT_INS_EXTRA += git-stage$X
+BUILT_INS_EXTRA += git-status$X
+BUILT_INS_EXTRA += git-switch$X
+BUILT_INS_EXTRA += git-whatchanged$X
+BUILT_INS += $(BUILT_INS_EXTRA)
 
 # what 'all' will build but not install in gitexecdir
 OTHER_PROGRAMS = git$X
@@ -3429,6 +3430,7 @@ ifdef DEVELOPER
 ifeq ($(filter no-assert-makefile,$(DEVOPTS)),)
 $(call check-sort,BINDIR_PROGRAMS_NEED_X)
 $(call check-sort,BUILTIN_OBJS)
+$(call check-sort,BUILT_INS_EXTRA)
 $(call check-sort,FUZZ_OBJS)
 $(call check-sort,FUZZ_PROGRAMS)
 $(call check-sort,GENERATED_H)
