@@ -591,6 +591,8 @@ FUZZ_OBJS =
 FUZZ_PROGRAMS =
 GENERATED_H =
 GIT_OBJS =
+INSTALL_BINDIR_PROGRAMS =
+INSTALL_BINDIR_XPROGRAMS =
 LIB_COMPAT_OBJS =
 LIB_H =
 LIB_H_GLOB =
@@ -609,6 +611,9 @@ TAGS_SOURCE_H =
 TAGS_SOURCE_PERL =
 TAGS_SOURCE_S =
 TAGS_SOURCE_SH =
+TEST_BINDIR_PROGRAMS =
+TEST_BINDIR_PROGRAMS_NEED_X =
+TEST_BIN_WRAPPERS_PROGRAMS =
 TEST_BUILTINS_OBJS =
 TEST_OBJS =
 TEST_PROGRAMS_NEED_X =
@@ -813,6 +818,18 @@ BINDIR_PROGRAMS_NEED_X += git-upload-archive
 BINDIR_PROGRAMS_NEED_X += git-upload-pack
 
 BINDIR_PROGRAMS_NO_X += git-cvsserver
+
+INSTALL_BINDIR_XPROGRAMS += $(patsubst %,%$X,$(BINDIR_PROGRAMS_NEED_X))
+INSTALL_BINDIR_PROGRAMS += $(INSTALL_BINDIR_XPROGRAMS) $(BINDIR_PROGRAMS_NO_X)
+
+# We have bin-wrappers for programs that we don't install
+TEST_BINDIR_PROGRAMS_NEED_X += $(BINDIR_PROGRAMS_NEED_X)
+TEST_BINDIR_PROGRAMS_NEED_X += $(TEST_PROGRAMS_NEED_X)
+
+TEST_BINDIR_PROGRAMS += $(TEST_BINDIR_PROGRAMS_NEED_X)
+TEST_BINDIR_PROGRAMS += $(BINDIR_PROGRAMS_NO_X)
+
+TEST_BIN_WRAPPERS_PROGRAMS += $(patsubst %,bin-wrappers/%,$(TEST_BINDIR_PROGRAMS))
 
 # Set paths to tools early so that they can be used for version tests.
 ifndef SHELL_PATH
@@ -2946,9 +2963,7 @@ GIT-PYTHON-VARS: FORCE
             fi
 endif
 
-test_bindir_programs := $(patsubst %,bin-wrappers/%,$(BINDIR_PROGRAMS_NEED_X) $(BINDIR_PROGRAMS_NO_X) $(TEST_PROGRAMS_NEED_X))
-
-all:: $(TEST_PROGRAMS) $(test_bindir_programs)
+all:: $(TEST_PROGRAMS) $(TEST_BIN_WRAPPERS_PROGRAMS)
 
 bin-wrappers/%: wrap-for-bin.sh
 	@mkdir -p bin-wrappers
@@ -3080,9 +3095,6 @@ mergetools_instdir = $(prefix)/$(mergetoolsdir)
 endif
 mergetools_instdir_SQ = $(subst ','\'',$(mergetools_instdir))
 
-install_bindir_xprograms := $(patsubst %,%$X,$(BINDIR_PROGRAMS_NEED_X))
-install_bindir_programs := $(install_bindir_xprograms) $(BINDIR_PROGRAMS_NO_X)
-
 .PHONY: profile-install profile-fast-install
 profile-install: profile
 	$(MAKE) install
@@ -3098,9 +3110,8 @@ install: all
 	$(INSTALL) $(INSTALL_STRIP) $(PROGRAMS) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
 	$(INSTALL) $(SCRIPTS) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
 	$(INSTALL) -m 644 $(SCRIPT_LIB) '$(DESTDIR_SQ)$(gitexec_instdir_SQ)'
-	$(INSTALL) $(INSTALL_STRIP) $(install_bindir_xprograms) '$(DESTDIR_SQ)$(bindir_SQ)'
+	$(INSTALL) $(INSTALL_STRIP) $(INSTALL_BINDIR_XPROGRAMS) '$(DESTDIR_SQ)$(bindir_SQ)'
 	$(INSTALL) $(BINDIR_PROGRAMS_NO_X) '$(DESTDIR_SQ)$(bindir_SQ)'
-
 ifdef MSVC
 	# We DO NOT install the individual foo.o.pdb files because they
 	# have already been rolled up into the exe's pdb file.
@@ -3142,7 +3153,7 @@ endif
 	execdir=$$(cd '$(DESTDIR_SQ)$(gitexec_instdir_SQ)' && pwd) && \
 	destdir_from_execdir_SQ=$$(echo '$(gitexecdir_relative_SQ)' | sed -e 's|[^/][^/]*|..|g') && \
 	{ test "$$bindir/" = "$$execdir/" || \
-	  for p in git$X $(filter $(install_bindir_programs),$(ALL_PROGRAMS)); do \
+	  for p in git$X $(filter $(INSTALL_BINDIR_PROGRAMS),$(ALL_PROGRAMS)); do \
 		$(RM) "$$execdir/$$p" && \
 		test -n "$(INSTALL_SYMLINKS)" && \
 		ln -s "$$destdir_from_execdir_SQ/$(bindir_relative_SQ)/$$p" "$$execdir/$$p" || \
@@ -3151,7 +3162,7 @@ endif
 		  cp "$$bindir/$$p" "$$execdir/$$p" || exit; } \
 	  done; \
 	} && \
-	for p in $(filter $(install_bindir_programs),$(BUILT_INS)); do \
+	for p in $(filter $(INSTALL_BINDIR_PROGRAMS),$(BUILT_INS)); do \
 		$(RM) "$$bindir/$$p" && \
 		test -n "$(INSTALL_SYMLINKS)" && \
 		ln -s "git$X" "$$bindir/$$p" || \
@@ -3264,7 +3275,7 @@ ARTIFACTS_TAR += $(ALL_COMMANDS_TO_INSTALL)
 ARTIFACTS_TAR += $(SCRIPT_LIB)
 ARTIFACTS_TAR += $(OTHER_PROGRAMS)
 ARTIFACTS_TAR += $(TEST_PROGRAMS)
-ARTIFACTS_TAR += $(test_bindir_programs)
+ARTIFACTS_TAR += $(TEST_BINDIR_PROGRAMS)
 ifndef NO_GETTEXT
 ARTIFACTS_TAR += $(MOFILES)
 endif
