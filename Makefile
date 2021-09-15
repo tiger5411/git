@@ -604,6 +604,7 @@ SCRIPT_SH =
 TAGS_SOURCE =
 TAGS_SOURCE_C =
 TAGS_SOURCE_H =
+TAGS_SOURCE_PERL =
 TAGS_SOURCE_S =
 TAGS_SOURCE_SH =
 TEST_BUILTINS_OBJS =
@@ -2808,6 +2809,11 @@ TAGS_SOURCE_SH += t/perf/perf-lib.sh
 TAGS_SOURCE_SH += t/test-lib-functions.sh
 TAGS_SOURCE_SH += t/test-lib.sh
 TAGS_SOURCE_SH += t/valgrind/*.sh
+# *.perl and *.pm
+TAGS_SOURCE_PERL =
+TAGS_SOURCE_PERL += $(LOCALIZED_PERL)
+TAGS_SOURCE_PERL += $(LIB_PERL)
+TAGS_SOURCE_PERL += $(LIB_CPAN)
 # The $(sort) is because there's some duplicaes within the list,
 # e.g. due to $(SCRIPT_SH) overlapping with *.sh. THere's no
 # duplication between them.
@@ -2815,6 +2821,7 @@ TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_C)))
 TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_H)))
 TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_S)))
 TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_SH)))
+TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_PERL)))
 
 $(ETAGS_TARGET): $(TAGS_SOURCE)
 	$(QUIET_GEN)$(RM) $@+ && \
