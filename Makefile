@@ -572,12 +572,13 @@ export TCL_PATH TCLTK_PATH
 PTHREAD_LIBS = -lpthread
 
 # Guard against environment variables
+ALL_COMPAT_C_GLOB =
 ALL_COMPAT_H =
 ALL_COMPAT_H_GLOB =
+ALL_COMPAT_S_GLOB =
 BUILTIN_OBJS =
 BUILT_INS =
 BUILT_INS_EXTRA =
-LIB_H_GLOB =
 COMPAT_CFLAGS =
 COMPAT_H =
 COMPAT_H_GLOB =
@@ -590,6 +591,7 @@ GENERATED_H =
 GIT_OBJS =
 LIB_COMPAT_OBJS =
 LIB_H =
+LIB_H_GLOB =
 LIB_OBJS =
 LIB_OBJS_NO_COMPAT_OBJS =
 OBJECTS =
@@ -599,6 +601,11 @@ SCRIPT_LIB =
 SCRIPT_PERL =
 SCRIPT_PYTHON =
 SCRIPT_SH =
+TAGS_SOURCE =
+TAGS_SOURCE_C =
+TAGS_SOURCE_H =
+TAGS_SOURCE_S =
+TAGS_SOURCE_SH =
 TEST_BUILTINS_OBJS =
 TEST_OBJS =
 TEST_PROGRAMS_NEED_X =
@@ -1762,12 +1769,16 @@ ifdef OPENSSL_SHA1
 	BASIC_CFLAGS += -DSHA1_OPENSSL
 else
 
+ALL_COMPAT_C_GLOB += block-sha1/*.c
 ALL_COMPAT_H_GLOB += block-sha1/*.h
 ifdef BLK_SHA1
 	LIB_COMPAT_OBJS += block-sha1/sha1.o
 	COMPAT_H_GLOB += block-sha1/*.h
 	BASIC_CFLAGS += -DSHA1_BLK
 else
+
+ALL_COMPAT_C_GLOB += ppc/*.c
+ALL_COMPAT_S_GLOB += ppc/*.S
 ALL_COMPAT_H_GLOB += ppc/*.h
 ifdef PPC_SHA1
 	LIB_COMPAT_OBJS += ppc/sha1.o ppc/sha1ppc.o
@@ -1790,7 +1801,10 @@ $(error Only set DC_SHA1_EXTERNAL or DC_SHA1_SUBMODULE, not both)
 	BASIC_CFLAGS += -DDC_SHA1_EXTERNAL
 	EXTLIBS += -lsha1detectcoll
 else
+
+ALL_COMPAT_C_GLOB += sha1collisiondetection/lib/*.c
 ALL_COMPAT_H_GLOB += sha1collisiondetection/lib/*.h
+ALL_COMPAT_C_GLOB += sha1dc/*.c
 ALL_COMPAT_H_GLOB += sha1dc/*.h
 ifdef DC_SHA1_SUBMODULE
 	LIB_COMPAT_OBJS += sha1collisiondetection/lib/sha1.o
@@ -1813,6 +1827,7 @@ endif
 endif
 endif
 
+ALL_COMPAT_C_GLOB += sha256/block/*.c
 ALL_COMPAT_H_GLOB += sha256/*.h
 ALL_COMPAT_H_GLOB += sha256/block/*.h
 ifdef OPENSSL_SHA256
@@ -2679,7 +2694,8 @@ XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell \
 	--keyword=gettextln --keyword=eval_gettextln
 XGETTEXT_FLAGS_PERL = $(XGETTEXT_FLAGS) --language=Perl \
 	--keyword=__ --keyword=N__ --keyword="__n:1,2"
-LOCALIZED_C = $(C_OBJ:o=c) $(LIB_H) $(COMPAT_H) $(GENERATED_H)
+LOCALIZED_C = $(C_OBJ:o=c)
+LOCALIZED_H = $(LIB_H) $(COMPAT_H) $(GENERATED_H)
 LOCALIZED_SH = $(SCRIPT_SH)
 LOCALIZED_SH += git-sh-setup.sh
 LOCALIZED_PERL = $(SCRIPT_PERL)
@@ -2703,13 +2719,13 @@ po/git.pot: $(GENERATED_H) FORCE
 	# want to have any local change.
 	git diff --quiet HEAD && git diff --quiet --cached
 
-	@for s in $(LOCALIZED_C) $(LOCALIZED_SH) $(LOCALIZED_PERL); \
+	@for s in $(LOCALIZED_C) $(LOCALIZED_H) $(LOCALIZED_SH) $(LOCALIZED_PERL); \
 	do \
 		sed -e 's|PRItime|PRIuMAX|g' <"$$s" >"$$s+" && \
 		cat "$$s+" >"$$s" && rm "$$s+"; \
 	done
 
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ $(XGETTEXT_FLAGS_C) $(LOCALIZED_C)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ $(XGETTEXT_FLAGS_C) $(LOCALIZED_C) $(LOCALIZED_H)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_SH) \
 		$(LOCALIZED_SH)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_PERL) \
@@ -2759,39 +2775,60 @@ perl/build/man/man3/Git.3pm: perl/Git.pm
 	$(QUIET_GEN)mkdir -p $(dir $@) && \
 	pod2man $< $@
 
-FIND_SOURCE_FILES = ( \
-	git ls-files \
-		'*.[hcS]' \
-		'*.sh' \
-		':!*[tp][0-9][0-9][0-9][0-9]*' \
-		':!contrib' \
-		2>/dev/null || \
-	$(FIND) . \
-		\( -name .git -type d -prune \) \
-		-o \( -name '[tp][0-9][0-9][0-9][0-9]*' -prune \) \
-		-o \( -name contrib -type d -prune \) \
-		-o \( -name build -type d -prune \) \
-		-o \( -name 'trash*' -type d -prune \) \
-		-o \( -name '*.[hcS]' -type f -print \) \
-		-o \( -name '*.sh' -type f -print \) \
-		| sed -e 's|^\./||' \
-	)
+## Source files to feed to "etags", "spatch" and similar tree-wide
+## utilities. Let's be more inclusive than not here.
+# *.c
+TAGS_SOURCE_C += $(LOCALIZED_C)
+TAGS_SOURCE_C += compat/*.c
+TAGS_SOURCE_C += compat/*/*.c
+TAGS_SOURCE_C += $(ALL_COMPAT_C_GLOB))
+# *.h
+TAGS_SOURCE_H += $(ALL_COMPAT_H)
+TAGS_SOURCE_H += $(ALL_COMPAT_H_GLOB))
+TAGS_SOURCE_H += $(LOCALIZED_H)
+TAGS_SOURCE_H += t/helper/*.h
+# *.S
+TAGS_SOURCE_S += $(ALL_COMPAT_S_GLOB))
+# *.sh
+TAGS_SOURCE_SH += $(LOCALIZED_SH)
+# *.sh (globs)
+TAGS_SOURCE_SH += *.sh
+TAGS_SOURCE_SH += Documentation/*.sh
+TAGS_SOURCE_SH += Documentation/*/*.sh
+TAGS_SOURCE_SH += ci/*.sh ci/*/*.sh
+TAGS_SOURCE_SH += git-gui/*.sh git-gui/*/*.sh git-gui/*/*/*.sh
+TAGS_SOURCE_SH += gitk-git/*/*.sh
+TAGS_SOURCE_SH += t/aggregate-results.sh
+TAGS_SOURCE_SH += t/annotate-tests.sh
+TAGS_SOURCE_SH += t/helper/*.sh
+TAGS_SOURCE_SH += t/interop/interop-lib.sh
+TAGS_SOURCE_SH += t/lib-*.sh
+TAGS_SOURCE_SH += t/perf/lib-*.sh
+TAGS_SOURCE_SH += t/perf/perf-lib.sh
+TAGS_SOURCE_SH += t/test-lib-functions.sh
+TAGS_SOURCE_SH += t/test-lib.sh
+TAGS_SOURCE_SH += t/valgrind/*.sh
+# The $(sort) is because there's some duplicaes within the list,
+# e.g. due to $(SCRIPT_SH) overlapping with *.sh. THere's no
+# duplication between them.
+TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_C)))
+TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_H)))
+TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_S)))
+TAGS_SOURCE += $(sort $(wildcard $(TAGS_SOURCE_SH)))
 
-FOUND_SOURCE_FILES = $(shell $(FIND_SOURCE_FILES))
-
-$(ETAGS_TARGET): $(FOUND_SOURCE_FILES)
+$(ETAGS_TARGET): $(TAGS_SOURCE)
 	$(QUIET_GEN)$(RM) $@+ && \
-	echo $(FOUND_SOURCE_FILES) | xargs etags -a -o $@+ && \
+	echo $(TAGS_SOURCE) | xargs etags -a -o $@+ && \
 	mv $@+ $@
 
-tags: $(FOUND_SOURCE_FILES)
+tags: $(TAGS_SOURCE)
 	$(QUIET_GEN)$(RM) $@+ && \
-	echo $(FOUND_SOURCE_FILES) | xargs ctags -a -o $@+ && \
+	echo $(TAGS_SOURCE) | xargs ctags -a -o $@+ && \
 	mv $@+ $@
 
-cscope.out: $(FOUND_SOURCE_FILES)
+cscope.out: $(TAGS_SOURCE)
 	$(QUIET_GEN)$(RM) $@+ && \
-	echo $(FOUND_SOURCE_FILES) | xargs cscope -f$@+ -b && \
+	echo $(TAGS_SOURCE) | xargs cscope -f$@+ -b && \
 	mv $@+ $@
 
 .PHONY: cscope
@@ -2988,8 +3025,7 @@ check: $(GENERATED_H)
 		exit 1; \
 	fi
 
-FOUND_C_SOURCES = $(filter %.c,$(FOUND_SOURCE_FILES))
-COCCI_SOURCES = $(filter-out $(THIRD_PARTY_SOURCES),$(FOUND_C_SOURCES))
+COCCI_SOURCES = $(sort $(wildcard $(filter-out $(THIRD_PARTY_SOURCES),$(TAGS_SOURCE_C) $(TAGS_SOURCE_H))))
 
 %.cocci.patch: %.cocci $(COCCI_SOURCES)
 	$(QUIET_SPATCH) \
