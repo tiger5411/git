@@ -2278,13 +2278,18 @@ $(COMMAND_LIST_GEN): .build/command-list.h.d/%.gen: Documentation/%.txt
 	$(QUIET)grep "^$(patsubst .build/command-list.h.d/%.gen,%,$@) " command-list.txt >$@.txt && \
 	./generate-cmdlist.sh --entry-only $@.txt >$@
 
+.build/command-list.h.gen: $(COMMAND_LIST_GEN)
+	$(QUIET)LC_ALL=C sort $(COMMAND_LIST_GEN) >$@ && \
+	test $$(wc -l <$@) -eq $(words $(COMMAND_LIST_GEN))
+
 command-list.h: $(COMMAND_LIST_GEN)
 command-list.h: generate-cmdlist.sh
 command-list.h: command-list.txt
+command-list.h: .build/command-list.h.gen
 	$(QUIET_GEN){ \
 		$(SHELL_PATH) ./generate-cmdlist.sh --header-only command-list.txt && \
 		echo "static struct cmdname_help command_list[] = {" && \
-		LC_ALL=C sort $(COMMAND_LIST_GEN) && \
+		cat $< && \
 		echo "};"; \
 	} >$@
 

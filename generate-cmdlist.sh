@@ -23,7 +23,7 @@ category_list () {
 }
 
 get_synopsis () {
-	head -n 10 "Documentation/$1.txt" |
+	head -n 6 "Documentation/$1.txt" |
 	sed -n '
 		/^NAME/,/'"$1"'/H
 		${
