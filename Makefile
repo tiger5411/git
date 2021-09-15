@@ -3499,9 +3499,10 @@ define check-sort-template
 ifeq ($$($1),)
 $$(error "$1 is an empty list, typo?")
 endif
-SORTED_$1 = $$(sort $$($1))
-ifneq ($$($1),$$(SORTED_$1))
-$$(error "please sort and de-duplicate $1!")
+SORTED_$1 = $((subst $X,,$$(subst -,,$$(strip $$(sort $$($1))))))
+UNSORTED_$1 = $((subst $X,,$$(subst -,,$$(strip $$($1)))))
+ifneq ($$(UNSORTED_$1),$$(SORTED_$1))
+$$(error "please sort and de-duplicate $1! Got <<$$(UNSORTED_$1)>>; Expected <<$$(SORTED_$1)>>")
 endif
 endef
 check-sort = $(eval $(call check-sort-template,$1))
