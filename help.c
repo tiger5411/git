@@ -57,9 +57,6 @@ static void extract_cmds(struct cmdname_help **p_cmds, uint32_t mask)
 	int i, nr = 0;
 	struct cmdname_help *cmds;
 
-	if (ARRAY_SIZE(command_list) == 0)
-		BUG("empty command_list[] is a sign of broken generate-cmdlist.sh");
-
 	ALLOC_ARRAY(cmds, ARRAY_SIZE(command_list) + 1);
 
 	for (i = 0; i < ARRAY_SIZE(command_list); i++) {
