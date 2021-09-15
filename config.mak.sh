@@ -88,7 +88,7 @@ DEFAULT_TEST_TARGET=prove
 #GIT_PROVE_OPTS=--jobs 8 --state=failed,slow,save --timer
 
 ## The optional "scalar" (MSFT "git-ng") interface
-CONTRIB_SCALAR = Y
+INSTALL_SCALAR = Y
 EOF
 
 if ! diff -u $toplevel/config.mak $tmp
