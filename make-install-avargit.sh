@@ -8,9 +8,8 @@ only_sanity=
 range_diff_to=origin/master
 only_range_diff=
 only_merge=
+merge_full_tests=
 no_merge_compile=
-only_compile=
-only_basic_test=
 only_test=
 force_push=
 auto_rebase=
@@ -38,14 +37,11 @@ do
 	--only-merge)
 		only_merge=yes
 		;;
+	--merge-full-tests)
+		merge_full_tests=yes
+		;;
 	--no-merge-compile)
 		no_merge_compile=yes
-		;;
-	--only-compile)
-		only_compile=yes
-		;;
-	--only-basic-test)
-		only_basic_test=yes
 		;;
 	--only-test)
 		only_test=yes
@@ -111,6 +107,68 @@ reset_it() {
 	git merge --abort || :
 	git reset --hard @{u}
 	rm -f version
+}
+
+test_compile () {
+	full=$1
+
+	# The very smallest sanity checks, in the merge loop (usually)
+	make -j $(nproc) git-objs check-docs
+
+	if test -z "$full"
+	then
+		return
+	fi
+
+	# Compile
+	make -j $(nproc) all
+	make -j $(nproc) sparse hdr-check
+	make -j $(nproc) man
+
+	# Test sanity
+	make -C t test-lint
+
+	# Remove any past test state
+	make -C t clean
+	GIT_PROVE_OPTS="--state=save --jobs=$(nproc) --timer"
+	export GIT_PROVE_OPTS
+
+	# First run a smaller subset of tests, likelier to have
+	# failures. But maybe we're on master, or otherwise have no
+	# "t/" modifications, so "test -s".aoo
+	git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
+	tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
+	if test -s /tmp/git.build-tests.tr
+	then
+		(
+			cd t
+			if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS"
+			then
+				suggest_bisect "$(git rev-parse HEAD)"
+			fi
+		)
+	fi
+
+	# Run all tests
+	(
+		cd t
+		make clean-except-prove-cache
+		if ! GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+		then
+			suggest_bisect "$(git rev-parse HEAD)"
+		fi
+	)
+
+	# Run special test setups
+	make -j $(nproc) SANITIZE=leak
+	(
+		cd t
+		make clean-except-prove-cache
+		if ! GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
+		then
+			suggest_bisect "$(git rev-parse HEAD)"
+		fi
+	)
 }
 
 suggest_bisect() {
@@ -399,69 +457,50 @@ reset_it
 # Configure
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
+# Test master first, for basic sanity
+tested_master=
+
 # Merge it all together
 set -x
 while read -r branch
 do
+	if test -n "$merge_full_tests" && test -z "$tested_master"
+	then
+		# Exhaustive compile, tests etc.
+		test_compile full
+		tested_master=t
+	fi
 	# If we've got a previous resolution, the merge --continue
 	# will continue the merge. TODO: make --continue support
 	# --no-edit
 	git merge --no-edit $branch || EDITOR=cat git merge --continue
 
 	# Make sure this merge at least compiles
-	if test -z "$no_merge_compile"
+	if test -n "$merge_full_tests"
 	then
-		make -j $(nproc) git-objs check-docs
+		# Exhaustive compile, tests etc.
+		test_compile full
+	elif test -z "$no_merge_compile"
+	then
+		# Only the basic compile, test etc.
+		test_compile
+	fi
+
+	if ! test -f config.mak
+	then
+		echo "WTF? config.mak gone after merging $branch?"
+		exit 1
 	fi
 done <$series_list
 test -n "$only_merge" && exit
 
-# Compile
-make -j $(nproc) all check-docs
-make -j $(nproc) sparse hdr-check
-make -j $(nproc) man
-test -n "$only_compile" && exit
+# Compile, unless we were doing it in the merge loop
+if test -z "$merge_full_tests"
+then
+	test_compile full
+fi
 
-# Test sanity
-make -C t test-lint
-
-# Remove any past test state
-make -C t clean
-GIT_PROVE_OPTS="--state=save --jobs=$(nproc) --timer"
-export GIT_PROVE_OPTS
-
-# First run a smaller subset of tests, likelier to have failures:
-git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
-tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
-(
-	cd t
-	if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS"
-	then
-		suggest_bisect "$(git rev-parse HEAD)"
-	fi
-)
-test -n "$only_basic_test" && exit
-
-# Run all tests
-(
-	cd t
-	make clean-except-prove-cache
-	if ! GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
-	then
-		suggest_bisect "$(git rev-parse HEAD)"
-	fi
-)
-
-# Run special test setups
-make -j $(nproc) SANITIZE=leak
-(
-	cd t
-	make clean-except-prove-cache
-	if ! GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
-	then
-		suggest_bisect "$(git rev-parse HEAD)"
-	fi
-)
+# Abort before installation?
 test -n "$only_test" && exit
 
 # Install it

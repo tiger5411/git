@@ -70,7 +70,7 @@ NO_TCLTK=Y
 
 # PCRE
 USE_LIBPCRE=Y
-LIBPCREDIR=\$(HOME)/g/pcre2/inst
+#LIBPCREDIR=\$(HOME)/g/pcre2/inst
 
 # No gettext makes some things (e.g. send-email) faster & cheaper
 NO_GETTEXT = YesPlease
