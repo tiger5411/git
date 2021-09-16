@@ -7,8 +7,7 @@ test_description='CRLF conversion all combinations'
 compare_files () {
 	tr '\015\000' QN <"$1" >"$1".expect &&
 	tr '\015\000' QN <"$2" | tr -d 'Z' >"$2".actual &&
-	test_cmp "$1".expect "$2".actual &&
-	rm "$1".expect "$2".actual
+	test_cmp "$1".expect "$2".actual
 }
 
 compare_ws_file () {
@@ -17,8 +16,7 @@ compare_ws_file () {
 	act=$pfx.actual.$3
 	tr '\015\000abcdef0123456789' QN00000000000000000 <"$2" >"$exp" &&
 	tr '\015\000abcdef0123456789' QN00000000000000000 <"$3" >"$act" &&
-	test_cmp "$exp" "$act" &&
-	rm "$exp" "$act"
+	test_cmp "$exp" "$act"
 }
 
 create_gitattributes () {
