@@ -141,9 +141,15 @@ suggest_bisect() {
 		exit 0
 	fi
 
-	if ! make -j $(nproc) all check-docs
+	~/g/git.meta/config.mak.sh --prefix /home/avar/local
+	if ! make -j \$(nproc) all check-docs
 	then
-		exit 125
+		git clean -dxf
+		~/g/git.meta/config.mak.sh --prefix /home/avar/local
+		if ! make -j \$(nproc) all check-docs
+		then
+			exit 125
+		fi
 	fi
 
 	(
