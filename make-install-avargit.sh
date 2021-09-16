@@ -454,6 +454,17 @@ test -n "$only_basic_test" && exit
 		suggest_bisect "$new_version"
 	fi
 )
+
+# Run special test setups
+make -j $(nproc) SANITIZE=leak
+(
+	cd t
+	make clean-except-prove-cache
+	if ! GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
+	then
+		suggest_bisect "$new_version"
+	fi
+)
 test -n "$only_test" && exit
 
 # Install it
