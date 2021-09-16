@@ -430,9 +430,6 @@ make -C t clean
 GIT_PROVE_OPTS="--state=save --jobs=$(nproc) --timer"
 export GIT_PROVE_OPTS
 
-# This version
-new_version=$(git rev-parse HEAD)
-
 # First run a smaller subset of tests, likelier to have failures:
 git diff --diff-filter=ACMR --name-only --relative=t/ -p @{u}.. -- t/t[0-9]*.sh >/tmp/git.build-tests
 tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
@@ -440,7 +437,7 @@ tr '\n' ' ' </tmp/git.build-tests >/tmp/git.build-tests.tr
 	cd t
 	if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS"
 	then
-		suggest_bisect "$new_version"
+		suggest_bisect "$(git rev-parse HEAD)"
 	fi
 )
 test -n "$only_basic_test" && exit
@@ -451,7 +448,7 @@ test -n "$only_basic_test" && exit
 	make clean-except-prove-cache
 	if ! GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 	then
-		suggest_bisect "$new_version"
+		suggest_bisect "$(git rev-parse HEAD)"
 	fi
 )
 
@@ -462,7 +459,7 @@ make -j $(nproc) SANITIZE=leak
 	make clean-except-prove-cache
 	if ! GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
 	then
-		suggest_bisect "$new_version"
+		suggest_bisect "$(git rev-parse HEAD)"
 	fi
 )
 test -n "$only_test" && exit
@@ -470,7 +467,7 @@ test -n "$only_test" && exit
 # Install it
 new_version=$(git rev-parse HEAD)
 new_tagname=$(tag_name)
-new_tag=$(tag_it "$new_version" "$new_tagname")
+new_tag=$(tag_it "$(git rev-parse HEAD)" "$new_tagname")
 last_version=$(git rev-parse avar/private)
 make -j $(nproc) install install-man
 
