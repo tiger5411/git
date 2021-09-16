@@ -287,7 +287,6 @@ checkout_files () {
 	lfmixcr=$1 ; shift
 	crlfnul=$1 ; shift
 	create_gitattributes "$attr" $ident $aeol &&
-	git config core.autocrlf $crlf &&
 	pfx=eol_${ceol}_crlf_${crlf}_attr_${attr}_ &&
 	for f in LF CRLF LF_mix_CR CRLF_mix_LF LF_nul
 	do
@@ -561,6 +560,8 @@ do
 	do
 		for crlf in true false input
 		do
+			git config core.autocrlf $crlf &&
+
 			# -text overrides core.autocrlf and core.eol
 			# text and eol=crlf or eol=lf override core.autocrlf and core.eol
 			checkout_files -text "$id" ""     "$crlf" "$ceol"  LF    CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
@@ -575,17 +576,22 @@ do
 		done
 
 		# core.autocrlf false, different core.eol
+		git config core.autocrlf false &&
 		checkout_files   ""    "$id" ""     false   "$ceol"  LF    CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
 		# core.autocrlf true
+		git config core.autocrlf true &&
 		checkout_files   ""    "$id" ""     true    "$ceol"  CRLF  CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
 		# text: core.autocrlf = true overrides core.eol
 		checkout_files   auto  "$id" ""     true    "$ceol"  CRLF  CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
 		checkout_files   text  "$id" ""     true    "$ceol"  CRLF  CRLF  CRLF         CRLF_mix_CR  CRLF_nul
 		# text: core.autocrlf = input overrides core.eol
+		git config core.autocrlf input &&
 		checkout_files   text  "$id" ""     input   "$ceol"  LF    CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
 		checkout_files   auto  "$id" ""     input   "$ceol"  LF    CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
 		# text=auto + eol=XXX
 	done
+
+	git config core.autocrlf false &&
 	# text: core.autocrlf=false uses core.eol
 	checkout_files     text  "$id" ""     false   crlf     CRLF  CRLF  CRLF         CRLF_mix_CR  CRLF_nul
 	checkout_files     text  "$id" ""     false   lf       LF    CRLF  CRLF_mix_LF  LF_mix_CR    LF_nul
