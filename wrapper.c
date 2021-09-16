@@ -145,6 +145,21 @@ void *xcalloc(size_t nmemb, size_t size)
 	return ret;
 }
 
+int xsetenv(const char *name, const char *value, int overwrite)
+{
+	if (setenv(name, value, overwrite))
+		die_errno("setenv(%s, '%s', %d) failed", name ? name : "(null)",
+			  value, overwrite);
+	return 0;
+}
+
+int xunsetenv(const char *name)
+{
+	if (!unsetenv(name))
+		die_errno("unsetenv(%s) failed", name ? name : "(null)");
+	return 0;
+}
+
 /*
  * Limit size of IO chunks, because huge chunks only cause pain.  OS X
  * 64-bit is buggy, returning EINVAL if len >= INT_MAX; and even in
