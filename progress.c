@@ -16,6 +16,7 @@
 #include "trace.h"
 #include "utf8.h"
 #include "config.h"
+#include <unistd.h>
 
 #define TP_IDX_MAX      8
 
@@ -202,8 +203,18 @@ void display_throughput(struct progress *progress, uint64_t total)
 		display(progress, progress->last_value, NULL);
 }
 
+static int no_bug_please;
+void no_progress_bug(void)
+{
+	no_bug_please = 1;
+}
+
 void display_progress(struct progress *progress, uint64_t n)
 {
+	if (getpid() != gettid() && getenv("GIT_TEST_BUG_DISPLAY") &&
+	    (getenv("GIT_TEST_BUG_DISPLAY_HARDER") || !no_bug_please))
+		BUG("display: pid = %d, tid = %d: %s\n", getpid(), gettid(),
+		    progress ? progress->title : "N/A");
 	if (progress)
 		display(progress, n, NULL);
 }
@@ -281,6 +292,11 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	progress->split = 0;
 	set_progress_signal(progress);
 	trace2_region_enter("progress", title, the_repository);
+
+	if (getpid() != gettid() && getenv("GIT_TEST_BUG_START"))
+		BUG("start: pid = %d, tid = %d: %s\n", getpid(), gettid(),
+		    title ? title : "N/A");
+
 	return progress;
 }
 
@@ -334,6 +350,11 @@ static void finish_if_sparse(struct progress *progress)
 
 void stop_progress(struct progress **p_progress)
 {
+	no_bug_please = 0;
+	if (getpid() != gettid() && getenv("GIT_TEST_BUG_STOP"))
+		BUG("stop: pid = %d, tid = %d: %s\n", getpid(), gettid(),
+		    ((p_progress && *p_progress) ? (*p_progress)->title : "N/A"));
+
 	if (!p_progress)
 		BUG("don't provide NULL to stop_progress");
 

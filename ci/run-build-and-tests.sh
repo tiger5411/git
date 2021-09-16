@@ -5,6 +5,9 @@
 
 . ${0%/*}/lib.sh
 
+export GIT_TEST_BUG_START=true
+export GIT_TEST_BUG_STOP=true
+
 case "$CI_OS_NAME" in
 windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
 *) ln -s "$cache_dir/.prove" t/.prove;;

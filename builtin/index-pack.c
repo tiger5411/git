@@ -1229,6 +1229,7 @@ static void resolve_deltas(void)
 	QSORT(ofs_deltas, nr_ofs_deltas, compare_ofs_delta_entry);
 	QSORT(ref_deltas, nr_ref_deltas, compare_ref_delta_entry);
 
+	no_progress_bug();
 	if (verbose || show_resolving_progress)
 		progress = start_progress(_("Resolving deltas"),
 					  nr_ref_deltas + nr_ofs_deltas);

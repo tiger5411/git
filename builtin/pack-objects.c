@@ -3072,6 +3072,7 @@ static void prepare_pack(int window, int depth)
 	if (nr_deltas && n > 1) {
 		unsigned nr_done = 0;
 
+		no_progress_bug();
 		if (progress)
 			progress_state = start_progress(_("Compressing objects"),
 							nr_deltas);
