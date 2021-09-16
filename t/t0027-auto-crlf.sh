@@ -127,21 +127,10 @@ commit_chk_wrnNNO () {
 	done
 
 	test_expect_success "commit NNO files crlf=$crlf attr=$attr LF" '
-		check_warning "$lfwarn" ${pfx}_LF.err
-	'
-	test_expect_success "commit NNO files attr=$attr aeol=$aeol crlf=$crlf CRLF" '
-		check_warning "$crlfwarn" ${pfx}_CRLF.err
-	'
-
-	test_expect_success "commit NNO files attr=$attr aeol=$aeol crlf=$crlf CRLF_mix_LF" '
-		check_warning "$lfmixcrlf" ${pfx}_CRLF_mix_LF.err
-	'
-
-	test_expect_success "commit NNO files attr=$attr aeol=$aeol crlf=$crlf LF_mix_cr" '
-		check_warning "$lfmixcr" ${pfx}_LF_mix_CR.err
-	'
-
-	test_expect_success "commit NNO files attr=$attr aeol=$aeol crlf=$crlf CRLF_nul" '
+		check_warning "$lfwarn" ${pfx}_LF.err &&
+		check_warning "$crlfwarn" ${pfx}_CRLF.err &&
+		check_warning "$lfmixcrlf" ${pfx}_CRLF_mix_LF.err &&
+		check_warning "$lfmixcr" ${pfx}_LF_mix_CR.err &&
 		check_warning "$crlfnul" ${pfx}_CRLF_nul.err
 	'
 }
@@ -169,21 +158,10 @@ commit_MIX_chkwrn () {
 	done
 
 	test_expect_success "commit file with mixed EOL onto LF crlf=$crlf attr=$attr" '
-		check_warning "$lfwarn" ${pfx}_LF.err
-	'
-	test_expect_success "commit file with mixed EOL onto CLRF attr=$attr aeol=$aeol crlf=$crlf" '
-		check_warning "$crlfwarn" ${pfx}_CRLF.err
-	'
-
-	test_expect_success "commit file with mixed EOL onto CRLF_mix_LF attr=$attr aeol=$aeol crlf=$crlf" '
-		check_warning "$lfmixcrlf" ${pfx}_CRLF_mix_LF.err
-	'
-
-	test_expect_success "commit file with mixed EOL onto LF_mix_cr attr=$attr aeol=$aeol crlf=$crlf " '
-		check_warning "$lfmixcr" ${pfx}_LF_mix_CR.err
-	'
-
-	test_expect_success "commit file with mixed EOL onto CRLF_nul attr=$attr aeol=$aeol crlf=$crlf" '
+		check_warning "$lfwarn" ${pfx}_LF.err &&
+		check_warning "$crlfwarn" ${pfx}_CRLF.err &&
+		check_warning "$lfmixcrlf" ${pfx}_CRLF_mix_LF.err &&
+		check_warning "$lfmixcr" ${pfx}_LF_mix_CR.err &&
 		check_warning "$crlfnul" ${pfx}_CRLF_nul.err
 	'
 }
@@ -257,18 +235,10 @@ check_in_repo_NNO () {
 	crlfnul=$1 ; shift
 	pfx=NNO_attr_${attr}_aeol_${aeol}_${crlf}
 	test_expect_success "compare_files $lfname ${pfx}_LF.txt" '
-		compare_files $lfname ${pfx}_LF.txt
-	'
-	test_expect_success "compare_files $crlfname ${pfx}_CRLF.txt" '
-		compare_files $crlfname ${pfx}_CRLF.txt
-	'
-	test_expect_success "compare_files $lfmixcrlf ${pfx}_CRLF_mix_LF.txt" '
-		compare_files $lfmixcrlf ${pfx}_CRLF_mix_LF.txt
-	'
-	test_expect_success "compare_files $lfmixcr ${pfx}_LF_mix_CR.txt" '
-		compare_files $lfmixcr ${pfx}_LF_mix_CR.txt
-	'
-	test_expect_success "compare_files $crlfnul ${pfx}_CRLF_nul.txt" '
+		compare_files $lfname ${pfx}_LF.txt &&
+		compare_files $crlfname ${pfx}_CRLF.txt &&
+		compare_files $lfmixcrlf ${pfx}_CRLF_mix_LF.txt &&
+		compare_files $lfmixcr ${pfx}_LF_mix_CR.txt &&
 		compare_files $crlfnul ${pfx}_CRLF_nul.txt
 	'
 }
@@ -309,23 +279,14 @@ checkout_files () {
 		git ls-files --eol crlf_false_attr__* |
 		sed -e "s/	/ /g" -e "s/  */ /g" |
 		sort >actual &&
-		test_cmp expect actual
-	'
-	test_expect_success "checkout attr=$attr $ident aeol=$aeol core.autocrlf=$crlf core.eol=$ceol file=LF" "
-		compare_ws_file $pfx $lfname    crlf_false_attr__LF.txt
-	"
-	test_expect_success "checkout attr=$attr $ident aeol=$aeol core.autocrlf=$crlf core.eol=$ceol file=CRLF" "
-		compare_ws_file $pfx $crlfname  crlf_false_attr__CRLF.txt
-	"
-	test_expect_success "checkout attr=$attr $ident aeol=$aeol core.autocrlf=$crlf core.eol=$ceol file=CRLF_mix_LF" "
-		compare_ws_file $pfx $lfmixcrlf crlf_false_attr__CRLF_mix_LF.txt
-	"
-	test_expect_success "checkout attr=$attr $ident aeol=$aeol core.autocrlf=$crlf core.eol=$ceol file=LF_mix_CR" "
-		compare_ws_file $pfx $lfmixcr   crlf_false_attr__LF_mix_CR.txt
-	"
-	test_expect_success "checkout attr=$attr $ident aeol=$aeol core.autocrlf=$crlf core.eol=$ceol file=LF_nul" "
+		test_cmp expect actual &&
+
+		compare_ws_file $pfx $lfname    crlf_false_attr__LF.txt &&
+		compare_ws_file $pfx $crlfname  crlf_false_attr__CRLF.txt &&
+		compare_ws_file $pfx $lfmixcrlf crlf_false_attr__CRLF_mix_LF.txt &&
+		compare_ws_file $pfx $lfmixcr   crlf_false_attr__LF_mix_CR.txt &&
 		compare_ws_file $pfx $crlfnul   crlf_false_attr__LF_nul.txt
-	"
+	'
 }
 
 # Test control characters
