@@ -1425,6 +1425,11 @@ then
 	skip_all="skip all tests in $this_test"
 	test_done
 fi
+if test -n "$skip_all"
+then
+	skip_all="$skip_all"
+	test_done
+fi
 
 # skip non-whitelisted tests when compiled with SANITIZE=leak
 if test -n "$SANITIZE_LEAK"

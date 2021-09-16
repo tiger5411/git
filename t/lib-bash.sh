@@ -12,8 +12,7 @@ then
 	unset POSIXLY_CORRECT
 	exec bash "$0" "$@"
 else
-	echo '1..0 #SKIP skipping bash completion tests; bash not available'
-	exit 0
+	skip_all="bash not available"
 fi
 
 . ./test-lib.sh
