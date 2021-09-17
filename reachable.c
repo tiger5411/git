@@ -155,7 +155,7 @@ int add_unseen_recent_objects_to_traversal(struct rev_info *revs,
 	if (r)
 		return r;
 	return for_each_packed_object(add_recent_packed, &data,
-				      FOR_EACH_OBJECT_LOCAL_ONLY);
+				      FOR_EACH_OBJECT_SKIP_NON_LOCAL_PACKS);
 }
 
 static int mark_object_seen(const struct object_id *oid,
