@@ -180,10 +180,10 @@ int has_pack_index(const unsigned char *sha1);
 /* Flags for for_each_*_object() below. */
 enum for_each_object_flags {
 	/* Iterate only over local objects, not alternates. */
-	FOR_EACH_OBJECT_LOCAL_ONLY = (1<<0),
+	FOR_EACH_OBJECT_SKIP_NON_LOCAL_PACKS = (1<<0),
 
 	/* Only iterate over packs obtained from the promisor remote. */
-	FOR_EACH_OBJECT_PROMISOR_ONLY = (1<<1),
+	FOR_EACH_OBJECT_SKIP_PROMISOR_PACKS = (1<<1),
 
 	/*
 	 * Visit objects within a pack in packfile order rather than .idx order
