@@ -66,13 +66,13 @@ create_NNO_MIX_files () {
 
 check_warning () {
 	case "$1" in
-	LF_CRLF) echo "warning: LF will be replaced by CRLF" >"$2".expect ;;
-	CRLF_LF) echo "warning: CRLF will be replaced by LF" >"$2".expect ;;
-	'')	                                                 >"$2".expect ;;
+	LF_CRLF) echo "warning: LF will be replaced by CRLF" >expect ;;
+	CRLF_LF) echo "warning: CRLF will be replaced by LF" >expect ;;
+	'')	                                             >expect ;;
 	*) echo >&2 "Illegal 1": "$1" ; return false ;;
 	esac
-	grep "will be replaced by" "$2" | sed -e "s/\(.*\) in [^ ]*$/\1/" | uniq  >"$2".actual
-	test_cmp "$2".expect "$2".actual
+	grep "will be replaced by" "$2" | sed -e "s/\(.*\) in [^ ]*$/\1/" | uniq  >actual
+	test_cmp expect actual
 }
 
 commit_check_warn () {
