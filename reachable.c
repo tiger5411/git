@@ -151,8 +151,7 @@ int add_unseen_recent_objects_to_traversal(struct rev_info *revs,
 	data.revs = revs;
 	data.timestamp = timestamp;
 
-	r = for_each_loose_object(add_recent_loose, &data,
-				  FOR_EACH_OBJECT_LOCAL_ONLY);
+	r = for_each_local_loose_object(add_recent_loose, &data);
 	if (r)
 		return r;
 	return for_each_packed_object(add_recent_packed, &data,
