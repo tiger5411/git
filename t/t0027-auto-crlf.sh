@@ -5,18 +5,11 @@ test_description='CRLF conversion all combinations'
 . ./test-lib.sh
 
 compare_files () {
-	tr '\015\000' QN <"$1" >"$1".expect &&
-	tr '\015\000' QN <"$2" | tr -d 'Z' >"$2".actual &&
-	test_cmp "$1".expect "$2".actual
+	test "$(tr '\015\000' QN <"$1")" = "$(tr '\015\000' QN <"$2" | tr -d 'Z')"
 }
 
 compare_ws_file () {
-	pfx=$1
-	exp=$2.expect
-	act=$pfx.actual.$3
-	tr '\015\000abcdef0123456789' QN00000000000000000 <"$2" >"$exp" &&
-	tr '\015\000abcdef0123456789' QN00000000000000000 <"$3" >"$act" &&
-	test_cmp "$exp" "$act"
+	test "$(tr '\015\000abcdef0123456789' QN00000000000000000 <"$1")" = "$(tr '\015\000abcdef0123456789' QN00000000000000000 <"$2")"
 }
 
 create_gitattributes () {
@@ -281,11 +274,11 @@ checkout_files () {
 		sort >actual &&
 		test_cmp expect actual &&
 
-		compare_ws_file $pfx $lfname    crlf_false_attr__LF.txt &&
-		compare_ws_file $pfx $crlfname  crlf_false_attr__CRLF.txt &&
-		compare_ws_file $pfx $lfmixcrlf crlf_false_attr__CRLF_mix_LF.txt &&
-		compare_ws_file $pfx $lfmixcr   crlf_false_attr__LF_mix_CR.txt &&
-		compare_ws_file $pfx $crlfnul   crlf_false_attr__LF_nul.txt
+		compare_ws_file $lfname    crlf_false_attr__LF.txt &&
+		compare_ws_file $crlfname  crlf_false_attr__CRLF.txt &&
+		compare_ws_file $lfmixcrlf crlf_false_attr__CRLF_mix_LF.txt &&
+		compare_ws_file $lfmixcr   crlf_false_attr__LF_mix_CR.txt &&
+		compare_ws_file $crlfnul   crlf_false_attr__LF_nul.txt
 	'
 }
 
