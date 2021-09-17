@@ -251,7 +251,7 @@ checkout_files () {
 	pfx=eol_${ceol}_crlf_${crlf}_attr_${attr}_ &&
 	for f in LF CRLF LF_mix_CR CRLF_mix_LF LF_nul
 	do
-		rm crlf_false_attr__$f.txt &&
+		> crlf_false_attr__$f.txt &&
 		if test -z "$ceol"; then
 			git checkout -- crlf_false_attr__$f.txt
 		else
