@@ -13,7 +13,6 @@
 #include "tag.h"
 #include "tree-walk.h"
 #include "tree.h"
-#include "object-store.h"
 #include "midx.h"
 #include "commit-graph.h"
 #include "promisor-remote.h"
