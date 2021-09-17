@@ -260,7 +260,6 @@ checkout_files () {
 	done
 
 	test_expect_success "ls-files --eol attr=$attr $ident aeol=$aeol core.autocrlf=$crlf core.eol=$ceol" '
-		test_when_finished "rm expect actual" &&
 		sort <<-EOF >expect &&
 		i/crlf w/$(stats_ascii $crlfname) attr/$(attr_ascii $attr $aeol) crlf_false_attr__CRLF.txt
 		i/mixed w/$(stats_ascii $lfmixcrlf) attr/$(attr_ascii $attr $aeol) crlf_false_attr__CRLF_mix_LF.txt
@@ -285,7 +284,6 @@ checkout_files () {
 # Test control characters
 # NUL SOH CR EOF==^Z
 test_expect_success 'ls-files --eol -o Text/Binary' '
-	test_when_finished "rm expect actual TeBi_*" &&
 	STRT=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA &&
 	STR=$STRT$STRT$STRT$STRT &&
 	printf "${STR}BBB\001" >TeBi_127_S &&
