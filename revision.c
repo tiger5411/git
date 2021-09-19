@@ -2955,6 +2955,7 @@ void release_revisions(struct rev_info *revs)
 	release_revisions_commit_list(revs);
 	object_array_clear(&revs->pending);
 	release_revisions_cmdline(&revs->cmdline);
+	list_objects_filter_release(&revs->filter);
 	release_revisions_mailmap(revs->mailmap);
 }
 
