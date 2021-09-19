@@ -56,7 +56,7 @@ NO_R_TO_GCC_LINKER = for-pre-2.23.0-only
 prefix=$prefix
 
 # Have --exec-path not be needed
-RUNTIME_PREFIX = Y
+#RUNTIME_PREFIX = Y
 
 # Better installation
 INSTALL_SYMLINKS=Y
@@ -70,7 +70,7 @@ NO_TCLTK=Y
 
 # PCRE
 USE_LIBPCRE=Y
-#LIBPCREDIR=\$(HOME)/g/pcre2/inst
+LIBPCREDIR=\$(HOME)/g/pcre2/inst
 
 # No gettext makes some things (e.g. send-email) faster & cheaper
 NO_GETTEXT = YesPlease
