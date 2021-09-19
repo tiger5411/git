@@ -221,7 +221,7 @@ suggest_bisect() {
 	)
 EOF
 	chmod +x /tmp/git-build-bisect.sh
-	sed 's/^\t//' <<-EOF
+	sed 's/^\t//' <<EOF
 	Try bisect with:
 
 		/tmp/git-build-bisect.sh
