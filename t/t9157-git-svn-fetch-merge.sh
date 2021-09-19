@@ -4,6 +4,8 @@
 #
 
 test_description='git svn merge detection'
+
+TEST_FAILS_SANITIZE_LEAK=true
 . ./lib-git-svn.sh
 
 svn_ver="$(svn --version --quiet)"
