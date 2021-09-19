@@ -756,6 +756,7 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 		print_ref_list(&filter, sorting, &format);
 		print_columns(&output, colopts, NULL);
 		string_list_clear(&output, 0);
+		ref_filter_release(&filter);
 		return 0;
 	} else if (edit_description) {
 		const char *branch_name;

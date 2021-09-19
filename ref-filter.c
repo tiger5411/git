@@ -2336,6 +2336,18 @@ void ref_array_clear(struct ref_array *array)
 	}
 }
 
+void ref_filter_release(struct ref_filter *ref_filter)
+{
+	if (!ref_filter)
+		return;
+	free_commit_list(ref_filter->with_commit);
+	free_commit_list(ref_filter->no_commit);
+	free_commit_list(ref_filter->reachable_from);
+	free_commit_list(ref_filter->unreachable_from);
+
+	oid_array_clear(&ref_filter->points_at);
+}
+
 #define EXCLUDE_REACHED 0
 #define INCLUDE_REACHED 1
 static void reach_filter(struct ref_array *array,
