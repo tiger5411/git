@@ -458,18 +458,17 @@ reset_it
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Test master first, for basic sanity
-tested_master=
+test_compile
+if test -n "$merge_full_tests"
+then
+	# Exhaustive compile, tests etc.
+	test_compile full
+fi
 
 # Merge it all together
 set -x
 while read -r branch
 do
-	if test -n "$merge_full_tests" && test -z "$tested_master"
-	then
-		# Exhaustive compile, tests etc.
-		test_compile full
-		tested_master=t
-	fi
 	# If we've got a previous resolution, the merge --continue
 	# will continue the merge. TODO: make --continue support
 	# --no-edit
