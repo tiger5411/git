@@ -2081,7 +2081,7 @@ static int verify_clean_subdirectory(const struct cache_entry *ce,
 	 */
 	int namelen;
 	int i;
-	struct dir_struct d;
+	struct dir_struct d = DIR_INIT;
 	char *pathbuf;
 	int cnt = 0;
 
@@ -2132,9 +2132,7 @@ static int verify_clean_subdirectory(const struct cache_entry *ce,
 	 */
 	pathbuf = xstrfmt("%.*s/", namelen, ce->name);
 
-	memset(&d, 0, sizeof(d));
-	if (o->dir)
-		d.exclude_per_dir = o->dir->exclude_per_dir;
+	d.exclude_per_dir = o->dir.exclude_per_dir;
 	i = read_directory(&d, o->src_index, pathbuf, namelen+1, NULL);
 	if (i)
 		return add_rejected_path(o, ERROR_NOT_UPTODATE_DIR, ce->name);
@@ -2175,8 +2173,7 @@ static int check_ok_to_remove(const char *name, int len, int dtype,
 	if (ignore_case && icase_exists(o, name, len, st))
 		return 0;
 
-	if (o->dir &&
-	    is_excluded(o->dir, o->src_index, name, &dtype))
+	if (is_excluded(&o->dir, o->src_index, name, &dtype))
 		/*
 		 * ce->name is explicitly excluded, so it is Ok to
 		 * overwrite it.

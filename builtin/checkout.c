@@ -747,9 +747,8 @@ static int merge_working_tree(const struct checkout_opts *opts,
 				       &new_branch_info->commit->object.oid :
 				       &new_branch_info->oid, NULL);
 		if (opts->overwrite_ignore) {
-			topts.dir = xcalloc(1, sizeof(*topts.dir));
-			topts.dir->flags |= DIR_SHOW_IGNORED;
-			setup_standard_excludes(topts.dir);
+			topts.dir.flags |= DIR_SHOW_IGNORED;
+			setup_standard_excludes(&topts.dir);
 		}
 		tree = parse_tree_indirect(old_branch_info->commit ?
 					   &old_branch_info->commit->object.oid :
@@ -761,6 +760,7 @@ static int merge_working_tree(const struct checkout_opts *opts,
 
 		ret = unpack_trees(2, trees, &topts);
 		clear_unpack_trees_porcelain(&topts);
+		//free(topts.dir); TODO: Commit message referred to this
 		if (ret == -1) {
 			/*
 			 * Unpack couldn't do a trivial merge; either

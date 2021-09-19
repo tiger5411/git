@@ -53,20 +53,17 @@ static int index_output_cb(const struct option *opt, const char *arg,
 static int exclude_per_directory_cb(const struct option *opt, const char *arg,
 				    int unset)
 {
-	struct dir_struct *dir;
 	struct unpack_trees_options *opts;
 
 	BUG_ON_OPT_NEG(unset);
 
 	opts = (struct unpack_trees_options *)opt->value;
 
-	if (opts->dir)
+	if (opts->dir.exclude_per_dir)
 		die("more than one --exclude-per-directory given.");
 
-	dir = xcalloc(1, sizeof(*opts->dir));
-	dir->flags |= DIR_SHOW_IGNORED;
-	dir->exclude_per_dir = arg;
-	opts->dir = dir;
+	opts->dir.flags |= DIR_SHOW_IGNORED;
+	opts->dir.exclude_per_dir = arg;
 	/* We do not need to nor want to do read-directory
 	 * here; we are merely interested in reusing the
 	 * per directory ignore stack mechanism.
@@ -209,7 +206,7 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 	if ((opts.update || opts.index_only) && !opts.merge)
 		die("%s is meaningless without -m, --reset, or --prefix",
 		    opts.update ? "-u" : "-i");
-	if ((opts.dir && !opts.update))
+	if ((opts.dir.exclude_per_dir && !opts.update))
 		die("--exclude-per-directory is meaningless unless -u");
 	if (opts.merge && !opts.index_only)
 		setup_work_tree();

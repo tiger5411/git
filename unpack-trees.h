@@ -5,6 +5,7 @@
 #include "strvec.h"
 #include "string-list.h"
 #include "tree-walk.h"
+#include "dir.h"
 
 #define MAX_UNPACK_TREES MAX_TRAVERSE_TREES
 
@@ -66,7 +67,7 @@ struct unpack_trees_options {
 		     dry_run;
 	const char *prefix;
 	int cache_bottom;
-	struct dir_struct *dir;
+	struct dir_struct dir;
 	struct pathspec *pathspec;
 	merge_fn_t fn;
 	const char *msgs[NB_UNPACK_TREES_WARNING_TYPES];
@@ -90,6 +91,9 @@ struct unpack_trees_options {
 	struct pattern_list *pl; /* for internal use */
 	struct checkout_metadata meta;
 };
+#define UNPACK_TREES_OPTIONS_INIT { \
+	.dir = DIR_INIT, \
+}
 
 int unpack_trees(unsigned n, struct tree_desc *t,
 		 struct unpack_trees_options *options);

@@ -50,10 +50,9 @@ int checkout_fast_forward(struct repository *r,
 			  int overwrite_ignore)
 {
 	struct tree *trees[MAX_UNPACK_TREES];
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc t[MAX_UNPACK_TREES];
 	int i, nr_trees = 0;
-	struct dir_struct dir = DIR_INIT;
 	struct lock_file lock_file = LOCK_INIT;
 
 	refresh_index(r->index, REFRESH_QUIET, NULL, NULL, NULL);
@@ -79,11 +78,9 @@ int checkout_fast_forward(struct repository *r,
 		init_tree_desc(t+i, trees[i]->buffer, trees[i]->size);
 	}
 
-	memset(&opts, 0, sizeof(opts));
 	if (overwrite_ignore) {
-		dir.flags |= DIR_SHOW_IGNORED;
-		setup_standard_excludes(&dir);
-		opts.dir = &dir;
+		opts.dir.flags |= DIR_SHOW_IGNORED;
+		setup_standard_excludes(&opts.dir);
 	}
 
 	opts.head_idx = 1;
@@ -101,7 +98,6 @@ int checkout_fast_forward(struct repository *r,
 		clear_unpack_trees_porcelain(&opts);
 		return -1;
 	}
-	dir_clear(&dir);
 	clear_unpack_trees_porcelain(&opts);
 
 	if (write_locked_index(r->index, &lock_file, COMMIT_LOCK))
