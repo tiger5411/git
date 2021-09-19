@@ -1,5 +1,7 @@
 #!/bin/sh
 test_description='git svn handling of root commits in merge ranges'
+
+TEST_FAILS_SANITIZE_LEAK=true
 . ./lib-git-svn.sh
 
 svn_ver="$(svn --version --quiet)"
