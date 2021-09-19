@@ -458,11 +458,14 @@ reset_it
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Test master first, for basic sanity
-test_compile
-if test -n "$merge_full_tests"
+if test -z "$no_merge_compile"
 then
-	# Exhaustive compile, tests etc.
-	test_compile full
+	test_compile
+	if test -n "$merge_full_tests"
+	then
+		# Exhaustive compile, tests etc.
+		test_compile full
+	fi
 fi
 
 # Merge it all together
