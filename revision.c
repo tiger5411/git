@@ -2916,6 +2916,44 @@ static void release_revisions_commit_list(struct rev_info *revs)
 	revs->commits = NULL;
 }
 
+static void release_revisions_cmdline_rev(struct rev_cmdline_entry *rev)
+{
+	if (!rev)
+		return;
+	free((char *)rev->name);
+	FREE_AND_NULL(rev);
+}
+
+static void release_revisions_cmdline(struct rev_cmdline_info *cmdline)
+{
+	int i;
+
+	for (i = 0; i < cmdline->nr; i++) {
+		struct rev_cmdline_entry *e = cmdline->rev + i;
+		release_revisions_cmdline_rev(e);
+	}
+	if (!cmdline)
+		return;
+}
+
+static void release_revisions_mailmap(struct string_list *mailmap)
+{
+	if (!mailmap)
+		return;
+	clear_mailmap(mailmap);
+	free(mailmap);
+}
+
+void release_revisions(struct rev_info *revs)
+{
+	if (!revs)
+		return;
+	release_revisions_commit_list(revs);
+	release_revisions_mailmap(revs->mailmap);
+	release_revisions_cmdline(&revs->cmdline);
+	object_array_clear(&revs->pending);
+}
+
 static void add_child(struct rev_info *revs, struct commit *parent, struct commit *child)
 {
 	struct commit_list *l = xcalloc(1, sizeof(*l));
