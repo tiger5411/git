@@ -540,6 +540,7 @@ int cmd_tag(int argc, const char **argv, const char *prefix)
 		ret = list_tags(&filter, sorting, &format);
 		if (column_active(colopts))
 			stop_column_filter();
+		ref_filter_release(&filter);
 		return ret;
 	}
 	if (filter.lines != -1)
