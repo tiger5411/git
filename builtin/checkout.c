@@ -761,6 +761,7 @@ static int merge_working_tree(const struct checkout_opts *opts,
 
 		ret = unpack_trees(2, trees, &topts);
 		clear_unpack_trees_porcelain(&topts);
+		free(topts.dir);
 		if (ret == -1) {
 			/*
 			 * Unpack couldn't do a trivial merge; either
