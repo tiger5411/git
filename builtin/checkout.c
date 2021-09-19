@@ -1581,6 +1581,7 @@ static int checkout_main(int argc, const char **argv, const char *prefix,
 {
 	struct branch_info new_branch_info;
 	int parseopt_flags = 0;
+	int ret;
 
 	memset(&new_branch_info, 0, sizeof(new_branch_info));
 	opts->overwrite_ignore = 1;
@@ -1771,9 +1772,12 @@ static int checkout_main(int argc, const char **argv, const char *prefix,
 
 	UNLEAK(opts);
 	if (opts->patch_mode || opts->pathspec.nr)
-		return checkout_paths(opts, &new_branch_info);
+		ret = checkout_paths(opts, &new_branch_info);
 	else
-		return checkout_branch(opts, &new_branch_info);
+		ret = checkout_branch(opts, &new_branch_info);
+	free((char *)new_branch_info.path);
+	return ret;
+	
 }
 
 int cmd_checkout(int argc, const char **argv, const char *prefix)
