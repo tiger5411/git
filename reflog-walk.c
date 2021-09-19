@@ -116,6 +116,29 @@ void init_reflog_walk(struct reflog_walk_info **info)
 	(*info)->complete_reflogs.strdup_strings = 1;
 }
 
+static void reflog_walk_release_reflog(void *util,const char *str)
+{
+	struct complete_reflogs *array = util;
+	free_complete_reflog(array);
+}
+
+void reflog_walk_release(struct reflog_walk_info *info)
+{
+	size_t i;
+
+	if (!info)
+		return;
+	//string_list_clear(&info->complete_reflogs, 1);
+	string_list_clear_func(&info->complete_reflogs, reflog_walk_release_reflog);
+	free(&info->complete_reflogs);
+
+	for (i = 0; i < info->nr; i++)
+		free(info->logs[i]);
+	free(info->logs);
+
+	free(info);
+}
+
 int add_reflog_for_walk(struct reflog_walk_info *info,
 		struct commit *commit, const char *name)
 {

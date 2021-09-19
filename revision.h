@@ -267,6 +267,7 @@ struct rev_info {
 	struct diff_options diffopt;
 	struct diff_options pruning;
 
+	int free_reflog_info;
 	struct reflog_walk_info *reflog_info;
 	struct decoration children;
 	struct decoration merge_simplification;

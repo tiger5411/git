@@ -912,6 +912,7 @@ static int show_stash(int argc, const char **argv, const char *prefix)
 	log_tree_diff_flush(&rev);
 
 	free_stash_info(&info);
+	release_revisions(&rev);
 	return diff_result_code(&rev.diffopt, 0);
 }
 
@@ -1054,7 +1055,9 @@ static int check_changes_tracked_files(const struct pathspec *ps)
 	}
 
 done:
+
 	clear_pathspec(&rev.prune_data);
+	release_revisions(&rev);
 	return ret;
 }
 

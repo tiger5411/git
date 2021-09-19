@@ -2223,6 +2223,7 @@ static int handle_revision_opt(struct rev_info *revs, int argc, const char **arg
 		revs->simplify_history = 0;
 		revs->limited = 1;
 	} else if (!strcmp(arg, "-g") || !strcmp(arg, "--walk-reflogs")) {
+		revs->free_reflog_info = 1;
 		init_reflog_walk(&revs->reflog_info);
 	} else if (!strcmp(arg, "--default")) {
 		if (argc <= 1)
@@ -2944,11 +2945,20 @@ static void release_revisions_mailmap(struct string_list *mailmap)
 	free(mailmap);
 }
 
+static void release_revisions_reflog_info(struct rev_info *revs)
+{
+	/* Owned either by us or the user, did we allocate it? */
+	if (!revs->free_reflog_info)
+		return;
+	reflog_walk_release(revs->reflog_info);
+}
+
 void release_revisions(struct rev_info *revs)
 {
 	if (!revs)
 		return;
 	release_revisions_commit_list(revs);
+	release_revisions_reflog_info(revs);
 	release_revisions_mailmap(revs->mailmap);
 	release_revisions_cmdline(&revs->cmdline);
 	object_array_clear(&revs->pending);
