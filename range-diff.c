@@ -404,6 +404,13 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 		progress = start_delayed_progress(title.buf, total);
 	}
 
+	for (i = a->nr; i < n; i++) {
+		for (j = b->nr; j < n; j++) {
+			display_progress(progress, ++count);
+			cost[i + n * j] = 0;
+		}
+	}
+
 	for (i = 0; i < a->nr; i++) {
 		struct patch_util *a_util = a->items[i].util;
 
@@ -436,13 +443,6 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 			util->diffsize * creation_factor / 100 : COST_MAX;
 		for (i = a->nr; i < n; i++) {
 			cost[i + n * j] = c;
-		}
-	}
-
-	for (i = a->nr; i < n; i++) {
-		for (j = b->nr; j < n; j++) {
-			display_progress(progress, ++count);
-			cost[i + n * j] = 0;
 		}
 	}
 
