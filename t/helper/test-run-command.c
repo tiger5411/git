@@ -181,7 +181,7 @@ static int testsuite(int argc, const char **argv)
 	if (max_jobs > suite.tests.nr)
 		max_jobs = suite.tests.nr;
 
-	fprintf(stderr, "Running %"PRIuMAX" tests (%d at a time)\n",
+	fprintf(stderr, "Running %d tests (%d at a time)\n",
 		suite.tests.nr, max_jobs);
 
 	ret = run_processes_parallel(max_jobs, next_test, test_failed,
@@ -189,7 +189,7 @@ static int testsuite(int argc, const char **argv)
 
 	if (suite.failed.nr > 0) {
 		ret = 1;
-		fprintf(stderr, "%"PRIuMAX" tests failed:\n\n", suite.failed.nr);
+		fprintf(stderr, "%d tests failed:\n\n", suite.failed.nr);
 		for (i = 0; i < suite.failed.nr; i++)
 			fprintf(stderr, "\t%s\n", suite.failed.items[i].string);
 	}
