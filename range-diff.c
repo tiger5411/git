@@ -28,16 +28,13 @@ struct patch_util {
 	struct object_id oid;
 };
 
-static const char *range1_txt = N_("<range1>");
-static const char *range2_txt = N_("<range1>");
-
 /*
  * Reads the patches into a string list, with the `util` field being populated
  * as struct object_id (will need to be free()d).
  */
 static int read_patches(const char *range, struct string_list *list,
-			const char *range_txt, const struct strvec *other_arg,
-			int show_progress)
+			const struct strvec *other_arg,
+			struct progress *progress, uint64_t *count)
 {
 	struct child_process cp = CHILD_PROCESS_INIT;
 	struct strbuf buf = STRBUF_INIT, contents = STRBUF_INIT;
@@ -47,8 +44,6 @@ static int read_patches(const char *range, struct string_list *list,
 	ssize_t len;
 	size_t size;
 	FILE *in;
-	struct progress *progress = NULL;
-	struct strbuf title = STRBUF_INIT;
 	off_t consumed_bytes = 0;
 
 	strvec_pushl(&cp.args, "log", "--no-color", "-p", "--no-merges",
@@ -77,11 +72,7 @@ static int read_patches(const char *range, struct string_list *list,
 		return error_errno(_("could not start `log`"));
 	in = xfdopen(cp.out, "r");
 
-	if (show_progress) {
-		strbuf_addf(&title, _("Running & Consuming 'log' for '%s'"), range_txt);
-		progress = start_delayed_progress(title.buf, 2);
-	}
-	display_progress(progress, 1);
+	display_progress(progress, ++*count);
 	while (1) {
 		size_t n = strbuf_fread(&buf, 8192, in);
 
@@ -90,8 +81,6 @@ static int read_patches(const char *range, struct string_list *list,
 				error_errno(_("could not read `log` output"));
 				finish_command(&cp);
 				strbuf_release(&buf);
-				stop_progress(&progress);
-				strbuf_release(&title);
 				return -1;
 			}
 			break;
@@ -105,13 +94,10 @@ static int read_patches(const char *range, struct string_list *list,
 	}
 	strbuf_reset(&buf);
 
-	if (finish_command(&cp)) {
-		stop_progress(&progress);
-		strbuf_release(&title);
+	if (finish_command(&cp))
 		return -1;
-	}
 
-	display_progress(progress, 2);
+	display_progress(progress, ++*count);
 	line = contents.buf;
 	size = contents.len;
 	for (; size > 0; size -= len, line += len) {
@@ -147,8 +133,6 @@ static int read_patches(const char *range, struct string_list *list,
 				string_list_clear(list, 1);
 				strbuf_release(&buf);
 				strbuf_release(&contents);
-				stop_progress(&progress);
-				strbuf_release(&title);
 				return -1;
 			}
 			util->matching = -1;
@@ -164,8 +148,6 @@ static int read_patches(const char *range, struct string_list *list,
 			string_list_clear(list, 1);
 			strbuf_release(&buf);
 			strbuf_release(&contents);
-			stop_progress(&progress);
-			strbuf_release(&title);
 			return -1;
 		}
 
@@ -193,8 +175,6 @@ static int read_patches(const char *range, struct string_list *list,
 				string_list_clear(list, 1);
 				strbuf_release(&buf);
 				strbuf_release(&contents);
-				stop_progress(&progress);
-				strbuf_release(&title);
 				return -1;
 			}
 			strbuf_addstr(&buf, " ## ");
@@ -273,8 +253,6 @@ static int read_patches(const char *range, struct string_list *list,
 		util->diffsize++;
 	}
 	strbuf_release(&contents);
-	stop_progress(&progress);
-	strbuf_release(&title);
 
 	if (util)
 		string_list_append(list, buf.buf)->util = util;
@@ -291,29 +269,16 @@ static int patch_util_cmp(const void *dummy, const struct patch_util *a,
 }
 
 static void find_exact_matches(struct string_list *a, struct string_list *b,
-			       int show_progress)
+			       struct progress *progress, uint64_t *count)
 {
 
 	struct hashmap map = HASHMAP_INIT((hashmap_cmp_fn)patch_util_cmp, NULL);
 	size_t i;
-	struct progress *progress = NULL;
-	struct strbuf title = STRBUF_INIT;
-	uint64_t count;
-
-	if (show_progress) {
-		const uint64_t total = a->nr + b->nr;
-		count = 0;
-
-		strbuf_addf(&title, _("Finding matches '%s' and '%s'"),
-			    _(range1_txt), _(range2_txt));
-		progress = start_delayed_progress(title.buf, total);
-	}
 
 	/* First, add the patches of a to a hash map */
+	display_progress(progress, ++*count);
 	for (i = 0; i < a->nr; i++) {
 		struct patch_util *util = a->items[i].util;
-
-		display_progress(progress, ++count);
 
 		util->i = i;
 		util->patch = a->items[i].string;
@@ -323,10 +288,9 @@ static void find_exact_matches(struct string_list *a, struct string_list *b,
 	}
 
 	/* Now try to find exact matches in b */
+	display_progress(progress, ++*count);
 	for (i = 0; i < b->nr; i++) {
 		struct patch_util *util = b->items[i].util, *other;
-
-		display_progress(progress, ++count);
 
 		util->i = i;
 		util->patch = b->items[i].string;
@@ -342,8 +306,6 @@ static void find_exact_matches(struct string_list *a, struct string_list *b,
 		}
 	}
 
-	stop_progress(&progress);
-	strbuf_release(&title);
 	hashmap_clear(&map);
 }
 
@@ -382,43 +344,30 @@ static int diffsize(const char *a, const char *b)
 }
 
 static void get_correspondences(struct string_list *a, struct string_list *b,
-				int creation_factor, int show_progress)
+				int creation_factor, struct progress *progress,
+				uint64_t *count)
 {
 	ssize_t n = a->nr + b->nr;
-	ssize_t a_x_b = a->nr * b->nr;
 	ssize_t *cost, c, *a2b, *b2a;
 	ssize_t i, j;
-	struct progress *progress = NULL;
-	struct strbuf title = STRBUF_INIT;
-	uint64_t count;
 
 	ALLOC_ARRAY(cost, st_mult(n, n));
 	ALLOC_ARRAY(a2b, n);
 	ALLOC_ARRAY(b2a, n);
 
-	if (show_progress) {
-		const uint64_t total = a_x_b + a_x_b + a->nr + b->nr;
-		count = 1;
-
-		strbuf_addf(&title, _("Computing '%s' to '%s' correspondences"),
-			    _(range1_txt), _(range2_txt));
-		progress = start_delayed_progress(title.buf, total);
-	}
-
+	display_progress(progress, ++*count);
 	for (i = a->nr; i < n; i++) {
-		for (j = b->nr; j < n; j++) {
-			display_progress(progress, ++count);
+		for (j = b->nr; j < n; j++)
 			cost[i + n * j] = 0;
-		}
 	}
 
+	display_progress(progress, ++*count);
 	for (i = 0; i < a->nr; i++) {
 		struct patch_util *a_util = a->items[i].util;
 
 		for (j = 0; j < b->nr; j++) {
 			struct patch_util *b_util = b->items[j].util;
 
-			display_progress(progress, ++count);
 
 			if (a_util->matching == j)
 				c = 0;
@@ -435,10 +384,11 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 			cost[i + n * j] = c;
 	}
 
+	display_progress(progress, ++*count);
 	for (j = 0; j < b->nr; j++) {
 		struct patch_util *util = b->items[j].util;
 
-		display_progress(progress, ++count);
+
 
 		c = util->matching < 0 ?
 			util->diffsize * creation_factor / 100 : COST_MAX;
@@ -447,21 +397,20 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 		}
 	}
 
+	display_progress(progress, ++*count);
 	compute_assignment(n, n, cost, a2b, b2a);
 
-	for (i = 0; i < a->nr; i++)
+	display_progress(progress, ++*count);
+	for (i = 0; i < a->nr; i++) {
 		if (a2b[i] >= 0 && a2b[i] < b->nr) {
 			struct patch_util *a_util = a->items[i].util;
 			struct patch_util *b_util = b->items[a2b[i]].util;
 
-			display_progress(progress, ++count);
 
 			a_util->matching = a2b[i];
 			b_util->matching = i;
 		}
-
-	stop_progress(&progress);
-	strbuf_release(&title);
+	}
 
 	free(cost);
 	free(a2b);
@@ -653,31 +602,40 @@ int show_range_diff(const char *range1, const char *range2,
 		    struct range_diff_options *range_diff_opts)
 {
 	int res = 0;
-
+	struct progress *progress = NULL;
+	uint64_t count = 0;
 	struct string_list branch1 = STRING_LIST_INIT_DUP;
 	struct string_list branch2 = STRING_LIST_INIT_DUP;
 
 	if (range_diff_opts->left_only && range_diff_opts->right_only)
 		res = error(_("--left-only and --right-only are mutually exclusive"));
 
-	if (!res && read_patches(range1, &branch1, _("<range1>"),
-				 range_diff_opts->other_arg,
-				 range_diff_opts->progress))
+	if (range_diff_opts->progress)
+		progress = start_delayed_progress(_("Fetching data for range-diff"),
+						  4);
+
+
+	if (!res && read_patches(range1, &branch1, range_diff_opts->other_arg,
+				 progress, &count))
 		res = error(_("could not parse log for '%s'"), range1);
-	if (!res && read_patches(range2, &branch2,_("<range2>"),
-				 range_diff_opts->other_arg,
-				 range_diff_opts->progress))
+	if (!res && read_patches(range2, &branch2, range_diff_opts->other_arg,
+				 progress, &count))
 		res = error(_("could not parse log for '%s'"), range2);
 
+	if (progress) {
+		stop_progress(&progress);
+		progress = start_delayed_progress(_("Computing range-diff"), 11);
+	}
+
 	if (!res) {
-		find_exact_matches(&branch1, &branch2,
-				   range_diff_opts->progress);
+		find_exact_matches(&branch1, &branch2, progress, &count);
 		get_correspondences(&branch1, &branch2,
 				    range_diff_opts->creation_factor,
-				    range_diff_opts->progress);
+				    progress, &count);
 		output(&branch1, &branch2, range_diff_opts);
 	}
 
+	stop_progress(&progress);
 	string_list_clear(&branch1, 1);
 	string_list_clear(&branch2, 1);
 
