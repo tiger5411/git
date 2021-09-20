@@ -514,7 +514,10 @@ make -j $(nproc) install install-man
 
 # Post-install & report
 echo "Range-diff between last built and what I've got now:"
-git --no-pager range-diff --left-only avar/private...
+if ! git --no-pager range-diff --left-only avar/private...
+then
+	echo "Range-diff segfaulting? Upstream issue with integer overflow"
+fi
 
 echo "Shortlog from @{u}..:"
 git --no-pager shortlog @{u}..
