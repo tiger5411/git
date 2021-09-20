@@ -24,6 +24,14 @@ test_lazy_prereq PRINTF_SUPPORTS_N_EXPANSION '
 	test_cmp expect actual
 '
 
+if ! test_have_prereq EXPENSIVE
+then
+	skip_all="set GIT_TEST_LONG=true to run this test"
+	test_done
+fi
+
+
+
 if ! test_have_prereq PRINTF_SUPPORTS_N_EXPANSION
 then
 	skip_all="this OS's printf(1) + our test_seq can't create our test data"
