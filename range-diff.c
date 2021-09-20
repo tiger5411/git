@@ -308,9 +308,9 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 	int *cost, c, *a2b, *b2a;
 	int i, j;
 
-	ALLOC_ARRAY(cost, st_mult(n, n));
-	ALLOC_ARRAY(a2b, n);
-	ALLOC_ARRAY(b2a, n);
+	CALLOC_ARRAY(cost, st_mult(n, n));
+	CALLOC_ARRAY(a2b, n);
+	CALLOC_ARRAY(b2a, n);
 
 	for (i = 0; i < a->nr; i++) {
 		struct patch_util *a_util = a->items[i].util;
@@ -342,11 +342,8 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 			cost[i + n * j] = c;
 	}
 
-	for (i = a->nr; i < n; i++)
-		for (j = b->nr; j < n; j++)
-			cost[i + n * j] = 0;
-
-	compute_assignment(n, n, cost, a2b, b2a);
+	if (n > 1)
+		compute_assignment(n, n, cost, a2b, b2a);
 
 	for (i = 0; i < a->nr; i++)
 		if (a2b[i] >= 0 && a2b[i] < b->nr) {
