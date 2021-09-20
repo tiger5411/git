@@ -19,10 +19,13 @@ int cmd_range_diff(int argc, const char **argv, const char *prefix)
 	struct range_diff_options range_diff_opts = {
 		.creation_factor = RANGE_DIFF_CREATION_FACTOR_DEFAULT,
 		.diffopt = &diffopt,
-		.other_arg = &other_arg
+		.other_arg = &other_arg,
+		.progress = isatty(STDERR_FILENO),
 	};
 	int simple_color = -1, left_only = 0, right_only = 0;
 	struct option range_diff_options[] = {
+		OPT_BOOL(0, "progress", &range_diff_opts.progress,
+			 N_("report progress")),
 		OPT_INTEGER(0, "creation-factor",
 			    &range_diff_opts.creation_factor,
 			    N_("percentage by which creation is weighted")),

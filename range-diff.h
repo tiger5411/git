@@ -7,6 +7,8 @@
 #define RANGE_DIFF_CREATION_FACTOR_DEFAULT 60
 
 struct range_diff_options {
+	int progress;
+
 	int creation_factor;
 	unsigned dual_color:1;
 	unsigned left_only:1, right_only:1;
