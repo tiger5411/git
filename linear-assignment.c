@@ -12,26 +12,26 @@
  * The parameter `cost` is the cost matrix: the cost to assign column j to row
  * i is `cost[j + column_count * i].
  */
-void compute_assignment(int column_count, int row_count, int *cost,
-			int *column2row, int *row2column)
+void compute_assignment(ssize_t column_count, ssize_t row_count, ssize_t *cost,
+			ssize_t *column2row, ssize_t *row2column)
 {
-	int *v, *d;
-	int *free_row, free_count = 0, saved_free_count, *pred, *col;
-	int i, j, phase;
+	ssize_t *v, *d;
+	ssize_t *free_row, free_count = 0, saved_free_count, *pred, *col;
+	ssize_t i, j, phase;
 
 	if (column_count < 2) {
-		memset(column2row, 0, sizeof(int) * column_count);
-		memset(row2column, 0, sizeof(int) * row_count);
+		memset(column2row, 0, sizeof(ssize_t) * column_count);
+		memset(row2column, 0, sizeof(ssize_t) * row_count);
 		return;
 	}
 
-	memset(column2row, -1, sizeof(int) * column_count);
-	memset(row2column, -1, sizeof(int) * row_count);
+	memset(column2row, -1, sizeof(ssize_t) * column_count);
+	memset(row2column, -1, sizeof(ssize_t) * row_count);
 	ALLOC_ARRAY(v, column_count);
 
 	/* column reduction */
 	for (j = column_count - 1; j >= 0; j--) {
-		int i1 = 0;
+		ssize_t i1 = 0;
 
 		for (i = 1; i < row_count; i++)
 			if (COST(j, i1) > COST(j, i))
@@ -51,13 +51,13 @@ void compute_assignment(int column_count, int row_count, int *cost,
 	/* reduction transfer */
 	ALLOC_ARRAY(free_row, row_count);
 	for (i = 0; i < row_count; i++) {
-		int j1 = row2column[i];
+		ssize_t j1 = row2column[i];
 		if (j1 == -1)
 			free_row[free_count++] = i;
 		else if (j1 < -1)
 			row2column[i] = -2 - j1;
 		else {
-			int min = COST(!j1, i) - v[!j1];
+			ssize_t min = COST(!j1, i) - v[!j1];
 			for (j = 1; j < column_count; j++)
 				if (j != j1 && min > COST(j, i) - v[j])
 					min = COST(j, i) - v[j];
@@ -74,20 +74,20 @@ void compute_assignment(int column_count, int row_count, int *cost,
 
 	/* augmenting row reduction */
 	for (phase = 0; phase < 2; phase++) {
-		int k = 0;
+		ssize_t k = 0;
 
 		saved_free_count = free_count;
 		free_count = 0;
 		while (k < saved_free_count) {
-			int u1, u2;
-			int j1 = 0, j2, i0;
+			ssize_t u1, u2;
+			ssize_t j1 = 0, j2, i0;
 
 			i = free_row[k++];
 			u1 = COST(j1, i) - v[j1];
 			j2 = -1;
-			u2 = INT_MAX;
+			u2 = SSIZE_MAX;
 			for (j = 1; j < column_count; j++) {
-				int c = COST(j, i) - v[j];
+				ssize_t c = COST(j, i) - v[j];
 				if (u2 > c) {
 					if (u1 < c) {
 						u2 = c;
@@ -130,8 +130,8 @@ void compute_assignment(int column_count, int row_count, int *cost,
 	ALLOC_ARRAY(pred, column_count);
 	ALLOC_ARRAY(col, column_count);
 	for (free_count = 0; free_count < saved_free_count; free_count++) {
-		int i1 = free_row[free_count], low = 0, up = 0, last, k;
-		int min, c, u1;
+		ssize_t i1 = free_row[free_count], low = 0, up = 0, last, k;
+		ssize_t min, c, u1;
 
 		for (j = 0; j < column_count; j++) {
 			d[j] = COST(j, i1) - v[j];
@@ -161,7 +161,7 @@ void compute_assignment(int column_count, int row_count, int *cost,
 
 			/* scan a row */
 			do {
-				int j1 = col[low++];
+				ssize_t j1 = col[low++];
 
 				i = column2row[j1];
 				u1 = COST(j1, i) - v[j1] - min;
@@ -185,14 +185,14 @@ void compute_assignment(int column_count, int row_count, int *cost,
 update:
 		/* updating of the column pieces */
 		for (k = 0; k < last; k++) {
-			int j1 = col[k];
+			ssize_t j1 = col[k];
 			v[j1] += d[j1] - min;
 		}
 
 		/* augmentation */
 		do {
 			if (j < 0)
-				BUG("negative j: %d", j);
+				BUG("negative j: %lu", j);
 			i = pred[j];
 			column2row[j] = i;
 			SWAP(j, row2column[i]);

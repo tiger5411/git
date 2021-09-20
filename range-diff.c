@@ -19,7 +19,8 @@ struct patch_util {
 	struct hashmap_entry e;
 	const char *diff, *patch;
 
-	int i, shown;
+	size_t i;
+	int shown;
 	int diffsize;
 	size_t diff_offset;
 	/* the index of the matching item in the other branch, or -1 */
@@ -294,7 +295,7 @@ static void find_exact_matches(struct string_list *a, struct string_list *b,
 {
 
 	struct hashmap map = HASHMAP_INIT((hashmap_cmp_fn)patch_util_cmp, NULL);
-	int i;
+	size_t i;
 	struct progress *progress = NULL;
 	struct strbuf title = STRBUF_INIT;
 	uint64_t count;
@@ -383,10 +384,10 @@ static int diffsize(const char *a, const char *b)
 static void get_correspondences(struct string_list *a, struct string_list *b,
 				int creation_factor, int show_progress)
 {
-	int n = a->nr + b->nr;
-	int a_x_b = a->nr * b->nr;
-	int *cost, c, *a2b, *b2a;
-	int i, j;
+	ssize_t n = a->nr + b->nr;
+	ssize_t a_x_b = a->nr * b->nr;
+	ssize_t *cost, c, *a2b, *b2a;
+	ssize_t i, j;
 	struct progress *progress = NULL;
 	struct strbuf title = STRBUF_INIT;
 	uint64_t count;
@@ -507,7 +508,7 @@ static void output_pair_header(struct diff_options *diffopt,
 	if (!a_util)
 		strbuf_addf(buf, "%*s:  %s ", patch_no_width, "-", dashes->buf);
 	else
-		strbuf_addf(buf, "%*d:  %s ", patch_no_width, a_util->i + 1,
+		strbuf_addf(buf, "%*lu:  %s ", patch_no_width, a_util->i + 1,
 			    find_unique_abbrev(&a_util->oid, DEFAULT_ABBREV));
 
 	if (status == '!')
@@ -519,7 +520,7 @@ static void output_pair_header(struct diff_options *diffopt,
 	if (!b_util)
 		strbuf_addf(buf, " %*s:  %s", patch_no_width, "-", dashes->buf);
 	else
-		strbuf_addf(buf, " %*d:  %s", patch_no_width, b_util->i + 1,
+		strbuf_addf(buf, " %*lu:  %s", patch_no_width, b_util->i + 1,
 			    find_unique_abbrev(&b_util->oid, DEFAULT_ABBREV));
 
 	commit = lookup_commit_reference(the_repository, oid);
