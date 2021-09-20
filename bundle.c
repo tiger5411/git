@@ -255,18 +255,18 @@ int verify_bundle(struct repository *r,
 
 		r = &header->references;
 		printf_ln(Q_("The bundle contains this ref:",
-			     "The bundle contains these %d refs:",
-			     r->nr),
-			  r->nr);
+			     "The bundle contains these %"PRIuMAX" refs:",
+			     (unsigned long)r->nr),
+			  (uintmax_t)r->nr);
 		list_refs(r, 0, NULL);
 		r = &header->prerequisites;
 		if (!r->nr) {
 			printf_ln(_("The bundle records a complete history."));
 		} else {
 			printf_ln(Q_("The bundle requires this ref:",
-				     "The bundle requires these %d refs:",
-				     r->nr),
-				  r->nr);
+				     "The bundle requires these %"PRIuMAX" refs:",
+				     (unsigned long)r->nr),
+				  (uintmax_t)r->nr);
 			list_refs(r, 0, NULL);
 		}
 	}
