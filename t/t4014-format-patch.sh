@@ -390,7 +390,7 @@ check_headers () {
 			}" \
 		-e "/^Message-Id: / {
 			s/<cover\.[0-9]\+\./<cover.[EPOCH]./;
-			s/<[0-9a-f]\{$hexsz\}\.[0-9]\+\./<[OID].[EPOCH]./;
+			s/<[0-9a-f]\{$hexsz\}\.[0-9]\{10,\}\+\./<[OID].[EPOCH]./;
 			p;
 		}" \
 	<patches >actual &&
