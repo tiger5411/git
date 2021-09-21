@@ -379,11 +379,18 @@ check_headers () {
 	test_when_finished "rm -f patches" &&
 	$negate git format-patch \
 		--stdout \
+		--thread \
 		"$@" >patches 2>err &&
 
+	hexsz=$(test_oid hexsz) &&
 	sed -n \
 		-e "/^Subject: / {
 			s/^\(Subject: \[[^]]*\]\).*/\1/;
+			p;
+			}" \
+		-e "/^Message-Id: / {
+			s/<cover\.[0-9]\+\./<cover.[EPOCH]./;
+			s/<[0-9a-f]\{$hexsz\}\.[0-9]\{10,\}\+\./<[OID].[EPOCH]./;
 			p;
 		}" \
 	<patches >actual &&
@@ -392,12 +399,14 @@ check_headers () {
 
 test_expect_success 'basic headers: default' '
 	check_headers main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH]
 	EOF
 '
 
 test_expect_success 'basic headers: --subject-prefix same as the default' '
 	check_headers --subject-prefix=PATCH main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH]
 	EOF
 '
@@ -411,12 +420,14 @@ test_expect_success 'basic headers: --subject-prefix eats REV argument' '
 
 test_expect_success 'basic headers: --subject-prefix without =' '
 	check_headers --subject-prefix ARGUMENT main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [ARGUMENT]
 	EOF
 '
 
 test_expect_success 'basic headers: --subject-prefix="SOME LONG SUBJECT" same as the default' '
 	check_headers --subject-prefix="SOME LONG SUBJECT" main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [SOME LONG SUBJECT]
 	EOF
 '
@@ -424,6 +435,7 @@ test_expect_success 'basic headers: --subject-prefix="SOME LONG SUBJECT" same as
 test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix config' '
 	test_config format.subjectPrefix "CONFIG PREFIX" &&
 	check_headers main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [CONFIG PREFIX]
 	EOF
 '
@@ -431,12 +443,14 @@ test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix co
 test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix config priority' '
 	test_config format.subjectPrefix "CONFIG PREFIX" &&
 	check_headers --subject-prefix="CLI PREFIX" main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [CLI PREFIX]
 	EOF
 '
 
 test_expect_success 'basic headers: --rfc option' '
 	check_headers --rfc main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [RFC PATCH]
 	EOF
 '
@@ -452,12 +466,14 @@ test_expect_success 'basic headers: --rfc=ARGUMENT' '
 
 test_expect_success 'basic headers: --subject-prefix=RFC/PATCH --rfc (--subject-prefix wins)' '
 	check_headers --subject-prefix=RFC/PATCH --rfc main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [RFC PATCH]
 	EOF
 '
 
 test_expect_success 'basic headers: --rfc --subject-prefix=RFC/PATCH (--subject-prefix wins)' '
 	check_headers --subject-prefix="RFC/PATCH" --rfc main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [RFC PATCH]
 	EOF
 '
@@ -465,60 +481,83 @@ test_expect_success 'basic headers: --rfc --subject-prefix=RFC/PATCH (--subject-
 test_expect_success 'basic headers: --rfc and format.subjectPrefix config priority' '
 	test_config format.subjectPrefix "CONFIG PREFIX" &&
 	check_headers --rfc main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [RFC PATCH]
 	EOF
 '
 
 test_expect_success 'basic headers: --subject-prefix with --v<N>' '
 	check_headers --subject-prefix=PREFIX -v1 main~..main <<-\EOF &&
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PREFIX v1]
 	EOF
 	check_headers -v1 --subject-prefix=PREFIX main~..main <<-\EOF
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PREFIX v1]
 	EOF
 '
 
 test_expect_success 'reroll count' '
 	check_headers --cover-letter --reroll-count 4 main..side <<-\EOF
+	Message-Id: <cover.[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 0/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 1/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 2/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 3/3]
 	EOF
 '
 
 test_expect_success 'reroll count (-v)' '
 	check_headers --cover-letter -v4 main..side <<-\EOF
+	Message-Id: <cover.[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 0/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 1/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 2/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4 3/3]
 	EOF
 '
 
 test_expect_success 'reroll count (-v) with a fractional number' '
 	check_headers --cover-letter -v4.4 main..side <<-\EOF
+	Message-Id: <cover.[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4.4 0/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4.4 1/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4.4 2/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4.4 3/3]
 	EOF
 '
 
 test_expect_success 'reroll (-v) count with a non number' '
 	check_headers --cover-letter -v4rev2 main..side <<-\EOF
+	Message-Id: <cover.[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4rev2 0/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4rev2 1/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4rev2 2/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4rev2 3/3]
 	EOF
 '
 
 test_expect_success 'reroll (-v) count with a non-pathname character' '
 	check_headers --cover-letter -v4---..././../--1/.2//  main..side <<-\EOF
+	Message-Id: <cover.[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 0/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 1/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 2/3]
+	Message-Id: <[OID].[EPOCH].git.committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 3/3]
 	EOF
 '
