@@ -206,7 +206,7 @@ void grep_commit_pattern_type(enum grep_pattern_type pattern_type, struct grep_o
 		grep_set_pattern_type_option(GREP_PATTERN_TYPE_ERE, opt);
 }
 
-static struct grep_pat *create_grep_pat(const char *pat, size_t patlen,
+static struct grep_pat *create_grep_pat(const char *const pat, size_t patlen,
 					const char *origin, int no,
 					enum grep_pat_token t,
 					enum grep_header_field field)
@@ -436,8 +436,8 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 	}
 }
 
-static int pcre2match(struct grep_pat *p, const char *line, const char *eol,
-		regmatch_t *match, int eflags)
+static int pcre2match(struct grep_pat *p, const char * const line,
+		      const char * const eol, regmatch_t *match, int eflags)
 {
 	int ret, flags = 0;
 	PCRE2_SIZE *ovector;
@@ -489,8 +489,9 @@ static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt
 	die("cannot use Perl-compatible regexes when not compiled with USE_LIBPCRE");
 }
 
-static int pcre2match(struct grep_pat *p, const char *line, const char *eol,
-		regmatch_t *match, int eflags)
+static int pcre2match(struct grep_pat *p,
+		      const char * const line, const char * const eol,
+		      regmatch_t *match, int eflags)
 {
 	return 1;
 }
@@ -909,7 +910,7 @@ static void show_name(struct grep_opt *opt, const char *name)
 }
 
 static int patmatch(struct grep_pat *p,
-		    const char *line, const char *eol,
+		    const char * const line, const char * const eol,
 		    regmatch_t *match, int eflags)
 {
 	int hit;
@@ -923,7 +924,7 @@ static int patmatch(struct grep_pat *p,
 	return hit;
 }
 
-static void strip_timestamp(const char *bol, const char **eol_p)
+static void strip_timestamp(const char * const bol, const char ** const eol_p)
 {
 	const char *eol = *eol_p;
 
@@ -1026,7 +1027,7 @@ static int match_one_pattern(struct grep_pat *p,
 }
 
 static int match_expr_eval(struct grep_opt *opt, struct grep_expr *x,
-			   const char *bol, const char *eol,
+			   const char *bol, const char * const eol,
 			   enum grep_context ctx, ssize_t *col,
 			   ssize_t *icol, int collect_hits)
 {
@@ -1095,7 +1096,7 @@ static int match_expr_eval(struct grep_opt *opt, struct grep_expr *x,
 }
 
 static int match_expr(struct grep_opt *opt,
-		      const char *bol, const char *eol,
+		      const char *bol, const char * const eol,
 		      enum grep_context ctx, ssize_t *col,
 		      ssize_t *icol, int collect_hits)
 {
@@ -1104,7 +1105,7 @@ static int match_expr(struct grep_opt *opt,
 }
 
 static int match_line(struct grep_opt *opt,
-		      const char *bol, const char *eol,
+		      const char *bol, const char * const eol,
 		      ssize_t *col, ssize_t *icol,
 		      enum grep_context ctx, int collect_hits)
 {
@@ -1137,7 +1138,7 @@ static int match_line(struct grep_opt *opt,
 }
 
 static int match_next_pattern(struct grep_pat *p,
-			      const char *bol, const char *eol,
+			      const char * const bol, const char * const eol,
 			      enum grep_context ctx,
 			      regmatch_t *pmatch, int eflags)
 {
@@ -1159,7 +1160,7 @@ static int match_next_pattern(struct grep_pat *p,
 }
 
 static int next_match(struct grep_opt *opt,
-		      const char *bol, const char *eol,
+		      const char * const bol, const char * const eol,
 		      enum grep_context ctx, regmatch_t *pmatch, int eflags)
 {
 	struct grep_pat *p;
@@ -1216,7 +1217,7 @@ static void show_line_header(struct grep_opt *opt, const char *name,
 }
 
 static void show_line(struct grep_opt *opt,
-		      const char *bol, const char *eol,
+		      const char *bol, const char * const eol,
 		      const char *name, unsigned lno, ssize_t cno, char sign)
 {
 	int rest = eol - bol;
@@ -1306,7 +1307,7 @@ static inline void grep_attr_unlock(void)
 }
 
 static int match_funcname(struct grep_opt *opt, struct grep_source *gs,
-			  const char *bol, const char *eol)
+			  const char * const bol, const char * const eol)
 {
 	xdemitconf_t *xecfg = opt->priv;
 	if (xecfg && !xecfg->find_func) {
@@ -1336,7 +1337,7 @@ static void show_funcname_line(struct grep_opt *opt, struct grep_source *gs,
 			       const char *bol, unsigned lno)
 {
 	while (bol > gs->buf) {
-		const char *eol = --bol;
+		const char * const eol = --bol;
 
 		while (bol > gs->buf && bol[-1] != '\n')
 			bol--;
@@ -1352,7 +1353,7 @@ static void show_funcname_line(struct grep_opt *opt, struct grep_source *gs,
 	}
 }
 
-static int is_empty_line(const char *bol, const char *eol);
+static int is_empty_line(const char * const bol, const char * const eol);
 
 static void show_pre_context(struct grep_opt *opt, struct grep_source *gs,
 			     const char *bol, const char *end, unsigned lno)
@@ -1375,8 +1376,8 @@ static void show_pre_context(struct grep_opt *opt, struct grep_source *gs,
 
 	/* Rewind. */
 	while (bol > gs->buf && cur > from) {
-		const char *next_bol = bol;
-		const char *eol = --bol;
+		const char * const next_bol = bol;
+		const char * const eol = --bol;
 
 		while (bol > gs->buf && bol[-1] != '\n')
 			bol--;
@@ -1438,7 +1439,7 @@ static int look_ahead(struct grep_opt *opt,
 		      const char **bol_p)
 {
 	unsigned lno = *lno_p;
-	const char *bol = *bol_p;
+	const char * const bol = *bol_p;
 	struct grep_pat *p;
 	const char *sp, *last_bol;
 	regoff_t earliest = -1;
@@ -1533,7 +1534,7 @@ static int fill_textconv_grep(struct repository *r,
 	return 0;
 }
 
-static int is_empty_line(const char *bol, const char *eol)
+static int is_empty_line(const char *bol, const char * const eol)
 {
 	while (bol < eol && isspace(*bol))
 		bol++;
