@@ -1084,6 +1084,7 @@ static void gen_message_id(struct subject_prefix_opt_callback_data *cb_data,
 		    git_committer_info(IDENT_NO_NAME|IDENT_NO_DATE|IDENT_STRICT));
 	rev->message_id = strbuf_detach(&buf, NULL);
 	strbuf_release(&fmt);
+	strbuf_release(&tmp);
 }
 
 static void print_signature(FILE *file)
