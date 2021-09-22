@@ -1306,12 +1306,11 @@ ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
 compdb_check = $(shell $(CC) $(ALL_CFLAGS) \
 	-Wno-pedantic \
 	-c -MJ /dev/null \
-	-x c /dev/null -o /dev/null 2>&1; \
+	-x c /dev/null -o /dev/null; \
 	echo $$?)
 ifneq ($(compdb_check),0)
-override GENERATE_COMPILATION_DATABASE = no
-$(warning GENERATE_COMPILATION_DATABASE is set to "yes", but your compiler does not \
-support generating compilation database entries)
+$(error Generating the compilation database failed. If your compiler does not \
+support generating compilation database entries, do not set GENERATE_COMPILATION_DATABASE=yes)
 endif
 else
 ifneq ($(GENERATE_COMPILATION_DATABASE),no)
