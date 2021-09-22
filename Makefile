@@ -1242,7 +1242,8 @@ ALL_COMMANDS_TO_INSTALL += git-upload-archive$(X)
 ALL_COMMANDS_TO_INSTALL += git-upload-pack$(X)
 endif
 
-ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+NON_DEVELOPER_CFLAGS = $(CPPFLAGS) $(CFLAGS)
+ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(NON_DEVELOPER_CFLAGS)
 ALL_LDFLAGS = $(LDFLAGS)
 
 comma := ,
@@ -1277,13 +1278,14 @@ COMPUTE_HEADER_DEPENDENCIES = auto
 endif
 
 ifeq ($(COMPUTE_HEADER_DEPENDENCIES),auto)
-dep_check = $(shell $(CC) $(ALL_CFLAGS) \
+dep_check = $(shell $(CC) $(NON_DEVELOPER_CFLAGS) \
 	-c -MF /dev/null -MQ /dev/null -MMD -MP \
-	-x c /dev/null -o /dev/null 2>&1; \
+	-x c /dev/null -o /dev/null; \
 	echo $$?)
 ifeq ($(dep_check),0)
 override COMPUTE_HEADER_DEPENDENCIES = yes
 else
+$(info Non-zero $(dep_check) exit with COMPUTE_HEADER_DEPENDENCIES=auto, set it to "yes" or "no" to quiet auto-detect)
 override COMPUTE_HEADER_DEPENDENCIES = no
 endif
 endif
