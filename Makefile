@@ -1953,6 +1953,7 @@ endif
 ifneq ($(findstring s,$(MAKEFLAGS)),s)
 ifndef V
 	QUIET_CC       = @echo '   ' CC $@;
+	QUIET_DEP      = @echo '   ' DEP $@;
 	QUIET_AR       = @echo '   ' AR $@;
 	QUIET_LINK     = @echo '   ' LINK $@;
 	QUIET_BUILT_IN = @echo '   ' BUILTIN $@;
@@ -2454,24 +2455,6 @@ endif
 .PHONY: objects
 objects: $(OBJECTS)
 
-dep_files := $(foreach f,$(OBJECTS),$(dir $f).depend/$(notdir $f).d)
-dep_dirs := $(addsuffix .depend,$(sort $(dir $(OBJECTS))))
-
-ifeq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
-$(dep_dirs):
-	@mkdir -p $@
-
-missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
-dep_file = $(dir $@).depend/$(notdir $@).d
-dep_args = -MF $(dep_file) -MQ $@ -MMD -MP
-endif
-
-ifneq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
-dep_dirs =
-missing_dep_dirs =
-dep_args =
-endif
-
 compdb_dir = compile_commands
 
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
@@ -2489,10 +2472,22 @@ endif
 ASM_SRC := $(wildcard $(OBJECTS:o=S))
 ASM_OBJ := $(ASM_SRC:S=o)
 C_OBJ := $(filter-out $(ASM_OBJ),$(OBJECTS))
+C_DEP_OBJ := $(OBJECTS:o=dep)
 
 .SUFFIXES:
 
-$(C_OBJ): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
+ifeq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
+$(C_DEP_OBJ): $(GENERATED_H)
+$(C_DEP_OBJ): %.dep : %.c command-list.h
+	$(QUIET_DEP)$(CC) -MF $*.dep -MQ $*.o -MM $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+
+ALL.dep: $(C_DEP_OBJ)
+	$(QUIET_DEP)cat $(C_DEP_OBJ) >$@
+
+include ALL.dep
+endif
+
+$(C_OBJ): %.o: %.c %.dep GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
 	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 $(ASM_OBJ): %.o: %.S GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
 	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
