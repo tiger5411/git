@@ -466,8 +466,8 @@ include shared.mak
 # INSTALL_STRIP can be set to "-s" to strip binaries during installation,
 # if your $(INSTALL) command supports the option.
 #
-# Define GENERATE_COMPILATION_DATABASE to "yes" to generate JSON compilation
-# database entries during compilation if your compiler supports it, using the
+# Define GENERATE_COMPILATION_DATABASE" to generate JSON compilation database
+# entries during compilation. This is (only?) supported by "clang" using the
 # `-MJ` flag. The JSON entries will be placed in the `compile_commands/`
 # directory, and the JSON compilation database 'compile_commands.json' will be
 # created at the root of the repository.
@@ -1345,28 +1345,6 @@ else
 ifneq ($(COMPUTE_HEADER_DEPENDENCIES),no)
 $(error please set COMPUTE_HEADER_DEPENDENCIES to yes, no, or auto \
 (not "$(COMPUTE_HEADER_DEPENDENCIES)"))
-endif
-endif
-
-ifndef GENERATE_COMPILATION_DATABASE
-GENERATE_COMPILATION_DATABASE = no
-endif
-
-ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
-compdb_check = $(shell $(CC) $(ALL_CFLAGS) \
-	-Wno-pedantic \
-	-c -MJ /dev/null \
-	-x c /dev/null -o /dev/null 2>&1; \
-	echo $$?)
-ifneq ($(compdb_check),0)
-override GENERATE_COMPILATION_DATABASE = no
-$(warning GENERATE_COMPILATION_DATABASE is set to "yes", but your compiler does not \
-support generating compilation database entries)
-endif
-else
-ifneq ($(GENERATE_COMPILATION_DATABASE),no)
-$(error please set GENERATE_COMPILATION_DATABASE to "yes" or "no" \
-(not "$(GENERATE_COMPILATION_DATABASE)"))
 endif
 endif
 
@@ -2544,7 +2522,7 @@ endif
 
 compdb_dir = compile_commands
 
-ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
+ifdef GENERATE_COMPILATION_DATABASE
 missing_compdb_dir = $(compdb_dir)
 $(missing_compdb_dir):
 	@mkdir -p $@
@@ -2575,7 +2553,7 @@ else
 $(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
 
-ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
+ifdef GENERATE_COMPILATION_DATABASE
 all:: compile_commands.json
 compile_commands.json:
 	$(QUIET_GEN)sed -e '1s/^/[/' -e '$$s/,$$/]/' $(compdb_dir)/*.o.json > $@+
