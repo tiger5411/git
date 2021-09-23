@@ -43,6 +43,10 @@ CFLAGS=-O0 -g
 DEVELOPER=1
 #DEVOPTS=no-error
 
+## Have GCC (or Clang) create a dependency graph in the ".depend"
+## directories for use in the Makefile
+COMPUTE_HEADER_DEPENDENCIES = yes
+
 ## Core flags for testing
 
 # SANITIZE=leak
