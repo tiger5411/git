@@ -348,6 +348,73 @@ test_expect_success 'conditional include, onbranch, implicit /** for /' '
 	test_cmp expect actual
 '
 
+test_expect_success 'conditional include, envExists:*' '
+	echo value >expect &&
+	git config -f envExists.cfg some.key $(cat expect) &&
+
+	test_must_fail git -c includeIf.envExists:VAR.path="$PWD/envExists.cfg" config some.key 2>err &&
+	test_must_be_empty err &&
+
+	VAR= git -c includeIf.envExists:VAR.path="$PWD/envExists.cfg" config some.key >actual 2>err &&
+	test_must_be_empty err &&
+	test_cmp expect actual &&
+
+	VAR=0 git -c includeIf.envExists:VAR.path="$PWD/envExists.cfg" config some.key >actual 2>err &&
+	test_cmp expect actual &&
+	test_must_be_empty err
+'
+
+test_expect_success 'conditional include, envBool:*' '
+	echo value >expect &&
+	git config -f envBool.cfg some.key $(cat expect) &&
+
+	test_must_fail env VAR= git -c includeIf.envBool:VAR.path="$PWD/envBool.cfg" config some.key 2>err &&
+	test_must_be_empty err &&
+
+	test_must_fail env VAR=0 git -c includeIf.envBool:VAR.path="$PWD/envBool.cfg" config some.key 2>err &&
+	test_must_be_empty err &&
+
+	test_must_fail env VAR=false git -c includeIf.envBool:VAR.path="$PWD/envBool.cfg" config some.key 2>err &&
+	test_must_be_empty err &&
+
+	# envBool:* bad value
+	cat >expect.err <<-\EOF &&
+	fatal: bad boolean config value '\''gibberish'\'' for '\''VAR'\''
+	EOF
+	test_must_fail env VAR=gibberish git -c includeIf.envBool:VAR.path="$PWD/envBool.cfg" config some.key 2>err.actual &&
+	test_cmp expect.err err.actual
+'
+
+test_expect_success 'conditional include, envIs:*' '
+	echo value >expect &&
+	git config -f envIs.cfg some.key $(cat expect) &&
+
+	VAR=foo git -c includeIf.envIs:VAR:foo.path="$PWD/envExists.cfg" config some.key &&
+	test_must_fail env VAR=foo git -c includeIf.envIs:VAR:*f*.path="$PWD/envExists.cfg" config some.key &&
+
+	cat >expect.err <<-\EOF &&
+	error: '\''envIs:VAR'\'' missing a '\'':'\'' to match the value
+	fatal: unable to parse command-line config
+	EOF
+	test_must_fail env VAR=x git -c includeIf.envIs:VAR.path="$PWD/envBool.cfg" config some.key 2>err.actual &&
+	test_cmp expect.err err.actual
+'
+
+test_expect_success 'conditional include, envMatch:*' '
+	echo value >expect &&
+	git config -f envMatch.cfg some.key $(cat expect) &&
+
+	VAR=foo git -c includeIf.envMatch:VAR:foo.path="$PWD/envExists.cfg" config some.key &&
+	VAR=foo git -c includeIf.envMatch:VAR:*f*.path="$PWD/envExists.cfg" config some.key &&
+
+	cat >expect.err <<-\EOF &&
+	error: '\''envMatch:VAR'\'' missing a '\'':'\'' to match the value
+	fatal: unable to parse command-line config
+	EOF
+	test_must_fail env VAR=x git -c includeIf.envMatch:VAR.path="$PWD/envBool.cfg" config some.key 2>err.actual &&
+	test_cmp expect.err err.actual
+'
+
 test_expect_success 'include cycles are detected' '
 	git init --bare cycle &&
 	git -C cycle config include.path cycle &&

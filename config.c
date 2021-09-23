@@ -271,6 +271,54 @@ done:
 	return ret;
 }
 
+static int include_by_env_exists(const char *cond, size_t cond_len)
+{
+	char *cfg = xstrndup(cond, cond_len);
+	int ret = !!getenv(cfg);
+	free(cfg);
+	return ret;
+}
+
+static int include_by_env_bool(const char *cond, size_t cond_len)
+{
+	char *cfg = xstrndup(cond, cond_len);
+	int ret = git_env_bool(cfg, 0);
+	free(cfg);
+	return ret;
+}
+
+static int include_by_env_match(const char *cond, size_t cond_len, int glob,
+				int *err)
+{
+	const char *eq;
+	const char *value;
+	const char *env;
+	char *cfg = xstrndup(cond, cond_len);
+	char *key = NULL;
+	int ret = 0;
+
+	eq = strchr(cfg, ':');
+	if (!eq) {
+		*err = error(_("'%s:%.*s' missing a ':' to match the value"),
+			     glob ? "envMatch" : "envIs", (int)(cond_len),
+			     cond);
+		goto cleanup;
+	}
+	value = eq + 1;
+
+	key = xmemdupz(cfg, eq - cfg);
+	env = getenv(key);
+	if (!env)
+		goto cleanup;
+
+	ret = glob ? !wildmatch(value, env, 0) : !strcmp(value, env);
+
+cleanup:
+	free(key);
+	free(cfg);
+	return ret;
+}
+
 static int include_by_branch(const char *cond, size_t cond_len)
 {
 	int flags;
@@ -292,7 +340,8 @@ static int include_by_branch(const char *cond, size_t cond_len)
 }
 
 static int include_condition_is_true(const struct config_options *opts,
-				     const char *cond, size_t cond_len)
+				     const char *cond, size_t cond_len,
+				     int *err)
 {
 
 	if (skip_prefix_mem(cond, cond_len, "gitdir:", &cond, &cond_len))
@@ -301,6 +350,14 @@ static int include_condition_is_true(const struct config_options *opts,
 		return include_by_gitdir(opts, cond, cond_len, 1);
 	else if (skip_prefix_mem(cond, cond_len, "onbranch:", &cond, &cond_len))
 		return include_by_branch(cond, cond_len);
+	else if (skip_prefix_mem(cond, cond_len, "envExists:", &cond, &cond_len))
+		return include_by_env_exists(cond, cond_len);
+	else if (skip_prefix_mem(cond, cond_len, "envBool:", &cond, &cond_len))
+		return include_by_env_bool(cond, cond_len);
+	else if (skip_prefix_mem(cond, cond_len, "envIs:", &cond, &cond_len))
+		return include_by_env_match(cond, cond_len, 0, err);
+	else if (skip_prefix_mem(cond, cond_len, "envMatch:", &cond, &cond_len))
+		return include_by_env_match(cond, cond_len, 1, err);
 
 	/* unknown conditionals are always false */
 	return 0;
@@ -325,7 +382,7 @@ int git_config_include(const char *var, const char *value, void *data)
 		ret = handle_path_include(value, inc);
 
 	if (!parse_config_key(var, "includeif", &cond, &cond_len, &key) &&
-	    (cond && include_condition_is_true(inc->opts, cond, cond_len)) &&
+	    (cond && include_condition_is_true(inc->opts, cond, cond_len, &ret)) &&
 	    !strcmp(key, "path"))
 		ret = handle_path_include(value, inc);
 
