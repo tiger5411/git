@@ -56,7 +56,7 @@ NO_R_TO_GCC_LINKER = for-pre-2.23.0-only
 prefix=$prefix
 
 # Have --exec-path not be needed
-#RUNTIME_PREFIX = Y
+RUNTIME_PREFIX = Y
 
 # Better installation
 INSTALL_SYMLINKS=Y
