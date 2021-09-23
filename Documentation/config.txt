@@ -159,6 +159,41 @@ all branches that begin with `foo/`. This is useful if your branches are
 organized hierarchically and you would like to apply a configuration to
 all the branches in that hierarchy.
 
+`envExists`::
+	The data that follows the keyword `envExists:` is taken to be the
+	name of an environment variable, e.g. `envExists:NAME`. If the
+	variable (`NAME` in this case) exists the include condition is
+	met.
+
+`envBool`::
+	The data that follows the keyword `envBool:` is taken to be the
+	name of an environment variable, e.g. `envBool:NAME`. If the
+	variable (`NAME` in this case) exists, its value will be
+	checked for boolean truth.
++
+The accepted boolean values are the same as those that `--type bool`
+would accept. A value that's normalized to "true" will satisfy the
+include condition (a nonexisting environment variable is "false").
+
+`envIs`::
+	The data that follows the keyword `envIs:` is taken to be the
+	name of an environment variable, followed by a mandatory ":"
+	character, followed by the expected value of the environment
+	variable. If the value matches the include condition is
+	satisfied.
++
+Values may contain any characters otherwise accepted by the config
+mechanism (including ":").
+
+`envMatch`::
+	Like `envIs`, except that the value is matched using standard
+	globbing wildcards.
+
+There is no way to match an environment variable name with any of the
+`env*` directives if that variable name contains a ":" character. Such
+names are allowed by POSIX, but it is assumed that nobody will need to
+match such a variable name in practice.
+
 A few more notes on matching via `gitdir` and `gitdir/i`:
 
  * Symlinks in `$GIT_DIR` are not resolved before matching.
