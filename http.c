@@ -2439,10 +2439,10 @@ void abort_http_object_request(struct http_object_request *freq)
 {
 	unlink_or_warn(freq->tmpfile.buf);
 
-	release_http_object_request(freq);
+	release_http_object_request(freq, 0);
 }
 
-void release_http_object_request(struct http_object_request *freq)
+void release_http_object_request(struct http_object_request *freq, int do_free)
 {
 	if (freq->localfile != -1) {
 		close(freq->localfile);
@@ -2456,6 +2456,8 @@ void release_http_object_request(struct http_object_request *freq)
 		freq->slot = NULL;
 	}
 	strbuf_release(&freq->tmpfile);
-	git_inflate_end(&freq->stream);
-	free(freq);
+	if (do_free) {
+		git_inflate_end(&freq->stream);
+		free(freq);
+	}
 }

@@ -73,7 +73,7 @@ static void start_object_request(struct walker *walker,
 	obj_req->state = ACTIVE;
 	if (!start_active_slot(slot)) {
 		obj_req->state = ABORTED;
-		release_http_object_request(req);
+		release_http_object_request(req, 1);
 		return;
 	}
 }
@@ -109,7 +109,7 @@ static void process_object_response(void *callback_data)
 		if (obj_req->repo->next != NULL) {
 			obj_req->repo =
 				obj_req->repo->next;
-			release_http_object_request(obj_req->req);
+			release_http_object_request(obj_req->req, 1);
 			start_object_request(walker, obj_req);
 			return;
 		}
@@ -542,7 +542,7 @@ static int fetch_object(struct walker *walker, unsigned char *hash)
 		strbuf_release(&buf);
 	}
 
-	release_http_object_request(req);
+	release_http_object_request(req, 0); /* TODO */
 	release_object_request(obj_req);
 	return ret;
 }

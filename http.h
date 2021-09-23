@@ -223,7 +223,7 @@ struct http_object_request *new_http_object_request(
 void process_http_object_request(struct http_object_request *freq);
 int finish_http_object_request(struct http_object_request *freq);
 void abort_http_object_request(struct http_object_request *freq);
-void release_http_object_request(struct http_object_request *freq);
+void release_http_object_request(struct http_object_request *freq, int do_free);
 
 /*
  * Instead of using environment variables to determine if curl tracing happens,

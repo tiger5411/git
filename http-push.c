@@ -269,7 +269,7 @@ static void start_fetch_loose(struct transfer_request *request)
 	if (!start_active_slot(slot)) {
 		fprintf(stderr, "Unable to start GET request\n");
 		repo->can_update_info_refs = 0;
-		release_http_object_request(obj_req);
+		release_http_object_request(obj_req, 1);
 		release_request(request);
 	}
 }
@@ -573,7 +573,7 @@ static void finish_request(struct transfer_request *request)
 
 		/* Try fetching packed if necessary */
 		if (request->obj->flags & LOCAL) {
-			release_http_object_request(obj_req);
+			release_http_object_request(obj_req, 1);
 			release_request(request);
 		} else
 			start_fetch_packed(request);
