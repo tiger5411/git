@@ -90,7 +90,9 @@ test_expect_success 'git help succeeds without git.html' '
 '
 
 test_expect_success 'generate builtin list' '
-	git --list-cmds=builtins >builtins
+	git --list-cmds=builtins >builtins &&
+	grep -v "^grep$" builtins >builtins+ &&
+	mv builtins+ builtins
 '
 
 while read builtin

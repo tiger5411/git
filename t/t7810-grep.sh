@@ -11,6 +11,10 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
 . ./test-lib.sh
 
+test_expect_success 'usage' '
+	test_expect_code 128 git grep -h
+'
+
 test_invalid_grep_expression() {
 	params="$@" &&
 	test_expect_success "invalid expression: grep $params" '
