@@ -21,10 +21,10 @@ do
 	--no-range-diff)
 		no_range_diff=yes
 		;;
-	--no-sanity)
+	--no-sanity|--no-check)
 		no_sanity=yes
 		;;
-	--only-sanity)
+	--only-sanity|--only-check)
 		only_sanity=yes
 		;;
 	--only-range-diff)
