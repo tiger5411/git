@@ -170,8 +170,8 @@ int cmd_check_attr(int argc, const char **argv, const char *prefix)
 			const struct git_attr *a = git_attr(argv[i]);
 
 			if (!a)
-				return error("%s: not a valid attribute name",
-					     argv[i]);
+				return -error("%s: not a valid attribute name",
+					      argv[i]);
 			attr_check_append(check, a);
 		}
 	}

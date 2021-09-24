@@ -3389,11 +3389,13 @@ int cmd_submodule__helper(int argc, const char **argv, const char *prefix)
 
 	for (i = 0; i < ARRAY_SIZE(commands); i++) {
 		if (!strcmp(argv[1], commands[i].cmd)) {
+			int ret;
 			if (get_super_prefix() &&
 			    !(commands[i].option & SUPPORT_SUPER_PREFIX))
 				die(_("%s doesn't support --super-prefix"),
 				    commands[i].cmd);
-			return commands[i].fn(argc - 1, argv + 1, prefix);
+			ret = commands[i].fn(argc - 1, argv + 1, prefix);
+			return ret < 0 ? -ret : ret;
 		}
 	}
 

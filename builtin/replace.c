@@ -104,7 +104,7 @@ static int for_each_replace_name(const char **argv, each_replace_name_fn fn)
 	const char **p, *full_hex;
 	struct strbuf ref = STRBUF_INIT;
 	size_t base_len;
-	int had_error = 0;
+	int err = 0;
 	struct object_id oid;
 
 	strbuf_addstr(&ref, git_replace_ref_base);
@@ -112,8 +112,7 @@ static int for_each_replace_name(const char **argv, each_replace_name_fn fn)
 
 	for (p = argv; *p; p++) {
 		if (get_oid(*p, &oid)) {
-			error("failed to resolve '%s' as a valid ref", *p);
-			had_error = 1;
+			err = error("failed to resolve '%s' as a valid ref", *p);
 			continue;
 		}
 
@@ -122,15 +121,14 @@ static int for_each_replace_name(const char **argv, each_replace_name_fn fn)
 		full_hex = ref.buf + base_len;
 
 		if (read_ref(ref.buf, &oid)) {
-			error(_("replace ref '%s' not found"), full_hex);
-			had_error = 1;
+			err = error(_("replace ref '%s' not found"), full_hex);
 			continue;
 		}
 		if (fn(full_hex, ref.buf, &oid))
-			had_error = 1;
+			err = -1;
 	}
 	strbuf_release(&ref);
-	return had_error;
+	return err;
 }
 
 static int delete_replace_ref(const char *name, const char *ref,
@@ -586,25 +584,25 @@ int cmd_replace(int argc, const char **argv, const char *prefix)
 		if (argc < 1)
 			usage_msg_opt(_("-d needs at least one argument"),
 				      git_replace_usage, options);
-		return for_each_replace_name(argv, delete_replace_ref);
+		return !!for_each_replace_name(argv, delete_replace_ref);
 
 	case MODE_REPLACE:
 		if (argc != 2)
 			usage_msg_opt(_("bad number of arguments"),
 				      git_replace_usage, options);
-		return replace_object(argv[0], argv[1], force);
+		return !!replace_object(argv[0], argv[1], force);
 
 	case MODE_EDIT:
 		if (argc != 1)
 			usage_msg_opt(_("-e needs exactly one argument"),
 				      git_replace_usage, options);
-		return edit_and_replace(argv[0], force, raw);
+		return !!edit_and_replace(argv[0], force, raw);
 
 	case MODE_GRAFT:
 		if (argc < 1)
 			usage_msg_opt(_("-g needs at least one argument"),
 				      git_replace_usage, options);
-		return create_graft(argc, argv, force, 0);
+		return !!create_graft(argc, argv, force, 0);
 
 	case MODE_CONVERT_GRAFT_FILE:
 		if (argc != 0)
@@ -616,7 +614,7 @@ int cmd_replace(int argc, const char **argv, const char *prefix)
 		if (argc > 1)
 			usage_msg_opt(_("only one pattern can be given with -l"),
 				      git_replace_usage, options);
-		return list_replace_refs(argv[0], format);
+		return !!list_replace_refs(argv[0], format);
 
 	default:
 		BUG("invalid cmdmode %d", (int)cmdmode);

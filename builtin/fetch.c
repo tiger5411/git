@@ -2151,5 +2151,5 @@ int cmd_fetch(int argc, const char **argv, const char *prefix)
 	if (enable_auto_gc)
 		run_auto_maintenance(verbosity < 0);
 
-	return result;
+	return -result;
 }

@@ -1287,5 +1287,5 @@ int cmd_bisect__helper(int argc, const char **argv, const char *prefix)
 	if ((res == BISECT_INTERNAL_SUCCESS_MERGE_BASE) || (res == BISECT_INTERNAL_SUCCESS_1ST_BAD_FOUND))
 		res = BISECT_OK;
 
-	return -res;
+	return res == -1 ? -res : res;
 }

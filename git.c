@@ -419,6 +419,7 @@ static int handle_alias(int *argcp, const char ***argv)
 static int run_builtin(struct cmd_struct *p, int argc, const char **argv)
 {
 	int status, help;
+	int posix_status;
 	struct stat st;
 	const char *prefix;
 
@@ -459,6 +460,9 @@ static int run_builtin(struct cmd_struct *p, int argc, const char **argv)
 
 	validate_cache_entries(the_repository->index);
 	status = p->fn(argc, argv, prefix);
+	posix_status = status & 0xFF;
+	if (status != posix_status)
+		BUG("got status %d which will be cast to %d, returning error() perhaps?", status, posix_status);
 	validate_cache_entries(the_repository->index);
 
 	if (status)

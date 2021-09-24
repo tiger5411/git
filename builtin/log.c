@@ -629,6 +629,7 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 	struct setup_revision_opt opt;
 	struct pathspec match_all;
 	int i, count, ret = 0;
+	int rc = 0;
 
 	init_log_defaults();
 	git_config(git_log_config, NULL);
@@ -695,14 +696,14 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 			rev.pending.nr = rev.pending.alloc = 0;
 			rev.pending.objects = NULL;
 			add_object_array(o, name, &rev.pending);
-			ret = cmd_log_walk(&rev);
+			rc = cmd_log_walk(&rev);
 			break;
 		default:
 			ret = error(_("unknown type: %d"), o->type);
 		}
 	}
 	free(objects);
-	return ret;
+	return ret ? -ret : rc;
 }
 
 /*

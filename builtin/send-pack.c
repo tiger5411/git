@@ -303,7 +303,7 @@ int cmd_send_pack(int argc, const char **argv, const char *prefix)
 
 	/* match them up */
 	if (match_push_refs(local_refs, &remote_refs, &rs, flags))
-		return -1;
+		return 1;
 
 	if (!is_empty_cas(&cas))
 		apply_push_cas(&cas, remote, remote_refs);
@@ -314,7 +314,7 @@ int cmd_send_pack(int argc, const char **argv, const char *prefix)
 	set_ref_status_for_push(remote_refs, args.send_mirror,
 		args.force_update);
 
-	ret = send_pack(&args, fd, conn, remote_refs, &extra_have);
+	ret = -send_pack(&args, fd, conn, remote_refs, &extra_have);
 
 	if (helper_status)
 		print_helper_status(remote_refs);

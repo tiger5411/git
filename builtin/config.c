@@ -938,7 +938,7 @@ int cmd_config(int argc, const char **argv, const char *prefix)
 		ret = git_config_rename_section_in_file(given_config_source.file,
 							argv[0], argv[1]);
 		if (ret < 0)
-			return ret;
+			return -ret;
 		if (ret == 0)
 			die(_("no such section: %s"), argv[0]);
 	}
@@ -949,7 +949,7 @@ int cmd_config(int argc, const char **argv, const char *prefix)
 		ret = git_config_rename_section_in_file(given_config_source.file,
 							argv[0], NULL);
 		if (ret < 0)
-			return ret;
+			return -ret;
 		if (ret == 0)
 			die(_("no such section: %s"), argv[0]);
 	}
