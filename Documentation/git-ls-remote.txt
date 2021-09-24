@@ -21,7 +21,6 @@ commit IDs.
 
 OPTIONS
 -------
--h::
 --heads::
 -t::
 --tags::
