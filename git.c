@@ -17,6 +17,7 @@
 #define SUPPORT_SUPER_PREFIX	(1<<4)
 #define DELAY_PAGER_CONFIG	(1<<5)
 #define NO_PARSEOPT		(1<<6) /* parse-options is not used */
+#define NO_STANDALONE_H_HELP	(1<<7) /* a lone -h does not provide help output */
 
 struct cmd_struct {
 	const char *cmd;
@@ -79,6 +80,8 @@ static int list_cmds(const char *spec)
 
 		if (match_token(spec, len, "builtins"))
 			list_builtins(&list, 0);
+		else if (match_token(spec, len, "builtins-h"))
+			list_builtins(&list, NO_STANDALONE_H_HELP);
 		else if (match_token(spec, len, "main"))
 			list_all_main_cmds(&list);
 		else if (match_token(spec, len, "others"))
@@ -538,7 +541,7 @@ static struct cmd_struct commands[] = {
 	{ "fsck-objects", cmd_fsck, RUN_SETUP },
 	{ "gc", cmd_gc, RUN_SETUP },
 	{ "get-tar-commit-id", cmd_get_tar_commit_id, NO_PARSEOPT },
-	{ "grep", cmd_grep, RUN_SETUP_GENTLY },
+	{ "grep", cmd_grep, RUN_SETUP_GENTLY | NO_STANDALONE_H_HELP },
 	{ "hash-object", cmd_hash_object },
 	{ "help", cmd_help },
 	{ "index-pack", cmd_index_pack, RUN_SETUP_GENTLY | NO_PARSEOPT },

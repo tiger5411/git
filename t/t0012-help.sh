@@ -139,7 +139,7 @@ test_expect_success 'git help --config-sections-for-completion' '
 '
 
 test_expect_success 'generate builtin list' '
-	git --list-cmds=builtins >builtins
+	git --list-cmds=builtins-h >builtins
 '
 
 while read builtin
