@@ -234,7 +234,7 @@ test_expect_success "'git help -g' section spacing" '
 
 test_expect_success 'generate builtin list' '
 	mkdir -p sub &&
-	git --list-cmds=builtins >builtins
+	git --list-cmds=builtins-h >builtins
 '
 
 while read builtin
