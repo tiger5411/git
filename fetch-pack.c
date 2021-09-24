@@ -41,7 +41,7 @@ static int server_supports_filtering;
 static int advertise_sid;
 static struct shallow_lock shallow_lock;
 static const char *alternate_shallow_file;
-static struct fsck_options fsck_options = FSCK_OPTIONS_MISSING_GITMODULES;
+static struct fsck_options fsck_options = FSCK_OPTIONS_STRICT;
 static struct strbuf fsck_msg_types = STRBUF_INIT;
 static struct string_list uri_protocols = STRING_LIST_INIT_DUP;
 
@@ -1731,8 +1731,6 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 			die("fetch-pack: expected hash then LF at end of http-fetch output");
 
 		packname[the_hash_algo->hexsz] = '\0';
-
-		parse_gitmodules_oids(cmd.out, &fsck_options.gitmodules_found);
 
 		close(cmd.out);
 
