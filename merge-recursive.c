@@ -410,8 +410,8 @@ static int unpack_trees_start(struct merge_options *opt,
 		opt->priv->unpack_opts.index_only = 1;
 	else {
 		opt->priv->unpack_opts.update = 1;
-		opt->priv->unpack_opts.dir.flags |= DIR_SHOW_IGNORED;
-		setup_standard_excludes(&opt->priv->unpack_opts.dir);
+		/* FIXME: should only do this if !overwrite_ignore */
+		opt->priv->unpack_opts.preserve_ignored = 0;
 	}
 	opt->priv->unpack_opts.merge = 1;
 	opt->priv->unpack_opts.head_idx = 2;

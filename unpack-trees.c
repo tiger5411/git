@@ -1711,6 +1711,11 @@ int unpack_trees(unsigned len, struct tree_desc *t, struct unpack_trees_options 
 		ensure_full_index(o->dst_index);
 	}
 
+	if (!o->preserve_ignored) {
+		o->dir.flags |= DIR_SHOW_IGNORED;
+		setup_standard_excludes(&o->dir);
+	}
+
 	if (!core_apply_sparse_checkout || !o->update)
 		o->skip_sparse_checkout = 1;
 	if (!o->skip_sparse_checkout && !o->pl) {
