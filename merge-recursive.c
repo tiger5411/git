@@ -408,8 +408,11 @@ static int unpack_trees_start(struct merge_options *opt,
 	unpack_trees_options_init(&opt->priv->unpack_opts);
 	if (opt->priv->call_depth)
 		opt->priv->unpack_opts.index_only = 1;
-	else
+	else {
 		opt->priv->unpack_opts.update = 1;
+		opt->priv->unpack_opts.dir.flags |= DIR_SHOW_IGNORED;
+		setup_standard_excludes(&opt->priv->unpack_opts.dir);
+	}
 	opt->priv->unpack_opts.merge = 1;
 	opt->priv->unpack_opts.head_idx = 2;
 	opt->priv->unpack_opts.fn = threeway_merge;
