@@ -196,7 +196,7 @@ void unpack_trees_options_init(struct unpack_trees_options *o)
 void unpack_trees_options_release(struct unpack_trees_options *opts)
 {
 	strvec_clear(&opts->msgs_to_free);
-	dir_clear(&opts->dir);
+	dir_clear(&opts->private_dir);
 }
 
 static int do_add_entry(struct unpack_trees_options *o, struct cache_entry *ce,
@@ -1712,8 +1712,8 @@ int unpack_trees(unsigned len, struct tree_desc *t, struct unpack_trees_options 
 	}
 
 	if (!o->preserve_ignored) {
-		o->dir.flags |= DIR_SHOW_IGNORED;
-		setup_standard_excludes(&o->dir);
+		o->private_dir.flags |= DIR_SHOW_IGNORED;
+		setup_standard_excludes(&o->private_dir);
 	}
 
 	if (!core_apply_sparse_checkout || !o->update)
@@ -2141,7 +2141,7 @@ static int verify_clean_subdirectory(const struct cache_entry *ce,
 	 */
 	pathbuf = xstrfmt("%.*s/", namelen, ce->name);
 
-	d.exclude_per_dir = o->dir.exclude_per_dir;
+	d.exclude_per_dir = o->private_dir.exclude_per_dir;
 	i = read_directory(&d, o->src_index, pathbuf, namelen+1, NULL);
 	dir_clear(&d);
 	free(pathbuf);
@@ -2183,7 +2183,7 @@ static int check_ok_to_remove(const char *name, int len, int dtype,
 	if (ignore_case && icase_exists(o, name, len, st))
 		return 0;
 
-	if (is_excluded(&o->dir, o->src_index, name, &dtype))
+	if (is_excluded(&o->private_dir, o->src_index, name, &dtype))
 		/*
 		 * ce->name is explicitly excluded, so it is Ok to
 		 * overwrite it.
