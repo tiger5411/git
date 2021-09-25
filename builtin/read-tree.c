@@ -201,10 +201,9 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 	if ((opts.update || opts.index_only) && !opts.merge)
 		die("%s is meaningless without -m, --reset, or --prefix",
 		    opts.update ? "-u" : "-i");
-	if (opts.update && !opts.reset) {
-		opts.dir.flags |= DIR_SHOW_IGNORED;
-		setup_standard_excludes(&opts.dir);
-	}
+	if (opts.update && !opts.reset)
+		opts.preserve_ignored = 0;
+	/* otherwise, opts.preserve_ignored is irrelevant */
 	if (opts.merge && !opts.index_only)
 		setup_work_tree();
 

@@ -79,11 +79,7 @@ int checkout_fast_forward(struct repository *r,
 		init_tree_desc(t+i, trees[i]->buffer, trees[i]->size);
 	}
 
-	if (overwrite_ignore) {
-		opts.dir.flags |= DIR_SHOW_IGNORED;
-		setup_standard_excludes(&opts.dir);
-	}
-
+	opts.preserve_ignored = !overwrite_ignore;
 	opts.head_idx = 1;
 	opts.src_index = r->index;
 	opts.dst_index = r->index;
