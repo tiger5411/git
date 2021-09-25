@@ -70,7 +70,7 @@ struct unpack_trees_options {
 		     dry_run;
 	const char *prefix;
 	int cache_bottom;
-	struct dir_struct dir;
+	struct dir_struct private_dir; /* for internal use only */
 	struct pathspec *pathspec;
 	merge_fn_t fn;
 	const char *msgs[NB_UNPACK_TREES_WARNING_TYPES];
@@ -97,7 +97,7 @@ struct unpack_trees_options {
 
 #define UNPACK_TREES_OPTIONS_INIT { \
 	.msgs_to_free = STRVEC_INIT, \
-	.dir = DIR_INIT, \
+	.private_dir = DIR_INIT, \
 }
 void unpack_trees_options_init(struct unpack_trees_options *o);
 
