@@ -159,7 +159,7 @@ all branches that begin with `foo/`. This is useful if your branches are
 organized hierarchically and you would like to apply a configuration to
 all the branches in that hierarchy.
 
-`env`::
+`envExists`::
 	The data that follows the keyword `envExists:` is taken to be the
 	name of an environment variable, e.g. `envExists:NAME`. If the
 	variable (`NAME` in this case) exists the include condition is

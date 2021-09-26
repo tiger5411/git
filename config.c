@@ -271,27 +271,37 @@ done:
 	return ret;
 }
 
-static int include_by_env(const char *cond, size_t cond_len, int *err)
+static int include_by_env_exists(const char *cond, size_t cond_len)
 {
-	const char *col;
+	char *cfg = xstrndup(cond, cond_len);
+	int ret = !!getenv(cfg);
+	free(cfg);
+	return ret;
+}
+
+static int include_by_env_bool(const char *cond, size_t cond_len)
+{
+	char *cfg = xstrndup(cond, cond_len);
+	int ret = git_env_bool(cfg, 0);
+	free(cfg);
+	return ret;
+}
+
+static int include_by_env_match(const char *cond, size_t cond_len, int glob,
+				int *err)
+{
+	const char *eq;
 	const char *value;
 	const char *env;
 	char *cfg = xstrndup(cond, cond_len);
 	char *key = NULL;
 	int ret = 0;
 
-/*
-  includeIf.env:FOO.path=foo
-  includeIf.env:TERM == xterm
-  includeIf.env:TERM != xterm
-  includeIf.env:TERM =~ xterm
-  includeIf.env:TERM =~ xterm
-
-*/
-	col = strchr(cfg, ':');
-	if (!col) {
-		*err = error(_("%s' missing a ':' to match the value"),
-			     cfg);
+	eq = strchr(cfg, ':');
+	if (!eq) {
+		*err = error(_("'%s:%.*s' missing a ':' to match the value"),
+			     glob ? "envMatch" : "envIs", (int)(cond_len),
+			     cond);
 		goto cleanup;
 	}
 	value = eq + 1;
@@ -340,8 +350,14 @@ static int include_condition_is_true(const struct config_options *opts,
 		return include_by_gitdir(opts, cond, cond_len, 1);
 	else if (skip_prefix_mem(cond, cond_len, "onbranch:", &cond, &cond_len))
 		return include_by_branch(cond, cond_len);
-	else if (skip_prefix_mem(cond, cond_len, "env:", &cond, &cond_len))
-		return include_by_env_match(cond, cond_len, err);
+	else if (skip_prefix_mem(cond, cond_len, "envExists:", &cond, &cond_len))
+		return include_by_env_exists(cond, cond_len);
+	else if (skip_prefix_mem(cond, cond_len, "envBool:", &cond, &cond_len))
+		return include_by_env_bool(cond, cond_len);
+	else if (skip_prefix_mem(cond, cond_len, "envIs:", &cond, &cond_len))
+		return include_by_env_match(cond, cond_len, 0, err);
+	else if (skip_prefix_mem(cond, cond_len, "envMatch:", &cond, &cond_len))
+		return include_by_env_match(cond, cond_len, 1, err);
 
 	/* unknown conditionals are always false */
 	return 0;
