@@ -911,7 +911,8 @@ int cmd_blame(int argc, const char **argv, const char *prefix)
 	show_progress = -1;
 
 	parse_options_start(&ctx, argc, argv, prefix, options,
-			    PARSE_OPT_KEEP_DASHDASH | PARSE_OPT_KEEP_ARGV0);
+			    PARSE_OPT_KEEP_DASHDASH | PARSE_OPT_KEEP_ARGV0 |
+			    PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG);
 	for (;;) {
 		switch (parse_options_step(&ctx, options, blame_opt_usage)) {
 		case PARSE_OPT_NON_OPTION:
