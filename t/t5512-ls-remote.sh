@@ -250,6 +250,15 @@ test_expect_success 'ls-remote with filtered symref (refname)' '
 	test_cmp expect actual
 '
 
+test_expect_success 'ls-remote -h handling' '
+	test_expect_code 129 git ls-remote -h >out &&
+	grep ^usage: out &&
+
+	git ls-remote --heads origin >expect &&
+	git ls-remote -h origin >actual &&
+	test_cmp expect actual
+'
+
 test_expect_failure 'ls-remote with filtered symref (--heads)' '
 	git symbolic-ref refs/heads/foo refs/tags/mark &&
 	cat >expect <<-EOF &&
