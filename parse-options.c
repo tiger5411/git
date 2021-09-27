@@ -439,9 +439,19 @@ static void check_typos(const char *arg, const struct option *options)
 	}
 }
 
-static void parse_options_check(const struct option *opts)
+static void parse_options_alter_flags(struct parse_opt_ctx_t *ctx)
+{
+	if (HAS_MULTI_BITS(ctx->flags & (PARSE_OPT_NO_INTERNAL_HELP |
+					 PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG)))
+		BUG("set only one of PARSE_OPT_{NO_INTERNAL_HELP,INTERNAL_HELP_ON_ONE_ARG}");
+	if (ctx->flags & PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG)
+		ctx->flags |= PARSE_OPT_NO_INTERNAL_HELP;
+}
+
+static void parse_options_check(const struct option *opts, enum parse_opt_flags flags)
 {
 	char short_opts[128];
+	int saw_help_opt = 0;
 
 	memset(short_opts, '\0', sizeof(short_opts));
 	for (; opts->type != OPTION_END; opts++) {
@@ -493,8 +503,17 @@ static void parse_options_check(const struct option *opts)
 		}
 		if (opts->argh &&
 		    strcspn(opts->argh, " _") != strlen(opts->argh))
-			optbug(opts, "multi-word argh should use dash to separate words");
+			bug("multi-word argh should use dash to separate words");
+
+		if ((opts->short_name && opts->short_name == 'h') ||
+		    (opts->long_name && (!strcmp(opts->long_name, "help") ||
+					 !strcmp(opts->long_name, "help-all"))))
+			saw_help_opt = 1;
 	}
+	if (!(flags & PARSE_OPT_REV_PARSE_PARSEOPT) &&
+	    !(flags & PARSE_OPT_NO_INTERNAL_HELP) &&
+	    saw_help_opt)
+		bug("set PARSE_OPT_NO_INTERNAL_HELP if using custom help options");
 }
 
 static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
@@ -520,7 +539,8 @@ static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
 	if ((flags & PARSE_OPT_ONE_SHOT) &&
 	    (flags & PARSE_OPT_KEEP_ARGV0))
 		bug("Can't keep argv0 if you don't have it");
-	parse_options_check(options);
+	parse_options_alter_flags(ctx);
+	parse_options_check(options, ctx->flags);
 	BUG_if_bug();
 }
 
@@ -728,6 +748,7 @@ enum parse_opt_result parse_options_step(struct parse_opt_ctx_t *ctx,
 					 const char * const usagestr[])
 {
 	int internal_help = !(ctx->flags & PARSE_OPT_NO_INTERNAL_HELP);
+	int internal_help_one_h = ctx->flags & PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG;
 
 	/* we must reset ->opt, unknown short option leave it dangling */
 	ctx->opt = NULL;
@@ -748,8 +769,13 @@ enum parse_opt_result parse_options_step(struct parse_opt_ctx_t *ctx,
 			continue;
 		}
 
-		/* lone -h asks for help */
-		if (internal_help && ctx->total == 1 && !strcmp(arg + 1, "h"))
+		/*
+		 * A "-h" option asks for help, except for "show-ref"
+		 * et al, which treat a single "-h" differently.
+		 */
+		if ((internal_help ||
+		     (internal_help_one_h && ctx->total == 1)) &&
+		    !strcmp(arg + 1, "h"))
 			goto show_usage;
 
 		/*
