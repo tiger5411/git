@@ -1901,7 +1901,7 @@ next:
 static int fast_forward_to(struct tree *head, struct tree *remote, int reset)
 {
 	struct lock_file lock_file = LOCK_INIT;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc t[2];
 
 	if (parse_tree(head) || parse_tree(remote))
@@ -1911,7 +1911,6 @@ static int fast_forward_to(struct tree *head, struct tree *remote, int reset)
 
 	refresh_cache(REFRESH_QUIET);
 
-	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = 1;
 	opts.src_index = &the_index;
 	opts.dst_index = &the_index;
@@ -1940,7 +1939,7 @@ static int fast_forward_to(struct tree *head, struct tree *remote, int reset)
 static int merge_tree(struct tree *tree)
 {
 	struct lock_file lock_file = LOCK_INIT;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc t[1];
 
 	if (parse_tree(tree))
@@ -1948,7 +1947,6 @@ static int merge_tree(struct tree *tree)
 
 	hold_locked_index(&lock_file, LOCK_DIE_ON_ERROR);
 
-	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = 1;
 	opts.src_index = &the_index;
 	opts.dst_index = &the_index;

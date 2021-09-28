@@ -92,6 +92,7 @@ struct unpack_trees_options {
 	struct checkout_metadata meta;
 };
 #define UNPACK_TREES_OPTIONS_INIT { \
+	.msgs_to_free = STRVEC_INIT, \
 	.dir = DIR_INIT, \
 }
 

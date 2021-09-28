@@ -195,7 +195,7 @@ static void clean_tracked_sparse_directories(struct repository *r)
 static int update_working_directory(struct pattern_list *pl)
 {
 	enum update_sparsity_result result;
-	struct unpack_trees_options o;
+	struct unpack_trees_options o = UNPACK_TREES_OPTIONS_INIT;
 	struct lock_file lock_file = LOCK_INIT;
 	struct repository *r = the_repository;
 
@@ -205,7 +205,6 @@ static int update_working_directory(struct pattern_list *pl)
 
 	r->index->sparse_checkout_patterns = pl;
 
-	memset(&o, 0, sizeof(o));
 	o.verbose_update = isatty(2);
 	o.update = 1;
 	o.head_idx = -1;

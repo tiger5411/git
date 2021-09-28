@@ -21,7 +21,7 @@ int reset_head(struct repository *r, struct object_id *oid, const char *action,
 	struct object_id head_oid;
 	struct tree_desc desc[2] = { { NULL }, { NULL } };
 	struct lock_file lock = LOCK_INIT;
-	struct unpack_trees_options unpack_tree_opts = { 0 };
+	struct unpack_trees_options unpack_tree_opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree *tree;
 	const char *reflog_action;
 	struct strbuf msg = STRBUF_INIT;

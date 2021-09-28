@@ -655,7 +655,7 @@ static int checkout(int submodule_progress)
 	struct object_id oid;
 	char *head;
 	struct lock_file lock_file = LOCK_INIT;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree *tree;
 	struct tree_desc t;
 	int err = 0;
@@ -683,7 +683,6 @@ static int checkout(int submodule_progress)
 
 	hold_locked_index(&lock_file, LOCK_DIE_ON_ERROR);
 
-	memset(&opts, 0, sizeof opts);
 	opts.update = 1;
 	opts.merge = 1;
 	opts.clone = 1;
