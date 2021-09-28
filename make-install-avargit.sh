@@ -121,8 +121,7 @@ test_compile () {
 	fi
 
 	# Compile
-	make -j $(nproc) all
-	make -j $(nproc) sparse hdr-check
+	make -j $(nproc) all sparse-incr
 	make -j $(nproc) man
 
 	# Test sanity
