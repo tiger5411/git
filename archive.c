@@ -306,8 +306,10 @@ int write_archive_entries(struct archiver_args *args,
 		opts.dst_index = args->repo->index;
 		opts.fn = oneway_merge;
 		init_tree_desc(&t, args->tree->buffer, args->tree->size);
-		if (unpack_trees(1, &t, &opts))
-			return -1;
+		if (unpack_trees(1, &t, &opts)) {
+			err = -1;
+			goto cleanup;
+		}
 		git_attr_set_direction(GIT_ATTR_INDEX);
 	}
 
@@ -346,8 +348,11 @@ int write_archive_entries(struct archiver_args *args,
 		if (err)
 			break;
 	}
+
+cleanup:
 	strbuf_release(&path_in_archive);
 	strbuf_release(&content);
+	unpack_trees_options_release(&opts);
 
 	return err;
 }
