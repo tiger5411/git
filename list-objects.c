@@ -20,6 +20,7 @@ struct traversal_context {
 	void *show_data;
 	struct filter *filter;
 };
+#define TRAVERSAL_CONTEXT_INIT { 0 }
 
 static void process_blob(struct traversal_context *ctx,
 			 struct blob *blob,
@@ -421,7 +422,7 @@ void traverse_commit_list(struct rev_info *revs,
 			  show_object_fn show_object,
 			  void *show_data)
 {
-	struct traversal_context ctx;
+	struct traversal_context ctx = TRAVERSAL_CONTEXT_INIT;
 	ctx.revs = revs;
 	ctx.show_commit = show_commit;
 	ctx.show_object = show_object;
@@ -438,7 +439,7 @@ void traverse_commit_list_filtered(
 	void *show_data,
 	struct oidset *omitted)
 {
-	struct traversal_context ctx;
+	struct traversal_context ctx = TRAVERSAL_CONTEXT_INIT;
 
 	ctx.revs = revs;
 	ctx.show_object = show_object;

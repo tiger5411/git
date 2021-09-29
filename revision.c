@@ -2941,6 +2941,8 @@ void release_revisions(struct rev_info *revs)
 	clear_pathspec(&revs->prune_data);
 	release_revisions_mailmap(revs->mailmap);
 	reflog_walk_info_release(revs->reflog_info);
+	/* TODO: Should add this to diff_free() and call that */
+	clear_pathspec(&revs->pruning.pathspec);
 }
 
 static void add_child(struct rev_info *revs, struct commit *parent, struct commit *child)
