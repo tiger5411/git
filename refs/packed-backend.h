@@ -12,7 +12,8 @@ struct ref_transaction;
  * even among packed refs.
  */
 
-struct ref_store *packed_ref_store_create(const char *path,
+struct ref_store *packed_ref_store_create(struct repository *repo,
+					  const char *path,
 					  unsigned int store_flags);
 
 /*
