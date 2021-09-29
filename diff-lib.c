@@ -527,6 +527,7 @@ static int diff_cache(struct rev_info *revs,
 	struct tree *tree;
 	struct tree_desc t;
 	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
+	int ret;
 
 	tree = parse_tree_indirect(tree_oid);
 	if (!tree)
@@ -545,7 +546,9 @@ static int diff_cache(struct rev_info *revs,
 	opts.pathspec->recursive = 1;
 
 	init_tree_desc(&t, tree->buffer, tree->size);
-	return unpack_trees(1, &t, &opts);
+	ret = unpack_trees(1, &t, &opts);
+	unpack_trees_options_release(&opts);
+	return ret;
 }
 
 void diff_get_merge_base(const struct rev_info *revs, struct object_id *mb)

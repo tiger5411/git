@@ -237,6 +237,7 @@ static int reset_tree(struct object_id *i_tree, int update, int reset)
 	struct tree_desc t[MAX_UNPACK_TREES];
 	struct tree *tree;
 	struct lock_file lock_file = LOCK_INIT;
+	int ret = 0;
 
 	read_cache_preload(NULL);
 	if (refresh_cache(REFRESH_QUIET))
@@ -258,13 +259,17 @@ static int reset_tree(struct object_id *i_tree, int update, int reset)
 	opts.update = update;
 	opts.fn = oneway_merge;
 
-	if (unpack_trees(nr_trees, t, &opts))
-		return -1;
+	if (unpack_trees(nr_trees, t, &opts)) {
+		ret = -1;
+		goto cleanup;
+	}
 
 	if (write_locked_index(&the_index, &lock_file, COMMIT_LOCK))
-		return error(_("unable to write new index file"));
+		ret = error(_("unable to write new index file"));
 
-	return 0;
+cleanup:
+	unpack_trees_options_release(&opts);
+	return ret;
 }
 
 static int diff_tree_binary(struct strbuf *out, struct object_id *w_commit)
@@ -815,6 +820,7 @@ static void diff_include_untracked(const struct stash_info *info, struct diff_op
 
 	if (unpack_trees(ARRAY_SIZE(tree_desc), tree_desc, &unpack_tree_opt))
 		die(_("failed to unpack trees"));
+	unpack_trees_options_release(&unpack_tree_opt);
 
 	do_diff_cache(&info->b_commit, diff_opt);
 }

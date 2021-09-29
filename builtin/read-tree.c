@@ -154,6 +154,7 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 		OPT__QUIET(&opts.quiet, N_("suppress feedback messages")),
 		OPT_END()
 	};
+	int ret = 0;
 
 	opts.head_idx = -1;
 	opts.src_index = &the_index;
@@ -243,11 +244,13 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 		parse_tree(tree);
 		init_tree_desc(t+i, tree->buffer, tree->size);
 	}
-	if (unpack_trees(nr_trees, t, &opts))
-		return 128;
+	if (unpack_trees(nr_trees, t, &opts)) {
+		ret = 128;
+		goto cleanup;
+	}
 
 	if (opts.debug_unpack || opts.dry_run)
-		return 0; /* do not write the index out */
+		goto cleanup; /* do not write the index out */
 
 	/*
 	 * When reading only one tree (either the most basic form,
@@ -262,5 +265,8 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 
 	if (write_locked_index(&the_index, &lock_file, COMMIT_LOCK))
 		die("unable to write new index file");
-	return 0;
+
+cleanup:
+	unpack_trees_options_release(&opts);
+	return ret;
 }

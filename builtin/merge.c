@@ -671,6 +671,7 @@ static int read_tree_trivial(struct object_id *common, struct object_id *head,
 	struct tree *trees[MAX_UNPACK_TREES];
 	struct tree_desc t[MAX_UNPACK_TREES];
 	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
+	int ret = 0;
 
 	opts.head_idx = 2;
 	opts.src_index = &the_index;
@@ -695,8 +696,9 @@ static int read_tree_trivial(struct object_id *common, struct object_id *head,
 		init_tree_desc(t+i, trees[i]->buffer, trees[i]->size);
 	}
 	if (unpack_trees(nr_trees, t, &opts))
-		return -1;
-	return 0;
+		ret = -1;
+	unpack_trees_options_release(&opts);
+	return ret;
 }
 
 static void write_tree_trivial(struct object_id *oid)

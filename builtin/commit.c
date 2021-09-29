@@ -305,6 +305,7 @@ static void create_base_index(const struct commit *current_head)
 	struct tree *tree;
 	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc t;
+	int exit_early = 0;
 
 	if (!current_head) {
 		discard_cache();
@@ -324,7 +325,10 @@ static void create_base_index(const struct commit *current_head)
 	parse_tree(tree);
 	init_tree_desc(&t, tree->buffer, tree->size);
 	if (unpack_trees(1, &t, &opts))
-		exit(128); /* We've already reported the error, finish dying */
+		exit_early = 1; /* We've already reported the error, finish dying */
+	unpack_trees_options_release(&opts);
+	if (exit_early)
+		exit(128);
 }
 
 static void refresh_cache_or_die(int refresh_flags)

@@ -3730,6 +3730,7 @@ static int do_reset(struct repository *r,
 cleanup:
 	free((void *)desc.buffer);
 	strbuf_release(&ref_name);
+	unpack_trees_options_release(&unpack_tree_opts);
 	return ret;
 }
 
