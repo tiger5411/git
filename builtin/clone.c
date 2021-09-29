@@ -699,6 +699,7 @@ static int checkout(int submodule_progress)
 	init_tree_desc(&t, tree->buffer, tree->size);
 	if (unpack_trees(1, &t, &opts) < 0)
 		die(_("unable to checkout working tree"));
+	clear_unpack_trees_porcelain(&opts);
 
 	free(head);
 

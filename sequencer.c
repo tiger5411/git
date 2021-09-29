@@ -3720,6 +3720,7 @@ static int do_reset(struct repository *r,
 		rollback_lock_file(&lock);
 		free((void *)desc.buffer);
 		strbuf_release(&ref_name);
+		clear_unpack_trees_porcelain(&unpack_tree_opts);
 		return -1;
 	}
 
@@ -3736,6 +3737,7 @@ static int do_reset(struct repository *r,
 				 NULL, 0, UPDATE_REFS_MSG_ON_ERR);
 
 	strbuf_release(&ref_name);
+	clear_unpack_trees_porcelain(&unpack_tree_opts);
 	return ret;
 }
 

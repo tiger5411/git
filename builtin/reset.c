@@ -85,10 +85,14 @@ static int reset_index(const char *ref, const struct object_id *oid, int reset_t
 
 	if (reset_type == KEEP) {
 		struct object_id head_oid;
-		if (get_oid("HEAD", &head_oid))
-			return error(_("You do not have a valid HEAD."));
-		if (!fill_tree_descriptor(the_repository, desc + nr, &head_oid))
-			return error(_("Failed to find tree of HEAD."));
+		if (get_oid("HEAD", &head_oid)) {
+			error(_("You do not have a valid HEAD."));
+			goto out;
+		}
+		if (!fill_tree_descriptor(the_repository, desc + nr, &head_oid)) {
+			error(_("Failed to find tree of HEAD."));
+			goto out;
+		}
 		nr++;
 		opts.fn = twoway_merge;
 	}
@@ -110,6 +114,7 @@ static int reset_index(const char *ref, const struct object_id *oid, int reset_t
 	ret = 0;
 
 out:
+	clear_unpack_trees_porcelain(&opts);
 	for (i = 0; i < nr; i++)
 		free((void *)desc[i].buffer);
 	return ret;

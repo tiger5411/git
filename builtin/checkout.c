@@ -641,6 +641,7 @@ static int reset_tree(struct tree *tree, const struct checkout_opts *o,
 {
 	struct unpack_trees_options opts;
 	struct tree_desc tree_desc;
+	int ret;
 
 	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = -1;
@@ -670,10 +671,14 @@ static int reset_tree(struct tree *tree, const struct checkout_opts *o,
 		 */
 		/* fallthrough */
 	case 0:
-		return 0;
+		ret = 0;
+		break;
 	default:
-		return 128;
+		ret = 128;
 	}
+
+	clear_unpack_trees_porcelain(&opts);
+	return ret;
 }
 
 static void setup_branch_path(struct branch_info *branch)

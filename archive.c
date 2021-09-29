@@ -299,16 +299,18 @@ int write_archive_entries(struct archiver_args *args,
 	/*
 	 * Setup index and instruct attr to read index only
 	 */
+	memset(&opts, 0, sizeof(opts));
 	if (!args->worktree_attributes) {
-		memset(&opts, 0, sizeof(opts));
 		opts.index_only = 1;
 		opts.head_idx = -1;
 		opts.src_index = args->repo->index;
 		opts.dst_index = args->repo->index;
 		opts.fn = oneway_merge;
 		init_tree_desc(&t, args->tree->buffer, args->tree->size);
-		if (unpack_trees(1, &t, &opts))
-			return -1;
+		if (unpack_trees(1, &t, &opts)) {
+			err = -1;
+			goto cleanup;
+		}
 		git_attr_set_direction(GIT_ATTR_INDEX);
 	}
 
@@ -347,8 +349,11 @@ int write_archive_entries(struct archiver_args *args,
 		if (err)
 			break;
 	}
+
+cleanup:
 	strbuf_release(&path_in_archive);
 	strbuf_release(&content);
+	clear_unpack_trees_porcelain(&opts);
 
 	return err;
 }

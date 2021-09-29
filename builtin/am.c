@@ -1903,6 +1903,7 @@ static int fast_forward_to(struct tree *head, struct tree *remote, int reset)
 	struct lock_file lock_file = LOCK_INIT;
 	struct unpack_trees_options opts;
 	struct tree_desc t[2];
+	int ret = 0;
 
 	if (parse_tree(head) || parse_tree(remote))
 		return -1;
@@ -1925,13 +1926,15 @@ static int fast_forward_to(struct tree *head, struct tree *remote, int reset)
 
 	if (unpack_trees(2, t, &opts)) {
 		rollback_lock_file(&lock_file);
-		return -1;
+		ret = -1;
+		goto cleanup;
 	}
 
 	if (write_locked_index(&the_index, &lock_file, COMMIT_LOCK))
 		die(_("unable to write new index file"));
-
-	return 0;
+cleanup:
+	clear_unpack_trees_porcelain(&opts);
+	return ret;
 }
 
 /**
@@ -1943,6 +1946,7 @@ static int merge_tree(struct tree *tree)
 	struct lock_file lock_file = LOCK_INIT;
 	struct unpack_trees_options opts;
 	struct tree_desc t[1];
+	int ret = 0;
 
 	if (parse_tree(tree))
 		return -1;
@@ -1959,13 +1963,16 @@ static int merge_tree(struct tree *tree)
 
 	if (unpack_trees(1, t, &opts)) {
 		rollback_lock_file(&lock_file);
-		return -1;
+		ret = -1;
+		goto cleanup;
 	}
 
 	if (write_locked_index(&the_index, &lock_file, COMMIT_LOCK))
 		die(_("unable to write new index file"));
 
-	return 0;
+cleanup:
+	clear_unpack_trees_porcelain(&opts);
+	return ret;
 }
 
 /**
