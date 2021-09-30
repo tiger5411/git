@@ -46,8 +46,10 @@ static int count_dir_entries(const char *dirname)
 	return len;
 }
 
-// Work linenumber into the tempdir, so we can see which tests forget to
-// cleanup.
+/*
+ * Work linenumber into the tempdir, so we can see which tests forget to
+ * cleanup.
+ */
 static char *get_tmp_template(int linenumber)
 {
 	const char *tmp = getenv("TMPDIR");
@@ -861,7 +863,7 @@ static void test_reftable_stack_compaction_concurrent(void)
 
 static void unclean_stack_close(struct reftable_stack *st)
 {
-	// break abstraction boundary to simulate unclean shutdown.
+	/* break abstraction boundary to simulate unclean shutdown */
 	int i = 0;
 	for (; i < st->readers_len; i++) {
 		reftable_reader_free(st->readers[i]);
