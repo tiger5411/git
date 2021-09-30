@@ -82,7 +82,7 @@ NO_GETTEXT = YesPlease
 # t/Makefile
 id_u := \$(shell id -u)
 GIT_TEST_OPTS = 
-GIT_TEST_OPTS += --root=/run/user/\$(id_u)/$(basename $(pwd))
+GIT_TEST_OPTS += --root=/run/user/\$(id_u)/$(basename $(dirname $(git rev-parse --absolute-git-dir)))
 GIT_TEST_OPTS += --verbose-log
 
 DEFAULT_TEST_TARGET=prove
