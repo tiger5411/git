@@ -90,6 +90,7 @@ struct unpack_trees_options {
 	struct pattern_list *pl; /* for internal use */
 	struct checkout_metadata meta;
 };
+#define UNPACK_TREES_OPTIONS_INIT { 0 }
 
 int unpack_trees(unsigned n, struct tree_desc *t,
 		 struct unpack_trees_options *options);

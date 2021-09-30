@@ -526,13 +526,12 @@ static int diff_cache(struct rev_info *revs,
 {
 	struct tree *tree;
 	struct tree_desc t;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 
 	tree = parse_tree_indirect(tree_oid);
 	if (!tree)
 		return error("bad tree object %s",
 			     tree_name ? tree_name : oid_to_hex(tree_oid));
-	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = 1;
 	opts.index_only = cached;
 	opts.diff_index_cached = (cached &&

@@ -404,8 +404,10 @@ static int unpack_trees_start(struct merge_options *opt,
 	int rc;
 	struct tree_desc t[3];
 	struct index_state tmp_index = { NULL };
+	struct unpack_trees_options blank = UNPACK_TREES_OPTIONS_INIT;
 
-	memset(&opt->priv->unpack_opts, 0, sizeof(opt->priv->unpack_opts));
+	assert(sizeof(blank) == sizeof(opt->priv->unpack_opts));
+	memcpy(&opt->priv->unpack_opts, &blank, sizeof(opt->priv->unpack_opts));
 	if (opt->priv->call_depth)
 		opt->priv->unpack_opts.index_only = 1;
 	else
