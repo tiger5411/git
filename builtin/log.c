@@ -707,7 +707,6 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 			ret = error(_("unknown type: %d"), o->type);
 		}
 	}
-	free(objects);
 	return cmd_log_deinit(ret, &rev, &opt);
 }
 
