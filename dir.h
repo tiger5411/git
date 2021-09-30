@@ -342,7 +342,9 @@ struct dir_struct {
 	unsigned visited_directories;
 };
 
-#define DIR_INIT { 0 }
+#define DIR_INIT { \
+	.basebuf = STRBUF_INIT, \
+}
 
 struct dirent *readdir_skip_dot_and_dotdot(DIR *dirp);
 

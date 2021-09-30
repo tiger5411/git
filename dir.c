@@ -1550,14 +1550,6 @@ static void prep_exclude(struct dir_struct *dir,
 	if (dir->pattern)
 		return;
 
-	/*
-	 * Lazy initialization. All call sites currently just
-	 * memset(dir, 0, sizeof(*dir)) before use. Changing all of
-	 * them seems lots of work for little benefit.
-	 */
-	if (!dir->basebuf.buf)
-		strbuf_init(&dir->basebuf, PATH_MAX);
-
 	/* Read from the parent directories and push them down. */
 	current = stk ? stk->baselen : -1;
 	strbuf_setlen(&dir->basebuf, current < 0 ? 0 : current);
