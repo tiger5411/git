@@ -2937,6 +2937,7 @@ static void release_revisions_commit_list(struct rev_info *revs)
 
 void release_revisions(struct rev_info *revs)
 {
+	release_revisions_commit_list(revs);
 	object_array_clear(&revs->pending);
 }
 
