@@ -2930,6 +2930,7 @@ void release_revisions(struct rev_info *revs)
 {
 	if (!revs)
 		return;
+	release_revisions_commit_list(revs);
 	object_array_clear(&revs->pending);
 }
 
