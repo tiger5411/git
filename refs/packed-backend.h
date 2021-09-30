@@ -1,6 +1,7 @@
 #ifndef REFS_PACKED_BACKEND_H
 #define REFS_PACKED_BACKEND_H
 
+struct repository;
 struct ref_transaction;
 
 /*
