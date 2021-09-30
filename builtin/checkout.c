@@ -639,10 +639,9 @@ static int reset_tree(struct tree *tree, const struct checkout_opts *o,
 		      int worktree, int *writeout_error,
 		      struct branch_info *info)
 {
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc tree_desc;
 
-	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = -1;
 	opts.update = worktree;
 	opts.skip_unmerged = !worktree;
@@ -719,9 +718,8 @@ static int merge_working_tree(const struct checkout_opts *opts,
 	} else {
 		struct tree_desc trees[2];
 		struct tree *tree;
-		struct unpack_trees_options topts;
+		struct unpack_trees_options topts = UNPACK_TREES_OPTIONS_INIT;
 
-		memset(&topts, 0, sizeof(topts));
 		topts.head_idx = -1;
 		topts.src_index = &the_index;
 		topts.dst_index = &the_index;

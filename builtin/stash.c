@@ -233,7 +233,7 @@ static int clear_stash(int argc, const char **argv, const char *prefix)
 static int reset_tree(struct object_id *i_tree, int update, int reset)
 {
 	int nr_trees = 1;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc t[MAX_UNPACK_TREES];
 	struct tree *tree;
 	struct lock_file lock_file = LOCK_INIT;
@@ -243,8 +243,6 @@ static int reset_tree(struct object_id *i_tree, int update, int reset)
 		return -1;
 
 	hold_locked_index(&lock_file, LOCK_DIE_ON_ERROR);
-
-	memset(&opts, 0, sizeof(opts));
 
 	tree = parse_tree_indirect(i_tree);
 	if (parse_tree(tree))
@@ -799,7 +797,7 @@ static void diff_include_untracked(const struct stash_info *info, struct diff_op
 	const struct object_id *oid[] = { &info->w_commit, &info->u_tree };
 	struct tree *tree[ARRAY_SIZE(oid)];
 	struct tree_desc tree_desc[ARRAY_SIZE(oid)];
-	struct unpack_trees_options unpack_tree_opt = { 0 };
+	struct unpack_trees_options unpack_tree_opt = UNPACK_TREES_OPTIONS_INIT;
 	int i;
 
 	for (i = 0; i < ARRAY_SIZE(oid); i++) {

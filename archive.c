@@ -269,7 +269,7 @@ int write_archive_entries(struct archiver_args *args,
 		write_archive_entry_fn_t write_entry)
 {
 	struct archiver_context context;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	struct tree_desc t;
 	int err;
 	struct strbuf path_in_archive = STRBUF_INIT;
@@ -300,7 +300,6 @@ int write_archive_entries(struct archiver_args *args,
 	 * Setup index and instruct attr to read index only
 	 */
 	if (!args->worktree_attributes) {
-		memset(&opts, 0, sizeof(opts));
 		opts.index_only = 1;
 		opts.head_idx = -1;
 		opts.src_index = args->repo->index;

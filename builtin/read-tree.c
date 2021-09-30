@@ -116,7 +116,7 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 	int i, stage = 0;
 	struct object_id oid;
 	struct tree_desc t[MAX_UNPACK_TREES];
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	int prefix_set = 0;
 	struct lock_file lock_file = LOCK_INIT;
 	const struct option read_tree_options[] = {
@@ -158,7 +158,6 @@ int cmd_read_tree(int argc, const char **argv, const char *cmd_prefix)
 		OPT_END()
 	};
 
-	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = -1;
 	opts.src_index = &the_index;
 	opts.dst_index = &the_index;

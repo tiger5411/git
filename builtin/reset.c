@@ -51,10 +51,9 @@ static int reset_index(const char *ref, const struct object_id *oid, int reset_t
 	int i, nr = 0;
 	struct tree_desc desc[2];
 	struct tree *tree;
-	struct unpack_trees_options opts;
+	struct unpack_trees_options opts = UNPACK_TREES_OPTIONS_INIT;
 	int ret = -1;
 
-	memset(&opts, 0, sizeof(opts));
 	opts.head_idx = 1;
 	opts.src_index = &the_index;
 	opts.dst_index = &the_index;

@@ -91,6 +91,8 @@ struct unpack_trees_options {
 	struct checkout_metadata meta;
 };
 
+#define UNPACK_TREES_OPTIONS_INIT { 0 }
+
 int unpack_trees(unsigned n, struct tree_desc *t,
 		 struct unpack_trees_options *options);
 

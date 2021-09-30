@@ -4021,9 +4021,8 @@ static int checkout(struct merge_options *opt,
 	/* Switch the index/working copy from old to new */
 	int ret;
 	struct tree_desc trees[2];
-	struct unpack_trees_options unpack_opts;
+	struct unpack_trees_options unpack_opts = UNPACK_TREES_OPTIONS_INIT;
 
-	memset(&unpack_opts, 0, sizeof(unpack_opts));
 	unpack_opts.head_idx = -1;
 	unpack_opts.src_index = opt->repo->index;
 	unpack_opts.dst_index = opt->repo->index;
