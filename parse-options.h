@@ -213,7 +213,8 @@ struct option {
  */
 int parse_options(int argc, const char **argv, const char *prefix,
 		  const struct option *options,
-		  const char * const usagestr[], int flags);
+		  const char * const usagestr[],
+		  enum parse_opt_flags flags);
 
 NORETURN void usage_with_options(const char * const *usagestr,
 				 const struct option *options);
@@ -270,7 +271,8 @@ struct parse_opt_ctx_t {
 
 void parse_options_start(struct parse_opt_ctx_t *ctx,
 			 int argc, const char **argv, const char *prefix,
-			 const struct option *options, int flags);
+			 const struct option *options,
+			 enum parse_opt_flags flags);
 
 int parse_options_step(struct parse_opt_ctx_t *ctx,
 		       const struct option *options,
