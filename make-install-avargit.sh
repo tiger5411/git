@@ -440,7 +440,7 @@ do
 	fi
 	t="$series_list.range-diff.t"
 	/usr/bin/time -f "%E" -o "$t" \
-		git --no-pager range-diff --no-progress --no-notes --right-only $range_diff_to...$branch \
+		git --no-pager range-diff --no-notes --right-only $range_diff_to...$branch \
 		>$series_list.range-diff
 	grep -E -v -- " ----------+ >" $series_list.range-diff >$series_list.range-diff.no-new || :
 	if test -s $series_list.range-diff.no-new
