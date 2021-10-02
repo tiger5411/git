@@ -133,7 +133,7 @@ reset_head_refs:
 leave_reset_head:
 	strbuf_release(&msg);
 	rollback_lock_file(&lock);
-	clear_unpack_trees_porcelain(&unpack_tree_opts);
+	unpack_trees_options_release(&unpack_tree_opts);
 	while (nr)
 		free((void *)desc[--nr].buffer);
 	return ret;

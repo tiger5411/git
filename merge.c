@@ -95,10 +95,10 @@ int checkout_fast_forward(struct repository *r,
 
 	if (unpack_trees(nr_trees, t, &opts)) {
 		rollback_lock_file(&lock_file);
-		clear_unpack_trees_porcelain(&opts);
+		unpack_trees_options_release(&opts);
 		return -1;
 	}
-	clear_unpack_trees_porcelain(&opts);
+	unpack_trees_options_release(&opts);
 
 	if (write_locked_index(r->index, &lock_file, COMMIT_LOCK))
 		return error(_("unable to write new index file"));

@@ -4054,7 +4054,7 @@ static int checkout(struct merge_options *opt,
 	init_tree_desc(&trees[1], next->buffer, next->size);
 
 	ret = unpack_trees(2, trees, &unpack_opts);
-	clear_unpack_trees_porcelain(&unpack_opts);
+	unpack_trees_options_release(&unpack_opts);
 	return ret;
 }
 

@@ -41,10 +41,12 @@ enum unpack_trees_error_types {
 void setup_unpack_trees_porcelain(struct unpack_trees_options *opts,
 				  const char *cmd);
 
-/*
- * Frees resources allocated by setup_unpack_trees_porcelain().
+/**
+ * Frees resources allocated by function that take the "struct
+ * unpack_trees_options". Always call this after using unpack_trees(),
+ * update_sparsity() etc.
  */
-void clear_unpack_trees_porcelain(struct unpack_trees_options *opts);
+void unpack_trees_options_release(struct unpack_trees_options *opts);
 
 struct unpack_trees_options {
 	unsigned int reset,

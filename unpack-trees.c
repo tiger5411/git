@@ -193,7 +193,7 @@ void unpack_trees_options_init(struct unpack_trees_options *o)
 	memcpy(o, &blank, sizeof(*o));
 }
 
-void clear_unpack_trees_porcelain(struct unpack_trees_options *opts)
+void unpack_trees_options_release(struct unpack_trees_options *opts)
 {
 	strvec_clear(&opts->msgs_to_free);
 	dir_clear(&opts->dir);

@@ -219,7 +219,7 @@ static int update_working_directory(struct pattern_list *pl)
 
 	setup_unpack_trees_porcelain(&o, "sparse-checkout");
 	result = update_sparsity(&o);
-	clear_unpack_trees_porcelain(&o);
+	unpack_trees_options_release(&o);
 
 	if (result == UPDATE_SPARSITY_WARNINGS)
 		/*
