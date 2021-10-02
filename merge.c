@@ -54,6 +54,7 @@ int checkout_fast_forward(struct repository *r,
 	struct tree_desc t[MAX_UNPACK_TREES];
 	int i, nr_trees = 0;
 	struct lock_file lock_file = LOCK_INIT;
+	int ret = 0;
 
 	refresh_index(r->index, REFRESH_QUIET, NULL, NULL, NULL);
 
@@ -95,12 +96,14 @@ int checkout_fast_forward(struct repository *r,
 
 	if (unpack_trees(nr_trees, t, &opts)) {
 		rollback_lock_file(&lock_file);
-		unpack_trees_options_release(&opts);
-		return -1;
+		ret = -1;
+		goto cleanup;
 	}
-	unpack_trees_options_release(&opts);
 
 	if (write_locked_index(r->index, &lock_file, COMMIT_LOCK))
-		return error(_("unable to write new index file"));
-	return 0;
+		ret = error(_("unable to write new index file"));
+
+cleanup:
+	unpack_trees_options_release(&opts);
+	return ret;
 }
