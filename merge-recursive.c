@@ -442,6 +442,7 @@ static void unpack_trees_finish(struct merge_options *opt)
 {
 	discard_index(&opt->priv->orig_index);
 	clear_unpack_trees_porcelain(&opt->priv->unpack_opts);
+	unpack_trees_options_init(&opt->priv->unpack_opts);
 }
 
 static int save_files_dirs(const struct object_id *oid,

@@ -197,7 +197,6 @@ void clear_unpack_trees_porcelain(struct unpack_trees_options *opts)
 {
 	strvec_clear(&opts->msgs_to_free);
 	dir_clear(&opts->dir);
-	memset(opts->msgs, 0, sizeof(opts->msgs));
 }
 
 static int do_add_entry(struct unpack_trees_options *o, struct cache_entry *ce,
