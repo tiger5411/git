@@ -108,8 +108,6 @@ void setup_unpack_trees_porcelain(struct unpack_trees_options *opts,
 	const char **msgs = opts->msgs;
 	const char *msg;
 
-	strvec_init(&opts->msgs_to_free);
-
 	if (!strcmp(cmd, "checkout"))
 		msg = advice_enabled(ADVICE_COMMIT_BEFORE_MERGE)
 		      ? _("Your local changes to the following files would be overwritten by checkout:\n%%s"
@@ -187,6 +185,12 @@ void setup_unpack_trees_porcelain(struct unpack_trees_options *opts,
 	/* rejected paths may not have a static buffer */
 	for (i = 0; i < ARRAY_SIZE(opts->unpack_rejects); i++)
 		opts->unpack_rejects[i].strdup_strings = 1;
+}
+
+void unpack_trees_options_init(struct unpack_trees_options *o)
+{
+	struct unpack_trees_options blank = UNPACK_TREES_OPTIONS_INIT;
+	memcpy(o, &blank, sizeof(*o));
 }
 
 void clear_unpack_trees_porcelain(struct unpack_trees_options *opts)

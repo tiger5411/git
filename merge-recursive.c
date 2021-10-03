@@ -405,7 +405,7 @@ static int unpack_trees_start(struct merge_options *opt,
 	struct tree_desc t[3];
 	struct index_state tmp_index = { NULL };
 
-	memset(&opt->priv->unpack_opts, 0, sizeof(opt->priv->unpack_opts));
+	unpack_trees_options_init(&opt->priv->unpack_opts);
 	if (opt->priv->call_depth)
 		opt->priv->unpack_opts.index_only = 1;
 	else
@@ -3704,6 +3704,7 @@ static int merge_start(struct merge_options *opt, struct tree *head)
 
 	CALLOC_ARRAY(opt->priv, 1);
 	string_list_init_dup(&opt->priv->df_conflict_file_set);
+	unpack_trees_options_init(&opt->priv->unpack_opts);
 	return 0;
 }
 
