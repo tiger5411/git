@@ -19,7 +19,7 @@
  * CE_SKIP_WORKTREE marked. If you want to exclude files, make sure you have
  * loaded the index first.
  *
- * - Prepare `struct dir_struct dir` using `dir_init()` function.
+ * - The `struct dir_struct dir` must be initialized with `DIR_INIT`.
  *
  * - To add single exclude pattern, call `add_pattern_list()` and then
  *   `add_pattern()`.

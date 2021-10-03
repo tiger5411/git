@@ -826,7 +826,7 @@ static int get_untracked_files(struct repository *r,
 			       struct prefix_item_list *files,
 			       const struct pathspec *ps)
 {
-	struct dir_struct dir = { 0 };
+	struct dir_struct dir = DIR_INIT;
 	size_t i;
 	struct strbuf buf = STRBUF_INIT;
 
