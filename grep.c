@@ -10,10 +10,6 @@
 #include "quote.h"
 #include "help.h"
 
-static int grep_source_load(struct grep_source *gs);
-static int grep_source_is_binary(struct grep_source *gs,
-				 struct index_state *istate);
-
 static void std_output(struct grep_opt *opt, const void *buf, size_t size)
 {
 	fwrite(buf, size, 1, stdout);
@@ -1422,6 +1418,69 @@ static int look_ahead(struct grep_opt *opt,
 	return 0;
 }
 
+static int grep_source_load_oid(struct grep_source *gs)
+{
+	enum object_type type;
+
+	gs->buf = repo_read_object_file(gs->repo, gs->identifier, &type,
+					&gs->size);
+	if (!gs->buf)
+		return error(_("'%s': unable to read %s"),
+			     gs->name,
+			     oid_to_hex(gs->identifier));
+	return 0;
+}
+
+static int grep_source_load_file(struct grep_source *gs)
+{
+	const char *filename = gs->identifier;
+	struct stat st;
+	char *data;
+	size_t size;
+	int i;
+
+	if (lstat(filename, &st) < 0) {
+	err_ret:
+		if (errno != ENOENT)
+			error_errno(_("failed to stat '%s'"), filename);
+		return -1;
+	}
+	if (!S_ISREG(st.st_mode))
+		return -1;
+	size = xsize_t(st.st_size);
+	i = open(filename, O_RDONLY);
+	if (i < 0)
+		goto err_ret;
+	data = xmallocz(size);
+	if (st.st_size != read_in_full(i, data, size)) {
+		error_errno(_("'%s': short read"), filename);
+		close(i);
+		free(data);
+		return -1;
+	}
+	close(i);
+
+	gs->buf = data;
+	gs->size = size;
+	return 0;
+}
+
+static int grep_source_load(struct grep_source *gs)
+{
+	if (gs->buf)
+		return 0;
+
+	switch (gs->type) {
+	case GREP_SOURCE_FILE:
+		return grep_source_load_file(gs);
+	case GREP_SOURCE_OID:
+		return grep_source_load_oid(gs);
+	case GREP_SOURCE_BUF:
+		return gs->buf ? 0 : -1;
+	}
+	BUG("invalid grep_source type to load");
+}
+
 static int fill_textconv_grep(struct repository *r,
 			      struct userdiff_driver *driver,
 			      struct grep_source *gs)
@@ -1487,6 +1546,20 @@ static int is_empty_line(const char *bol, const char *eol)
 	while (bol < eol && isspace(*bol))
 		bol++;
 	return bol == eol;
+}
+
+
+static int grep_source_is_binary(struct grep_source *gs,
+				 struct index_state *istate)
+{
+	grep_source_load_driver(gs, istate);
+	if (gs->driver->binary != -1)
+		return gs->driver->binary;
+
+	if (!grep_source_load(gs))
+		return buffer_is_binary(gs->buf, gs->size);
+
+	return 0;
 }
 
 static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int collect_hits)
@@ -1849,69 +1922,6 @@ void grep_source_clear_data(struct grep_source *gs)
 	}
 }
 
-static int grep_source_load_oid(struct grep_source *gs)
-{
-	enum object_type type;
-
-	gs->buf = repo_read_object_file(gs->repo, gs->identifier, &type,
-					&gs->size);
-	if (!gs->buf)
-		return error(_("'%s': unable to read %s"),
-			     gs->name,
-			     oid_to_hex(gs->identifier));
-	return 0;
-}
-
-static int grep_source_load_file(struct grep_source *gs)
-{
-	const char *filename = gs->identifier;
-	struct stat st;
-	char *data;
-	size_t size;
-	int i;
-
-	if (lstat(filename, &st) < 0) {
-	err_ret:
-		if (errno != ENOENT)
-			error_errno(_("failed to stat '%s'"), filename);
-		return -1;
-	}
-	if (!S_ISREG(st.st_mode))
-		return -1;
-	size = xsize_t(st.st_size);
-	i = open(filename, O_RDONLY);
-	if (i < 0)
-		goto err_ret;
-	data = xmallocz(size);
-	if (st.st_size != read_in_full(i, data, size)) {
-		error_errno(_("'%s': short read"), filename);
-		close(i);
-		free(data);
-		return -1;
-	}
-	close(i);
-
-	gs->buf = data;
-	gs->size = size;
-	return 0;
-}
-
-static int grep_source_load(struct grep_source *gs)
-{
-	if (gs->buf)
-		return 0;
-
-	switch (gs->type) {
-	case GREP_SOURCE_FILE:
-		return grep_source_load_file(gs);
-	case GREP_SOURCE_OID:
-		return grep_source_load_oid(gs);
-	case GREP_SOURCE_BUF:
-		return gs->buf ? 0 : -1;
-	}
-	BUG("invalid grep_source type to load");
-}
-
 void grep_source_load_driver(struct grep_source *gs,
 			     struct index_state *istate)
 {
@@ -1924,17 +1934,4 @@ void grep_source_load_driver(struct grep_source *gs,
 	if (!gs->driver)
 		gs->driver = userdiff_find_by_name("default");
 	grep_attr_unlock();
-}
-
-static int grep_source_is_binary(struct grep_source *gs,
-				 struct index_state *istate)
-{
-	grep_source_load_driver(gs, istate);
-	if (gs->driver->binary != -1)
-		return gs->driver->binary;
-
-	if (!grep_source_load(gs))
-		return buffer_is_binary(gs->buf, gs->size);
-
-	return 0;
 }
