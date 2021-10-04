@@ -1443,6 +1443,7 @@ static int grep_source_load_file(struct grep_source *gs)
 	err_ret:
 		if (errno != ENOENT)
 			error_errno(_("failed to stat '%s'"), filename);
+		gs->no_reload = 1;
 		return -1;
 	}
 	if (!S_ISREG(st.st_mode))
@@ -1619,6 +1620,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 	 * We know the result of a textconv is text, so we only have to care
 	 * about binary handling if we are not using it.
 	 */
+	gs->no_reload = 0;
 	if (!textconv) {
 		switch (opt->binary) {
 		case GREP_BINARY_DEFAULT:
@@ -1641,7 +1643,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 
 	try_lookahead = should_lookahead(opt);
 
-	if (fill_textconv_grep(opt->repo, textconv, gs) < 0)
+	if (!gs->no_reload && fill_textconv_grep(opt->repo, textconv, gs) < 0)
 		return 0;
 
 	bol = gs->buf;

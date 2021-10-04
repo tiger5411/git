@@ -233,6 +233,8 @@ struct grep_source {
 
 	char *path; /* for attribute lookups */
 	struct userdiff_driver *driver;
+
+	int no_reload;
 };
 
 void grep_source_init_file(struct grep_source *gs, const char *name,

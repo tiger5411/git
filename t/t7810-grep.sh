@@ -1775,4 +1775,21 @@ test_expect_success 'grep does not report i-t-a and assume unchanged with -L' '
 	test_cmp expected actual
 '
 
+test_expect_success SANITY,POSIXPERM 'grep permission errors' '
+	git init no-perms &&
+	(
+		cd no-perms &&
+		test_commit A &&
+		test_commit B &&
+
+		chmod 0 B.t &&
+
+		git grep A A.t 2>err &&
+		test_must_be_empty err &&
+
+		test_must_fail git grep A B.t 2>err &&
+		test_line_count = 1 err
+	)
+'
+
 test_done
