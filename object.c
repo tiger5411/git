@@ -22,11 +22,30 @@ struct object *get_indexed_object(unsigned int idx)
 
 static const char *object_type_strings[] = {
 	NULL,		/* OBJ_NONE = 0 */
-	"commit",	/* OBJ_COMMIT = 1 */
-	"tree",		/* OBJ_TREE = 2 */
-	"blob",		/* OBJ_BLOB = 3 */
-	"tag",		/* OBJ_TAG = 4 */
+	/*
+	 * TRANSLATORS: "commit", "tree", "blob" and "tag" are the
+	 * name of Git's object types. These names are interpolated
+	 * stand-alone when doing so is unambiguous for translation
+	 * and doesn't require extra context. E.g. as part of an
+	 * already-translated string that needs to have a type name
+	 * quoted verbatim, or the short description of a command-line
+	 * option expecting a given type.
+	 */
+	N_("commit"),	/* OBJ_COMMIT = 1 */
+	N_("tree"),	/* OBJ_TREE = 2 */
+	N_("blob"),	/* OBJ_BLOB = 3 */
+	N_("tag"),	/* OBJ_TAG = 4 */
 };
+
+/*
+ * TRANSLATORS: This is the short type name of an object that's not
+ * one of Git's known object types, as opposed to "commit", "tree",
+ * "blob" and "tag" above.
+ *
+ * A user is unlikely to ever encounter these, but they can be
+ * manually created with "git hash-object --literally".
+ */
+const char *unknown_type = N_("unknown type");
 
 const char *type_name(unsigned int type)
 {

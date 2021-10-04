@@ -91,6 +91,7 @@ struct object {
 	struct object_id oid;
 };
 
+extern const char *unknown_type;
 const char *type_name(unsigned int type);
 int type_from_string_gently(const char *str, ssize_t, int gentle);
 #define type_from_string(str) type_from_string_gently(str, -1, 0)
