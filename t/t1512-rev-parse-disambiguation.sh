@@ -73,7 +73,6 @@ test_expect_success 'ambiguous loose blob parsed as OBJ_BAD' '
 
 	cat >expect <<-\EOF &&
 	error: short object ID bad0... is ambiguous
-	hint: The candidates are:
 	fatal: invalid object type
 	EOF
 	test_cmp_failed_rev_parse blob.bad bad0
@@ -95,11 +94,11 @@ test_expect_success POSIXPERM 'ambigous zlib corrupt loose blob' '
 
 	cat >expect <<-\EOF &&
 	error: short object ID cafe... is ambiguous
+	error: inflate: data stream error (incorrect header check)
+	error: unable to unpack cafe... header
+	error: inflate: data stream error (incorrect header check)
+	error: unable to unpack cafe... header
 	hint: The candidates are:
-	error: inflate: data stream error (incorrect header check)
-	error: unable to unpack cafe... header
-	error: inflate: data stream error (incorrect header check)
-	error: unable to unpack cafe... header
 	hint:   cafe... [bad object]
 	hint:   cafe... blob
 	fatal: ambiguous argument '\''cafe...'\'': unknown revision or path not in the working tree.
