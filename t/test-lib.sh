@@ -1210,10 +1210,10 @@ test_done () {
 			error "Tests passed but trash directory already removed before test cleanup; aborting"
 
 			cd "$TRASH_DIRECTORY/.." &&
-			rm -fr "$TRASH_DIRECTORY" || {
+			remove_trash_directory "$TRASH_DIRECTORY" || {
 				# try again in a bit
 				sleep 5;
-				rm -fr "$TRASH_DIRECTORY"
+				remove_trash_directory "$TRASH_DIRECTORY"
 			} ||
 			error "Tests passed but test cleanup failed; aborting"
 		fi
@@ -1370,6 +1370,18 @@ then
 	exit 1
 fi
 
+# Try really hard to clean up our mess
+remove_trash_directory() {
+	dir="$1"
+	if ! rm -rf "$dir"
+	then
+		say_color info >&3 "Failed to remove trash directory, trying to re-chmod it first..."
+		chmod -R u+w "$dir" 2>/dev/null
+		rm -rf "$dir"
+	fi
+	! test -d "$dir"
+}
+
 # Are we running this test at all?
 remove_trash=
 this_test=${0##*/}
@@ -1388,7 +1400,7 @@ GNUPGHOME="$HOME/gnupg-home-not-used"
 export HOME GNUPGHOME USER_HOME
 
 # Test repository
-rm -fr "$TRASH_DIRECTORY" || {
+remove_trash_directory "$TRASH_DIRECTORY" || {
 	GIT_EXIT_OK=t
 	echo >&5 "FATAL: Cannot prepare test area"
 	exit 1
