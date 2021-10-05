@@ -45,6 +45,8 @@ struct expire_reflog_policy_cb {
 	struct cmd_reflog_expire_cb cmd;
 	struct commit *tip_commit;
 	struct commit_list *tips;
+	unsigned int dry_run:1,
+		     verbose:1;
 };
 
 struct worktree_reflogs {
@@ -294,29 +296,38 @@ static int should_expire_reflog_ent(struct object_id *ooid, struct object_id *no
 	struct commit *old_commit, *new_commit;
 
 	if (timestamp < cb->cmd.expire_total)
-		return 1;
+		goto expire;
 
 	old_commit = new_commit = NULL;
 	if (cb->cmd.stalefix &&
 	    (!keep_entry(&old_commit, ooid) || !keep_entry(&new_commit, noid)))
-		return 1;
+		goto expire;
 
 	if (timestamp < cb->cmd.expire_unreachable) {
 		switch (cb->unreachable_expire_kind) {
 		case UE_ALWAYS:
-			return 1;
+			goto expire;
 		case UE_NORMAL:
 		case UE_HEAD:
 			if (unreachable(cb, old_commit, ooid) || unreachable(cb, new_commit, noid))
-				return 1;
+				goto expire;
 			break;
 		}
 	}
 
 	if (cb->cmd.recno && --(cb->cmd.recno) == 0)
-		return 1;
+		goto expire;
+
+	if (cb->verbose)
+		printf("keep %s", message);
 
 	return 0;
+expire:
+	if (cb->dry_run)
+		printf("would prune %s", message);
+	else if (cb->verbose)
+		printf("prune %s", message);
+	return 1;
 }
 
 static int push_tip_to_list(const char *refname, const struct object_id *oid,
@@ -539,6 +550,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	int i, status, do_all, all_worktrees = 1;
 	int explicit_expiry = 0;
 	unsigned int flags = 0;
+	int verbose = 0;
 
 	default_reflog_expire_unreachable = now - 30 * 24 * 3600;
 	default_reflog_expire = now - 90 * 24 * 3600;
@@ -576,7 +588,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		else if (!strcmp(arg, "--single-worktree"))
 			all_worktrees = 0;
 		else if (!strcmp(arg, "--verbose"))
-			flags |= EXPIRE_REFLOGS_VERBOSE;
+			verbose = 1;
 		else if (!strcmp(arg, "--")) {
 			i++;
 			break;
@@ -599,10 +611,10 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		revs.do_not_die_on_missing_tree = 1;
 		revs.ignore_missing = 1;
 		revs.ignore_missing_links = 1;
-		if (flags & EXPIRE_REFLOGS_VERBOSE)
+		if (verbose)
 			printf(_("Marking reachable objects..."));
 		mark_reachable_objects(&revs, 0, 0, NULL);
-		if (flags & EXPIRE_REFLOGS_VERBOSE)
+		if (verbose)
 			putchar('\n');
 	}
 
@@ -624,7 +636,11 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		free_worktrees(worktrees);
 
 		for_each_string_list_item(item, &collected.reflogs) {
-			struct expire_reflog_policy_cb cb = { .cmd = cmd };
+			struct expire_reflog_policy_cb cb = {
+				.cmd = cmd,
+				.dry_run = !!(flags & EXPIRE_REFLOGS_DRY_RUN),
+				.verbose = verbose,
+			};
 
 			set_reflog_expiry_param(&cb.cmd, explicit_expiry, item->string);
 			status |= reflog_expire(item->string, flags,
@@ -671,6 +687,7 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 	struct cmd_reflog_expire_cb cmd = { 0 };
 	int i, status = 0;
 	unsigned int flags = 0;
+	int verbose = 0;
 
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
@@ -681,7 +698,7 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 		else if (!strcmp(arg, "--updateref"))
 			flags |= EXPIRE_REFLOGS_UPDATE_REF;
 		else if (!strcmp(arg, "--verbose"))
-			flags |= EXPIRE_REFLOGS_VERBOSE;
+			verbose = 1;
 		else if (!strcmp(arg, "--")) {
 			i++;
 			break;
@@ -699,7 +716,10 @@ static int cmd_reflog_delete(int argc, const char **argv, const char *prefix)
 		const char *spec = strstr(argv[i], "@{");
 		char *ep, *ref;
 		int recno;
-		struct expire_reflog_policy_cb cb = { 0 };
+		struct expire_reflog_policy_cb cb = {
+			.verbose = verbose,
+			.dry_run = !!(flags & EXPIRE_REFLOGS_DRY_RUN),
+		};
 
 		if (!spec) {
 			status |= error(_("not a reflog: %s"), argv[i]);
