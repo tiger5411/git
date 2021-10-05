@@ -14,7 +14,8 @@ test_expect_success 'usage: cmdmode' '
 	test_cmdmode_usage git cat-file -p -t &&
 	test_cmdmode_usage git cat-file -t -s &&
 	test_cmdmode_usage git cat-file -s --textconv &&
-	test_cmdmode_usage git cat-file --textconv --filters
+	test_cmdmode_usage git cat-file --textconv --filters &&
+	test_cmdmode_usage git cat-file --batch-all-objects -e
 '
 
 test_incompatible_usage() {
@@ -36,10 +37,6 @@ for opt in $cw_modes
 do
 	test_expect_success "usage: $opt requires another option" '
 		test_expect_code 129 git cat-file $opt
-	'
-
-	test_expect_failure "usage: incompatible options: --batch-all-objects with $opt" '
-		test_incompatible_usage git cat-file --batch-all-objects $opt
 	'
 done
 
