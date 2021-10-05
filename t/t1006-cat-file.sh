@@ -31,7 +31,7 @@ test_expect_success 'usage: incompatible options' '
 	test_incompatible_usage git cat-file --path=foo -e HEAD:some-path.txt
 '
 
-test_expect_failure 'usage: incompatible options' '
+test_expect_success 'usage: incompatible options' '
 	test_incompatible_usage git cat-file --batch-all-objects --textconv &&
 	test_incompatible_usage git cat-file --batch-all-objects --filters
 '
