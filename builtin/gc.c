@@ -695,7 +695,6 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		clean_pack_garbage();
 	}
 
-	prepare_repo_settings(the_repository);
 	if (the_repository->settings.gc_write_commit_graph == 1)
 		write_commit_graph_reachable(the_repository->objects->odb,
 					     !quiet && !daemonized ? COMMIT_GRAPH_WRITE_PROGRESS : 0,
@@ -860,7 +859,6 @@ static int run_write_commit_graph(struct maintenance_run_opts *opts)
 
 static int maintenance_task_commit_graph(struct maintenance_run_opts *opts)
 {
-	prepare_repo_settings(the_repository);
 	if (!the_repository->settings.core_commit_graph)
 		return 0;
 
@@ -1052,7 +1050,6 @@ static int incremental_repack_auto_condition(void)
 	int incremental_repack_auto_limit = 10;
 	int count = 0;
 
-	prepare_repo_settings(the_repository);
 	if (!the_repository->settings.core_multi_pack_index)
 		return 0;
 
@@ -1167,7 +1164,6 @@ static int multi_pack_index_repack(struct maintenance_run_opts *opts)
 
 static int maintenance_task_incremental_repack(struct maintenance_run_opts *opts)
 {
-	prepare_repo_settings(the_repository);
 	if (!the_repository->settings.core_multi_pack_index) {
 		warning(_("skipping incremental-repack task because core.multiPackIndex is disabled"));
 		return 0;
@@ -2492,6 +2488,7 @@ int cmd_maintenance(int argc, const char **argv, const char *prefix)
 	    (argc == 2 && !strcmp(argv[1], "-h")))
 		usage(builtin_maintenance_usage);
 
+	prepare_repo_settings(the_repository);
 	if (!strcmp(argv[1], "run"))
 		return maintenance_run(argc - 1, argv + 1, prefix);
 	if (!strcmp(argv[1], "start"))

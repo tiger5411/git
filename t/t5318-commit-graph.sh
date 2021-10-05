@@ -368,7 +368,7 @@ test_expect_success 'check that gc computes commit-graph' '
 	git commit-graph write --reachable &&
 	cp $objdir/info/commit-graph commit-graph-before-gc &&
 	git reset --hard HEAD~1 &&
-	git config gc.writeCommitGraph true &&
+	# BUG: Due to 31b1de6a09b (commit-graph: turn on commit-graph by default, 2019-08-13)?
 	git gc &&
 	cp $objdir/info/commit-graph commit-graph-after-gc &&
 	! test_cmp_bin commit-graph-before-gc commit-graph-after-gc &&
