@@ -11,6 +11,7 @@
 #include "revision.h"
 #include "reachable.h"
 #include "worktree.h"
+#include "progress.h"
 
 /* NEEDSWORK: switch to using parse_options */
 static const char reflog_expire_usage[] =
@@ -551,6 +552,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	int explicit_expiry = 0;
 	unsigned int flags = 0;
 	int verbose = 0;
+	int show_progress = -1;
 
 	default_reflog_expire_unreachable = now - 30 * 24 * 3600;
 	default_reflog_expire = now - 90 * 24 * 3600;
@@ -579,6 +581,10 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		}
 		else if (!strcmp(arg, "--stale-fix"))
 			cmd.stalefix = 1;
+		else if (!strcmp(arg, "--progress"))
+			show_progress = 1;
+		else if (!strcmp(arg, "--no-progress"))
+			show_progress = 0;
 		else if (!strcmp(arg, "--rewrite"))
 			flags |= EXPIRE_REFLOGS_REWRITE;
 		else if (!strcmp(arg, "--updateref"))
@@ -598,6 +604,8 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		else
 			break;
 	}
+	if (show_progress == -1)
+		show_progress = isatty(2);
 
 	/*
 	 * We can trust the commits and objects reachable from refs
@@ -606,16 +614,16 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	 */
 	if (cmd.stalefix) {
 		struct rev_info revs;
+		struct progress *progress = NULL;
 
+		if (show_progress)
+			progress = start_delayed_progress(_("Marking reachable objects"), 0);
 		repo_init_revisions(the_repository, &revs, prefix);
 		revs.do_not_die_on_missing_tree = 1;
 		revs.ignore_missing = 1;
 		revs.ignore_missing_links = 1;
-		if (verbose)
-			printf(_("Marking reachable objects..."));
-		mark_reachable_objects(&revs, 0, 0, NULL);
-		if (verbose)
-			putchar('\n');
+		mark_reachable_objects(&revs, 0, 0, progress);
+		stop_progress(&progress);
 	}
 
 	if (do_all) {
