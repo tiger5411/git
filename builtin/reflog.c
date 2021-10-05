@@ -4,6 +4,7 @@
 #include "reachable.h"
 #include "worktree.h"
 #include "reflog.h"
+#include "progress.h"
 
 #define BUILTIN_REFLOG_SHOW_USAGE \
 	N_("git reflog [show] [<log-options>] [<ref>]")
@@ -235,6 +236,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	int i, status, do_all, all_worktrees = 1;
 	unsigned int flags = 0;
 	int verbose = 0;
+	int show_progress = -1;
 	reflog_expiry_should_prune_fn *should_prune_fn = should_expire_reflog_ent;
 	const struct option options[] = {
 		OPT_BIT(0, "dry-run", &flags, N_("do not actually prune any entries"),
@@ -246,6 +248,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 			N_("update the reference to the value of the top reflog entry"),
 			EXPIRE_REFLOGS_UPDATE_REF),
 		OPT_BOOL(0, "verbose", &verbose, N_("print extra information on screen")),
+		OPT_BOOL(0, "progress", &show_progress, N_("force progress reporting")),
 		OPT_CALLBACK_F(0, "expire", &cmd, N_("timestamp"),
 			       N_("prune entries older than the specified time"),
 			       PARSE_OPT_NONEG,
@@ -277,6 +280,8 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 
 	if (verbose)
 		should_prune_fn = should_expire_reflog_ent_verbose;
+	if (show_progress == -1)
+		show_progress = isatty(2);
 
 	/*
 	 * We can trust the commits and objects reachable from refs
@@ -285,16 +290,16 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	 */
 	if (cmd.stalefix) {
 		struct rev_info revs;
+		struct progress *progress = NULL;
 
+		if (show_progress)
+			progress = start_delayed_progress(_("Marking reachable objects"), 0);
 		repo_init_revisions(the_repository, &revs, prefix);
 		revs.do_not_die_on_missing_tree = 1;
 		revs.ignore_missing = 1;
 		revs.ignore_missing_links = 1;
-		if (verbose)
-			printf(_("Marking reachable objects..."));
-		mark_reachable_objects(&revs, 0, 0, NULL);
-		if (verbose)
-			putchar('\n');
+		mark_reachable_objects(&revs, 0, 0, progress);
+		stop_progress(&progress);
 	}
 
 	if (do_all) {
