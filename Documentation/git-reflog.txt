@@ -69,6 +69,14 @@ Options for `show`
 Options for `expire`
 ~~~~~~~~~~~~~~~~~~~~
 
+--progress::
+--no-progress::
+	Progress status is reported on the standard error stream by
+	default when it is attached to a terminal. The `--progress
+	flag enables progress reporting even if not attached to a
+	terminal. Supplying `--no-progress` will suppress all progress
+	output.
+
 --all::
 	Process the reflogs of all references.
 
