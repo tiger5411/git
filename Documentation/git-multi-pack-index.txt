@@ -9,8 +9,7 @@ git-multi-pack-index - Write and verify multi-pack-indexes
 SYNOPSIS
 --------
 [verse]
-'git multi-pack-index' [--object-dir=<dir>] [--[no-]progress]
-	[--preferred-pack=<pack>] [--[no-]bitmap] <subcommand>
+'git multi-pack-index' [--object-dir=<dir>] [--[no-]bitmap] <sub-command>
 
 DESCRIPTION
 -----------
@@ -28,7 +27,8 @@ OPTIONS
 
 --[no-]progress::
 	Turn progress on/off explicitly. If neither is specified, progress is
-	shown if standard error is connected to a terminal.
+	shown if standard error is connected to a terminal. Supported by
+	sub-commands `write`, `verify`, `expire`, and `repack.
 
 The following subcommands are available:
 
@@ -45,6 +45,25 @@ write::
 
 	--[no-]bitmap::
 		Control whether or not a multi-pack bitmap is written.
+
+	--stdin-packs::
+		Write a multi-pack index containing only the set of
+		line-delimited pack index basenames provided over stdin.
+
+	--refs-snapshot=<path>::
+		With `--bitmap`, optionally specify a file which
+		contains a "refs snapshot" taken prior to repacking.
++
+A reference snapshot is composed of line-delimited OIDs corresponding to
+the reference tips, usually taken by `git repack` prior to generating a
+new pack. A line may optionally start with a `+` character to indicate
+that the reference which corresponds to that OID is "preferred" (see
+linkgit:git-config[1]'s `pack.preferBitmapTips`.)
++
+The file given at `<path>` is expected to be readable, and can contain
+duplicates. (If a given OID is given more than once, it is marked as
+preferred if at least one instance of it begins with the special `+`
+marker).
 --
 
 verify::

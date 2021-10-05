@@ -68,6 +68,17 @@ const char *refs_resolve_ref_unsafe(struct ref_store *refs,
 				    int resolve_flags,
 				    struct object_id *oid,
 				    int *flags);
+/**
+ * refs_resolve_ref_unsafe_with_errno() is like
+ * refs_resolve_ref_unsafe(), but provide access to errno code that
+ * lead to a failure. We guarantee that errno is set to a meaningful
+ * value on non-zero return.
+ */
+const char *refs_resolve_ref_unsafe_with_errno(struct ref_store *refs,
+					       const char *refname,
+					       int resolve_flags,
+					       struct object_id *oid,
+					       int *flags, int *failure_errno);
 const char *resolve_ref_unsafe(const char *refname, int resolve_flags,
 			       struct object_id *oid, int *flags);
 
@@ -342,10 +353,8 @@ int for_each_ref(each_ref_fn fn, void *cb_data);
 int for_each_ref_in(const char *prefix, each_ref_fn fn, void *cb_data);
 
 int refs_for_each_fullref_in(struct ref_store *refs, const char *prefix,
-			     each_ref_fn fn, void *cb_data,
-			     unsigned int broken);
-int for_each_fullref_in(const char *prefix, each_ref_fn fn, void *cb_data,
-			unsigned int broken);
+			     each_ref_fn fn, void *cb_data);
+int for_each_fullref_in(const char *prefix, each_ref_fn fn, void *cb_data);
 
 /**
  * iterate all refs in "patterns" by partitioning patterns into disjoint sets
@@ -354,8 +363,7 @@ int for_each_fullref_in(const char *prefix, each_ref_fn fn, void *cb_data,
  * callers should be prepared to ignore references that they did not ask for.
  */
 int for_each_fullref_in_prefixes(const char *namespace, const char **patterns,
-				 each_ref_fn fn, void *cb_data,
-				 unsigned int broken);
+				 each_ref_fn fn, void *cb_data);
 /**
  * iterate refs from the respective area.
  */
@@ -834,8 +842,6 @@ int reflog_expire(const char *refname,
 		  reflog_expiry_should_prune_fn should_prune_fn,
 		  reflog_expiry_cleanup_fn cleanup_fn,
 		  void *policy_cb_data);
-
-int ref_storage_backend_exists(const char *name);
 
 struct ref_store *get_main_ref_store(struct repository *r);
 

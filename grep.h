@@ -128,9 +128,9 @@ struct grep_opt {
 	 * instead.
 	 *
 	 * This is potentially the cause of at least one bug - "git grep"
-	 * ignoring the textconv attributes from submodules. See [1] for more
-	 * information.
-	 * [1] https://lore.kernel.org/git/CAHd-oW5iEQarYVxEXoTG-ua2zdoybTrSjCBKtO0YT292fm0NQQ@mail.gmail.com/
+	 * using the textconv attributes from the superproject on the
+	 * submodules. See the failing "git grep --textconv" tests in
+	 * t7814-grep-recurse-submodules.sh for more information.
 	 */
 	struct repository *repo;
 
@@ -189,7 +189,16 @@ void append_grep_pattern(struct grep_opt *opt, const char *pat, const char *orig
 void append_header_grep_pattern(struct grep_opt *, enum grep_header_field, const char *);
 void compile_grep_patterns(struct grep_opt *opt);
 void free_grep_patterns(struct grep_opt *opt);
-int grep_buffer(struct grep_opt *opt, char *buf, unsigned long size);
+int grep_buffer(struct grep_opt *opt, const char *buf, unsigned long size);
+
+/* The field parameter is only used to filter header patterns
+ * (where appropriate). If filtering isn't desirable
+ * GREP_HEADER_FIELD_MAX should be supplied.
+ */
+int grep_next_match(struct grep_opt *opt,
+		    const char *bol, const char *eol,
+		    enum grep_context ctx, regmatch_t *pmatch,
+		    enum grep_header_field field, int eflags);
 
 struct grep_source {
 	char *name;
@@ -202,7 +211,7 @@ struct grep_source {
 	void *identifier;
 	struct repository *repo; /* if GREP_SOURCE_OID */
 
-	char *buf;
+	const char *buf;
 	unsigned long size;
 
 	char *path; /* for attribute lookups */
@@ -223,7 +232,6 @@ void grep_source_load_driver(struct grep_source *gs,
 int grep_source(struct grep_opt *opt, struct grep_source *gs);
 
 struct grep_opt *grep_opt_dup(const struct grep_opt *opt);
-int grep_threads_ok(const struct grep_opt *opt);
 
 /*
  * Mutex used around access to the attributes machinery if

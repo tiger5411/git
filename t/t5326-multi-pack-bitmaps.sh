@@ -283,4 +283,116 @@ test_expect_success 'pack.preferBitmapTips' '
 	)
 '
 
+test_expect_success 'writing a bitmap with --refs-snapshot' '
+	git init repo &&
+	test_when_finished "rm -fr repo" &&
+	(
+		cd repo &&
+
+		test_commit one &&
+		test_commit two &&
+
+		git rev-parse one >snapshot &&
+
+		git repack -ad &&
+
+		# First, write a MIDX which see both refs/tags/one and
+		# refs/tags/two (causing both of those commits to receive
+		# bitmaps).
+		git multi-pack-index write --bitmap &&
+
+		test_path_is_file $midx &&
+		test_path_is_file $midx-$(midx_checksum $objdir).bitmap &&
+
+		test-tool bitmap list-commits | sort >bitmaps &&
+		grep "$(git rev-parse one)" bitmaps &&
+		grep "$(git rev-parse two)" bitmaps &&
+
+		rm -fr $midx-$(midx_checksum $objdir).bitmap &&
+		rm -fr $midx-$(midx_checksum $objdir).rev &&
+		rm -fr $midx &&
+
+		# Then again, but with a refs snapshot which only sees
+		# refs/tags/one.
+		git multi-pack-index write --bitmap --refs-snapshot=snapshot &&
+
+		test_path_is_file $midx &&
+		test_path_is_file $midx-$(midx_checksum $objdir).bitmap &&
+
+		test-tool bitmap list-commits | sort >bitmaps &&
+		grep "$(git rev-parse one)" bitmaps &&
+		! grep "$(git rev-parse two)" bitmaps
+	)
+'
+
+test_expect_success 'write a bitmap with --refs-snapshot (preferred tips)' '
+	git init repo &&
+	test_when_finished "rm -fr repo" &&
+	(
+		cd repo &&
+
+		test_commit_bulk --message="%s" 103 &&
+
+		git log --format="%H" >commits.raw &&
+		sort <commits.raw >commits &&
+
+		git log --format="create refs/tags/%s %H" HEAD >refs &&
+		git update-ref --stdin <refs &&
+
+		git multi-pack-index write --bitmap &&
+		test_path_is_file $midx &&
+		test_path_is_file $midx-$(midx_checksum $objdir).bitmap &&
+
+		test-tool bitmap list-commits | sort >bitmaps &&
+		comm -13 bitmaps commits >before &&
+		test_line_count = 1 before &&
+
+		(
+			grep -vf before commits.raw &&
+			# mark missing commits as preferred
+			sed "s/^/+/" before
+		) >snapshot &&
+
+		rm -fr $midx-$(midx_checksum $objdir).bitmap &&
+		rm -fr $midx-$(midx_checksum $objdir).rev &&
+		rm -fr $midx &&
+
+		git multi-pack-index write --bitmap --refs-snapshot=snapshot &&
+		test-tool bitmap list-commits | sort >bitmaps &&
+		comm -13 bitmaps commits >after &&
+
+		! test_cmp before after
+	)
+'
+
+test_expect_success 'hash-cache values are propagated from pack bitmaps' '
+	rm -fr repo &&
+	git init repo &&
+	test_when_finished "rm -fr repo" &&
+	(
+		cd repo &&
+
+		test_commit base &&
+		test_commit base2 &&
+		git repack -adb &&
+
+		test-tool bitmap dump-hashes >pack.raw &&
+		test_file_not_empty pack.raw &&
+		sort pack.raw >pack.hashes &&
+
+		test_commit new &&
+		git repack &&
+		git multi-pack-index write --bitmap &&
+
+		test-tool bitmap dump-hashes >midx.raw &&
+		sort midx.raw >midx.hashes &&
+
+		# ensure that every namehash in the pack bitmap can be found in
+		# the midx bitmap (i.e., that there are no oid-namehash pairs
+		# unique to the pack bitmap).
+		comm -23 pack.hashes midx.hashes >dropped.hashes &&
+		test_must_be_empty dropped.hashes
+	)
+'
+
 test_done

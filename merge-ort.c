@@ -32,6 +32,7 @@
 #include "promisor-remote.h"
 #include "revision.h"
 #include "strmap.h"
+#include "submodule-config.h"
 #include "submodule.h"
 #include "tree.h"
 #include "unpack-trees.h"
@@ -608,6 +609,7 @@ static int err(struct merge_options *opt, const char *err, ...)
 
 static void format_commit(struct strbuf *sb,
 			  int indent,
+			  struct repository *repo,
 			  struct commit *commit)
 {
 	struct merge_remote_desc *desc;
@@ -621,7 +623,7 @@ static void format_commit(struct strbuf *sb,
 		return;
 	}
 
-	format_commit_message(commit, "%h %s", sb, &ctx);
+	repo_format_commit_message(repo, commit, "%h %s", sb, &ctx);
 	strbuf_addch(sb, '\n');
 }
 
@@ -632,7 +634,11 @@ static void path_msg(struct merge_options *opt,
 		     const char *fmt, ...)
 {
 	va_list ap;
-	struct strbuf *sb = strmap_get(&opt->priv->output, path);
+	struct strbuf *sb;
+
+	if (opt->record_conflict_msgs_in_tree && omittable_hint)
+		return; /* Do not record mere hints in tree */
+	sb = strmap_get(&opt->priv->output, path);
 	if (!sb) {
 		sb = xmalloc(sizeof(*sb));
 		strbuf_init(sb, 0);
@@ -1511,7 +1517,6 @@ static int find_first_merges(struct repository *repo,
 	xsnprintf(merged_revision, sizeof(merged_revision), "^%s",
 		  oid_to_hex(&a->object.oid));
 	repo_init_revisions(repo, &revs, NULL);
-	rev_opts.submodule = path;
 	/* FIXME: can't handle linked worktrees in submodules yet */
 	revs.single_worktree = path != NULL;
 	setup_revisions(ARRAY_SIZE(rev_args)-1, rev_args, &revs, &rev_opts);
@@ -1521,7 +1526,7 @@ static int find_first_merges(struct repository *repo,
 		die("revision walk setup failed");
 	while ((commit = get_revision(&revs)) != NULL) {
 		struct object *o = &(commit->object);
-		if (in_merge_bases(b, commit))
+		if (repo_in_merge_bases(repo, b, commit))
 			add_object_array(o, NULL, &merges);
 	}
 	reset_revision_walk();
@@ -1536,7 +1541,7 @@ static int find_first_merges(struct repository *repo,
 		contains_another = 0;
 		for (j = 0; j < merges.nr; j++) {
 			struct commit *m2 = (struct commit *) merges.objects[j].item;
-			if (i != j && in_merge_bases(m2, m1)) {
+			if (i != j && repo_in_merge_bases(repo, m2, m1)) {
 				contains_another = 1;
 				break;
 			}
@@ -1557,10 +1562,12 @@ static int merge_submodule(struct merge_options *opt,
 			   const struct object_id *b,
 			   struct object_id *result)
 {
+	struct repository subrepo;
+	struct strbuf sb = STRBUF_INIT;
+	int ret = 0;
 	struct commit *commit_o, *commit_a, *commit_b;
 	int parent_count;
 	struct object_array merges;
-	struct strbuf sb = STRBUF_INIT;
 
 	int i;
 	int search = !opt->priv->call_depth;
@@ -1576,46 +1583,48 @@ static int merge_submodule(struct merge_options *opt,
 	if (is_null_oid(b))
 		return 0;
 
-	if (add_submodule_odb(path)) {
+	if (repo_submodule_init(&subrepo, opt->repo, path, null_oid())) {
 		path_msg(opt, path, 0,
-			 _("Failed to merge submodule %s (not checked out)"),
-			 path);
+				_("Failed to merge submodule %s (not checked out)"),
+				path);
 		return 0;
 	}
 
-	if (!(commit_o = lookup_commit_reference(opt->repo, o)) ||
-	    !(commit_a = lookup_commit_reference(opt->repo, a)) ||
-	    !(commit_b = lookup_commit_reference(opt->repo, b))) {
+	if (!(commit_o = lookup_commit_reference(&subrepo, o)) ||
+	    !(commit_a = lookup_commit_reference(&subrepo, a)) ||
+	    !(commit_b = lookup_commit_reference(&subrepo, b))) {
 		path_msg(opt, path, 0,
 			 _("Failed to merge submodule %s (commits not present)"),
 			 path);
-		return 0;
+		goto cleanup;
 	}
 
 	/* check whether both changes are forward */
-	if (!in_merge_bases(commit_o, commit_a) ||
-	    !in_merge_bases(commit_o, commit_b)) {
+	if (!repo_in_merge_bases(&subrepo, commit_o, commit_a) ||
+	    !repo_in_merge_bases(&subrepo, commit_o, commit_b)) {
 		path_msg(opt, path, 0,
 			 _("Failed to merge submodule %s "
 			   "(commits don't follow merge-base)"),
 			 path);
-		return 0;
+		goto cleanup;
 	}
 
 	/* Case #1: a is contained in b or vice versa */
-	if (in_merge_bases(commit_a, commit_b)) {
+	if (repo_in_merge_bases(&subrepo, commit_a, commit_b)) {
 		oidcpy(result, b);
 		path_msg(opt, path, 1,
 			 _("Note: Fast-forwarding submodule %s to %s"),
 			 path, oid_to_hex(b));
-		return 1;
+		ret = 1;
+		goto cleanup;
 	}
-	if (in_merge_bases(commit_b, commit_a)) {
+	if (repo_in_merge_bases(&subrepo, commit_b, commit_a)) {
 		oidcpy(result, a);
 		path_msg(opt, path, 1,
 			 _("Note: Fast-forwarding submodule %s to %s"),
 			 path, oid_to_hex(a));
-		return 1;
+		ret = 1;
+		goto cleanup;
 	}
 
 	/*
@@ -1627,10 +1636,10 @@ static int merge_submodule(struct merge_options *opt,
 
 	/* Skip the search if makes no sense to the calling context.  */
 	if (!search)
-		return 0;
+		goto cleanup;
 
 	/* find commit which merges them */
-	parent_count = find_first_merges(opt->repo, path, commit_a, commit_b,
+	parent_count = find_first_merges(&subrepo, path, commit_a, commit_b,
 					 &merges);
 	switch (parent_count) {
 	case 0:
@@ -1638,7 +1647,7 @@ static int merge_submodule(struct merge_options *opt,
 		break;
 
 	case 1:
-		format_commit(&sb, 4,
+		format_commit(&sb, 4, &subrepo,
 			      (struct commit *)merges.objects[0].item);
 		path_msg(opt, path, 0,
 			 _("Failed to merge submodule %s, but a possible merge "
@@ -1655,7 +1664,7 @@ static int merge_submodule(struct merge_options *opt,
 		break;
 	default:
 		for (i = 0; i < merges.nr; i++)
-			format_commit(&sb, 4,
+			format_commit(&sb, 4, &subrepo,
 				      (struct commit *)merges.objects[i].item);
 		path_msg(opt, path, 0,
 			 _("Failed to merge submodule %s, but multiple "
@@ -1664,7 +1673,9 @@ static int merge_submodule(struct merge_options *opt,
 	}
 
 	object_array_clear(&merges);
-	return 0;
+cleanup:
+	repo_clear(&subrepo);
+	return ret;
 }
 
 static void initialize_attr_index(struct merge_options *opt)
@@ -1737,6 +1748,7 @@ static int merge_3way(struct merge_options *opt,
 	struct ll_merge_options ll_opts = {0};
 	char *base, *name1, *name2;
 	int merge_status;
+	struct strbuf warnings = STRBUF_INIT;
 
 	if (!opt->priv->attr_index.initialized)
 		initialize_attr_index(opt);
@@ -1777,10 +1789,14 @@ static int merge_3way(struct merge_options *opt,
 	read_mmblob(&src1, a);
 	read_mmblob(&src2, b);
 
-	merge_status = ll_merge(result_buf, path, &orig, base,
-				&src1, name1, &src2, name2,
-				&opt->priv->attr_index, &ll_opts);
+	merge_status = ll_merge_with_warnings(result_buf, &warnings, path,
+					      &orig, base,
+					      &src1, name1, &src2, name2,
+					      &opt->priv->attr_index, &ll_opts);
+	if (warnings.len > 0)
+		path_msg(opt, path, 0, "%s", warnings.buf);
 
+	strbuf_release(&warnings);
 	free(base);
 	free(name1);
 	free(name2);
@@ -2409,7 +2425,7 @@ static void apply_directory_rename_modifications(struct merge_options *opt,
 		 */
 		ci->path_conflict = 1;
 		if (pair->status == 'A')
-			path_msg(opt, new_path, 0,
+			path_msg(opt, new_path, 1,
 				 _("CONFLICT (file location): %s added in %s "
 				   "inside a directory that was renamed in %s, "
 				   "suggesting it should perhaps be moved to "
@@ -2417,7 +2433,7 @@ static void apply_directory_rename_modifications(struct merge_options *opt,
 				 old_path, branch_with_new_path,
 				 branch_with_dir_rename, new_path);
 		else
-			path_msg(opt, new_path, 0,
+			path_msg(opt, new_path, 1,
 				 _("CONFLICT (file location): %s renamed to %s "
 				   "in %s, inside a directory that was renamed "
 				   "in %s, suggesting it should perhaps be "
@@ -3531,6 +3547,74 @@ static void write_completed_directory(struct merge_options *opt,
 	info->last_directory_len = strlen(info->last_directory);
 }
 
+static void put_path_msgs_in_file(struct merge_options *opt,
+				  const char *path,
+				  struct merged_info *mi,
+				  struct directory_versions *dir_metadata)
+{
+	struct strbuf tmp = STRBUF_INIT, new_path_contents = STRBUF_INIT;
+	char *new_path;
+	int new_path_basic_len, unique_counter;
+	struct merged_info *new_mi;
+	char final;
+	struct strbuf *sb = strmap_get(&opt->priv->output, path);
+
+	assert(opt->record_conflict_msgs_in_tree);
+	if (!sb)
+		return;
+
+	/*
+	 * Determine a pathname for recording conflict messages.  We'd like it
+	 * to sort just before path, but have a name very similar to what path
+	 * has.
+	 */
+	strbuf_addstr(&tmp, path);
+	final = tmp.buf[tmp.len-1];
+	strbuf_setlen(&tmp, tmp.len-1);
+	strbuf_addf(&tmp, " %c.conflict_msg", final);
+
+	/*
+	 * In extremely unlikely event this filename is not unique, modify it
+	 * with ".<integer>" suffixes until it is.
+	 */
+	new_path_basic_len = tmp.len;
+	unique_counter = 0;
+	while (strmap_contains(&opt->priv->paths, tmp.buf)) {
+		strbuf_setlen(&tmp, new_path_basic_len);
+		strbuf_addf(&tmp, ".%d", ++unique_counter);
+	}
+
+	/* Now that we have a unique string, move it to our pool */
+	new_path = mem_pool_strdup(&opt->priv->pool, tmp.buf);
+	strbuf_release(&tmp);
+
+	/* Set up contents we want to place in the file. */
+	strbuf_addf(&new_path_contents, "== Conflict notices for %s ==\n",
+		    path);
+	strbuf_addbuf(&new_path_contents, sb);
+
+	/* Set up new_mi */
+	new_mi = mem_pool_calloc(&opt->priv->pool, 1, sizeof(*new_mi));
+	new_mi->result.mode = 0100644;
+	new_mi->is_null = 0;
+	new_mi->clean = 1;
+	new_mi->basename_offset = mi->basename_offset;
+	new_mi->directory_name = mi->directory_name;
+	if (write_object_file(new_path_contents.buf, new_path_contents.len,
+			      blob_type, &new_mi->result.oid))
+		die(_("Unable to add %s to database"), new_path);
+
+	/*
+	 * Save new_mi in opt->priv->path (so that something will deallocate
+	 * it later), and record the entry for it.
+	 */
+	strmap_put(&opt->priv->paths, new_path, new_mi);
+	record_entry_for_tree(dir_metadata, new_path, new_mi);
+
+	/* Cleanup */
+	strbuf_release(&new_path_contents);
+}
+
 /* Per entry merge function */
 static void process_entry(struct merge_options *opt,
 			  const char *path,
@@ -3814,7 +3898,7 @@ static void process_entry(struct merge_options *opt,
 				reason = _("add/add");
 			if (S_ISGITLINK(merged_file.mode))
 				reason = _("submodule");
-			path_msg(opt, path, 0,
+			path_msg(opt, path, 1,
 				 _("CONFLICT (%s): Merge conflict in %s"),
 				 reason, path);
 		}
@@ -3991,6 +4075,8 @@ static void process_entries(struct merge_options *opt,
 			struct conflict_info *ci = (struct conflict_info *)mi;
 			process_entry(opt, path, ci, &dir_metadata);
 		}
+		if (!opt->priv->call_depth && opt->record_conflict_msgs_in_tree)
+			put_path_msgs_in_file(opt, path, mi, &dir_metadata);
 	}
 	trace2_region_leave("merge", "processing", opt->repo);
 
@@ -4234,6 +4320,9 @@ void merge_switch_to_result(struct merge_options *opt,
 		struct strmap_entry *e;
 		struct string_list olist = STRING_LIST_INIT_NODUP;
 		int i;
+
+		if (opt->record_conflict_msgs_in_tree)
+			BUG("Either display conflict messages or record them in tree, not both");
 
 		trace2_region_enter("merge", "display messages", opt->repo);
 
