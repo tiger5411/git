@@ -769,5 +769,7 @@ int cmd_rev_list(int argc, const char **argv, const char *prefix)
 	if (show_disk_usage)
 		printf("%"PRIuMAX"\n", (uintmax_t)total_disk_usage);
 
+	release_revisions(&revs);
+
 	return 0;
 }
