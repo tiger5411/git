@@ -76,8 +76,9 @@ NO_TCLTK=Y
 USE_LIBPCRE=Y
 LIBPCREDIR=\$(HOME)/g/pcre2/inst
 
-# No gettext makes some things (e.g. send-email) faster & cheaper
-NO_GETTEXT = YesPlease
+# No gettext makes some things (e.g. send-email) faster & cheaper, but
+# it's a less normal config, so might cause CI failures in gettext tests...
+#NO_GETTEXT = YesPlease
 
 # t/Makefile
 id_u := \$(shell id -u)
