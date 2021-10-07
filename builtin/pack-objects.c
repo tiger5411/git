@@ -3799,6 +3799,7 @@ static void get_object_list(int ac, const char **av)
 	if (unpack_unreachable)
 		loosen_unused_packed_objects();
 
+	release_revisions(&revs);
 	oid_array_clear(&recent_objects);
 }
 
