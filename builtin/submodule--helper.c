@@ -1260,6 +1260,7 @@ static int compute_summary_module_list(struct object_id *head_oid,
 		run_diff_files(&rev, 0);
 	prepare_submodule_summary(info, &list);
 	strvec_clear(&diff_args);
+	release_revisions(&rev);
 	return 0;
 }
 

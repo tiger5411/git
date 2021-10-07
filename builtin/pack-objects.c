@@ -3384,6 +3384,7 @@ static void read_packs_list_from_stdin(void)
 	strbuf_release(&buf);
 	string_list_clear(&include_packs, 0);
 	string_list_clear(&exclude_packs, 0);
+	release_revisions(&revs);
 }
 
 static void read_object_list_from_stdin(void)
@@ -3799,6 +3800,7 @@ static void get_object_list(int ac, const char **av)
 	if (unpack_unreachable)
 		loosen_unused_packed_objects();
 
+	release_revisions(&revs);
 	oid_array_clear(&recent_objects);
 }
 
