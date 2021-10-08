@@ -21,7 +21,7 @@ test_expect_success POSIXPERM,SANITY 'write-tree should notice unwritable reposi
 
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
-	fatal: git-write-tree: error building trees
+	error: error building trees
 	EOF
 	test_must_fail git write-tree 2>actual &&
 	test_cmp expect actual
@@ -33,7 +33,7 @@ test_expect_success POSIXPERM,SANITY 'commit should notice unwritable repository
 
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
-	error: Error building trees
+	error: error building trees
 	EOF
 	test_must_fail git commit -m second 2>actual &&
 	test_cmp expect actual
@@ -47,7 +47,7 @@ test_expect_success POSIXPERM,SANITY 'update-index should notice unwritable repo
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
 	error: file: failed to insert into database
-	fatal: Unable to process path file
+	fatal: unable to index file '\''file'\''
 	EOF
 	test_must_fail git update-index file 2>actual &&
 	test_cmp expect actual

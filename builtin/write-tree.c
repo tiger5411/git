@@ -22,7 +22,6 @@ int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 	enum write_index_result ret;
 	const char *tree_prefix = NULL;
 	struct object_id oid;
-	const char *me = "git-write-tree";
 	struct option write_tree_options[] = {
 		OPT_BIT(0, "missing-ok", &flags, N_("allow missing objects"),
 			WRITE_TREE_MISSING_OK),
@@ -41,18 +40,15 @@ int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 
 	ret = write_cache_as_tree(&oid, flags, tree_prefix);
 	switch (ret) {
-	case 0:
+	case WRITE_TREE_INDEX_OK:
 		printf("%s\n", oid_to_hex(&oid));
-		break;
+		return 0;
 	case WRITE_TREE_UNREADABLE_INDEX:
-		die("%s: error reading the index", me);
-		break;
 	case WRITE_TREE_UNMERGED_INDEX:
-		die("%s: error building trees", me);
-		break;
+		exit(128);
 	case WRITE_TREE_PREFIX_ERROR:
-		die("%s: prefix %s not found", me, tree_prefix);
-		break;
+		exit(WRITE_TREE_PREFIX_ERROR);
+
 	}
-	return ret;
+	BUG("unreachable");
 }

@@ -700,12 +700,6 @@ static int read_tree_trivial(struct object_id *common, struct object_id *head,
 	return 0;
 }
 
-static void write_tree_trivial(struct object_id *oid)
-{
-	if (write_cache_as_tree(oid, 0, NULL))
-		die(_("git write-tree failed to write a tree"));
-}
-
 static int try_merge_strategy(const char *strategy, struct commit_list *common,
 			      struct commit_list *remoteheads,
 			      struct commit *head)
@@ -901,7 +895,8 @@ static int merge_trivial(struct commit *head, struct commit_list *remoteheads)
 	if (refresh_and_write_cache(REFRESH_QUIET, SKIP_IF_UNCHANGED, 0) < 0)
 		return error(_("Unable to write index."));
 
-	write_tree_trivial(&result_tree);
+	if (write_cache_as_tree(&result_tree, 0, NULL))
+		exit(1);
 	printf(_("Wonderful.\n"));
 	pptr = commit_list_append(head, pptr);
 	pptr = commit_list_append(remoteheads->item, pptr);
@@ -925,7 +920,8 @@ static int finish_automerge(struct commit *head,
 	struct strbuf buf = STRBUF_INIT;
 	struct object_id result_commit;
 
-	write_tree_trivial(result_tree);
+	if (write_cache_as_tree(result_tree, 0, NULL))
+		exit(1);
 	free_commit_list(common);
 	parents = remoteheads;
 	if (!head_subsumed || fast_forward == FF_NO)

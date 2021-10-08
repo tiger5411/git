@@ -1612,7 +1612,7 @@ static void do_commit(const struct am_state *state)
 		exit(1);
 
 	if (write_cache_as_tree(&tree, 0, NULL))
-		die(_("git write-tree failed to write a tree"));
+		exit(1);
 
 	if (!get_oid_commit("HEAD", &parent)) {
 		old_oid = &parent;
