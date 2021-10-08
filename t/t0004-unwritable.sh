@@ -33,7 +33,6 @@ test_expect_success POSIXPERM,SANITY 'commit should notice unwritable repository
 
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
-	error: insufficient permission for adding an object to repository database .git/objects
 	error: Error building trees
 	EOF
 	test_must_fail git commit -m second 2>actual &&
