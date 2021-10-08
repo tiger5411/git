@@ -18,27 +18,55 @@ test_expect_success setup '
 test_expect_success POSIXPERM,SANITY 'write-tree should notice unwritable repository' '
 	test_when_finished "chmod 775 .git/objects .git/objects/??" &&
 	chmod a-w .git/objects .git/objects/?? &&
-	test_must_fail git write-tree
+
+	cat >expect <<-\EOF &&
+	error: insufficient permission for adding an object to repository database .git/objects
+	fatal: git-write-tree: error building trees
+	EOF
+	test_must_fail git write-tree 2>actual &&
+	test_cmp expect actual
 '
 
 test_expect_success POSIXPERM,SANITY 'commit should notice unwritable repository' '
 	test_when_finished "chmod 775 .git/objects .git/objects/??" &&
 	chmod a-w .git/objects .git/objects/?? &&
-	test_must_fail git commit -m second
+
+	cat >expect <<-\EOF &&
+	error: insufficient permission for adding an object to repository database .git/objects
+	error: insufficient permission for adding an object to repository database .git/objects
+	error: Error building trees
+	EOF
+	test_must_fail git commit -m second 2>actual &&
+	test_cmp expect actual
 '
 
 test_expect_success POSIXPERM,SANITY 'update-index should notice unwritable repository' '
 	test_when_finished "chmod 775 .git/objects .git/objects/??" &&
 	echo 6O >file &&
 	chmod a-w .git/objects .git/objects/?? &&
-	test_must_fail git update-index file
+
+	cat >expect <<-\EOF &&
+	error: insufficient permission for adding an object to repository database .git/objects
+	error: file: failed to insert into database
+	fatal: Unable to process path file
+	EOF
+	test_must_fail git update-index file 2>actual &&
+	test_cmp expect actual
 '
 
 test_expect_success POSIXPERM,SANITY 'add should notice unwritable repository' '
 	test_when_finished "chmod 775 .git/objects .git/objects/??" &&
 	echo b >file &&
 	chmod a-w .git/objects .git/objects/?? &&
-	test_must_fail git add file
+
+	cat >expect <<-\EOF &&
+	error: insufficient permission for adding an object to repository database .git/objects
+	error: file: failed to insert into database
+	error: unable to index file '\''file'\''
+	fatal: updating files failed
+	EOF
+	test_must_fail git add file 2>actual &&
+	test_cmp expect actual
 '
 
 test_done
