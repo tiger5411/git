@@ -18,7 +18,8 @@ static const char * const write_tree_usage[] = {
 
 int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 {
-	int flags = 0, ret;
+	int flags = 0;
+	enum write_index_result ret;
 	const char *tree_prefix = NULL;
 	struct object_id oid;
 	const char *me = "git-write-tree";
@@ -40,7 +41,7 @@ int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 
 	ret = write_cache_as_tree(&oid, flags, tree_prefix);
 	switch (ret) {
-	case 0:
+	case WRITE_TREE_INDEX_OK:
 		printf("%s\n", oid_to_hex(&oid));
 		break;
 	case WRITE_TREE_UNREADABLE_INDEX:
