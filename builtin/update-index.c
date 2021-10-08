@@ -485,7 +485,7 @@ static void update_one(const char *path)
 		return;
 	}
 	if (process_path(path, &st, stat_errno))
-		die("Unable to process path %s", path);
+		die("unable to index file '%s'", path);
 	report("add '%s'", path);
 }
 

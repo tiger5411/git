@@ -464,7 +464,7 @@ int cache_tree_update(struct index_state *istate, int flags)
 	i = verify_cache(istate, flags);
 
 	if (i)
-		return i;
+		goto error;
 
 	if (!istate->cache_tree)
 		istate->cache_tree = cache_tree();
@@ -479,9 +479,13 @@ int cache_tree_update(struct index_state *istate, int flags)
 	trace2_region_leave("cache_tree", "update", the_repository);
 	trace_performance_leave("cache_tree_update");
 	if (i < 0)
-		return i;
+		goto error;
 	istate->cache_changed |= CACHE_TREE_CHANGED;
-	return 0;
+	i = 0;
+error:
+	if (i && !(flags & WRITE_TREE_SILENT))
+		error(_("error building trees"));
+	return i;
 }
 
 static void write_one(struct strbuf *buffer, struct cache_tree *it,
@@ -671,8 +675,10 @@ static enum write_index_result write_index_as_tree_internal(struct object_id *oi
 	if (prefix) {
 		struct cache_tree *subtree;
 		subtree = cache_tree_find(index_state->cache_tree, prefix);
-		if (!subtree)
+		if (!subtree) {
+			error("prefix '%s' not found", prefix);
 			return WRITE_TREE_PREFIX_ERROR;
+		}
 		oidcpy(oid, &subtree->oid);
 	}
 	else
