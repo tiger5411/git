@@ -45,8 +45,10 @@ int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 		return 0;
 	case WRITE_TREE_UNREADABLE_INDEX:
 	case WRITE_TREE_UNMERGED_INDEX:
-		exit(128);
+		/* error() emitted by write_cache_as_tree() */
+		return 128;
 	case WRITE_TREE_PREFIX_ERROR:
+		/* backwards compatibility :( */
 		exit(WRITE_TREE_PREFIX_ERROR);
 
 	}
