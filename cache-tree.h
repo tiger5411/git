@@ -44,18 +44,26 @@ void cache_tree_verify(struct repository *, struct index_state *);
 #define WRITE_TREE_REPAIR 16
 
 /* error return codes */
-#define WRITE_TREE_UNREADABLE_INDEX (-1)
-#define WRITE_TREE_UNMERGED_INDEX (-2)
-#define WRITE_TREE_PREFIX_ERROR (-3)
+enum write_index_result {
+	WRITE_TREE_PREFIX_ERROR = -3,
+	WRITE_TREE_UNMERGED_INDEX = -2,
+	WRITE_TREE_UNREADABLE_INDEX = -1,
+	WRITE_TREE_INDEX_OK = 0,
+};
 
 struct tree* write_in_core_index_as_tree(struct repository *repo);
-int write_index_as_tree(struct object_id *oid, struct index_state *index_state, const char *index_path, int flags, const char *prefix);
+enum write_index_result write_index_as_tree(struct object_id *oid,
+					    struct index_state *index_state,
+					    const char *index_path, int flags,
+					    const char *prefix);
 void prime_cache_tree(struct repository *, struct index_state *, struct tree *);
 
 int cache_tree_matches_traversal(struct cache_tree *, struct name_entry *ent, struct traverse_info *info);
 
 #ifdef USE_THE_INDEX_COMPATIBILITY_MACROS
-static inline int write_cache_as_tree(struct object_id *oid, int flags, const char *prefix)
+static inline enum write_index_result write_cache_as_tree(struct object_id *oid,
+							  int flags,
+							  const char *prefix)
 {
 	return write_index_as_tree(oid, &the_index, get_index_file(), flags, prefix);
 }
