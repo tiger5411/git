@@ -505,7 +505,7 @@ static int do_apply_stash(const char *prefix, struct stash_info *info,
 		return -1;
 
 	if (write_cache_as_tree(&c_tree, 0, NULL))
-		return error(_("cannot apply a stash in the middle of a merge"));
+		return error(_("could not apply stash in this index state"));
 
 	if (index) {
 		if (oideq(&info->b_tree, &info->i_tree) ||
@@ -529,7 +529,7 @@ static int do_apply_stash(const char *prefix, struct stash_info *info,
 			discard_cache();
 			read_cache();
 			if (write_cache_as_tree(&index_tree, 0, NULL))
-				return error(_("could not save index tree"));
+				return error(_("could not apply stash in this index state"));
 
 			reset_head();
 			discard_cache();
