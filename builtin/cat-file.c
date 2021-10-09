@@ -622,6 +622,7 @@ static int batch_option_callback(const struct option *opt,
 int cmd_cat_file(int argc, const char **argv, const char *prefix)
 {
 	int opt = 0;
+	int opt_cw = 0;
 	const char *exp_type = NULL, *obj_name = NULL;
 	struct batch_options batch = {0};
 	int unknown_type = 0;
@@ -638,35 +639,44 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 		NULL
 	};
 	const struct option options[] = {
-		OPT_GROUP(N_("<type> can be one of: blob, tree, commit, tag")),
-		OPT_CMDMODE('t', NULL, &opt, N_("show object type"), 't'),
-		OPT_CMDMODE('s', NULL, &opt, N_("show object size"), 's'),
+		OPT_GROUP(N_("Check object existence or emit object contents")),
 		OPT_CMDMODE('e', NULL, &opt,
-			    N_("exit with zero when there's no error"), 'e'),
-		OPT_CMDMODE('p', NULL, &opt, N_("pretty-print object's content"), 'p'),
+			    N_("check if <object> exists"), 'e'),
+		OPT_CMDMODE('p', NULL, &opt, N_("pretty-print <object> content"), 'p'),
+
+		OPT_GROUP(N_("Emit [broken] object attributes")),
+		OPT_CMDMODE('t', NULL, &opt, N_("show object type (one of 'blob', 'tree', 'commit', 'tag', ...)"), 't'),
+		OPT_CMDMODE('s', NULL, &opt, N_("show object size"), 's'),
+		OPT_BOOL(0, "allow-unknown-type", &unknown_type,
+			  N_("allow -s and -t to work with broken/corrupt objects")),
+
+		OPT_GROUP(N_("Batch objects requested on STDIN (or --batch-all-objects")),
+		OPT_CALLBACK_F(0, "batch", &batch, N_("format"),
+			N_("show full <object> or <rev> contents"),
+			PARSE_OPT_OPTARG | PARSE_OPT_NONEG,
+			batch_option_callback),
+		OPT_CALLBACK_F(0, "batch-check", &batch, N_("format"),
+			N_("like --batch, but don't emit <contents>"),
+			PARSE_OPT_OPTARG | PARSE_OPT_NONEG,
+			batch_option_callback),
+		OPT_CMDMODE(0, "batch-all-objects", &opt,
+			    N_("Need --batch[-check], ignores STDIN, batches all known objects"), 'b'),
+
+		OPT_GROUP(N_("Emit objects with conversion or filter (stand-alone, or with batch)")),
 		OPT_CMDMODE(0, "textconv", &opt,
 			    N_("for blob objects, run textconv on object's content"), 'c'),
 		OPT_CMDMODE(0, "filters", &opt,
 			    N_("for blob objects, run filters on object's content"), 'w'),
-		OPT_CMDMODE(0, "batch-all-objects", &opt,
-			    N_("show all objects with --batch or --batch-check"), 'b'),
-		OPT_STRING(0, "path", &force_path, N_("blob"),
-			   N_("use a specific path for --textconv/--filters")),
-		OPT_BOOL(0, "allow-unknown-type", &unknown_type,
-			  N_("allow -s and -t to work with broken/corrupt objects")),
+		OPT_STRING(0, "path", &force_path, N_("blob|tree"),
+			   N_("use a <path> for (--textconv | --filters ); Not with 'batch'")),
+
+		OPT_GROUP(N_("Change or optimize batch output")),
 		OPT_BOOL(0, "buffer", &batch.buffer_output, N_("buffer --batch output")),
-		OPT_CALLBACK_F(0, "batch", &batch, "format",
-			N_("show info and content of objects fed from the standard input"),
-			PARSE_OPT_OPTARG | PARSE_OPT_NONEG,
-			batch_option_callback),
-		OPT_CALLBACK_F(0, "batch-check", &batch, "format",
-			N_("show info about objects fed from the standard input"),
-			PARSE_OPT_OPTARG | PARSE_OPT_NONEG,
-			batch_option_callback),
 		OPT_BOOL(0, "follow-symlinks", &batch.follow_symlinks,
-			 N_("follow in-tree symlinks (used with --batch or --batch-check)")),
+			 N_("follow in-tree symlinks")),
 		OPT_BOOL(0, "unordered", &batch.unordered,
-			 N_("do not order --batch-all-objects output")),
+			 N_("do not order objects before emitting them")),
+
 		OPT_END()
 	};
 
@@ -674,24 +684,43 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 
 	batch.buffer_output = -1;
 	argc = parse_options(argc, argv, prefix, options, usage, 0);
+	opt_cw = (opt == 'c' || opt == 'w');
+
 	if (argc && batch.enabled)
-		goto usage;
+		usage_msg_opt(_("argument given in batch mode"), usage,
+			      options);
 	if (opt == 'b') {
 		batch.all_objects = 1;
 	} else if (opt) {
-		if (batch.enabled && (opt == 'c' || opt == 'w'))
+		if (batch.enabled && opt_cw)
 			batch.cmdmode = opt;
+		else if (batch.enabled)
+			usage_msg_optf(_("'%s' and '%s' are incompatible with '-%c'"),
+				       usage, options, "--batch", "--batch-check", opt);
+		else if (!argc && opt == 'c')
+			usage_msg_optf(_("<rev> required with '%s'"),
+				       usage, options, "--textconv");
+		else if (!argc && opt == 'w')
+			usage_msg_optf(_("<rev> required with '%s'"),
+				       usage, options, "--filters");
+		else if (!argc && opt == 'e')
+			usage_msg_optf(_("<object> required with '%s'"),
+				       usage, options, "-e");
+		else if (!argc && opt == 'p')
+			usage_msg_optf(_("<object> required with '%s'"),
+				       usage, options, "-p");
 		else if (argc == 1)
 			obj_name = argv[0];
 		else
-			goto usage;
+			usage_msg_opt(_("too many arguments"), usage, options);
 	} else if (!opt && !batch.enabled) {
-		if (argc == 2) {
-			exp_type = argv[0];
-			obj_name = argv[1];
-		} else
-			goto usage;
+		if (argc != 2)
+			usage_msg_opt(_("only two arguments allowed in <type> <object> mode"),
+				      usage, options);
+		exp_type = argv[0];
+		obj_name = argv[1];
 	} else if (batch.enabled && batch.cmdmode != opt) {
+		BUG("bad");
 		goto usage;
 	}
 
@@ -699,21 +728,19 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 		goto usage;
 	}
 
-	if (force_path && opt != 'c' && opt != 'w') {
-		error("--path=<path> needs --textconv or --filters");
-		goto usage;
-	}
+	if (force_path && opt != 'c' && opt != 'w')
+		usage_msg_optf(_("'%s=<%s> needs '%s' or '%s'"),
+			       usage, options,
+			       "--path", _("path|tree-ish"), "--filters",
+			       "--textconv");
 
-	if (force_path && batch.enabled) {
-		error("--path=<path> incompatible with --batch");
-		goto usage;
-	}
-
-	if (batch.buffer_output < 0)
-		batch.buffer_output = batch.all_objects;
-
-	if (batch.enabled)
+	if (batch.enabled) {
+		if (batch.buffer_output < 0)
+			batch.buffer_output = batch.all_objects;
 		return batch_objects(&batch);
+	} else if (batch.buffer_output >= 0)
+		usage_msg_optf(_("'%s' requires a batch mode"),
+			       usage, options, "--buffer");
 
 	if (unknown_type && opt != 't' && opt != 's')
 		die("git cat-file --allow-unknown-type: use with -s or -t");

@@ -20,7 +20,7 @@ test_expect_success 'usage: cmdmode' '
 test_incompatible_usage() {
 	test_expect_code 129 "$@" 2>err &&
 	cat err >&2 &&
-	grep -E "^error:.*$switch.*((combined|incompatible) with|needs)" err
+	grep -E "^(fatal|error):.*$switch.*((combined|incompatible) with|needs)" err
 }
 
 test_expect_success 'usage: incompatible options' '
@@ -31,7 +31,41 @@ test_expect_success 'usage: incompatible options' '
 	test_incompatible_usage git cat-file --path=foo -e HEAD:some-path.txt &&
 
 	test_incompatible_usage git cat-file --batch-all-objects --textconv &&
-	test_incompatible_usage git cat-file --batch-all-objects --filters
+	test_incompatible_usage git cat-file --batch-all-objects --filters &&
+
+	test_incompatible_usage git cat-file --batch -e &&
+	test_incompatible_usage git cat-file --batch -p &&
+	test_incompatible_usage git cat-file --batch -t &&
+	test_incompatible_usage git cat-file --batch -s &&
+
+	test_incompatible_usage git cat-file --batch-check -e &&
+	test_incompatible_usage git cat-file --batch-check -p &&
+	test_incompatible_usage git cat-file --batch-check -t &&
+	test_incompatible_usage git cat-file --batch-check -s
+'
+
+test_missing_usage() {
+	test_expect_code 129 "$@" 2>err &&
+	grep -E "^fatal:.*required" err
+}
+
+test_expect_success 'usage: invalid' '
+	test_missing_usage git cat-file --textconv &&
+	test_missing_usage git cat-file --filters
+'
+
+test_too_many_arguments() {
+	test_expect_code 129 "$@" 2>err &&
+	grep -E "^fatal: too many arguments$" err
+}
+
+test_expect_success 'usage: too many arguments' '
+	test_too_many_arguments git cat-file -e one two three &&
+	test_too_many_arguments git cat-file -p one two three &&
+	test_too_many_arguments git cat-file -t one two three &&
+	test_too_many_arguments git cat-file -s one two three &&
+	test_too_many_arguments git cat-file --textconv one two three &&
+	test_too_many_arguments git cat-file --filters one two three
 '
 
 echo_without_newline () {
