@@ -1795,15 +1795,19 @@ static enum get_oid_result get_oid_with_context_1(struct repository *repo,
 	const char *cp;
 	int only_to_die = flags & GET_OID_ONLY_TO_DIE;
 
-	if (only_to_die)
+	if (only_to_die && !(flags & GET_OID_VERBOSELY))
 		flags |= GET_OID_QUIETLY;
 
 	memset(oc, 0, sizeof(*oc));
 	oc->mode = S_IFINVALID;
 	strbuf_init(&oc->symlink_path, 0);
 	ret = get_oid_1(repo, name, namelen, oid, flags);
-	if (!ret)
+	if (!ret) {
+		if (flags & GET_OID_REQUIRE_PATH)
+			die(_("<object>:<path> required, only <object> '%s' given"), name);
 		return ret;
+	}
+
 	/*
 	 * tree:path --> object name of path in tree
 	 * :path -> object name of absolute path in index
