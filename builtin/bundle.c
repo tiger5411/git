@@ -205,7 +205,7 @@ int cmd_bundle(int argc, const char **argv, const char *prefix)
 	packet_trace_identity("bundle");
 
 	if (argc < 2)
-		usage_with_options(builtin_bundle_usage, options);
+		ERROR_USAGE(_("no subcommand given"));
 
 	else if (!strcmp(argv[0], "create"))
 		result = cmd_bundle_create(argc, argv, prefix);
@@ -220,4 +220,6 @@ int cmd_bundle(int argc, const char **argv, const char *prefix)
 		usage_with_options(builtin_bundle_usage, options);
 	}
 	return result ? 1 : 0;
+usage:
+	usage_with_options(builtin_bundle_usage, options);
 }

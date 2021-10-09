@@ -218,6 +218,11 @@ int parse_options(int argc, const char **argv, const char *prefix,
 NORETURN void usage_with_options(const char * const *usagestr,
 				 const struct option *options);
 
+__attribute__((format (printf,3,4)))
+void NORETURN die_usagef(const char * const *usagestr,
+			 const struct option *opts,
+			 const char *fmt, ...);
+
 NORETURN void usage_msg_opt(const char *msg,
 			    const char * const *usagestr,
 			    const struct option *options);
@@ -346,7 +351,7 @@ int parse_opt_passthru_argv(const struct option *, const char *, int);
  */
 #define ERROR_USAGE(...) \
 	do { \
-		error(__VA_ARGS__); \
+		error((__VA_ARGS__)); \
 		goto usage; \
 	} while (0)
 

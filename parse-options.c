@@ -993,6 +993,20 @@ void NORETURN usage_with_options(const char * const *usagestr,
 	exit(129);
 }
 
+__attribute__((format (printf,3,4)))
+void NORETURN die_usagef(const char * const *usagestr,
+			 const struct option *opts,
+			 const char *fmt, ...)
+{
+	struct strbuf msg = STRBUF_INIT;
+	va_list ap;
+	va_start(ap, fmt);
+	strbuf_vaddf(&msg, fmt, ap);
+	va_end(ap);
+
+	usage_msg_opt(msg.buf, usagestr, opts);
+}
+
 void NORETURN usage_msg_opt(const char *msg,
 		   const char * const *usagestr,
 		   const struct option *options)
