@@ -4,6 +4,38 @@ test_description='git cat-file'
 
 . ./test-lib.sh
 
+test_cmdmode_usage() {
+	test_expect_code 129 "$@" 2>err &&
+	cat err >&2 &&
+	grep "^error:.*is incompatible with" err
+}
+
+test_expect_success 'usage: cmdmode' '
+	test_cmdmode_usage git cat-file -e -p &&
+	test_cmdmode_usage git cat-file -p -t &&
+	test_cmdmode_usage git cat-file -t -s &&
+	test_cmdmode_usage git cat-file -s --textconv
+'
+
+test_incompatible_usage() {
+	test_expect_code 129 "$@" 2>err &&
+	cat err >&2 &&
+	grep -E "^error:.*$switch.*((combined|incompatible) with|needs)" err
+}
+
+test_expect_success 'usage: incompatible options' '
+	test_incompatible_usage git cat-file --path=foo --batch &&
+	test_incompatible_usage git cat-file --path=foo --batch-check &&
+
+	test_incompatible_usage git cat-file --path=foo -t HEAD:some-path.txt &&
+	test_incompatible_usage git cat-file --path=foo -e HEAD:some-path.txt
+'
+
+test_expect_failure 'usage: incompatible options' '
+	test_incompatible_usage git cat-file --batch-all-objects --textconv &&
+	test_incompatible_usage git cat-file --batch-all-objects --filters
+'
+
 echo_without_newline () {
     printf '%s' "$*"
 }
