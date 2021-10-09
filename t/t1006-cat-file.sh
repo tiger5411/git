@@ -20,7 +20,7 @@ test_expect_success 'usage: cmdmode' '
 test_incompatible_usage() {
 	test_expect_code 129 "$@" 2>err &&
 	cat err >&2 &&
-	grep -E "^(fatal|error):.*$switch.*((combined|incompatible) with|needs)" err
+	grep -E "^(fatal|error):.*$switch.*(requires|(combined|incompatible) with|needs)" err
 }
 
 test_expect_success 'usage: incompatible options' '
@@ -41,7 +41,12 @@ test_expect_success 'usage: incompatible options' '
 	test_incompatible_usage git cat-file --batch-check -e &&
 	test_incompatible_usage git cat-file --batch-check -p &&
 	test_incompatible_usage git cat-file --batch-check -t &&
-	test_incompatible_usage git cat-file --batch-check -s
+	test_incompatible_usage git cat-file --batch-check -s &&
+
+	test_incompatible_usage git cat-file --follow-symlinks -e &&
+	test_incompatible_usage git cat-file --follow-symlinks -p &&
+	test_incompatible_usage git cat-file --follow-symlinks -t &&
+	test_incompatible_usage git cat-file --follow-symlinks -s
 '
 
 test_missing_usage() {
