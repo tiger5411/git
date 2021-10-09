@@ -357,8 +357,18 @@ void set_git_dir(const char *path, int make_realpath)
 
 const char *get_log_output_encoding(void)
 {
-	return git_log_output_encoding ? git_log_output_encoding
+	const char *encoding = git_log_output_encoding ? git_log_output_encoding
 		: get_commit_output_encoding();
+#ifndef NO_ICONV
+	iconv_t conv;
+	conv = iconv_open(encoding, "UTF-8");
+	if (conv == (iconv_t) -1 && errno == EINVAL)
+		die_errno("the '%s' encoding is not known to iconv", encoding);
+#else
+	if (strcmp(encoding, "UTF-8"))
+		die("compiled with NO_ICONV=Y, can't re-encode to '%s'", encoding);
+#endif
+	return encoding;
 }
 
 const char *get_commit_output_encoding(void)
