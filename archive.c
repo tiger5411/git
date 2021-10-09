@@ -452,9 +452,7 @@ static void parse_treeish_arg(const char **argv,
 		dwim_ref(name, strlen(name), &oid, &ref, 0);
 	}
 
-	if (get_oid(name, &oid))
-		die(_("not a valid object name: %s"), name);
-
+	repo_get_oid_obj_or_die(the_repository, name, &oid);
 	commit = lookup_commit_reference_gently(ar_args->repo, &oid, 1);
 	if (commit) {
 		commit_oid = &commit->object.oid;

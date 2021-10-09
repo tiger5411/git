@@ -524,14 +524,11 @@ static void describe(const char *arg, int last_one)
 	struct object_id oid;
 	struct commit *cmit;
 	struct strbuf sb = STRBUF_INIT;
-	struct object_context obj_context;
 
 	if (debug)
 		fprintf(stderr, _("describe %s\n"), arg);
 
-	get_oid_with_context(the_repository, arg,
-			     GET_OID_ONLY_TO_DIE | GET_OID_REQUIRE_OBJ,
-			     &oid, &obj_context);
+	repo_get_oid_obj_or_die(the_repository, arg, &oid);
 	cmit = lookup_commit_reference_gently(the_repository, &oid, 1);
 
 	if (cmit)

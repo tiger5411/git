@@ -1678,6 +1678,15 @@ int repo_get_oid_blob(struct repository *r,
 				    oid, &unused);
 }
 
+int repo_get_oid_obj_or_die(struct repository *r,
+			    const char *name,
+			    struct object_id *oid)
+{
+	unsigned flags = GET_OID_ONLY_TO_DIE | GET_OID_REQUIRE_OBJ;
+	struct object_context unused;
+	return get_oid_with_context(r, name,  flags, oid, &unused);
+}
+
 /* Must be called only when object_name:filename doesn't exist. */
 static void diagnose_invalid_oid_path(struct repository *r,
 				      const char *prefix,
@@ -1805,7 +1814,7 @@ static enum get_oid_result get_oid_with_context_1(struct repository *repo,
 			    name);
 		return ret;
 	} else if (flags & GET_OID_REQUIRE_OBJ) {
-		die(_("not a valid object name: '%s'"), name);
+		die(_("invalid object name: '%s'"), name);
 	}
 	/*
 	 * tree:path --> object name of path in tree
