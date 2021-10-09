@@ -686,10 +686,10 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, options, usage, 0);
 	opt_cw = (opt == 'c' || opt == 'w');
 
+	/* Incompatible with batch mode */
 	if (argc && batch.enabled)
 		usage_msg_opt(_("argument given in batch mode"), usage,
 			      options);
-
 	if (!batch.enabled && batch.follow_symlinks)
 		usage_msg_optf(_("'%s' requires '%s' or '%s'"),
 			       usage, options, "--follow-symlinks",
@@ -698,7 +698,6 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 		usage_msg_optf(_("'%s' requires '%s' or '%s'"),
 			       usage, options, "--batch-all-objects",
 			       "--batch","--batch-check");
-
 	if (opt == 'b') {
 		batch.all_objects = 1;
 	} else if (opt) {
@@ -734,7 +733,7 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 		goto usage;
 	}
 
-	if (force_path && opt != 'c' && opt != 'w')
+	if (force_path && !opt_cw)
 		usage_msg_optf(_("'%s=<%s> needs '%s' or '%s'"),
 			       usage, options,
 			       "--path", _("path|tree-ish"), "--filters",
