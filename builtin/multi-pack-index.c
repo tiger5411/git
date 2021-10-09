@@ -188,9 +188,10 @@ int cmd_multi_pack_index(int argc, const char **argv,
 		opts.object_dir = get_object_directory();
 
 	if (!argc)
-		goto usage;
-
-	if (!strcmp(argv[0], "repack"))
+		usage_msg_opt(_("no subcommand given"),
+			      builtin_multi_pack_index_usage,
+			      builtin_multi_pack_index_options);
+	else if (!strcmp(argv[0], "repack"))
 		return cmd_multi_pack_index_repack(argc, argv);
 	else if (!strcmp(argv[0], "write"))
 		return cmd_multi_pack_index_write(argc, argv);
@@ -198,9 +199,8 @@ int cmd_multi_pack_index(int argc, const char **argv,
 		return cmd_multi_pack_index_verify(argc, argv);
 	else if (!strcmp(argv[0], "expire"))
 		return cmd_multi_pack_index_expire(argc, argv);
-
-	error(_("unrecognized subcommand: %s"), argv[0]);
-usage:
-	usage_with_options(builtin_multi_pack_index_usage,
-			   builtin_multi_pack_index_options);
+	else
+		usage_msg_optf(_("unrecognized subcommand: %s"),
+			       builtin_multi_pack_index_usage,
+			       builtin_multi_pack_index_options, argv[0]);
 }
