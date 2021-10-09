@@ -336,4 +336,18 @@ int parse_opt_passthru_argv(const struct option *, const char *, int);
 #define OPT_PATHSPEC_FILE_NUL(v)  OPT_BOOL(0, "pathspec-file-nul", v, N_("with --pathspec-from-file, pathspec elements are separated with NUL character"))
 #define OPT_AUTOSTASH(v) OPT_BOOL(0, "autostash", v, N_("automatically stash/stash pop before and after"))
 
+/**
+ * Utility macros for use with parse_options().
+ */
+
+/**
+ * ERROR_USAGE(): Macro that calls error() followed by "goto usage".
+ * Avoids the need for braces that common pattern.
+ */
+#define ERROR_USAGE(...) \
+	do { \
+		error(__VA_ARGS__); \
+		goto usage; \
+	} while (0)
+
 #endif
