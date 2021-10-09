@@ -12,15 +12,15 @@ test_expect_success 'usage' '
 
 test_expect_success 'usage shown without sub-command' '
 	test_expect_code 129 git commit-graph 2>err &&
-	! grep error: err
+	grep fatal: err
 '
 
 test_expect_success 'usage shown with an error on unknown sub-command' '
 	cat >expect <<-\EOF &&
-	error: unrecognized subcommand: unknown
+	fatal: unrecognized subcommand: unknown
 	EOF
 	test_expect_code 129 git commit-graph unknown 2>stderr &&
-	grep error stderr >actual &&
+	grep fatal stderr >actual &&
 	test_cmp expect actual
 '
 

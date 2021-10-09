@@ -1729,10 +1729,9 @@ int cmd_remote(int argc, const char **argv, const char *prefix)
 		result = prune(argc, argv);
 	else if (!strcmp(argv[0], "update"))
 		result = update(argc, argv);
-	else {
-		usage_msg_optf(_("Unknown subcommand: %s"),
+	else
+		usage_msg_optf(_("unrecognized subcommand: %s"),
 			       builtin_remote_usage, options, argv[0]);
-	}
 
 	return result ? 1 : 0;
 }

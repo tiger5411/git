@@ -192,31 +192,39 @@ cleanup:
 	return ret;
 }
 
+
+static int do_cmd(int (*fn)(int, const char **, const char *),
+		  const struct option *options, int argc, const char **argv,
+		  const char *prefix) {
+	if (argc < 2)
+		usage_msg_optf(_("subcommand '%s' requires an argument"),
+			       builtin_bundle_usage, options, argv[0]);
+	return !!fn(argc, argv, prefix);
+}
+
 int cmd_bundle(int argc, const char **argv, const char *prefix)
 {
 	struct option options[] = {
 		OPT_END()
 	};
-	int result;
 
 	argc = parse_options(argc, argv, prefix, options, builtin_bundle_usage,
 		PARSE_OPT_STOP_AT_NON_OPTION);
 
 	packet_trace_identity("bundle");
 
-	if (argc < 2)
-		usage_with_options(builtin_bundle_usage, options);
-
+	if (!argc)
+		usage_msg_opt(_("no subcommand given"),
+			      builtin_bundle_usage, options);
 	else if (!strcmp(argv[0], "create"))
-		result = cmd_bundle_create(argc, argv, prefix);
+		return do_cmd(cmd_bundle_create, options, argc, argv, prefix);
 	else if (!strcmp(argv[0], "verify"))
-		result = cmd_bundle_verify(argc, argv, prefix);
+		return do_cmd(cmd_bundle_verify, options, argc, argv, prefix);
 	else if (!strcmp(argv[0], "list-heads"))
-		result = cmd_bundle_list_heads(argc, argv, prefix);
+		return do_cmd(cmd_bundle_list_heads, options, argc, argv, prefix);
 	else if (!strcmp(argv[0], "unbundle"))
-		result = cmd_bundle_unbundle(argc, argv, prefix);
+		return do_cmd(cmd_bundle_unbundle, options, argc, argv, prefix);
 	else
-		usage_msg_optf(_("Unknown subcommand: %s"),
+		usage_msg_optf(_("unrecognized subcommand: %s"),
 			       builtin_bundle_usage, options, argv[0]);
-	return result ? 1 : 0;
 }
