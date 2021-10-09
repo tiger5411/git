@@ -525,9 +525,4 @@ int for_each_object_in_pack(struct packed_git *p,
 int for_each_packed_object(each_packed_object_fn, void *,
 			   enum for_each_object_flags flags);
 
-/**
- * Convenience wrappers around get_oid_with_context()
- */
-int repo_get_oid_obj_or_die(struct repository *r, const char *str,
-			    struct object_id *oid);
 #endif /* OBJECT_STORE_H */
