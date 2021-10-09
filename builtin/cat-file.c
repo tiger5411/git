@@ -686,18 +686,31 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, options, usage, 0);
 	opt_cw = (opt == 'c' || opt == 'w');
 
+	/* Incompatible options */
+	if (force_path && !opt_cw)
+		usage_msg_optf(_("'%s=<%s> needs '%s' or '%s'"),
+			       usage, options,
+			       "--path", _("path|tree-ish"), "--filters",
+			       "--textconv");
+
 	/* Incompatible with batch mode */
-	if (argc && batch.enabled)
-		usage_msg_opt(_("argument given in batch mode"), usage,
-			      options);
-	if (!batch.enabled && batch.follow_symlinks)
+	if (batch.enabled) {
+		if (argc)
+			usage_msg_opt(_("argument given in batch mode"), usage,
+				      options);
+	} else if (batch.follow_symlinks) {
 		usage_msg_optf(_("'%s' requires '%s' or '%s'"),
 			       usage, options, "--follow-symlinks",
 			       "--batch","--batch-check");
-	else if	(!batch.enabled && batch.all_objects)
+	} else if (batch.all_objects) {
 		usage_msg_optf(_("'%s' requires '%s' or '%s'"),
 			       usage, options, "--batch-all-objects",
 			       "--batch","--batch-check");
+	} else if (batch.buffer_output >= 0) {
+		usage_msg_optf(_("'%s' requires a batch mode"),
+			       usage, options, "--buffer");
+	}
+
 	if (opt == 'b') {
 		batch.all_objects = 1;
 	} else if (opt) {
@@ -733,19 +746,11 @@ int cmd_cat_file(int argc, const char **argv, const char *prefix)
 		goto usage;
 	}
 
-	if (force_path && !opt_cw)
-		usage_msg_optf(_("'%s=<%s> needs '%s' or '%s'"),
-			       usage, options,
-			       "--path", _("path|tree-ish"), "--filters",
-			       "--textconv");
-
 	if (batch.enabled) {
 		if (batch.buffer_output < 0)
 			batch.buffer_output = batch.all_objects;
 		return batch_objects(&batch);
-	} else if (batch.buffer_output >= 0)
-		usage_msg_optf(_("'%s' requires a batch mode"),
-			       usage, options, "--buffer");
+	}
 
 	if (unknown_type && opt != 't' && opt != 's')
 		die("git cat-file --allow-unknown-type: use with -s or -t");
