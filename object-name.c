@@ -1804,8 +1804,6 @@ static enum get_oid_result get_oid_with_context_1(struct repository *repo,
 			die(_("<object>:<path> required, only <object> '%s' given"),
 			    name);
 		return ret;
-	} else if (flags & GET_OID_REQUIRE_OBJ) {
-		die(_("not a valid object name: '%s'"), name);
 	}
 	/*
 	 * tree:path --> object name of path in tree
