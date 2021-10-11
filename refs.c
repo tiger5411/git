@@ -1670,7 +1670,7 @@ int refs_read_raw_ref(struct ref_store *ref_store, const char *refname,
 					   type, failure_errno);
 }
 
-const char *refs_werrres_ref_unsafe(struct ref_store *refs,
+const char *refs_resolve_ref_unsafe(struct ref_store *refs,
 				    const char *refname,
 				    int resolve_flags,
 				    struct object_id *oid,
@@ -1765,19 +1765,6 @@ const char *refs_werrres_ref_unsafe(struct ref_store *refs,
 
 	*failure_errno = ELOOP;
 	return NULL;
-}
-
-const char *refs_resolve_ref_unsafe(struct ref_store *refs, const char *refname,
-				    int resolve_flags, struct object_id *oid,
-				    int *flags)
-{
-	int failure_errno = 0;
-	const char *refn;
-	refn = refs_werrres_ref_unsafe(refs, refname, resolve_flags,
-				       oid, flags, &failure_errno);
-	if (!refn)
-		errno = failure_errno;
-	return refn;
 }
 
 /* backend functions */
