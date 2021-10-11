@@ -1035,6 +1035,11 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 		ret = error("could not read_bundle_header(%s)", bundle_uri);
 		goto cleanup;
 	}
+	if (!verify_bundle(the_repository, &header, 1)) {
+		error("already have everything I need from %s", bundle_uri);
+		ret = -2;
+		goto cleanup;
+	}
 
 	for_each_string_list_item(item, &header.references) {
 		/*
@@ -1136,7 +1141,14 @@ static int get_bundle_uri(struct string_list_item *item, unsigned int nth,
 	out_fd = fileno(out);
 	ret = unbundle_bundle_uri(uri, nth, total_nr, out, out_fd,
 				  bundle_oids, use_thin_pack);
-
+	if (ret == -2) {
+		int err = kill(cmd.pid, SIGTERM);;
+		if (err == -1) {
+			ret = error("fetch-pack: could not kill curl!");
+			goto cleanup;
+		}
+		fprintf(stderr, "killed curl child early, have the content in %s\n", item->string);
+	}
 	if (finish_command(&cmd)) {
 		ret = error("fetch-pack: unable to finish http-fetch");
 		goto cleanup;

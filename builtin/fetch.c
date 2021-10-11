@@ -1587,6 +1587,7 @@ static int do_fetch(struct transport *transport,
 		trace2_region_leave("fetch", "remote_refs", the_repository);
 	} else
 		remote_refs = NULL;
+	transport_get_remote_bundle_uri(transport, 1);
 
 	strvec_clear(&transport_ls_refs_options.ref_prefixes);
 
