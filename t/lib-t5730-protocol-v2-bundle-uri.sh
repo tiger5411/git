@@ -375,8 +375,7 @@ test_expect_success "fetch with bundle-uri protocol v2 over $T5730_PROTOCOL:// 1
 		-c protocol.version=2 \
 		-c fetch.uriProtocols=file,http \
 		fetch --verbose --verbose >out 2>err &&
-	# Fetch is not supported yet
-	! grep -F "Receiving bundle (1/1)" err &&
+	grep -F "Receiving bundle (1/1)" err &&
 	grep "fetch> want " log &&
 	test_cmp_repo_refs "$T5730_PARENT" child refs/heads refs/tags
 '
@@ -420,5 +419,5 @@ test_expect_success "clone with bundle-uri protocol v2 with $T5730_PROTOCOL:// A
 		"$T5730_URI" child >out 2>err &&
 	grep -F "Receiving bundle (6/6)" err &&
 	test_cmp_repo_refs "$T5730_PARENT" child refs/heads refs/tags &&
-	! grep "clone> want " log
+	grep "clone> want " log
 '
