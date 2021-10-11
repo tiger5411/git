@@ -852,6 +852,27 @@ test_expect_success 'remove a remote' '
 	)
 '
 
+test_expect_success 'setup: rename a remote with a D/F conflict' '
+	git clone one df-conf &&
+	(
+		cd df-conf &&
+
+		# Spoil the rename
+		git update-ref refs/remotes/newname HEAD &&
+
+		git for-each-ref >expect.refs &&
+		git config -f .git/config -l >expect.config &&
+
+		cat >err.expect <<-\EOF &&
+		error: '\''refs/remotes/newname'\'' exists; cannot create '\''refs/remotes/newname/main'\''
+		fatal: renaming '\''refs/remotes/origin/main'\'' failed
+		EOF
+		test_must_fail git remote rename origin newname >out 2>err.actual &&
+		test_must_be_empty out &&
+		test_cmp err.expect err.actual
+	)
+'
+
 test_expect_success 'remove a remote removes repo remote.pushDefault' '
 	git clone one four.five.1 &&
 	(
