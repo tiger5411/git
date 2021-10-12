@@ -18,7 +18,7 @@ do
 	test_expect_success "pack-objects with $config" '
 		test_when_finished "rm -f pack-*.*" &&
 		git $config pack-objects pack <object-name &&
-		sz=$(test_file_size pack-*.pack) &&
+		sz=$(test-tool path-utils file-size pack-*.pack) &&
 		case "$expect" in
 		small) test "$sz" -le 100000 ;;
 		large) test "$sz" -ge 100000 ;;

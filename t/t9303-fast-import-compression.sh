@@ -20,7 +20,7 @@ do
 		test_when_finished "rm -f .git/objects/pack/pack-*.*" &&
 		test_when_finished "rm -rf .git/objects/??" &&
 		import_large -c fastimport.unpacklimit=0 $config &&
-		sz=$(test_file_size .git/objects/pack/pack-*.pack) &&
+		sz=$(test-tool path-utils file-size .git/objects/pack/pack-*.pack) &&
 		case "$expect" in
 		small) test "$sz" -le 100000 ;;
 		large) test "$sz" -ge 100000 ;;
@@ -43,7 +43,7 @@ do
 		test_when_finished "rm -f .git/objects/pack/pack-*.*" &&
 		test_when_finished "rm -rf .git/objects/??" &&
 		import_large -c fastimport.unpacklimit=9 $config &&
-		sz=$(test_file_size .git/objects/??/????*) &&
+		sz=$(test-tool path-utils file-size .git/objects/??/????*) &&
 		case "$expect" in
 		small) test "$sz" -le 100000 ;;
 		large) test "$sz" -ge 100000 ;;

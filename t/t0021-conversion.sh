@@ -365,6 +365,10 @@ test_expect_success 'diff does not reuse worktree files that need cleaning' '
 	test_line_count = 0 count
 '
 
+test_file_size () {
+	test-tool path-utils file-size "$@"
+}
+
 test_expect_success PERL 'required process filter should filter data' '
 	test_config_global filter.protocol.process "rot13-filter.pl debug.log clean smudge" &&
 	test_config_global filter.protocol.required true &&
