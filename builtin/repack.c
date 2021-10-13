@@ -258,9 +258,11 @@ static void repack_promisor_objects(const struct pack_objects_args *args,
 	for_each_packed_object(write_oid, &cmd,
 			       FOR_EACH_OBJECT_PROMISOR_ONLY);
 
-	if (cmd.in == -1)
+	if (cmd.in == -1) {
+		child_process_clear(&cmd);
 		/* No packed objects; cmd was never started */
 		return;
+	}
 
 	close(cmd.in);
 
