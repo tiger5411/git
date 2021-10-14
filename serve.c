@@ -12,26 +12,14 @@
 static int advertise_sid = -1;
 static int client_hash_algo = GIT_HASH_SHA1;
 
-static int always_advertise(struct repository *r,
-			    struct strbuf *value)
+static void agent_value(struct repository *r, struct strbuf *value)
 {
-	return 1;
+	strbuf_addstr(value, git_user_agent_sanitized());
 }
 
-static int agent_advertise(struct repository *r,
-			   struct strbuf *value)
+static void object_format_value(struct repository *r, struct strbuf *value)
 {
-	if (value)
-		strbuf_addstr(value, git_user_agent_sanitized());
-	return 1;
-}
-
-static int object_format_advertise(struct repository *r,
-				   struct strbuf *value)
-{
-	if (value)
-		strbuf_addstr(value, r->hash_algo->name);
-	return 1;
+	strbuf_addstr(value, r->hash_algo->name);
 }
 
 static void object_format_receive(struct repository *r,
@@ -45,16 +33,19 @@ static void object_format_receive(struct repository *r,
 		die("unknown object format '%s'", algo_name);
 }
 
-static int session_id_advertise(struct repository *r, struct strbuf *value)
+static int session_id_advertise(struct repository *r)
 {
 	if (advertise_sid == -1 &&
 	    git_config_get_bool("transfer.advertisesid", &advertise_sid))
 		advertise_sid = 0;
 	if (!advertise_sid)
 		return 0;
-	if (value)
-		strbuf_addstr(value, trace2_session_id());
 	return 1;
+}
+
+static void session_id_value(struct repository *r,struct strbuf *value)
+{
+	strbuf_addstr(value, trace2_session_id());
 }
 
 static void session_id_receive(struct repository *r,
@@ -74,12 +65,20 @@ struct protocol_capability {
 	const char *name;
 
 	/*
-	 * Function queried to see if a capability should be advertised.
-	 * Optionally a value can be specified by adding it to 'value'.
+	 * An optional function that'll be queried to check if the
+	 * capability should be advertised. If omitted the capability
+	 * will be advertised by default.
+	 */
+	int (*advertise)(struct repository *r);
+
+	/*
+	 * An optional value to add to the capability, This callback
+	 * receives and optionally appends to an empty 'value'.
+	 *
 	 * If a value is added to 'value', the server will advertise this
 	 * capability as "<name>=<value>" instead of "<name>".
 	 */
-	int (*advertise)(struct repository *r, struct strbuf *value);
+	void (*value)(struct repository *r, struct strbuf *value);
 
 	/*
 	 * Function called when a client requests the capability as a command.
@@ -105,38 +104,44 @@ struct protocol_capability {
 static struct protocol_capability capabilities[] = {
 	{
 		.name = "agent",
-		.advertise = agent_advertise,
+		.value = agent_value,
 	},
 	{
 		.name = "ls-refs",
-		.advertise = ls_refs_advertise,
+		.value = ls_refs_value,
 		.command = ls_refs,
 	},
 	{
 		.name = "fetch",
-		.advertise = upload_pack_advertise,
+		.value = upload_pack_value,
 		.command = upload_pack_v2,
 	},
 	{
 		.name = "server-option",
-		.advertise = always_advertise,
 	},
 	{
 		.name = "object-format",
-		.advertise = object_format_advertise,
+		.value = object_format_value,
 		.receive = object_format_receive,
 	},
 	{
-		.name = "session-id",
 		.advertise = session_id_advertise,
+		.name = "session-id",
+		.value = session_id_value,
 		.receive = session_id_receive,
 	},
 	{
 		.name = "object-info",
-		.advertise = always_advertise,
 		.command = cap_object_info,
 	},
 };
+
+static int is_advertised(struct repository *r, const struct protocol_capability *c)
+{
+	if (!c->advertise)
+		return 1;
+	return c->advertise(the_repository);
+}
 
 void protocol_v2_advertise_capabilities(void)
 {
@@ -149,8 +154,11 @@ void protocol_v2_advertise_capabilities(void)
 	for (i = 0; i < ARRAY_SIZE(capabilities); i++) {
 		struct protocol_capability *c = &capabilities[i];
 
-		if (!c->advertise(the_repository, &value))
+		if (!is_advertised(the_repository, c))
 			continue;
+
+		if (c->value)
+			c->value(the_repository, &value);
 
 		if (value.len) {
 			packet_write_fmt(1, "%s=%s\n", c->name, value.buf);
@@ -194,7 +202,7 @@ static int receive_client_capability(const char *key)
 	const char *value;
 	const struct protocol_capability *c = get_capability(key, &value);
 
-	if (!c || c->command || !c->advertise(the_repository, NULL))
+	if (!c || c->command || !is_advertised(the_repository, c))
 		return 0;
 
 	if (c->receive)
@@ -213,7 +221,7 @@ static int parse_command(const char *key, struct protocol_capability **command)
 		if (*command)
 			die("command '%s' requested after already requesting command '%s'",
 			    out, (*command)->name);
-		if (!cmd || !cmd->advertise(the_repository, NULL) || !cmd->command || value)
+		if (!cmd || !is_advertised(the_repository, cmd) || !cmd->command || value)
 			die("invalid command '%s'", out);
 
 		*command = cmd;

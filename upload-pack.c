@@ -1738,44 +1738,39 @@ int upload_pack_v2(struct repository *r, struct packet_reader *request)
 	return 0;
 }
 
-int upload_pack_advertise(struct repository *r,
-			  struct strbuf *value)
+void upload_pack_value(struct repository *r, struct strbuf *value)
 {
-	if (value) {
-		int allow_filter_value;
-		int allow_ref_in_want;
-		int allow_sideband_all_value;
-		char *str = NULL;
+	int allow_filter_value;
+	int allow_ref_in_want;
+	int allow_sideband_all_value;
+	char *str = NULL;
 
-		strbuf_addstr(value, "shallow wait-for-done");
+	strbuf_addstr(value, "shallow wait-for-done");
 
-		if (!repo_config_get_bool(the_repository,
-					 "uploadpack.allowfilter",
-					 &allow_filter_value) &&
-		    allow_filter_value)
-			strbuf_addstr(value, " filter");
+	if (!repo_config_get_bool(the_repository,
+				 "uploadpack.allowfilter",
+				 &allow_filter_value) &&
+	    allow_filter_value)
+		strbuf_addstr(value, " filter");
 
-		if (!repo_config_get_bool(the_repository,
-					 "uploadpack.allowrefinwant",
-					 &allow_ref_in_want) &&
-		    allow_ref_in_want)
-			strbuf_addstr(value, " ref-in-want");
+	if (!repo_config_get_bool(the_repository,
+				 "uploadpack.allowrefinwant",
+				 &allow_ref_in_want) &&
+	    allow_ref_in_want)
+		strbuf_addstr(value, " ref-in-want");
 
-		if (git_env_bool("GIT_TEST_SIDEBAND_ALL", 0) ||
-		    (!repo_config_get_bool(the_repository,
-					   "uploadpack.allowsidebandall",
-					   &allow_sideband_all_value) &&
-		     allow_sideband_all_value))
-			strbuf_addstr(value, " sideband-all");
+	if (git_env_bool("GIT_TEST_SIDEBAND_ALL", 0) ||
+	    (!repo_config_get_bool(the_repository,
+				   "uploadpack.allowsidebandall",
+				   &allow_sideband_all_value) &&
+	     allow_sideband_all_value))
+		strbuf_addstr(value, " sideband-all");
 
-		if (!repo_config_get_string(the_repository,
-					    "uploadpack.blobpackfileuri",
-					    &str) &&
-		    str) {
-			strbuf_addstr(value, " packfile-uris");
-			free(str);
-		}
+	if (!repo_config_get_string(the_repository,
+				    "uploadpack.blobpackfileuri",
+				    &str) &&
+	    str) {
+		strbuf_addstr(value, " packfile-uris");
+		free(str);
 	}
-
-	return 1;
 }
