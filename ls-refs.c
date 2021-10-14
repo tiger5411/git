@@ -196,13 +196,14 @@ int ls_refs(struct repository *r, struct packet_reader *request)
 	return 0;
 }
 
-int ls_refs_advertise(struct repository *r, struct strbuf *value)
+int ls_refs_advertise(struct repository *r)
 {
-	if (value) {
-		ensure_config_read();
-		if (advertise_unborn)
-			strbuf_addstr(value, "unborn");
-	}
-
 	return 1;
+}
+
+void ls_refs_value(struct repository *r, struct strbuf *value)
+{
+	ensure_config_read();
+	if (advertise_unborn)
+		strbuf_addstr(value, "unborn");
 }
