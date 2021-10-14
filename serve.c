@@ -180,9 +180,6 @@ static struct protocol_capability *get_capability(const char *key, const char **
 {
 	int i;
 
-	if (!key)
-		return NULL;
-
 	for (i = 0; i < ARRAY_SIZE(capabilities); i++) {
 		struct protocol_capability *c = &capabilities[i];
 		const char *out;
@@ -201,44 +198,52 @@ static struct protocol_capability *get_capability(const char *key, const char **
 	return NULL;
 }
 
-static int receive_client_capability(const char *key)
+static struct protocol_capability *parse_v2_line(const char **line, int *as_cmd,
+						 int *is_adv, const char **cap_val)
 {
-	const char *value;
-	const struct protocol_capability *c = get_capability(key, &value);
+	struct protocol_capability *c;
 
-	if (!c || c->command || !is_advertised(the_repository, c))
-		return 0;
+	*as_cmd = !!skip_prefix(*line, "command=", line);
+	*is_adv = 0;
 
-	if (c->receive)
-		c->receive(the_repository, value);
-	return 1;
-}
+	c = get_capability(*line, cap_val);
+	if (!c)
+		return NULL;
+	if (is_advertised(the_repository, c))
+		*is_adv = 1;
 
-static int parse_command(const char *key, struct protocol_capability **command)
-{
-	const char *out;
-
-	if (skip_prefix(key, "command=", &out)) {
-		const char *value;
-		struct protocol_capability *cmd = get_capability(out, &value);
-
-		if (*command)
-			die("command '%s' requested after already requesting command '%s'",
-			    out, (*command)->name);
-		if (!cmd || !is_advertised(the_repository, cmd) || !cmd->command || value)
-			die("invalid command '%s'", out);
-
-		*command = cmd;
-		return 1;
-	}
-
-	return 0;
+	return c;
 }
 
 enum request_state {
 	PROCESS_REQUEST_KEYS,
 	PROCESS_REQUEST_DONE,
 };
+
+static struct protocol_capability *process_reader_line(const char *line)
+{
+	struct protocol_capability *c = NULL;
+	int as_cmd;
+	int is_adv;
+	const char *val;
+
+	c = parse_v2_line(&line, &as_cmd, &is_adv, &val);
+	if (!c && as_cmd)
+		die("invalid command '%s'", line);
+	else if (!c || (!as_cmd && c->command) ||
+		 (!is_adv && !c->command))
+		die("unknown capability '%s'", line);
+	else if ((as_cmd && !c->command) || (!is_adv && c->command) ||
+		 (as_cmd && val))
+		die("invalid command '%s'", line);
+
+	if (c->receive)
+		c->receive(the_repository, val);
+	else if (as_cmd)
+		return c;
+
+	return NULL;
+}
 
 static int process_request(void)
 {
@@ -265,15 +270,16 @@ static int process_request(void)
 		case PACKET_READ_EOF:
 			BUG("Should have already died when seeing EOF");
 		case PACKET_READ_NORMAL:
-			if (parse_command(reader.line, &command) ||
-			    receive_client_capability(reader.line))
-				seen_capability_or_command = 1;
-			else
-				die("unknown capability '%s'", reader.line);
+		{
+			struct protocol_capability *c = NULL;
 
+			if ((c = process_reader_line(reader.line)))
+				command = c;
+			seen_capability_or_command = 1;
 			/* Consume the peeked line */
 			packet_reader_read(&reader);
 			break;
+		}
 		case PACKET_READ_FLUSH:
 			/*
 			 * If no command and no keys were given then the client
