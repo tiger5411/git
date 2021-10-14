@@ -8,15 +8,22 @@ static char const * const serve_usage[] = {
 	NULL
 };
 
+enum cmd_mode {
+	MODE_UNSPECIFIED,
+	MODE_STATELESS,
+	MODE_ADVERTISE,
+};
+
 int cmd__serve_v2(int argc, const char **argv)
 {
-	int stateless_rpc = 0;
-	int advertise_capabilities = 0;
+	enum cmd_mode mode = MODE_UNSPECIFIED;
 	struct option options[] = {
-		OPT_BOOL(0, "stateless-rpc", &stateless_rpc,
-			 N_("quit after a single request/response exchange")),
-		OPT_BOOL(0, "advertise-capabilities", &advertise_capabilities,
-			 N_("exit immediately after advertising capabilities")),
+		OPT_CMDMODE(0, "stateless-rpc", &mode,
+			 N_("quit after a single request/response exchange"),
+			MODE_STATELESS),
+		OPT_CMDMODE(0, "advertise-capabilities", &mode,
+			 N_("exit immediately after advertising capabilities"),
+			    MODE_ADVERTISE),
 		OPT_END()
 	};
 	const char *prefix = setup_git_directory();
@@ -26,10 +33,18 @@ int cmd__serve_v2(int argc, const char **argv)
 			     PARSE_OPT_KEEP_DASHDASH |
 			     PARSE_OPT_KEEP_UNKNOWN);
 
-	if (advertise_capabilities)
+	switch (mode) {
+	case MODE_ADVERTISE:
 		protocol_v2_advertise_capabilities();
-	else
-		protocol_v2_serve_loop(stateless_rpc);
+		break;
+	case MODE_STATELESS:
+		protocol_v2_serve_loop(1);
+		break;
+	case MODE_UNSPECIFIED:
+		usage_msg_opt("one of --stateless-rpc or --advertise-capabilities is required",
+			      serve_usage, options);
+		return 1;
+	}
 
 	return 0;
 }
