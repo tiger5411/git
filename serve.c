@@ -25,9 +25,6 @@ static void object_format_value(struct repository *r, struct strbuf *value)
 static void object_format_receive(struct repository *r,
 				  const char *algo_name)
 {
-	if (!algo_name)
-		die("object-format capability requires an argument");
-
 	client_hash_algo = hash_algo_by_name(algo_name);
 	if (client_hash_algo == GIT_HASH_UNKNOWN)
 		die("unknown object format '%s'", algo_name);
@@ -248,6 +245,8 @@ static struct protocol_capability *process_reader_line(const char *line)
 
 	if (c->receive && as_cmd)
 		BUG("%s: .receive is incompatible with .command", name);
+	else if (c->receive && !val)
+		die("'%s' capability requires an argument", c->name);
 	else if (c->receive)
 		c->receive(the_repository, val);
 	else if (as_cmd)

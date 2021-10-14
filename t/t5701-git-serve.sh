@@ -136,7 +136,7 @@ test_expect_success 'object-format with no value' '
 	EOF
 
 	cat >expect <<-\EOF &&
-	fatal: object-format capability requires an argument
+	fatal: '\''object-format'\'' capability requires an argument
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>actual <in &&
 	test_cmp expect actual
@@ -200,7 +200,7 @@ test_expect_success 'session-id is accepted if advertised' '
 	test_cmp expect actual
 '
 
-test_expect_failure 'session-id has a mandatory argument' '
+test_expect_success 'session-id has a mandatory argument' '
 	test_config transfer.advertiseSID true &&
 
 	test-tool pkt-line pack >in <<-EOF &&
@@ -210,7 +210,11 @@ test_expect_failure 'session-id has a mandatory argument' '
 	0000
 	EOF
 
-	test_must_fail test-tool serve-v2 --stateless-rpc <in
+	cat >expect <<-\EOF &&
+	fatal: '\''session-id'\'' capability requires an argument
+	EOF
+	test_must_fail test-tool serve-v2 --stateless-rpc 2>actual <in &&
+	test_cmp expect actual
 '
 
 # Test the basics of ls-refs
