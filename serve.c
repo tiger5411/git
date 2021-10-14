@@ -140,7 +140,6 @@ static struct protocol_capability capabilities[] = {
 
 void protocol_v2_advertise_capabilities(void)
 {
-	struct strbuf capability = STRBUF_INIT;
 	struct strbuf value = STRBUF_INIT;
 	int i;
 
@@ -150,24 +149,18 @@ void protocol_v2_advertise_capabilities(void)
 	for (i = 0; i < ARRAY_SIZE(capabilities); i++) {
 		struct protocol_capability *c = &capabilities[i];
 
-		if (c->advertise(the_repository, &value)) {
-			strbuf_addstr(&capability, c->name);
+		if (!c->advertise(the_repository, &value))
+			continue;
 
-			if (value.len) {
-				strbuf_addch(&capability, '=');
-				strbuf_addbuf(&capability, &value);
-			}
-
-			strbuf_addch(&capability, '\n');
-			packet_write(1, capability.buf, capability.len);
+		if (value.len) {
+			packet_write_fmt(1, "%s=%s\n", c->name, value.buf);
+			strbuf_reset(&value);
+		} else {
+			packet_write_fmt(1, "%s\n", c->name);
 		}
-
-		strbuf_reset(&capability);
-		strbuf_reset(&value);
 	}
 
 	packet_flush(1);
-	strbuf_release(&capability);
 	strbuf_release(&value);
 }
 
