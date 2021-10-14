@@ -237,7 +237,9 @@ static struct protocol_capability *process_reader_line(const char *line)
 		 (as_cmd && val))
 		die("invalid command '%s'", line);
 
-	if (c->receive)
+	if (c->receive && as_cmd)
+		BUG("%s: .receive is incompatible with .command", c->name);
+	else if (c->receive)
 		c->receive(the_repository, val);
 	else if (as_cmd)
 		return c;
