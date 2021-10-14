@@ -38,7 +38,7 @@ int cmd__serve_v2(int argc, const char **argv)
 		protocol_v2_advertise_capabilities();
 		break;
 	case MODE_STATELESS:
-		protocol_v2_serve_loop(1);
+		protocol_v2_request();
 		break;
 	case MODE_UNSPECIFIED:
 		usage_msg_opt("one of --stateless-rpc or --advertise-capabilities is required",

@@ -2,6 +2,7 @@
 #define SERVE_H
 
 void protocol_v2_advertise_capabilities(void);
-void protocol_v2_serve_loop(int stateless_rpc);
+int protocol_v2_request(void);
+void protocol_v2_serve_loop(void);
 
 #endif /* SERVE_H */

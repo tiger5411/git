@@ -255,7 +255,7 @@ static struct protocol_capability *process_reader_line(const char *line)
 	return NULL;
 }
 
-static int process_request(void)
+int protocol_v2_request(void)
 {
 	enum request_state state = PROCESS_REQUEST_KEYS;
 	struct packet_reader reader;
@@ -332,20 +332,11 @@ static int process_request(void)
 	return 0;
 }
 
-void protocol_v2_serve_loop(int stateless_rpc)
+void protocol_v2_serve_loop(void)
 {
-	if (!stateless_rpc)
-		protocol_v2_advertise_capabilities();
+	protocol_v2_advertise_capabilities();
 
-	/*
-	 * If stateless-rpc was requested then exit after
-	 * a single request/response exchange
-	 */
-	if (stateless_rpc) {
-		process_request();
-	} else {
-		for (;;)
-			if (process_request())
-				break;
-	}
+	for (;;)
+		if (protocol_v2_request())
+			break;
 }

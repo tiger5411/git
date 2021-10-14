@@ -51,8 +51,10 @@ int cmd_upload_pack(int argc, const char **argv, const char *prefix)
 	case protocol_v2:
 		if (advertise_refs)
 			protocol_v2_advertise_capabilities();
+		else if (stateless_rpc)
+			protocol_v2_request();
 		else
-			protocol_v2_serve_loop(stateless_rpc);
+			protocol_v2_serve_loop();
 		break;
 	case protocol_v1:
 		/*
