@@ -226,19 +226,28 @@ static struct protocol_capability *process_reader_line(const char *line)
 	int as_cmd;
 	int is_adv;
 	const char *val;
+	const char *name;
 
 	c = parse_v2_line(&line, &as_cmd, &is_adv, &val);
 	if (!c && as_cmd)
 		die("invalid command '%s'", line);
-	else if (!c || (!as_cmd && c->command) ||
-		 (!is_adv && !c->command))
+	else if (!c)
 		die("unknown capability '%s'", line);
-	else if ((as_cmd && !c->command) || (!is_adv && c->command) ||
-		 (as_cmd && val))
-		die("invalid command '%s'", line);
+
+	name = c->name;
+	if (as_cmd && !c->command)
+		die("'%s' is a capability, not a command", name);
+	else if (!as_cmd && c->command)
+		die("'%s' is a command, not a capability", name);
+	else if (!is_adv && c->command)
+		die("command '%s' unsupported", name);
+	else if (!is_adv)
+		die("capability '%s' unsupported", name);
+	else if (as_cmd && val)
+		die("commands do not accept arguments; '%s' given to '%s'", val, name);
 
 	if (c->receive && as_cmd)
-		BUG("%s: .receive is incompatible with .command", c->name);
+		BUG("%s: .receive is incompatible with .command", name);
 	else if (c->receive)
 		c->receive(the_repository, val);
 	else if (as_cmd)

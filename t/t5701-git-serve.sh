@@ -79,8 +79,12 @@ test_expect_success 'request capability as command' '
 	object-format=$(test_oid algo)
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	grep invalid.command.*agent err
+
+	cat >expect <<-\EOF &&
+	fatal: '\''agent'\'' is a capability, not a command
+	EOF
+	test_must_fail test-tool serve-v2 --stateless-rpc 2>actual <in &&
+	test_cmp expect actual
 '
 
 test_expect_success 'request command as capability' '
@@ -90,8 +94,12 @@ test_expect_success 'request command as capability' '
 	fetch
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	grep unknown.capability err
+
+	cat >expect <<-\EOF &&
+	fatal: '\''fetch'\'' is a command, not a capability
+	EOF
+	test_must_fail test-tool serve-v2 --stateless-rpc 2>actual <in &&
+	test_cmp expect actual
 '
 
 test_expect_success 'requested command is command=value' '
@@ -100,8 +108,12 @@ test_expect_success 'requested command is command=value' '
 	object-format=$(test_oid algo)
 	0000
 	EOF
-	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	grep invalid.command.*ls-refs=whatever err
+
+	cat >expect <<-\EOF &&
+	fatal: commands do not accept arguments; '\''whatever'\'' given to '\''ls-refs'\''
+	EOF
+	test_must_fail test-tool serve-v2 --stateless-rpc 2>actual <in &&
+	test_cmp expect actual
 '
 
 test_expect_success 'wrong object-format' '
@@ -161,7 +173,7 @@ test_expect_success 'session-id errors if not advertised' '
 	EOF
 
 	cat >expect <<-\EOF &&
-	fatal: unknown capability '\''session-id=123abc'\''
+	fatal: capability '\''session-id'\'' unsupported
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc >out 2>actual <in &&
 	test_must_be_empty out &&
