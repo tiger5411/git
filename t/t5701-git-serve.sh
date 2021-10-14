@@ -115,6 +115,21 @@ test_expect_success 'wrong object-format' '
 	test_i18ngrep "mismatched object format" err
 '
 
+test_expect_success 'object-format with no value' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=fetch
+	agent=git/test
+	object-format
+	0000
+	EOF
+
+	cat >expect <<-\EOF &&
+	fatal: object-format capability requires an argument
+	EOF
+	test_must_fail test-tool serve-v2 --stateless-rpc 2>actual <in &&
+	test_cmp expect actual
+'
+
 test_expect_success 'unspecified object-format' '
 	test-tool pkt-line pack >in <<-EOF &&
 	command=fetch
