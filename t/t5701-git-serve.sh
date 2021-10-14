@@ -115,6 +115,22 @@ test_expect_success 'wrong object-format' '
 	test_i18ngrep "mismatched object format" err
 '
 
+test_expect_success 'unspecified object-format' '
+	test-tool pkt-line pack >in <<-EOF &&
+	command=fetch
+	agent=git/test
+	0000
+	EOF
+	if test_have_prereq SHA1
+	then
+		test-tool serve-v2 --stateless-rpc 2>err <in &&
+		test_must_be_empty err
+	else
+		test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
+		test_i18ngrep "mismatched object format" err
+	fi
+'
+
 # Test the basics of ls-refs
 #
 test_expect_success 'setup some refs and tags' '
