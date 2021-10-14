@@ -43,7 +43,7 @@ test_expect_success 'stateless-rpc flag does not list capabilities' '
 	test_must_be_empty out
 '
 
-test_expect_success 'request invalid capability' '
+test_expect_success 'request unknown capability' '
 	test-tool pkt-line pack >in <<-EOF &&
 	foobar
 	0000
@@ -62,7 +62,7 @@ test_expect_success 'request with no command' '
 	test_i18ngrep "no command requested" err
 '
 
-test_expect_success 'request invalid command' '
+test_expect_success 'request unknown command' '
 	test-tool pkt-line pack >in <<-EOF &&
 	command=foo
 	object-format=$(test_oid algo)
@@ -70,7 +70,7 @@ test_expect_success 'request invalid command' '
 	0000
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "invalid command" err
+	test_i18ngrep "unknown command" err
 '
 
 test_expect_success 'request capability as command' '

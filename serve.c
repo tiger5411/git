@@ -227,7 +227,7 @@ static struct protocol_capability *process_reader_line(const char *line)
 
 	c = parse_v2_line(&line, &as_cmd, &is_adv, &val);
 	if (!c && as_cmd)
-		die("invalid command '%s'", line);
+		die("unknown command '%s'", line);
 	else if (!c)
 		die("unknown capability '%s'", line);
 
