@@ -131,6 +131,61 @@ test_expect_success 'unspecified object-format' '
 	fi
 '
 
+# Test the basics of session-id
+#
+test_expect_success 'session-id errors if not advertised' '
+	test_config transfer.advertiseSID false &&
+	test-tool pkt-line pack >in <<-EOF &&
+	session-id=123abc
+	command=ls-refs
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	0000
+	EOF
+
+	cat >expect <<-\EOF &&
+	fatal: unknown capability '\''session-id=123abc'\''
+	EOF
+	test_must_fail test-tool serve-v2 --stateless-rpc >out 2>actual <in &&
+	test_must_be_empty out &&
+	test_cmp expect actual
+'
+
+test_expect_success 'session-id is accepted if advertised' '
+	test_config transfer.advertiseSID true &&
+
+	test-tool pkt-line pack >in <<-EOF &&
+	session-id=123abc
+	command=ls-refs
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	cat >expect <<-EOF &&
+	0000
+	EOF
+
+	test-tool serve-v2 --stateless-rpc >out 2>err <in &&
+	test_must_be_empty err &&
+	test-tool pkt-line unpack <out >actual &&
+	test_cmp expect actual
+'
+
+test_expect_failure 'session-id has a mandatory argument' '
+	test_config transfer.advertiseSID true &&
+
+	test-tool pkt-line pack >in <<-EOF &&
+	session-id
+	command=ls-refs
+	object-format=$(test_oid algo)
+	0000
+	EOF
+
+	test_must_fail test-tool serve-v2 --stateless-rpc <in
+'
+
 # Test the basics of ls-refs
 #
 test_expect_success 'setup some refs and tags' '
