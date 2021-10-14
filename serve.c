@@ -61,6 +61,9 @@ struct protocol_capability {
 	 * The name of the capability.  The server uses this name when
 	 * advertising this capability, and the client uses this name to
 	 * specify this capability.
+	 *
+	 * This is the only mandatory field, e.g. the "server-option"
+	 * capability needs no "advertise", "value", "command" etc.
 	 */
 	const char *name;
 
@@ -81,18 +84,19 @@ struct protocol_capability {
 	void (*value)(struct repository *r, struct strbuf *value);
 
 	/*
-	 * Function called when a client requests the capability as a command.
+	 * An optional function called when a client requests the
+	 * capability as a command, if omitted any attempt to do so is
+	 * an error.
+	 *
 	 * Will be provided a struct packet_reader 'request' which it should
 	 * use to read the command specific part of the request.  Every command
 	 * MUST read until a flush packet is seen before sending a response.
-	 *
-	 * This field should be NULL for capabilities which are not commands.
 	 */
 	int (*command)(struct repository *r, struct packet_reader *request);
 
 	/*
-	 * Function called when a client requests the capability as a
-	 * non-command. This may be NULL if the capability does nothing.
+	 * An optional function called when a client requests the
+	 * capability as a non-command.
 	 *
 	 * For a capability of the form "foo=bar", the value string points to
 	 * the content after the "=" (i.e., "bar"). For simple capabilities
