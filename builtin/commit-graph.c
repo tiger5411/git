@@ -266,8 +266,8 @@ static int graph_write(int argc, const char **argv)
 
 	if (opts.reachable) {
 		if (write_commit_graph_reachable(odb, flags, &write_opts))
-			return 1;
-		return 0;
+			result = 1;
+		goto cleanup;
 	}
 
 	if (opts.stdin_packs) {
@@ -302,6 +302,7 @@ static int graph_write(int argc, const char **argv)
 			       &write_opts))
 		result = 1;
 
+cleanup:
 	FREE_AND_NULL(options);
 	pack_indexes.strdup_strings = 1;
 	string_list_clear(&pack_indexes, 0);

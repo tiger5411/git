@@ -1858,16 +1858,19 @@ static int write_commit_graph_file(struct write_commit_graph_context *ctx)
 		fd = git_mkstemp_mode(ctx->graph_name, 0444);
 		if (fd < 0) {
 			error(_("unable to create temporary graph layer"));
+			free(lock_name);
 			return -1;
 		}
 
 		if (adjust_shared_perm(ctx->graph_name)) {
 			error(_("unable to adjust shared permissions for '%s'"),
 			      ctx->graph_name);
+			free(lock_name);
 			return -1;
 		}
 
 		f = hashfd(fd, ctx->graph_name);
+		free(lock_name);
 	} else {
 		hold_lock_file_for_update_mode(&lk, ctx->graph_name,
 					       LOCK_DIE_ON_ERROR, 0444);
@@ -1978,6 +1981,7 @@ static int write_commit_graph_file(struct write_commit_graph_context *ctx)
 		} else {
 			char *graph_name = get_commit_graph_filename(ctx->odb);
 			unlink(graph_name);
+			free(graph_name);
 		}
 
 		ctx->commit_graph_hash_after[ctx->num_commit_graphs_after - 1] = xstrdup(hash_to_hex(file_hash));
