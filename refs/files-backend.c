@@ -3201,9 +3201,13 @@ static int files_reflog_expire(struct ref_store *ref_store,
 		 * a reference if there are no remaining reflog
 		 * entries.
 		 */
+		int would_update = (flags & EXPIRE_REFLOGS_UPDATE_REF) &&
+			!is_null_oid(&cb.last_kept_oid);
 		int update = (flags & EXPIRE_REFLOGS_UPDATE_REF) &&
 			!(type & REF_ISSYMREF) &&
 			!is_null_oid(&cb.last_kept_oid);
+		if (would_update != update)
+			BUG("symref @ '%s'; '%d'", refname, update);
 
 		if (close_lock_file_gently(&reflog_lock)) {
 			status |= error("couldn't write %s: %s", log_file,
