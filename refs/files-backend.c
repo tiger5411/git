@@ -3213,6 +3213,8 @@ static int files_reflog_expire(struct ref_store *ref_store,
 			!is_null_oid(&cb.last_kept_oid);
 		fprintf(stderr, "refname <%s> should update <%d> would <%d> last kept <%s>\n", refname,
 			update, would_update, oid_to_hex(&cb.last_kept_oid));
+		if (would_update != update)
+			BUG("would/should");
 
 		if (close_lock_file_gently(&reflog_lock)) {
 			status |= error("couldn't write %s: %s", log_file,

@@ -430,7 +430,6 @@ test_expect_success 'expire with multiple worktrees' '
 test_expect_success 'reflog delete --updateref with HEAD' '
 	git log >log.expect &&
 	git log -g --format="%gd %gs" >expect &&
-	false &&
 	git reflog delete --updateref reflogskip@{0} &&
 	git log -g --format="%gd %gs" >actual &&
 	git log >log.actual &&
