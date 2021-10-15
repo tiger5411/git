@@ -3091,13 +3091,16 @@ static int expire_reflog_ent(struct object_id *ooid, struct object_id *noid,
 	if (cb->flags & EXPIRE_REFLOGS_REWRITE)
 		ooid = &cb->last_kept_oid;
 
+	fprintf(stderr, "1.1 have last kept = %s\n", oid_to_hex(&cb->last_kept_oid));
 	if ((*cb->should_prune_fn)(ooid, noid, email, timestamp, tz,
 				   message, policy_cb)) {
+		fprintf(stderr, "1.2 have last kept = %s\n", oid_to_hex(&cb->last_kept_oid));
 		if (!cb->newlog)
 			printf("would prune %s", message);
 		else if (cb->flags & EXPIRE_REFLOGS_VERBOSE)
 			printf("prune %s", message);
 	} else {
+		fprintf(stderr, "1.3 have last kept = %s\n", oid_to_hex(&cb->last_kept_oid));
 		if (cb->newlog) {
 			fprintf(cb->newlog, "%s %s %s %"PRItime" %+05d\t%s",
 				oid_to_hex(ooid), oid_to_hex(noid),
@@ -3140,6 +3143,7 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	 * reference if --updateref was specified:
 	 */
 	lock = lock_ref_oid_basic(refs, refname, &err);
+	fprintf(stderr, "locked ref <%s> at <%s>\n", refname, oid_to_hex(&lock->old_oid));
 	if (!lock) {
 		error("cannot lock ref '%s': %s", refname, err.buf);
 		strbuf_release(&err);
@@ -3190,7 +3194,9 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	}
 
 	(*prepare_fn)(refname, oid, cb.policy_cb);
+	fprintf(stderr, "1 have last kept = %s\n", oid_to_hex(&cb.last_kept_oid));
 	refs_for_each_reflog_ent(ref_store, refname, expire_reflog_ent, &cb);
+	fprintf(stderr, "2 have last kept = %s\n", oid_to_hex(&cb.last_kept_oid));
 	(*cleanup_fn)(cb.policy_cb);
 
 	if (!(flags & EXPIRE_REFLOGS_DRY_RUN)) {
@@ -3205,8 +3211,8 @@ static int files_reflog_expire(struct ref_store *ref_store,
 			!is_null_oid(&cb.last_kept_oid);
 		int update = (flags & EXPIRE_REFLOGS_UPDATE_REF) &&
 			!is_null_oid(&cb.last_kept_oid);
-		if (would_update != update)
-			BUG("symref @ '%s'; '%d'", refname, update);
+		fprintf(stderr, "refname <%s> should update <%d> would <%d> last kept <%s>\n", refname,
+			update, would_update, oid_to_hex(&cb.last_kept_oid));
 
 		if (close_lock_file_gently(&reflog_lock)) {
 			status |= error("couldn't write %s: %s", log_file,
