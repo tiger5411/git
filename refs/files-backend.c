@@ -1001,7 +1001,7 @@ static int create_reflock(const char *path, void *cb)
  * Locks a ref returning the lock on success and NULL on failure.
  */
 static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
-					   const char *refname, int *type,
+					   const char *refname,
 					   struct strbuf *err)
 {
 	struct strbuf ref_file = STRBUF_INIT;
@@ -1482,7 +1482,7 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 
 	logmoved = log;
 
-	lock = lock_ref_oid_basic(refs, newrefname, NULL, &err);
+	lock = lock_ref_oid_basic(refs, newrefname, &err);
 	if (!lock) {
 		if (copy)
 			error("unable to copy '%s' to '%s': %s", oldrefname, newrefname, err.buf);
@@ -1504,7 +1504,7 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 	goto out;
 
  rollback:
-	lock = lock_ref_oid_basic(refs, oldrefname, NULL, &err);
+	lock = lock_ref_oid_basic(refs, oldrefname, &err);
 	if (!lock) {
 		error("unable to lock %s for rollback: %s", oldrefname, err.buf);
 		strbuf_release(&err);
@@ -1911,7 +1911,7 @@ static int files_create_symref(struct ref_store *ref_store,
 	struct ref_lock *lock;
 	int ret;
 
-	lock = lock_ref_oid_basic(refs, refname, NULL, &err);
+	lock = lock_ref_oid_basic(refs, refname, &err);
 	if (!lock) {
 		error("%s", err.buf);
 		strbuf_release(&err);
@@ -3115,7 +3115,6 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	struct strbuf log_file_sb = STRBUF_INIT;
 	char *log_file;
 	int status = 0;
-	int type;
 	struct strbuf err = STRBUF_INIT;
 	const struct object_id *oid;
 
@@ -3129,7 +3128,7 @@ static int files_reflog_expire(struct ref_store *ref_store,
 	 * reference itself, plus we might need to update the
 	 * reference if --updateref was specified:
 	 */
-	lock = lock_ref_oid_basic(refs, refname, &type, &err);
+	lock = lock_ref_oid_basic(refs, refname, &err);
 	if (!lock) {
 		error("cannot lock ref '%s': %s", refname, err.buf);
 		strbuf_release(&err);
@@ -3194,7 +3193,6 @@ static int files_reflog_expire(struct ref_store *ref_store,
 		int would_update = (flags & EXPIRE_REFLOGS_UPDATE_REF) &&
 			!is_null_oid(&cb.last_kept_oid);
 		int update = (flags & EXPIRE_REFLOGS_UPDATE_REF) &&
-			!(type & REF_ISSYMREF) &&
 			!is_null_oid(&cb.last_kept_oid);
 		if (would_update != update)
 			BUG("symref @ '%s'; '%d'", refname, update);
