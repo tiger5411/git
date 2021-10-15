@@ -422,4 +422,26 @@ test_expect_success 'expire with multiple worktrees' '
 	)
 '
 
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< HEAD
+================================
+test_expect_success 'reflog delete --updateref with HEAD' '
+	git log >log.expect &&
+	git log -g --format="%gd %gs" >expect &&
+	false &&
+	git reflog delete --updateref reflogskip@{0} &&
+	git log -g --format="%gd %gs" >actual &&
+	git log >log.actual &&
+	test_cmp log.expect log.actual
+'
+
+test_expect_success 'reflog delete --updateref with "reflogskip"' '
+	git log >log.expect &&
+	git log -g --format="%gd %gs" >expect &&
+	git reflog delete --updateref relogskip@{0} &&
+	git log -g --format="%gd %gs" >actual &&
+	git log >log.actual &&
+	test_cmp log.expect log.actual
+'
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> cf316d3bf96 (just tests?)
 test_done
