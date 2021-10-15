@@ -422,9 +422,4 @@ test_expect_success 'expire with multiple worktrees' '
 	)
 '
 
-test_expect_success 'reflog --updateref' '
-	git reflog delete --updateref reflogskip@{1} &&
-	git log
-'
-
 test_done

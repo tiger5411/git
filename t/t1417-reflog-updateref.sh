@@ -6,15 +6,19 @@ test_description='git reflog --updateref'
 
 
 test_expect_success 'reflog --updateref' '
-	git init updateref &&
+	git init repo &&
 	(
-		cd updateref &&
+		cd repo &&
+		git checkout -b branch &&
 		test_commit A &&
 		test_commit B &&
 		test_commit C &&
-		git reflog
+		git rev-parse HEAD >../orig.HEAD &&
+		git log -g --format="%gs" >../orig.gs
 	) &&
-	false
+	cp -R repo one &&
+	git -C one reflog delete 
+
 '
 
 test_done
