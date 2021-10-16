@@ -1,0 +1,17 @@
+# We don't care about "release" versions like the "90" in "3.99.90"
+MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
+MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))
+
+# The oldest supported version of GNU make is 3-something. So "not v3"
+# is a future-proof way to ask "is it modern?"
+ifeq ($(MAKE_VERSION_MAJOR),3)
+NO_MAKE_FILE_WRITE = Need version 4.0 or later (released in late 2013)
+else
+# $(file >[...]) and $(file >>[...]) is in 4.0, and $(file <[...]) as
+# of 4.2
+ifeq ($(filter-out 0 1 2,$(MAKE_VERSION_MINOR)),)
+NO_MAKE_FILE_READ = Need version 4.2 or later (released in mid-2016)
+endif
+endif
+
+
