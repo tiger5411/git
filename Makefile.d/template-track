@@ -8,10 +8,7 @@ $(1)_EXISTS = $(wildcard $(1))
 ifeq ($$($(1)_EXISTS),)
 $(1)_WRITE = new
 else
-
-$(1)_CONTENT = $(if $(MAKE_HAVE_FILE_READ),file $(file <$(1)),cat $(shell cat $(1)))
-
-$(1)_CONTENT = $(file <$(1))
+$(1)_CONTENT = $(if $(MAKE_HAVE_FILE_READ),$(file <$(1)),$(shell file $(1)))
 ifeq ($$($(1)_CONTENT),$($(2)))
 $(1)_WRITE = same
 else
@@ -24,5 +21,4 @@ $$(file >$(1),$($(2)))
 endif
 endef
 
-BAR=some content
 $(info $(call TRACK_template,FOO,BAR))
