@@ -1,3 +1,7 @@
+include Makefile.d/gmake-version
+
+
+
 ### Template for making a GIT-SOMETHING which changes if a
 ### TRACK_SOMETHING variable changes
 define TRACK_template
