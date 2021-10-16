@@ -1,0 +1,20 @@
+### Template for making a GIT-SOMETHING which changes if a
+### TRACK_SOMETHING variable changes
+define TRACK_template
+$(1)_WRITE =
+$(1)_EXISTS = $(wildcard $(1))
+ifeq ($$($(1)_EXISTS),)
+$(1)_WRITE = new
+else
+$(1)_CONTENT = $(file <$(1))
+ifeq ($$($(1)_CONTENT),$($(2)))
+$(1)_WRITE = same
+else
+$(1)_WRITE = changed
+endif
+endif
+ifneq ($$($(1)_WRITE),same)
+$$(info CONFIG $(1) changed)
+$$(file >$(1),$($(2)))
+endif
+endef
