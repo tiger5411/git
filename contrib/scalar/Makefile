@@ -1,3 +1,6 @@
+# Import tree-wide shared Makefile behavior and libraries
+include ../../shared.mak
+
 QUIET_SUBDIR0  = +$(MAKE) -C # space to separate -C and subdir
 QUIET_SUBDIR1  =
 
