@@ -107,3 +107,18 @@ endif
 define mkdir_p_parent_template
 $(if $(wildcard $(@D)),,$(QUIET_MKDIR_P_PARENT)$(shell mkdir -p $(@D)))
 endef
+
+## TRACK_template: maintain a GIT-SOMETHING file, which changes if a
+## TRACK_SOMETHING variable changes.
+define TRACK_template
+.PHONY: FORCE
+$(1): FORCE
+	@FLAGS='$$($(2))'; \
+	if ! test -f $(1) ; then \
+		echo $(wspfx_SQ) "$(1) PARAMETERS (new)"; \
+		echo "$$$$FLAGS" >$(1); \
+	elif test x"$$$$FLAGS" != x"`cat $(1) 2>/dev/null`" ; then \
+		echo $(wspfx_SQ) "$(1) PARAMETERS (changed)"; \
+		echo "$$$$FLAGS" >$(1); \
+	fi
+endef

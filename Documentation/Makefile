@@ -311,13 +311,7 @@ mergetools-list.made: ../git-mergetool--lib.sh $(wildcard ../mergetools/*)
 	date >$@
 
 TRACK_ASCIIDOCFLAGS = $(subst ','\'',$(ASCIIDOC_COMMON):$(ASCIIDOC_HTML):$(ASCIIDOC_DOCBOOK))
-
-GIT-ASCIIDOCFLAGS: FORCE
-	@FLAGS='$(TRACK_ASCIIDOCFLAGS)'; \
-	    if test x"$$FLAGS" != x"`cat GIT-ASCIIDOCFLAGS 2>/dev/null`" ; then \
-		echo >&2 "    * new asciidoc flags"; \
-		echo "$$FLAGS" >GIT-ASCIIDOCFLAGS; \
-            fi
+$(eval $(call TRACK_template,GIT-ASCIIDOCFLAGS,TRACK_ASCIIDOCFLAGS))
 
 clean:
 	$(RM) -rf .build/

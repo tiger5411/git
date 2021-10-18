@@ -2120,10 +2120,7 @@ endif
 GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
 GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
 GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
-GIT-USER-AGENT: FORCE
-	@if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
-		echo '$(GIT_USER_AGENT_SQ)' >GIT-USER-AGENT; \
-	fi
+$(eval $(call TRACK_template,GIT-USER-AGENT,GIT_USER_AGENT_SQ))
 
 ifdef DEFAULT_HELP_FORMAT
 BASIC_CFLAGS += -DDEFAULT_HELP_FORMAT='"$(DEFAULT_HELP_FORMAT)"'
@@ -2278,12 +2275,7 @@ SCRIPT_DEFINES += $(USE_GETTEXT_SCHEME)
 SCRIPT_DEFINES += $(gitwebdir_SQ)
 SCRIPT_DEFINES += $(localedir_SQ)
 SCRIPT_DEFINES += $(perllibdir_SQ)
-GIT-SCRIPT-DEFINES: FORCE
-	@FLAGS='$(SCRIPT_DEFINES)'; \
-	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
-		echo >&2 "    * new script parameters"; \
-		echo "$$FLAGS" >$@; \
-            fi
+$(eval $(call TRACK_template,GIT-SCRIPT-DEFINES,SCRIPT_DEFINES))
 
 define cmd_munge_script
 sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
@@ -2356,13 +2348,7 @@ $(SCRIPT_PERL_GEN): % : %.perl GIT-PERL-DEFINES GIT-PERL-HEADER GIT-VERSION-FILE
 	chmod +x $@+ && \
 	mv $@+ $@
 
-PERL_DEFINES := $(subst $(space),:,$(PERL_DEFINES))
-GIT-PERL-DEFINES: FORCE
-	@FLAGS='$(PERL_DEFINES)'; \
-	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
-		echo >&2 "    * new perl-specific parameters"; \
-		echo "$$FLAGS" >$@; \
-	    fi
+$(eval $(call TRACK_template,GIT-PERL-DEFINES,PERL_DEFINES))
 
 GIT-PERL-HEADER: $(PERL_HEADER_TEMPLATE) GIT-PERL-DEFINES Makefile
 	$(QUIET_GEN) \
@@ -2804,32 +2790,16 @@ TRACK_PREFIX += $(gitexecdir_SQ)
 TRACK_PREFIX += $(localedir_SQ)
 TRACK_PREFIX += $(prefix_SQ)
 TRACK_PREFIX += $(template_dir_SQ)
-GIT-PREFIX: FORCE
-	@FLAGS='$(TRACK_PREFIX)'; \
-	if test x"$$FLAGS" != x"`cat GIT-PREFIX 2>/dev/null`" ; then \
-		echo >&2 "    * new prefix flags"; \
-		echo "$$FLAGS" >GIT-PREFIX; \
-	fi
+$(eval $(call TRACK_template,GIT-PREFIX,TRACK_PREFIX))
 
 TRACK_CFLAGS =
 TRACK_CFLAGS += $(CC)
 TRACK_CFLAGS += $(subst ','\'',$(ALL_CFLAGS))
 TRACK_CFLAGS += $(USE_GETTEXT_SCHEME)
-GIT-CFLAGS: FORCE
-	@FLAGS='$(TRACK_CFLAGS)'; \
-	    if test x"$$FLAGS" != x"`cat GIT-CFLAGS 2>/dev/null`" ; then \
-		echo >&2 "    * new build flags"; \
-		echo "$$FLAGS" >GIT-CFLAGS; \
-            fi
+$(eval $(call TRACK_template,GIT-CFLAGS,TRACK_CFLAGS))
 
 TRACK_LDFLAGS = $(subst ','\'',$(ALL_LDFLAGS))
-
-GIT-LDFLAGS: FORCE
-	@FLAGS='$(TRACK_LDFLAGS)'; \
-	    if test x"$$FLAGS" != x"`cat GIT-LDFLAGS 2>/dev/null`" ; then \
-		echo >&2 "    * new link flags"; \
-		echo "$$FLAGS" >GIT-LDFLAGS; \
-            fi
+$(eval $(call TRACK_template,GIT-LDFLAGS,TRACK_LDFLAGS))
 
 # We need to apply sq twice, once to protect from the shell
 # that runs GIT-BUILD-OPTIONS, and then again to protect it
@@ -2903,12 +2873,7 @@ endif
 ifndef NO_PYTHON
 TRACK_PYTHON = $(subst ','\'',-DPYTHON_PATH='$(PYTHON_PATH_SQ)')
 
-GIT-PYTHON-VARS: FORCE
-	@VARS='$(TRACK_PYTHON)'; \
-	    if test x"$$VARS" != x"`cat $@ 2>/dev/null`" ; then \
-		echo >&2 "    * new Python interpreter location"; \
-		echo "$$VARS" >$@; \
-            fi
+$(eval $(call TRACK_template,GIT-PYTHON-VARS,TRACK_PYTHON))
 endif
 
 test_bindir_programs := $(patsubst %,bin-wrappers/%,$(BINDIR_PROGRAMS_NEED_X) $(BINDIR_PROGRAMS_NO_X) $(TEST_PROGRAMS_NEED_X))
