@@ -2297,12 +2297,7 @@ git.res: git.rc GIT-VERSION-FILE GIT-PREFIX
 # This makes sure we depend on the NO_PERL setting itself.
 $(SCRIPT_PERL_GEN): GIT-BUILD-OPTIONS
 
-# Used for substitution in Perl modules. Disabled when using RUNTIME_PREFIX
-# since the locale directory is injected.
-perl_localedir_SQ = $(localedir_SQ)
-
 ifndef NO_PERL
-PERL_HEADER_TEMPLATE = perl/header_templates/fixed_prefix.template.pl
 PERL_DEFINES =
 PERL_DEFINES += $(PERL_PATH_SQ)
 PERL_DEFINES += $(PERLLIB_EXTRA_SQ)
@@ -2311,16 +2306,15 @@ PERL_DEFINES += $(RUNTIME_PREFIX)
 PERL_DEFINES += $(NO_PERL_CPAN_FALLBACKS)
 PERL_DEFINES += $(NO_GETTEXT)
 
-# Support Perl runtime prefix. In this mode, a different header is installed
-# into Perl scripts.
+# Under RUNTIME_PREFIX we inject a header into the Perl scripts; If
+# NO_GETTEXT is not defined we'll make use of the localedir.
 ifdef RUNTIME_PREFIX
-
 PERL_HEADER_TEMPLATE = perl/header_templates/runtime_prefix.template.pl
-
-# Don't export a fixed $(localedir) path; it will be resolved by the Perl header
-# at runtime.
-perl_localedir_SQ =
-
+ifndef NO_GETTEXT
+perl_localedir_SQ = $(localedir_SQ)
+endif
+else
+PERL_HEADER_TEMPLATE = perl/header_templates/fixed_prefix.template.pl
 endif
 
 PERL_DEFINES += $(gitexecdir) $(perllibdir) $(localedir)
