@@ -112,8 +112,10 @@ reset_it() {
 test_compile () {
 	full=$1
 
+	# Due to check-docs regression fixed by avar/lint-doc-parallel-2
+	git clean -dxf -- 'Documentation/*.txt'
 	# The very smallest sanity checks, in the merge loop (usually)
-	make -j $(nproc) git-objs check-docs
+	make -j $(nproc) git-objs sparse check-docs
 
 	if test -z "$full"
 	then
@@ -121,7 +123,7 @@ test_compile () {
 	fi
 
 	# Compile
-	make -j $(nproc) all sparse-incr
+	make -j $(nproc) all
 	make -j $(nproc) man
 
 	# Test sanity
