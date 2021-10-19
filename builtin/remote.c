@@ -343,13 +343,7 @@ static void read_branches(void)
 
 struct ref_states {
 	struct remote *remote;
-
-	struct string_list new_refs;
-	struct string_list stale;
-	struct string_list tracked;
-	struct string_list heads;
-	struct string_list push;
-
+	struct string_list new_refs, stale, tracked, heads, push;
 	int queried;
 };
 
@@ -916,7 +910,7 @@ static void clear_push_info(void *util, const char *string)
 {
 	struct push_info *info = util;
 	free(info->dest);
-	/* note: fixed memleak here */
+	free(info);
 }
 
 static void free_remote_ref_states(struct ref_states *states)
@@ -1175,7 +1169,7 @@ static int get_one_entry(struct remote *remote, void *priv)
 		string_list_append(list, remote->name)->util =
 				strbuf_detach(&url_buf, NULL);
 	} else
-		string_list_append(list, remote->name);
+		string_list_append(list, remote->name)->util = NULL;
 	if (remote->pushurl_nr) {
 		url = remote->pushurl;
 		url_nr = remote->pushurl_nr;
@@ -1227,8 +1221,6 @@ static int show(int argc, const char **argv)
 		OPT_BOOL('n', NULL, &no_query, N_("do not query remotes")),
 		OPT_END()
 	};
-	struct ref_states states = REF_STATES_INIT;
-	struct string_list info_list = STRING_LIST_INIT_NODUP;
 	struct show_info info = SHOW_INFO_INIT;
 
 	argc = parse_options(argc, argv, NULL, options, builtin_remote_show_usage,

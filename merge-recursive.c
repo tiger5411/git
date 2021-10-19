@@ -517,7 +517,7 @@ static struct string_list *get_unmerged(struct index_state *istate)
 	struct string_list *unmerged = xcalloc(1, sizeof(struct string_list));
 	int i;
 
-	string_list_init_dup(unmerged);
+	unmerged->strdup_strings = 1;
 
 	/* TODO: audit for interaction with sparse-index. */
 	ensure_full_index(istate);
