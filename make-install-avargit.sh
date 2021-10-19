@@ -458,7 +458,7 @@ test -n "$only_range_diff" && exit
 reset_it
 
 # Configure
-~/g/git.meta/config.mak.sh --prefix /home/avar/local
+~/g/git.meta/config.mak.sh --prefix /home/avar/local --cflags "-O3 -g"
 
 # Test master first, for basic sanity
 if test -z "$no_merge_compile"

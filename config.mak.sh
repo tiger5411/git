@@ -3,12 +3,17 @@ set -e
 
 do_release=
 prefix=/tmp/git
+cflags="-O0 -g"
 while test $# != 0
 do
 	case "$1" in
 	    --prefix)
 		prefix="$2"
 		do_release=1
+		shift
+		;;
+	    --cflags)
+		cflags="$2"
 		shift
 		;;
 	    *)
@@ -39,7 +44,7 @@ cat >$tmp <<EOF
 CC = ccache cc
 
 # Core flags
-CFLAGS=-O0 -g
+CFLAGS = $cflags
 DEVELOPER=1
 #DEVOPTS=no-error
 
