@@ -2705,6 +2705,14 @@ int parse_opt_ref_sorting(const struct option *opt, const char *arg, int unset)
 	return 0;
 }
 
+void ref_sorting_release(struct ref_sorting *sorting)
+{
+	struct ref_sorting *next = sorting->next;
+	if (next)
+	       ref_sorting_release(next);
+	free(sorting);
+}
+
 int parse_opt_merge_filter(const struct option *opt, const char *arg, int unset)
 {
 	struct ref_filter *rf = opt->value;
