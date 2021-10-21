@@ -244,6 +244,7 @@ static void repack_promisor_objects(const struct pack_objects_args *args,
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	FILE *out;
 	struct strbuf line = STRBUF_INIT;
+	int ret = 0;
 
 	prepare_pack_objects(&cmd, args);
 	cmd.in = -1;
@@ -260,7 +261,7 @@ static void repack_promisor_objects(const struct pack_objects_args *args,
 
 	if (cmd.in == -1)
 		/* No packed objects; cmd was never started */
-		return;
+		goto cleanup;
 
 	close(cmd.in);
 
@@ -293,7 +294,12 @@ static void repack_promisor_objects(const struct pack_objects_args *args,
 		free(promisor_name);
 	}
 	fclose(out);
-	if (finish_command(&cmd))
+	ret = finish_command(&cmd);
+
+cleanup:
+	child_process_clear(&cmd);
+
+	if (ret)
 		die(_("could not finish pack-objects to repack promisor objects"));
 }
 
@@ -559,10 +565,10 @@ static int write_midx_included_packs(struct string_list *include,
 	struct string_list_item *item;
 	struct packed_git *largest = get_largest_active_pack(geometry);
 	FILE *in;
-	int ret;
+	int ret = 0;
 
 	if (!include->nr)
-		return 0;
+		goto cleanup;
 
 	cmd.in = -1;
 	cmd.git_cmd = 1;
@@ -587,14 +593,19 @@ static int write_midx_included_packs(struct string_list *include,
 
 	ret = start_command(&cmd);
 	if (ret)
-		return ret;
+		goto cleanup;
 
 	in = xfdopen(cmd.in, "w");
 	for_each_string_list_item(item, include)
 		fprintf(in, "%s\n", item->string);
 	fclose(in);
 
-	return finish_command(&cmd);
+	ret = finish_command(&cmd);
+
+cleanup:
+	child_process_clear(&cmd);
+
+	return ret;
 }
 
 int cmd_repack(int argc, const char **argv, const char *prefix)
@@ -608,7 +619,7 @@ int cmd_repack(int argc, const char **argv, const char *prefix)
 	struct pack_geometry *geometry = NULL;
 	struct strbuf line = STRBUF_INIT;
 	struct tempfile *refs_snapshot = NULL;
-	int i, ext, ret;
+	int i, ext, ret = 0;
 	FILE *out;
 	int show_progress = isatty(2);
 
@@ -794,7 +805,7 @@ int cmd_repack(int argc, const char **argv, const char *prefix)
 
 	ret = start_command(&cmd);
 	if (ret)
-		return ret;
+		goto cleanup;
 
 	if (geometry) {
 		FILE *in = xfdopen(cmd.in, "w");
@@ -819,7 +830,7 @@ int cmd_repack(int argc, const char **argv, const char *prefix)
 	fclose(out);
 	ret = finish_command(&cmd);
 	if (ret)
-		return ret;
+		goto cleanup;
 
 	if (!names.nr && !po_args.quiet)
 		printf_ln(_("Nothing new to pack."));
@@ -893,7 +904,7 @@ int cmd_repack(int argc, const char **argv, const char *prefix)
 		string_list_clear(&include, 0);
 
 		if (ret)
-			return ret;
+			goto cleanup;
 	}
 
 	reprepare_packed_git(the_repository);
@@ -946,12 +957,14 @@ int cmd_repack(int argc, const char **argv, const char *prefix)
 		write_midx_file(get_object_directory(), NULL, NULL, flags);
 	}
 
+cleanup:
 	string_list_clear(&names, 0);
 	string_list_clear(&rollback, 0);
 	string_list_clear(&existing_nonkept_packs, 0);
 	string_list_clear(&existing_kept_packs, 0);
 	clear_pack_geometry(geometry);
 	strbuf_release(&line);
+	child_process_clear(&cmd);
 
-	return 0;
+	return ret;
 }
