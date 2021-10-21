@@ -292,8 +292,8 @@ static int load_bitmap_entries_v1(struct bitmap_index *index)
 
 char *midx_bitmap_filename(struct multi_pack_index *midx)
 {
-	return xstrfmt("%s-%s.bitmap",
-		       get_midx_filename(midx->object_dir),
+	return xstrfmt("%s/pack/multi-pack-index-%s.bitmap",
+		       midx->object_dir,
 		       hash_to_hex(get_midx_checksum(midx)));
 }
 
