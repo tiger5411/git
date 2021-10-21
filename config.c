@@ -159,11 +159,13 @@ static int handle_path_include(const char *path, struct config_include_data *inc
 	}
 
 	if (!access_or_die(path, R_OK, 0)) {
-		if (++inc->depth > MAX_INCLUDE_DEPTH)
+		if (++inc->depth > MAX_INCLUDE_DEPTH) {
+			free(expanded);
 			die(_(include_depth_advice), MAX_INCLUDE_DEPTH, path,
 			    !cf ? "<unknown>" :
 			    cf->name ? cf->name :
 			    "the command line");
+		}
 		ret = git_config_from_file(git_config_include, path, inc);
 		inc->depth--;
 	}

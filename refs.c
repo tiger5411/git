@@ -590,8 +590,11 @@ char *repo_default_branch_name(struct repository *r, int quiet)
 	}
 
 	full_ref = xstrfmt("refs/heads/%s", ret);
-	if (check_refname_format(full_ref, 0))
+	if (check_refname_format(full_ref, 0)) {
+		free(ret);
+		free(full_ref);
 		die(_("invalid branch name: %s = %s"), config_display_key, ret);
+	}
 	free(full_ref);
 
 	return ret;
