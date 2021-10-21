@@ -171,7 +171,6 @@ int dwim_log(const char *str, int len, struct object_id *oid, char **ref);
  * return value of `git_default_branch_name()` is a singleton.
  */
 const char *git_default_branch_name(int quiet);
-char *repo_default_branch_name(struct repository *r, int quiet);
 
 /*
  * A ref_transaction represents a collection of reference updates that

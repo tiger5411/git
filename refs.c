@@ -571,11 +571,11 @@ static const char default_branch_name_advice[] = N_(
 "\tgit branch -m <name>\n"
 );
 
-char *repo_default_branch_name(struct repository *r, int quiet)
+static char *repo_default_branch_name(struct repository *r, int quiet)
 {
 	const char *config_key = "init.defaultbranch";
 	const char *config_display_key = "init.defaultBranch";
-	char *ret = NULL, *full_ref;
+	char *ret = NULL;
 	const char *env = getenv("GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME");
 
 	if (env && *env)
@@ -589,10 +589,8 @@ char *repo_default_branch_name(struct repository *r, int quiet)
 			advise(_(default_branch_name_advice), ret);
 	}
 
-	full_ref = xstrfmt("refs/heads/%s", ret);
-	if (check_refname_format(full_ref, 0))
+	if (check_refname_format(ret, REFNAME_ALLOW_ONELEVEL))
 		die(_("invalid branch name: %s = %s"), config_display_key, ret);
-	free(full_ref);
 
 	return ret;
 }
