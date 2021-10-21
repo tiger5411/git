@@ -132,6 +132,7 @@ static int handle_path_include(const char *path, struct config_include_data *inc
 	int ret = 0;
 	struct strbuf buf = STRBUF_INIT;
 	char *expanded;
+	int die_depth = 0;
 
 	if (!path)
 		return config_error_nonbool("include.path");
@@ -161,18 +162,20 @@ static int handle_path_include(const char *path, struct config_include_data *inc
 	}
 
 	if (!access_or_die(path, R_OK, 0)) {
-		if (++inc->depth > MAX_INCLUDE_DEPTH)
-			die(_(include_depth_advice), MAX_INCLUDE_DEPTH, path,
-			    !cf ? "<unknown>" :
-			    cf->name ? cf->name :
-			    "the command line");
+		if (++inc->depth > MAX_INCLUDE_DEPTH) {
+			die_depth = 1;
+			goto cleanup;
+		}
 		ret = git_config_from_file(git_config_include, path, inc);
 		inc->depth--;
 	}
 cleanup:
 	strbuf_release(&buf);
 	free(expanded);
-	return ret;
+	if (!die_depth)
+		return ret;
+	die(_(include_depth_advice), MAX_INCLUDE_DEPTH, path,
+	    !cf ? "<unknown>" : cf->name ? cf->name : "the command line");
 }
 
 static void add_trailing_starstar_for_dir(struct strbuf *pat)
