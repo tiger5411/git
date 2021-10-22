@@ -2,7 +2,11 @@
 
 test_description='"-C <path>" option and its effects on other path-related options'
 
+TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
+todo_leaks <<-\EOF
+^cmd_log_init_finish$
+EOF
 
 test_expect_success '"git -C <path>" runs git from the directory <path>' '
 	test_create_repo dir1 &&
