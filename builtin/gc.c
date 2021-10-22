@@ -472,19 +472,20 @@ static const char *lock_repo_for_gc(int force, pid_t* ret_pid)
  * gc should not proceed due to an error in the last run. Prints a
  * message and returns -1 if an error occurred while reading gc.log
  */
-static int report_last_gc_error(void)
+static int report_last_gc_error(int *skip)
 {
 	struct strbuf sb = STRBUF_INIT;
 	int ret = 0;
 	ssize_t len;
 	struct stat st;
 	char *gc_log_path = git_pathdup("gc.log");
+	*skip = 0;
 
 	if (stat(gc_log_path, &st)) {
 		if (errno == ENOENT)
 			goto done;
 
-		ret = error_errno(_("cannot stat '%s'"), gc_log_path);
+		ret = die_message_errno(_("cannot stat '%s'"), gc_log_path);
 		goto done;
 	}
 
@@ -493,7 +494,7 @@ static int report_last_gc_error(void)
 
 	len = strbuf_read_file(&sb, gc_log_path, 0);
 	if (len < 0)
-		ret = error_errno(_("cannot read '%s'"), gc_log_path);
+		ret = die_message_errno(_("cannot read '%s'"), gc_log_path);
 	else if (len > 0) {
 		/*
 		 * A previous gc failed.  Report the error, and don't
@@ -507,7 +508,7 @@ static int report_last_gc_error(void)
 			       "until the file is removed.\n\n"
 			       "%s"),
 			    gc_log_path, sb.buf);
-		ret = 1;
+		*skip = 1;
 	}
 	strbuf_release(&sb);
 done:
@@ -610,13 +611,15 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 			fprintf(stderr, _("See \"git help gc\" for manual housekeeping.\n"));
 		}
 		if (detach_auto) {
-			int ret = report_last_gc_error();
-			if (ret < 0)
-				/* an I/O error occurred, already reported */
-				exit(128);
-			if (ret == 1)
+			int skip;
+			int ret = report_last_gc_error(&skip);
+
+			if (skip)
 				/* Last gc --auto failed. Skip this one. */
 				return 0;
+			if (ret)
+				/* an I/O error occurred, already reported */
+				return ret;
 
 			if (lock_repo_for_gc(force, &pid))
 				return 0;
