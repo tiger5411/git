@@ -6,12 +6,27 @@ die () {
 }
 
 command_list () {
-	eval "grep -ve '^#' $exclude_programs" <"$1"
+	while read cmd rest
+	do
+		case "$cmd" in
+		"#"*)
+			continue;
+			;;
+		*)
+			case "$exclude_programs" in
+				*":$cmd:"*)
+				;;
+			*)
+				echo "$cmd $rest"
+				;;
+			esac
+		esac
+	done
 }
 
 category_list () {
-	command_list "$1" |
-	cut -c 40- |
+	command_list <"$1" |
+	cut -d' ' -f2- |
 	tr ' ' '\012' |
 	grep -v '^$' |
 	LC_ALL=C sort -u
@@ -48,7 +63,7 @@ define_category_names () {
 print_command_list () {
 	echo "static struct cmdname_help command_list[] = {"
 
-	command_list "$1" |
+	command_list <"$1" |
 	while read cmd rest
 	do
 		synopsis=
@@ -69,11 +84,11 @@ print_command_list () {
 	echo "};"
 }
 
-exclude_programs=
+exclude_programs=:
 while test "--exclude-program" = "$1"
 do
 	shift
-	exclude_programs="$exclude_programs -e \"^$1 \""
+	exclude_programs="$exclude_programs$1:"
 	shift
 done
 
