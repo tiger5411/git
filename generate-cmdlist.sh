@@ -24,8 +24,7 @@ define_categories () {
 	in_list=
 	while read cmd cats
 	do
-		bol=$(printf "%c" "$cmd")
-		if test -z "$cmd"
+		if test -z "$cmd$cats"
 		then
 			in_list=t
 			continue
@@ -55,15 +54,20 @@ define_categories () {
 print_command_list () {
 	echo "static struct cmdname_help command_list[] = {"
 
-	while read cmd rest
+	in_list=
+	while read cmd cats
 	do
-		bol=$(printf "%c" "$cmd")
-		if test "$bol" = "#"
+		if test -z "$cmd$cats"
+		then
+			in_list=t
+			continue
+		elif test -z "$in_list"
 		then
 			continue
 		fi
+
 		printf "	{ \"$cmd\", $(get_synopsis $cmd), 0"
-		printf " | CAT_%s" $rest
+		printf " | CAT_%s" $cats
 		echo " },"
 	done <"$1"
 	echo "};"
