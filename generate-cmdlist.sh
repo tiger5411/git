@@ -21,10 +21,15 @@ define_categories () {
 
 	seen=":"
 	bit=0
+	in_list=
 	while read cmd cats
 	do
 		bol=$(printf "%c" "$cmd")
-		if test "$bol" = "#"
+		if test -z "$cmd"
+		then
+			in_list=t
+			continue
+		elif test -z "$in_list"
 		then
 			continue
 		fi
