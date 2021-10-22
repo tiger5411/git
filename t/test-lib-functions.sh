@@ -243,6 +243,48 @@ debug () {
 	done
 }
 
+# Declare known "general" memory leaks, for use with TEST_PASSES_SANITIZE_LEAK=true.
+#
+# Matches lines in a stack trace that leaks. Intended for
+# LSAN_OPTIONS, but the format is intended to be easy to use with
+# other leak checkers, so the "leak:" prefix is omitted (and added for
+# you).
+#
+# Use it immediately after sourcing test-lib.sh (or equivalent), and
+# after a "TEST_PASSES_SANITIZE_LEAK=true" has been set. E.g:
+#
+#    TEST_PASSES_SANITIZE_LEAK=true
+#    . ./test-lib.sh
+#    todo_leaks <<-\EOF
+#    ^cmd_log_init_finish$
+#    EOF
+#
+# The "^" and "$" anchors don't suggest full regex syntax support,
+# that's the only anchoring (or other metacharacter) understood by
+# LSAN_OPTIONS,.
+#
+# See
+# https://github.com/google/sanitizers/wiki/AddressSanitizerLeakSanitizer#suppressions
+# for the relevant LSAN_OPTIONS documentation.
+todo_leaks () {
+	if ! test_have_prereq SANITIZE_LEAK
+	then
+		return 0
+	fi
+
+	# Try not to interfere with any test logic
+	suppressions=.lsan-suppressions.txt
+	if test -d .git
+	then
+		suppressions=".git/$suppressions"
+	fi
+	suppressions="$PWD/$suppressions"
+
+	sed 's/^/leak:/' >"$suppressions" &&
+	LSAN_OPTIONS="$LSAN_OPTIONS:suppressions=\"$suppressions\"" &&
+	export LSAN_OPTIONS
+}
+
 # Usage: test_commit [options] <message> [<file> [<contents> [<tag>]]]
 #   -C <dir>:
 #	Run all git commands in directory <dir>
