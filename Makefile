@@ -2275,8 +2275,7 @@ $(COMMAND_LIST_GEN): | .build/command-list.h.d
 $(COMMAND_LIST_GEN): command-list.txt
 $(COMMAND_LIST_GEN): generate-cmdlist.sh
 $(COMMAND_LIST_GEN): .build/command-list.h.d/%.gen: Documentation/%.txt
-	$(QUIET)grep "^$(patsubst .build/command-list.h.d/%.gen,%,$@) " command-list.txt >$@.txt && \
-	./generate-cmdlist.sh --entry-only $@.txt >$@
+	$(QUIET)./generate-cmdlist.sh --entry-only $(*F) command-list.txt >$@
 
 .build/command-list.h.gen: $(COMMAND_LIST_GEN)
 	$(QUIET)LC_ALL=C sort $(COMMAND_LIST_GEN) >$@ && \

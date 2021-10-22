@@ -66,6 +66,10 @@ print_command_list () {
 	command_list <"$1" |
 	while read cmd rest
 	do
+		if test "$cmd" != "$command_only"
+		then
+			continue
+		fi
 		synopsis=
 		while read line
 		do
@@ -80,6 +84,11 @@ print_command_list () {
 		printf '\t{ "%s", N_("%s"), 0' "$cmd" "$synopsis"
 		printf " | CAT_%s" $rest
 		echo " },"
+
+		if test "$cmd" = "$command_only"
+		then
+			break
+		fi
 	done
 }
 
@@ -92,8 +101,11 @@ do
 done
 
 header_only=
+command_only=
 case $1 in
 --entry-only)
+	shift
+	command_only=$1
 	shift
 	print_command_list $1 <"$1"
 	exit 0
