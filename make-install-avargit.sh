@@ -289,7 +289,7 @@ do
 	then
 		echo "error: Our upstream of $branch should be the same!"
 		echo "error: Got this instead:"
-		cat $series_list.vcmp
+		cat $series_list.vcmp | sed -e 's!refs/heads/!!'
 		git push avar $branch:$branch ${force_push:+--force}
 		pushed=1
 	fi
