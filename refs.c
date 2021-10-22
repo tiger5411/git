@@ -578,6 +578,7 @@ char *repo_default_branch_name(struct repository *r, int quiet)
 	const char *config_display_key = "init.defaultBranch";
 	char *ret = NULL, *full_ref;
 	const char *env = getenv("GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME");
+	int exit_with = 0;
 
 	if (env && *env)
 		ret = xstrdup(env);
@@ -592,8 +593,13 @@ char *repo_default_branch_name(struct repository *r, int quiet)
 
 	full_ref = xstrfmt("refs/heads/%s", ret);
 	if (check_refname_format(full_ref, 0))
-		die(_("invalid branch name: %s = %s"), config_display_key, ret);
+		exit_with = die_message(_("invalid branch name: %s = %s"),
+					config_display_key, ret);
 	free(full_ref);
+	if (exit_with) {
+		free(ret);
+		exit(exit_with);
+	}
 
 	return ret;
 }
