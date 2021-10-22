@@ -17,7 +17,12 @@ command_list () {
 				*":$cmd:"*)
 				;;
 			*)
-				echo "$cmd $rest"
+				if test -n "$1"
+				then
+					printf "%s\n" $rest
+				else
+					echo "$cmd $rest"
+				fi
 				;;
 			esac
 		esac
@@ -25,10 +30,7 @@ command_list () {
 }
 
 category_list () {
-	command_list <"$1" |
-	cut -d' ' -f2- |
-	tr ' ' '\012' |
-	grep -v '^$' |
+	command_list --no-cat <"$1" |
 	LC_ALL=C sort -u
 }
 
