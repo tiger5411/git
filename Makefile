@@ -2277,6 +2277,15 @@ $(COMMAND_LIST_GEN): generate-cmdlist.sh
 $(COMMAND_LIST_GEN): .build/command-list.h.d/%.gen: Documentation/%.txt
 	$(QUIET)./generate-cmdlist.sh --entry-only $(*F) command-list.txt >$@
 
+.build/command-list.h.gen.header: | .build/command-list.h.d
+.build/command-list.h.gen.header:
+	if test -e $@ && cut -d' ' -f2- command-list.txt >$@.cut.new && cmp $@.cut $@.cut.new; \
+	then \
+		cat $@; \
+	else \
+		./generate-cmdlist.sh --header-only command-list.txt >$@; \
+	fi
+
 .build/command-list.h.gen: $(COMMAND_LIST_GEN)
 	$(QUIET)LC_ALL=C sort $(COMMAND_LIST_GEN) >$@ && \
 	test $$(wc -l <$@) -eq $(words $(COMMAND_LIST_GEN))
@@ -2284,9 +2293,10 @@ $(COMMAND_LIST_GEN): .build/command-list.h.d/%.gen: Documentation/%.txt
 command-list.h: $(COMMAND_LIST_GEN)
 command-list.h: generate-cmdlist.sh
 command-list.h: command-list.txt
+command-list.h: .build/command-list.h.gen.header
 command-list.h: .build/command-list.h.gen
 	$(QUIET_GEN){ \
-		$(SHELL_PATH) ./generate-cmdlist.sh --header-only command-list.txt && \
+		cat .build/command-list.h.gen.header && \
 		echo "static struct cmdname_help command_list[] = {" && \
 		cat $< && \
 		echo "};"; \
