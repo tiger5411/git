@@ -55,6 +55,12 @@ static NORETURN void usage_builtin(const char *err, va_list params)
 	exit(129);
 }
 
+static void die_message_builtin(const char *err, va_list params)
+{
+	trace2_cmd_error_va(err, params);
+	vreportf("fatal: ", err, params);
+}
+
 /*
  * We call trace2_cmd_error_va() in the below functions first and
  * expect it to va_copy 'params' before using it (because an 'ap' can
@@ -62,10 +68,7 @@ static NORETURN void usage_builtin(const char *err, va_list params)
  */
 static NORETURN void die_builtin(const char *err, va_list params)
 {
-	trace2_cmd_error_va(err, params);
-
-	vreportf("fatal: ", err, params);
-
+	die_message_builtin(err, params);
 	exit(128);
 }
 
@@ -155,6 +158,17 @@ void NORETURN usagef(const char *err, ...)
 void NORETURN usage(const char *err)
 {
 	usagef("%s", err);
+}
+
+#undef die_message
+int die_message(const char *err, ...)
+{
+	va_list params;
+
+	va_start(params, err);
+	die_message_builtin(err, params);
+	va_end(params);
+	return 128;
 }
 
 void NORETURN die(const char *err, ...)
