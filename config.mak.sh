@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+# System tuning
+if test "$(cat /sys/devices/system/cpu/cpufreq/policy*/scaling_governor | sort -u)" != "performance"
+then
+	sudo cpupower frequency-set -g performance
+fi
+
 do_release=
 prefix=/tmp/git
 cflags="-O0 -g"
