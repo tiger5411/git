@@ -19,49 +19,6 @@
 static volatile sig_atomic_t progress_update;
 static struct progress *global_progress;
 
-/*
- * These are only intended for testing the progress output, i.e. exclusively
- * for 'test-tool progress'.
- */
-void test_progress_force_update(void)
-{
-	progress_update = 1;
-}
-
-
-static void progress_interval(int signum)
-{
-	progress_update = 1;
-}
-
-static void set_progress_signal(void)
-{
-	struct sigaction sa;
-	struct itimerval v;
-
-	progress_update = 0;
-
-	memset(&sa, 0, sizeof(sa));
-	sa.sa_handler = progress_interval;
-	sigemptyset(&sa.sa_mask);
-	sa.sa_flags = SA_RESTART;
-	sigaction(SIGALRM, &sa, NULL);
-
-	v.it_interval.tv_sec = 1;
-	v.it_interval.tv_usec = 0;
-	v.it_value = v.it_interval;
-	setitimer(ITIMER_REAL, &v, NULL);
-}
-
-static void clear_progress_signal(void)
-{
-	struct itimerval v = {{0,},};
-
-	setitimer(ITIMER_REAL, &v, NULL);
-	signal(SIGALRM, SIG_IGN);
-	progress_update = 0;
-}
-
 static int is_foreground_fd(int fd)
 {
 	int tpgrp = tcgetpgrp(fd);
@@ -295,6 +252,35 @@ void display_progress(struct progress *progress, uint64_t n)
 		display(progress, n, NULL, 0);
 }
 
+static void progress_interval(int signum)
+{
+	progress_update = 1;
+}
+
+void test_progress_force_update(void)
+{
+	progress_interval(SIGALRM);
+}
+
+static void set_progress_signal(void)
+{
+	struct sigaction sa;
+	struct itimerval v;
+
+	progress_update = 0;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.sa_handler = progress_interval;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sigaction(SIGALRM, &sa, NULL);
+
+	v.it_interval.tv_sec = 1;
+	v.it_interval.tv_usec = 0;
+	v.it_value = v.it_interval;
+	setitimer(ITIMER_REAL, &v, NULL);
+}
+
 static void set_global_progress(struct progress *progress)
 {
 	if (global_progress)
@@ -378,6 +364,15 @@ static void log_trace2(struct progress *progress)
 				   progress->throughput->curr_total);
 
 	trace2_region_leave("progress", progress->title.buf, the_repository);
+}
+
+static void clear_progress_signal(void)
+{
+	struct itimerval v = {{0,},};
+
+	setitimer(ITIMER_REAL, &v, NULL);
+	signal(SIGALRM, SIG_IGN);
+	progress_update = 0;
 }
 
 static void unset_global_progress(void)
