@@ -1,7 +1,19 @@
 #!/bin/sh
 
 test_description='multi-pack-indexes'
+
+TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
+todo_leaks <<-\EOF
+^add_rev_cmdline$
+^cmd_log_init_finish$
+^prep_parse_options$
+^prepare_revision_walk$
+^start_progress_delay$
+
+# An indirect leak reported because we excluded the leaks above
+strdup$
+EOF
 
 GIT_TEST_MULTI_PACK_INDEX=0
 objdir=.git/objects
