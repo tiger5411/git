@@ -688,82 +688,15 @@ X =
 
 PROGRAMS += $(patsubst %.o,git-%$X,$(PROGRAM_OBJS))
 
-TEST_BUILTINS_OBJS += test-advise.o
-TEST_BUILTINS_OBJS += test-bitmap.o
-TEST_BUILTINS_OBJS += test-bloom.o
-TEST_BUILTINS_OBJS += test-chmtime.o
-TEST_BUILTINS_OBJS += test-config.o
-TEST_BUILTINS_OBJS += test-crontab.o
-TEST_BUILTINS_OBJS += test-ctype.o
-TEST_BUILTINS_OBJS += test-date.o
-TEST_BUILTINS_OBJS += test-delta.o
-TEST_BUILTINS_OBJS += test-dir-iterator.o
-TEST_BUILTINS_OBJS += test-drop-caches.o
-TEST_BUILTINS_OBJS += test-dump-cache-tree.o
-TEST_BUILTINS_OBJS += test-dump-fsmonitor.o
-TEST_BUILTINS_OBJS += test-dump-split-index.o
-TEST_BUILTINS_OBJS += test-dump-untracked-cache.o
-TEST_BUILTINS_OBJS += test-example-decorate.o
-TEST_BUILTINS_OBJS += test-fast-rebase.o
-TEST_BUILTINS_OBJS += test-genrandom.o
-TEST_BUILTINS_OBJS += test-genzeros.o
-TEST_BUILTINS_OBJS += test-getcwd.o
-TEST_BUILTINS_OBJS += test-hash-speed.o
-TEST_BUILTINS_OBJS += test-hash.o
-TEST_BUILTINS_OBJS += test-hashmap.o
-TEST_BUILTINS_OBJS += test-index-version.o
-TEST_BUILTINS_OBJS += test-json-writer.o
-TEST_BUILTINS_OBJS += test-lazy-init-name-hash.o
-TEST_BUILTINS_OBJS += test-match-trees.o
-TEST_BUILTINS_OBJS += test-mergesort.o
-TEST_BUILTINS_OBJS += test-mktemp.o
-TEST_BUILTINS_OBJS += test-oid-array.o
-TEST_BUILTINS_OBJS += test-oidmap.o
-TEST_BUILTINS_OBJS += test-oidtree.o
-TEST_BUILTINS_OBJS += test-online-cpus.o
-TEST_BUILTINS_OBJS += test-parse-options.o
-TEST_BUILTINS_OBJS += test-parse-pathspec-file.o
-TEST_BUILTINS_OBJS += test-partial-clone.o
-TEST_BUILTINS_OBJS += test-path-utils.o
-TEST_BUILTINS_OBJS += test-pcre2-config.o
-TEST_BUILTINS_OBJS += test-pkt-line.o
-TEST_BUILTINS_OBJS += test-prio-queue.o
-TEST_BUILTINS_OBJS += test-proc-receive.o
-TEST_BUILTINS_OBJS += test-progress.o
-TEST_BUILTINS_OBJS += test-reach.o
-TEST_BUILTINS_OBJS += test-read-cache.o
-TEST_BUILTINS_OBJS += test-read-graph.o
-TEST_BUILTINS_OBJS += test-read-midx.o
-TEST_BUILTINS_OBJS += test-ref-store.o
-TEST_BUILTINS_OBJS += test-regex.o
-TEST_BUILTINS_OBJS += test-repository.o
-TEST_BUILTINS_OBJS += test-revision-walking.o
-TEST_BUILTINS_OBJS += test-run-command.o
-TEST_BUILTINS_OBJS += test-scrap-cache-tree.o
-TEST_BUILTINS_OBJS += test-serve-v2.o
-TEST_BUILTINS_OBJS += test-sha1.o
-TEST_BUILTINS_OBJS += test-sha256.o
-TEST_BUILTINS_OBJS += test-sigchain.o
-TEST_BUILTINS_OBJS += test-simple-ipc.o
-TEST_BUILTINS_OBJS += test-strcmp-offset.o
-TEST_BUILTINS_OBJS += test-string-list.o
-TEST_BUILTINS_OBJS += test-submodule-config.o
-TEST_BUILTINS_OBJS += test-submodule-nested-repo-config.o
-TEST_BUILTINS_OBJS += test-subprocess.o
-TEST_BUILTINS_OBJS += test-trace2.o
-TEST_BUILTINS_OBJS += test-urlmatch-normalization.o
-TEST_BUILTINS_OBJS += test-userdiff.o
-TEST_BUILTINS_OBJS += test-wildmatch.o
-TEST_BUILTINS_OBJS += test-windows-named-pipe.o
-TEST_BUILTINS_OBJS += test-write-cache.o
-TEST_BUILTINS_OBJS += test-xml-encode.o
-
 # Do not add more tests here unless they have extra dependencies. Add
 # them in TEST_BUILTINS_OBJS above.
 TEST_PROGRAMS_NEED_X += test-fake-ssh
 TEST_PROGRAMS_NEED_X += test-tool
 
 TEST_PROGRAMS = $(patsubst %,t/helper/%$X,$(TEST_PROGRAMS_NEED_X))
+
+TEST_BUILTINS_OBJS_NAMES = $(patsubst t/helper/%.c,%,$(wildcard t/helper/*.c))
+TEST_BUILTINS_OBJS += $(patsubst %,%.o,$(filter-out $(TEST_PROGRAMS_NEED_X),$(TEST_BUILTINS_OBJS_NAMES)))
 
 # List built-in command $C whose implementation cmd_$C() is not in
 # builtin/$C.o but is linked in as part of some other command.
