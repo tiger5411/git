@@ -709,7 +709,7 @@ ifeq ($(uname_S),QNX)
 	NO_STRLCPY = YesPlease
 endif
 
-vcxproj:
+vcxproj: all
 	# Require clean work tree
 	git update-index -q --refresh && \
 	git diff-files --quiet && \
@@ -721,6 +721,7 @@ vcxproj:
 	git add -f git.sln {*,*/lib,t/helper/*}/*.vcxproj
 
 	# Generate the LinkOrCopyBuiltins.targets and LinkOrCopyRemoteHttp.targets file
+	mkdir -p git-remote-http
 	(echo '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">' && \
 	 echo '  <Target Name="CopyBuiltins_AfterBuild" AfterTargets="AfterBuild">' && \
 	 for name in $(BUILT_INS);\
