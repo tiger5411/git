@@ -2039,13 +2039,7 @@ reconfigure config.mak.autogen: config.status
 .PHONY: reconfigure # This is a convenience target.
 endif
 
-XDIFF_OBJS += xdiff/xdiffi.o
-XDIFF_OBJS += xdiff/xemit.o
-XDIFF_OBJS += xdiff/xhistogram.o
-XDIFF_OBJS += xdiff/xmerge.o
-XDIFF_OBJS += xdiff/xpatience.o
-XDIFF_OBJS += xdiff/xprepare.o
-XDIFF_OBJS += xdiff/xutils.o
+XDIFF_OBJS += $(patsubst %.c,%.o,$(wildcard xdiff/*.c))
 .PHONY: xdiff-objs
 xdiff-objs: $(XDIFF_OBJS)
 
