@@ -566,32 +566,34 @@ export TCL_PATH TCLTK_PATH
 PTHREAD_LIBS = -lpthread
 
 # Guard against environment variables
-ALL_COMPAT_OBJS =
-BUILTIN_OBJS =
 BUILT_INS =
 COMPAT_CFLAGS =
-COMPAT_OBJS =
-CURL_OBJS =
-XDIFF_OBJS =
 GENERATED_H =
 EXTRA_CPPFLAGS =
-FUZZ_OBJS =
 FUZZ_PROGRAMS =
-GIT_OBJS =
-LIB_OBJS =
-LIB_OBJS_DIRS =
 OBJECTS =
-PROGRAM_OBJS =
 PROGRAMS =
 EXCLUDED_PROGRAMS =
 SCRIPT_PERL =
 SCRIPT_PYTHON =
 SCRIPT_SH =
 SCRIPT_LIB =
-TEST_BUILTINS_OBJS =
-TEST_OBJS =
 TEST_PROGRAMS_NEED_X =
 THIRD_PARTY_SOURCES =
+
+# Guard against environment variables -- objects
+ALL_COMPAT_OBJS =
+BUILTIN_OBJS =
+COMPAT_OBJS =
+CURL_OBJS =
+FUZZ_OBJS =
+GIT_OBJS =
+LIB_OBJS =
+LIB_OBJS_DIRS =
+PROGRAM_OBJS =
+TEST_BUILTINS_OBJS =
+TEST_OBJS =
+XDIFF_OBJS =
 
 # Having this variable in your environment would break pipelines because
 # you cause "cd" to echo its destination to stdout.  It can also take
