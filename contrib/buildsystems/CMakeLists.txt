@@ -111,32 +111,15 @@ project(git
 #TODO Add pcre support
 
 #macros for parsing the Makefile for sources and scripts
-macro(parse_makefile_for_sources list_var regex)
-	file(STRINGS ${CMAKE_SOURCE_DIR}/Makefile ${list_var} REGEX "^${regex} \\+=(.*)")
-	string(REPLACE "${regex} +=" "" ${list_var} ${${list_var}})
-	string(REPLACE "$(COMPAT_OBJS)" "" ${list_var} ${${list_var}}) #remove "$(COMPAT_OBJS)" This is only for libgit.
+macro(ask_makefile_for_list list_var var_name)
+	execute_process(COMMAND make print-list-${var_name}
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			OUTPUT_VARIABLE ${list_var})
+	string(REGEX REPLACE "\\.o\n" ".c\n" ${list_var} ${${list_var}}) #change .o to .c
 	string(STRIP ${${list_var}} ${list_var}) #remove trailing/leading whitespaces
-	string(REPLACE ".o" ".c;" ${list_var} ${${list_var}}) #change .o to .c, ; is for converting the string into a list
-	list(TRANSFORM ${list_var} STRIP) #remove trailing/leading whitespaces for each element in list
-	list(REMOVE_ITEM ${list_var} "") #remove empty list elements
-endmacro()
-
-macro(parse_makefile_for_scripts list_var regex lang)
-	file(STRINGS ${CMAKE_SOURCE_DIR}/Makefile ${list_var} REGEX "^${regex} \\+=(.*)")
-	string(REPLACE "${regex} +=" "" ${list_var} ${${list_var}})
-	string(STRIP ${${list_var}} ${list_var}) #remove trailing/leading whitespaces
-	string(REPLACE " " ";" ${list_var} ${${list_var}}) #convert string to a list
-	if(NOT ${lang}) #exclude for SCRIPT_LIB
-		list(TRANSFORM ${list_var} REPLACE "${lang}" "") #do the replacement
-	endif()
-endmacro()
-
-macro(parse_makefile_for_executables list_var regex)
-	file(STRINGS ${CMAKE_SOURCE_DIR}/Makefile ${list_var} REGEX "^${regex} \\+= git-(.*)")
-	string(REPLACE "${regex} +=" "" ${list_var} ${${list_var}})
-	string(STRIP ${${list_var}} ${list_var}) #remove trailing/leading whitespaces
-	string(REPLACE "git-" "" ${list_var} ${${list_var}}) #strip `git-` prefix
-	string(REPLACE "\$X" ";" ${list_var} ${${list_var}}) #strip $X, ; is for converting the string into a list
+	## Parse the Makefile print-list-% format
+	string(REGEX REPLACE "${var_name} =\n" "" ${list_var} ${${list_var}})
+	string(REGEX REPLACE "${var_name} \\+?= ([^\n]+)" "\\1;" ${list_var} ${${list_var}})
 	list(TRANSFORM ${list_var} STRIP) #remove trailing/leading whitespaces for each element in list
 	list(REMOVE_ITEM ${list_var} "") #remove empty list elements
 endmacro()
@@ -635,14 +618,14 @@ include_directories(${CMAKE_BINARY_DIR})
 
 #build
 #libgit
-parse_makefile_for_sources(libgit_SOURCES "LIB_OBJS")
+ask_makefile_for_list(libgit_SOURCES "LIB_OBJS_NO_COMPAT")
 
 list(TRANSFORM libgit_SOURCES PREPEND "${CMAKE_SOURCE_DIR}/")
 list(TRANSFORM compat_SOURCES PREPEND "${CMAKE_SOURCE_DIR}/")
 add_library(libgit ${libgit_SOURCES} ${compat_SOURCES})
 
 #libxdiff
-parse_makefile_for_sources(libxdiff_SOURCES "XDIFF_OBJS")
+ask_makefile_for_list(libxdiff_SOURCES "XDIFF_OBJS")
 
 list(TRANSFORM libxdiff_SOURCES PREPEND "${CMAKE_SOURCE_DIR}/")
 add_library(xdiff STATIC ${libxdiff_SOURCES})
@@ -693,7 +676,7 @@ elseif(UNIX)
 endif()
 
 #git
-parse_makefile_for_sources(git_SOURCES "BUILTIN_OBJS")
+ask_makefile_for_list(git_SOURCES "BUILTIN_OBJS")
 
 list(TRANSFORM git_SOURCES PREPEND "${CMAKE_SOURCE_DIR}/")
 add_executable(git ${CMAKE_SOURCE_DIR}/git.c ${git_SOURCES})
@@ -729,7 +712,9 @@ if(CURL_FOUND)
 	endif()
 endif()
 
-parse_makefile_for_executables(git_builtin_extra "BUILT_INS")
+ask_makefile_for_list(git_builtin_extra "BUILT_INS")
+list(TRANSFORM git_builtin_extra REPLACE "^git-(.*)" "\\1") #strip `git-` prefix
+list(TRANSFORM git_builtin_extra REPLACE "\.exe$" "") #strip $X
 
 option(SKIP_DASHED_BUILT_INS "Skip hardlinking the dashed versions of the built-ins")
 
@@ -766,8 +751,8 @@ set(GITWEBDIR ${FALLBACK_RUNTIME_PREFIX}/share/locale)
 set(INSTLIBDIR ${FALLBACK_RUNTIME_PREFIX}/share/perl5)
 
 #shell scripts
-parse_makefile_for_scripts(git_sh_scripts "SCRIPT_SH" ".sh")
-parse_makefile_for_scripts(git_shlib_scripts "SCRIPT_LIB" "")
+ask_makefile_for_list(git_sh_scripts "SCRIPT_SH_GEN")
+ask_makefile_for_list(git_shlib_scripts "SCRIPT_LIB_GEN")
 set(git_shell_scripts
 	${git_sh_scripts} ${git_shlib_scripts} git-instaweb)
 
@@ -787,7 +772,7 @@ foreach(script ${git_shell_scripts})
 endforeach()
 
 #perl scripts
-parse_makefile_for_scripts(git_perl_scripts "SCRIPT_PERL" ".perl")
+ask_makefile_for_list(git_perl_scripts "SCRIPT_PERL_GEN")
 
 #create perl header
 file(STRINGS ${CMAKE_SOURCE_DIR}/perl/header_templates/fixed_prefix.template.pl perl_header )
@@ -910,9 +895,9 @@ add_executable(test-fake-ssh ${CMAKE_SOURCE_DIR}/t/helper/test-fake-ssh.c)
 target_link_libraries(test-fake-ssh common-main)
 
 #test-tool
-parse_makefile_for_sources(test-tool_SOURCES "TEST_BUILTINS_OBJS")
+ask_makefile_for_list(test-tool_SOURCES "TEST_BUILTINS_OBJS")
 
-list(TRANSFORM test-tool_SOURCES PREPEND "${CMAKE_SOURCE_DIR}/t/helper/")
+list(TRANSFORM test-tool_SOURCES PREPEND "${CMAKE_SOURCE_DIR}/")
 add_executable(test-tool ${CMAKE_SOURCE_DIR}/t/helper/test-tool.c ${test-tool_SOURCES})
 target_link_libraries(test-tool common-main)
 
