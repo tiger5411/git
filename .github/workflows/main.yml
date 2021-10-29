@@ -7,7 +7,7 @@ env:
 
 jobs:
   ci-config:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     outputs:
       enabled: ${{ steps.check-ref.outputs.enabled }}${{ steps.skip-if-redundant.outputs.enabled }}
     steps:
@@ -265,7 +265,7 @@ jobs:
           image: fedora
     env:
       jobname: ${{matrix.vector.jobname}}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     container: ${{matrix.vector.image}}
     steps:
     - uses: actions/checkout@v1
@@ -284,7 +284,7 @@ jobs:
     if: needs.ci-config.outputs.enabled == 'yes'
     env:
       jobname: StaticAnalysis
-    runs-on: ubuntu-18.04
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     - run: ci/install-dependencies.sh
@@ -294,7 +294,7 @@ jobs:
     if: needs.ci-config.outputs.enabled == 'yes'
     env:
       jobname: sparse
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
     steps:
     - name: Download a current `sparse` package
       # Ubuntu's `sparse` version is too old for us
@@ -314,7 +314,7 @@ jobs:
     if: needs.ci-config.outputs.enabled == 'yes'
     env:
       jobname: Documentation
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
     - uses: actions/checkout@v2
     - run: ci/install-dependencies.sh
