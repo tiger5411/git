@@ -329,7 +329,7 @@ all::
 #
 # Define OBJECT_CREATION_USES_RENAMES if your operating systems has problems
 # when hardlinking a file to another name and unlinking the original file right
-# away (some NTFS drivers seem to zero the contents in that scenario).
+#q away (some NTFS drivers seem to zero the contents in that scenario).
 #
 # Define INSTALL_SYMLINKS if you prefer to have everything that can be
 # symlinked between bin/ and libexec/ to use relative symlinks between
@@ -588,12 +588,26 @@ COMPAT_OBJS =
 CURL_OBJS =
 FUZZ_OBJS =
 GIT_OBJS =
+LIB_DIRS_OBJS =
 LIB_OBJS =
-LIB_OBJS_DIRS =
 PROGRAM_OBJS =
 TEST_BUILTINS_OBJS =
 TEST_OBJS =
 XDIFF_OBJS =
+
+# Guard against environment variables -- sources
+ALL_COMPAT_SRC =
+BUILTIN_SRC =
+COMPAT_SRC =
+CURL_SRC =
+FUZZ_SRC =
+GIT_SRC =
+LIB_DIRS_SRC =
+LIB_SRC =
+PROGRAM_SRC =
+TEST_BUILTINS_SRC =
+TEST_SRC =
+XDIFF_SRC =
 
 # Having this variable in your environment would break pipelines because
 # you cause "cd" to echo its destination to stdout.  It can also take
@@ -663,9 +677,8 @@ SCRIPTS = $(SCRIPT_SH_GEN) \
 
 ETAGS_TARGET = TAGS
 
-FUZZ_OBJS += fuzz-commit-graph.o
-FUZZ_OBJS += fuzz-pack-headers.o
-FUZZ_OBJS += fuzz-pack-idx.o
+FUZZ_SRC += $(wildcard fuzz-*.c)
+FUZZ_OBJS += $(FUZZ_SRC:.c=.o)
 .PHONY: fuzz-objs
 fuzz-objs: $(FUZZ_OBJS)
 
@@ -680,11 +693,12 @@ EXTRA_PROGRAMS =
 # ... and all the rest that could be moved out of bindir to gitexecdir
 PROGRAMS += $(EXTRA_PROGRAMS)
 
-PROGRAM_OBJS += daemon.o
-PROGRAM_OBJS += http-backend.o
-PROGRAM_OBJS += imap-send.o
-PROGRAM_OBJS += sh-i18n--envsubst.o
-PROGRAM_OBJS += shell.o
+PROGRAM_SRC += daemon.c
+PROGRAM_SRC += http-backend.c
+PROGRAM_SRC += imap-send.c
+PROGRAM_SRC += sh-i18n--envsubst.c
+PROGRAM_SRC += shell.c
+PROGRAM_OBJS += $(PROGRAM_SRC:.c=.o)
 .PHONY: program-objs
 program-objs: $(PROGRAM_OBJS)
 
@@ -693,19 +707,21 @@ X =
 
 PROGRAMS += $(patsubst %.o,git-%$X,$(PROGRAM_OBJS))
 
-# Do not add more tests here unless they have extra dependencies. Add
-# them in TEST_BUILTINS_OBJS above.
-TEST_PROGRAMS_NEED_X += test-fake-ssh
-TEST_PROGRAMS_NEED_X += test-tool
+# Only add special-cases in t/helper/*.c here
+TEST_PROGRAMS_NEED_X_SRC += t/helper/test-fake-ssh.c
+TEST_PROGRAMS_NEED_X_SRC += t/helper/test-tool.c
+TEST_PROGRAMS_NEED_X += $(TEST_PROGRAMS_NEED_X_SRC:t/helper/%.c=%)
 
 TEST_PROGRAMS = $(patsubst %,t/helper/%$X,$(TEST_PROGRAMS_NEED_X))
 
+TEST_BUILTINS_SRC = $(filter-out $(TEST_PROGRAMS_NEED_X_SRC),$(wildcard t/helper/*.c))
 TEST_BUILTINS_OBJS_NAMES = $(patsubst t/helper/%.c,%,$(wildcard t/helper/*.c))
 TEST_BUILTINS_OBJS += $(patsubst %,%.o,$(filter-out $(TEST_PROGRAMS_NEED_X),$(TEST_BUILTINS_OBJS_NAMES)))
 
 # List built-in command $C whose implementation cmd_$C() is in
 # builtin/$C.o
-BUILTIN_OBJS = $(patsubst %.c,%.o,$(wildcard builtin/*.c))
+BUILTIN_SRC += $(wildcard builtin/*.c)
+BUILTIN_OBJS += $(BUILTIN_SRC:.c=.o)
 BUILT_INS += $(patsubst builtin/%.o,git-%$X,$(BUILTIN_OBJS))
 
 # List built-in command $C whose implementation cmd_$C() is not in
@@ -770,23 +786,26 @@ LIB_H := $(sort $(patsubst ./%,%,$(shell git ls-files '*.h' ':!t/' ':!Documentat
 	-name '*.h' -print)))
 
 # LIB_OBJS: compat/* objects that live at the top-level
-ALL_COMPAT_OBJS += unix-socket.o
-ALL_COMPAT_OBJS += unix-stream-server.o
-ALL_COMPAT_OBJS += sha1dc_git.o
+ALL_COMPAT_SRC += unix-socket.c
+ALL_COMPAT_SRC += unix-stream-server.c
+ALL_COMPAT_SRC += sha1dc_git.c
+ALL_COMPAT_OBJS += $(ALL_COMPAT_SRC:.c=.o)
 
 # LIB_OBJS: Mostly glob *.c at the top-level, with some exlusions
-LIB_OBJS += $(filter-out \
-	$(ALL_COMPAT_OBJS) \
-	git.o common-main.o $(PROGRAM_OBJS) \
-	$(FUZZ_OBJS) $(CURL_OBJS),\
-	$(patsubst %.c,%.o,$(wildcard *.c)))
+LIB_SRC += $(filter-out \
+	$(ALL_COMPAT_SRC) \
+	git.c common-main.c $(PROGRAM_SRC) \
+	$(FUZZ_SRC) $(CURL_SRC),\
+	$(wildcard *.c))
+LIB_OBJS += $(LIB_SRC:.c=.o)
 
 # LIB_OBJS: Directories that contain only LIB_OBJS
-LIB_OBJS_DIRS += ewah
-LIB_OBJS_DIRS += negotiator
-LIB_OBJS_DIRS += refs
-LIB_OBJS_DIRS += trace2
-LIB_OBJS += $(patsubst %.c,%.o,$(foreach dir,$(LIB_OBJS_DIRS),$(wildcard $(dir)/*.c)))
+LIB_SRC_DIRS += ewah
+LIB_SRC_DIRS += negotiator
+LIB_SRC_DIRS += refs
+LIB_SRC_DIRS += trace2
+LIB_SRC += $(foreach dir,$(LIB_DIRS_SRC),$(wildcard $(dir)/*.c))
+LIB_OBJS += $(LIB_DIRS_SRC:.c=.o)
 
 # LIB_OBJS: unconditional compat/* objects
 LIB_OBJS += compat/obstack.o
@@ -1043,10 +1062,10 @@ else
 	REMOTE_CURL_PRIMARY = git-remote-http$X
 	REMOTE_CURL_ALIASES = git-remote-https$X git-remote-ftp$X git-remote-ftps$X
 	REMOTE_CURL_NAMES = $(REMOTE_CURL_PRIMARY) $(REMOTE_CURL_ALIASES)
-	PROGRAM_OBJS += http-fetch.o
+	PROGRAM_SRC += http-fetch.o
 	PROGRAMS += $(REMOTE_CURL_NAMES)
 	ifndef NO_EXPAT
-		PROGRAM_OBJS += http-push.o
+		PROGRAM_SRC += http-push.o
 	endif
 	curl_check := $(shell (echo 072200; $(CURL_CONFIG) --vernum | sed -e '/^70[BC]/s/^/0/') 2>/dev/null | sort -r | sed -ne 2p)
 	ifeq "$(curl_check)" "072200"
@@ -2049,16 +2068,18 @@ TEST_OBJS := $(patsubst %$X,%.o,$(TEST_PROGRAMS)) $(patsubst %,t/helper/%,$(TEST
 .PHONY: test-objs
 test-objs: $(TEST_OBJS)
 
-GIT_OBJS += $(LIB_OBJS)
-GIT_OBJS += $(BUILTIN_OBJS)
-GIT_OBJS += common-main.o
-GIT_OBJS += git.o
+GIT_SRC += $(LIB_SRC)
+GIT_SRC += $(BUILTIN_SRC)
+GIT_SRC += common-main.c
+GIT_SRC += git.c
+GIT_OBJS += $(GIT_SRC:.c=.o)
 .PHONY: git-objs
 git-objs: $(GIT_OBJS)
 
-CURL_OBJS += http.o
-CURL_OBJS += http-walker.o
-CURL_OBJS += remote-curl.o
+CURL_SRC += http.c
+CURL_SRC += http-walker.c
+CURL_SRC += remote-curl.c
+CURL_OBJS += $(CURL_SRC:.c=.o)
 .PHONY: curl-objs
 curl-objs: $(CURL_OBJS)
 
