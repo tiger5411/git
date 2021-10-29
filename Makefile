@@ -566,10 +566,12 @@ export TCL_PATH TCLTK_PATH
 PTHREAD_LIBS = -lpthread
 
 # Guard against environment variables
+ALL_COMPAT_OBJS =
 BUILTIN_OBJS =
 BUILT_INS =
 COMPAT_CFLAGS =
 COMPAT_OBJS =
+CURL_OBJS =
 XDIFF_OBJS =
 GENERATED_H =
 EXTRA_CPPFLAGS =
@@ -577,6 +579,7 @@ FUZZ_OBJS =
 FUZZ_PROGRAMS =
 GIT_OBJS =
 LIB_OBJS =
+LIB_OBJS_DIRS =
 OBJECTS =
 PROGRAM_OBJS =
 PROGRAMS =
@@ -764,234 +767,28 @@ LIB_H := $(sort $(patsubst ./%,%,$(shell git ls-files '*.h' ':!t/' ':!Documentat
 	-name Documentation -prune -o \
 	-name '*.h' -print)))
 
-LIB_OBJS += abspath.o
-LIB_OBJS += add-interactive.o
-LIB_OBJS += add-patch.o
-LIB_OBJS += advice.o
-LIB_OBJS += alias.o
-LIB_OBJS += alloc.o
-LIB_OBJS += apply.o
-LIB_OBJS += archive-tar.o
-LIB_OBJS += archive-zip.o
-LIB_OBJS += archive.o
-LIB_OBJS += attr.o
-LIB_OBJS += base85.o
-LIB_OBJS += bisect.o
-LIB_OBJS += blame.o
-LIB_OBJS += blob.o
-LIB_OBJS += bloom.o
-LIB_OBJS += branch.o
-LIB_OBJS += bulk-checkin.o
-LIB_OBJS += bundle.o
-LIB_OBJS += cache-tree.o
-LIB_OBJS += cbtree.o
-LIB_OBJS += chdir-notify.o
-LIB_OBJS += checkout.o
-LIB_OBJS += chunk-format.o
-LIB_OBJS += color.o
-LIB_OBJS += column.o
-LIB_OBJS += combine-diff.o
-LIB_OBJS += commit-graph.o
-LIB_OBJS += commit-reach.o
-LIB_OBJS += commit.o
+# LIB_OBJS: compat/* objects that live at the top-level
+ALL_COMPAT_OBJS += unix-socket.o
+ALL_COMPAT_OBJS += unix-stream-server.o
+ALL_COMPAT_OBJS += sha1dc_git.o
+
+# LIB_OBJS: Mostly glob *.c at the top-level, with some exlusions
+LIB_OBJS += $(filter-out \
+	$(ALL_COMPAT_OBJS) \
+	git.o common-main.o $(PROGRAM_OBJS) \
+	$(FUZZ_OBJS) $(CURL_OBJS),\
+	$(patsubst %.c,%.o,$(wildcard *.c)))
+
+# LIB_OBJS: Directories that contain only LIB_OBJS
+LIB_OBJS_DIRS += ewah
+LIB_OBJS_DIRS += negotiator
+LIB_OBJS_DIRS += refs
+LIB_OBJS_DIRS += trace2
+LIB_OBJS += $(patsubst %.c,%.o,$(foreach dir,$(LIB_OBJS_DIRS),$(wildcard $(dir)/*.c)))
+
+# LIB_OBJS: unconditional compat/* objects
 LIB_OBJS += compat/obstack.o
 LIB_OBJS += compat/terminal.o
-LIB_OBJS += config.o
-LIB_OBJS += connect.o
-LIB_OBJS += connected.o
-LIB_OBJS += convert.o
-LIB_OBJS += copy.o
-LIB_OBJS += credential.o
-LIB_OBJS += csum-file.o
-LIB_OBJS += ctype.o
-LIB_OBJS += date.o
-LIB_OBJS += decorate.o
-LIB_OBJS += delta-islands.o
-LIB_OBJS += diff-delta.o
-LIB_OBJS += diff-merges.o
-LIB_OBJS += diff-lib.o
-LIB_OBJS += diff-no-index.o
-LIB_OBJS += diff.o
-LIB_OBJS += diffcore-break.o
-LIB_OBJS += diffcore-delta.o
-LIB_OBJS += diffcore-order.o
-LIB_OBJS += diffcore-pickaxe.o
-LIB_OBJS += diffcore-rename.o
-LIB_OBJS += diffcore-rotate.o
-LIB_OBJS += dir-iterator.o
-LIB_OBJS += dir.o
-LIB_OBJS += editor.o
-LIB_OBJS += entry.o
-LIB_OBJS += environment.o
-LIB_OBJS += ewah/bitmap.o
-LIB_OBJS += ewah/ewah_bitmap.o
-LIB_OBJS += ewah/ewah_io.o
-LIB_OBJS += ewah/ewah_rlw.o
-LIB_OBJS += exec-cmd.o
-LIB_OBJS += fetch-negotiator.o
-LIB_OBJS += fetch-pack.o
-LIB_OBJS += fmt-merge-msg.o
-LIB_OBJS += fsck.o
-LIB_OBJS += fsmonitor.o
-LIB_OBJS += gettext.o
-LIB_OBJS += gpg-interface.o
-LIB_OBJS += graph.o
-LIB_OBJS += grep.o
-LIB_OBJS += hash-lookup.o
-LIB_OBJS += hashmap.o
-LIB_OBJS += help.o
-LIB_OBJS += hex.o
-LIB_OBJS += hook.o
-LIB_OBJS += ident.o
-LIB_OBJS += json-writer.o
-LIB_OBJS += kwset.o
-LIB_OBJS += levenshtein.o
-LIB_OBJS += line-log.o
-LIB_OBJS += line-range.o
-LIB_OBJS += linear-assignment.o
-LIB_OBJS += list-objects-filter-options.o
-LIB_OBJS += list-objects-filter.o
-LIB_OBJS += list-objects.o
-LIB_OBJS += ll-merge.o
-LIB_OBJS += lockfile.o
-LIB_OBJS += log-tree.o
-LIB_OBJS += ls-refs.o
-LIB_OBJS += mailinfo.o
-LIB_OBJS += mailmap.o
-LIB_OBJS += match-trees.o
-LIB_OBJS += mem-pool.o
-LIB_OBJS += merge-blobs.o
-LIB_OBJS += merge-ort.o
-LIB_OBJS += merge-ort-wrappers.o
-LIB_OBJS += merge-recursive.o
-LIB_OBJS += merge.o
-LIB_OBJS += mergesort.o
-LIB_OBJS += midx.o
-LIB_OBJS += name-hash.o
-LIB_OBJS += negotiator/default.o
-LIB_OBJS += negotiator/noop.o
-LIB_OBJS += negotiator/skipping.o
-LIB_OBJS += notes-cache.o
-LIB_OBJS += notes-merge.o
-LIB_OBJS += notes-utils.o
-LIB_OBJS += notes.o
-LIB_OBJS += object-file.o
-LIB_OBJS += object-name.o
-LIB_OBJS += object.o
-LIB_OBJS += oid-array.o
-LIB_OBJS += oidmap.o
-LIB_OBJS += oidset.o
-LIB_OBJS += oidtree.o
-LIB_OBJS += pack-bitmap-write.o
-LIB_OBJS += pack-bitmap.o
-LIB_OBJS += pack-check.o
-LIB_OBJS += pack-objects.o
-LIB_OBJS += pack-revindex.o
-LIB_OBJS += pack-write.o
-LIB_OBJS += packfile.o
-LIB_OBJS += pager.o
-LIB_OBJS += parallel-checkout.o
-LIB_OBJS += parse-options-cb.o
-LIB_OBJS += parse-options.o
-LIB_OBJS += patch-delta.o
-LIB_OBJS += patch-ids.o
-LIB_OBJS += path.o
-LIB_OBJS += pathspec.o
-LIB_OBJS += pkt-line.o
-LIB_OBJS += preload-index.o
-LIB_OBJS += pretty.o
-LIB_OBJS += prio-queue.o
-LIB_OBJS += progress.o
-LIB_OBJS += promisor-remote.o
-LIB_OBJS += prompt.o
-LIB_OBJS += protocol.o
-LIB_OBJS += protocol-caps.o
-LIB_OBJS += prune-packed.o
-LIB_OBJS += quote.o
-LIB_OBJS += range-diff.o
-LIB_OBJS += reachable.o
-LIB_OBJS += read-cache.o
-LIB_OBJS += rebase-interactive.o
-LIB_OBJS += rebase.o
-LIB_OBJS += ref-filter.o
-LIB_OBJS += reflog-walk.o
-LIB_OBJS += refs.o
-LIB_OBJS += refs/debug.o
-LIB_OBJS += refs/files-backend.o
-LIB_OBJS += refs/iterator.o
-LIB_OBJS += refs/packed-backend.o
-LIB_OBJS += refs/ref-cache.o
-LIB_OBJS += refspec.o
-LIB_OBJS += remote.o
-LIB_OBJS += replace-object.o
-LIB_OBJS += repo-settings.o
-LIB_OBJS += repository.o
-LIB_OBJS += rerere.o
-LIB_OBJS += reset.o
-LIB_OBJS += resolve-undo.o
-LIB_OBJS += revision.o
-LIB_OBJS += run-command.o
-LIB_OBJS += send-pack.o
-LIB_OBJS += sequencer.o
-LIB_OBJS += serve.o
-LIB_OBJS += server-info.o
-LIB_OBJS += setup.o
-LIB_OBJS += shallow.o
-LIB_OBJS += sideband.o
-LIB_OBJS += sigchain.o
-LIB_OBJS += sparse-index.o
-LIB_OBJS += split-index.o
-LIB_OBJS += stable-qsort.o
-LIB_OBJS += strbuf.o
-LIB_OBJS += streaming.o
-LIB_OBJS += string-list.o
-LIB_OBJS += strmap.o
-LIB_OBJS += strvec.o
-LIB_OBJS += sub-process.o
-LIB_OBJS += submodule-config.o
-LIB_OBJS += submodule.o
-LIB_OBJS += symlinks.o
-LIB_OBJS += tag.o
-LIB_OBJS += tempfile.o
-LIB_OBJS += thread-utils.o
-LIB_OBJS += tmp-objdir.o
-LIB_OBJS += trace.o
-LIB_OBJS += trace2.o
-LIB_OBJS += trace2/tr2_cfg.o
-LIB_OBJS += trace2/tr2_cmd_name.o
-LIB_OBJS += trace2/tr2_dst.o
-LIB_OBJS += trace2/tr2_sid.o
-LIB_OBJS += trace2/tr2_sysenv.o
-LIB_OBJS += trace2/tr2_tbuf.o
-LIB_OBJS += trace2/tr2_tgt_event.o
-LIB_OBJS += trace2/tr2_tgt_normal.o
-LIB_OBJS += trace2/tr2_tgt_perf.o
-LIB_OBJS += trace2/tr2_tls.o
-LIB_OBJS += trailer.o
-LIB_OBJS += transport-helper.o
-LIB_OBJS += transport.o
-LIB_OBJS += tree-diff.o
-LIB_OBJS += tree-walk.o
-LIB_OBJS += tree.o
-LIB_OBJS += unpack-trees.o
-LIB_OBJS += upload-pack.o
-LIB_OBJS += url.o
-LIB_OBJS += urlmatch.o
-LIB_OBJS += usage.o
-LIB_OBJS += userdiff.o
-LIB_OBJS += utf8.o
-LIB_OBJS += varint.o
-LIB_OBJS += version.o
-LIB_OBJS += versioncmp.o
-LIB_OBJS += walker.o
-LIB_OBJS += wildmatch.o
-LIB_OBJS += worktree.o
-LIB_OBJS += wrapper.o
-LIB_OBJS += write-or-die.o
-LIB_OBJS += ws.o
-LIB_OBJS += wt-status.o
-LIB_OBJS += xdiff-interface.o
-LIB_OBJS += zlib.o
 
 # THIRD_PARTY_SOURCES is a list of patterns compatible with the
 # $(filter) and $(filter-out) family of functions. They specify source
@@ -2263,13 +2060,19 @@ GIT_OBJS += git.o
 .PHONY: git-objs
 git-objs: $(GIT_OBJS)
 
+CURL_OBJS += http.o
+CURL_OBJS += http-walker.o
+CURL_OBJS += remote-curl.o
+.PHONY: curl-objs
+curl-objs: $(CURL_OBJS)
+
 OBJECTS += $(GIT_OBJS)
 OBJECTS += $(PROGRAM_OBJS)
 OBJECTS += $(TEST_OBJS)
 OBJECTS += $(XDIFF_OBJS)
 OBJECTS += $(FUZZ_OBJS)
 ifndef NO_CURL
-	OBJECTS += http.o http-walker.o remote-curl.o
+OBJECTS += $(CURL_OBJS)
 endif
 .PHONY: objects
 objects: $(OBJECTS)
