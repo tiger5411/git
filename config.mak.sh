@@ -15,6 +15,9 @@ do
 	case "$1" in
 	    --prefix)
 		prefix="$2"
+		shift
+		;;
+	    --do-release)
 		do_release=1
 		shift
 		;;

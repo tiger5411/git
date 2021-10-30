@@ -459,7 +459,7 @@ test -n "$only_range_diff" && exit
 # Checkout work area
 reset_it
 
-# Configure
+# Configure with prefix & cflags, fake "version" still
 ~/g/git.meta/config.mak.sh --prefix /home/avar/local --cflags "-O3 -g"
 
 # Test master first, for basic sanity
@@ -500,6 +500,9 @@ do
 	fi
 done <$series_list
 test -n "$only_merge" && exit
+
+# Configure with prefix & cflags, and a non-fake "version" for release
+~/g/git.meta/config.mak.sh --do-release --prefix /home/avar/local --cflags "-O3 -g"
 
 # Compile, unless we were doing it in the merge loop
 if test -z "$merge_full_tests"
