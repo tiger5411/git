@@ -142,12 +142,8 @@ jobs:
         repository: 'microsoft/vcpkg'
         path: 'compat/vcbuild/vcpkg'
     - name: generate Visual Studio solution
-      shell: powershell
-      run: |
-        & .\git-sdk-64-minimal\usr\bin\bash.exe -lc @"
-          make NDEBUG=1 DEVELOPER=1 vcxproj
-        "@
-        if (!$?) { exit(1) }
+      shell: bash
+      run: make NDEBUG=1 DEVELOPER=1 vcxproj
     - name: download vcpkg artifacts
       shell: powershell
       run: |
