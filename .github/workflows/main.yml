@@ -141,6 +141,13 @@ jobs:
       with:
         repository: 'microsoft/vcpkg'
         path: 'compat/vcbuild/vcpkg'
+    - name: generate Visual Studio solution
+      shell: powershell
+      run: |
+        & .\git-sdk-64-minimal\usr\bin\bash.exe -lc @"
+          make NDEBUG=1 DEVELOPER=1 vcxproj
+        "@
+        if (!$?) { exit(1) }
     - name: download vcpkg artifacts
       shell: powershell
       run: |
@@ -152,14 +159,6 @@ jobs:
         Remove-Item compat.zip
     - name: add msbuild to PATH
       uses: microsoft/setup-msbuild@v1
-    - name: copy dlls to root
-      shell: cmd
-      run: compat\vcbuild\vcpkg_copy_dlls.bat release
-    - name: generate Visual Studio solution
-      shell: bash
-      run: |
-        cmake `pwd`/contrib/buildsystems/ -DCMAKE_PREFIX_PATH=`pwd`/compat/vcbuild/vcpkg/installed/x64-windows \
-        -DNO_GETTEXT=YesPlease -DPERL_TESTS=OFF -DPYTHON_TESTS=OFF -DCURL_NO_CURL_CMAKE=ON
     - name: MSBuild
       run: msbuild git.sln -property:Configuration=Release -property:Platform=x64 -maxCpuCount:4 -property:PlatformToolset=v142
     - name: bundle artifact tar
@@ -168,6 +167,8 @@ jobs:
         MSVC: 1
         VCPKG_ROOT: ${{github.workspace}}\compat\vcbuild\vcpkg
       run: |
+        & compat\vcbuild\vcpkg_copy_dlls.bat release
+        if (!$?) { exit(1) }
         mkdir -p artifacts &&
         eval "$(make -n artifacts-tar INCLUDE_DLLS_IN_ARTIFACTS=YesPlease ARTIFACTS_DIRECTORY=artifacts NO_GETTEXT=YesPlease 2>&1 | grep ^tar)"
     - name: zip up tracked files
