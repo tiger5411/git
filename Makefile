@@ -590,6 +590,14 @@ TEST_OBJS =
 TEST_PROGRAMS_NEED_X =
 THIRD_PARTY_SOURCES =
 
+# Utility to dump whatever variables are defined here
+print-var-%:
+	@echo $($*)
+
+print-list-%:
+	@echo $* =
+	@for v in $($*); do echo $* += $$v; done
+
 # Having this variable in your environment would break pipelines because
 # you cause "cd" to echo its destination to stdout.  It can also take
 # scripts to unexpected places.  If you like CDPATH, define it for your
