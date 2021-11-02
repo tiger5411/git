@@ -544,6 +544,7 @@ done <$series_list
 test -n "$only_merge" && exit
 
 # Configure with prefix & cflags, and a non-fake "version" for release
+rm version
 ~/g/git.meta/config.mak.sh --do-release --prefix /home/avar/local --cflags "-O3 -g"
 
 # Compile, unless we were doing it in the merge loop
