@@ -476,6 +476,10 @@ export GIT_TEST_MERGE_ALGORITHM
 GIT_TRACE_BARE=1
 export GIT_TRACE_BARE
 
+# Have git_prompt_noecho() accept stdin
+GIT_TEST_TERMINAL_PROMPT=true
+export GIT_TEST_TERMINAL_PROMPT
+
 # Use specific version of the index file format
 if test -n "${GIT_TEST_INDEX_VERSION:+isset}"
 then

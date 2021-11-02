@@ -830,9 +830,6 @@ static int bisect_autostart(struct bisect_terms *terms)
 	fprintf_ln(stderr, _("You need to start by \"git bisect "
 			  "start\"\n"));
 
-	if (!isatty(STDIN_FILENO))
-		return -1;
-
 	/*
 	 * TRANSLATORS: Make sure to include [Y] and [n] in your
 	 * translation. The program will only accept English input

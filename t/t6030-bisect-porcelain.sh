@@ -45,6 +45,47 @@ test_expect_success 'set up basic repo with 1 file (hello) and 4 commits' '
      HASH4=$(git rev-parse --verify HEAD)
 '
 
+test_expect_success 'bisect "good" without a "start": no prompt' '
+	cat >expect <<-\EOF &&
+	You need to start by "git bisect start"
+
+	fatal: unable to read from stdin in '\''GIT_TEST_TERMINAL_PROMPT=true'\'' mode
+	EOF
+	test_expect_code 128 git bisect good HEAD 2>actual &&
+	test_cmp expect actual &&
+	test_must_fail git bisect bad HEAD~ 2>actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'bisect "good" without a "start": have prompt' '
+	cat >expect <<-\EOF &&
+	You need to start by "git bisect start"
+
+	EOF
+	echo n | test_expect_code 1 git bisect good HEAD 2>actual &&
+	test_cmp expect actual &&
+	echo n | test_must_fail git bisect bad HEAD~ 2>actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'bisect "good" without a "start": answer prompt' '
+	cat >expect <<-\EOF &&
+	You need to start by "git bisect start"
+
+	EOF
+	echo Y | git bisect good HEAD 2>actual &&
+	test_cmp expect actual &&
+
+	# We will only get this far with the "Y" prompt
+	cat >expect <<-\EOF &&
+	Some good revs are not ancestors of the bad rev.
+	git bisect cannot work properly in this case.
+	Maybe you mistook good and bad revs?
+	EOF
+	test_must_fail git bisect bad HEAD~ 2>actual &&
+	test_cmp expect actual
+'
+
 test_expect_success 'bisect starts with only one bad' '
 	git bisect reset &&
 	git bisect start &&

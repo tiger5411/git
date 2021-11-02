@@ -1693,7 +1693,7 @@ static int do_interactive(struct am_state *state)
 	assert(state->msg);
 
 	for (;;) {
-		char reply[64];
+		const char *reply;
 
 		puts(_("Commit Body is:"));
 		puts("--------------------------");
@@ -1705,9 +1705,7 @@ static int do_interactive(struct am_state *state)
 		 * in your translation. The program will only accept English
 		 * input at this point.
 		 */
-		printf(_("Apply? [y]es/[n]o/[e]dit/[v]iew patch/[a]ccept all: "));
-		if (!fgets(reply, sizeof(reply), stdin))
-			die("unable to read from stdin; aborting");
+		reply = git_prompt_echo(_("Apply? [y]es/[n]o/[e]dit/[v]iew patch/[a]ccept all: "));
 
 		if (*reply == 'y' || *reply == 'Y') {
 			return 0;
@@ -2437,7 +2435,7 @@ int cmd_am(int argc, const char **argv, const char *prefix)
 				strvec_push(&paths, mkpath("%s/%s", prefix, argv[i]));
 		}
 
-		if (state.interactive && !paths.nr)
+		if (state.interactive && !paths.nr && isatty(0))
 			die(_("interactive mode requires patches on the command line"));
 
 		am_setup(&state, patch_format, paths.v, keep_cr);
