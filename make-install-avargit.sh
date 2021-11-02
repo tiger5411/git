@@ -2,6 +2,7 @@
 set -e
 set -x
 
+## Options
 no_sanity=
 no_range_diff=
 only_sanity=
@@ -69,9 +70,28 @@ do
 	shift
 done
 
+## Post-process options
+range_diff_to_rev=$(git rev-parse "$range_diff_to")
+
+## Startup
+
 META_DIR="$(pwd)"
 BUILD_DIR=~/g/git.build
 cd $BUILD_DIR
+CACHE_DIR=
+make_cache () {
+	RUNTIME_DIR="$XDG_RUNTIME_DIR"
+	if test -z "$RUNTIME_DIR"
+	then
+		echo should have a XDG_RUNTIME_DIR like /run/$(id -u)
+		exit 1
+	fi
+	BASENAME="$(basename "$0")"
+	CACHE_DIR="$RUNTIME_DIR/$BASENAME"
+	export CACHE_DIR
+	mkdir -p "$CACHE_DIR"
+}
+make_cache
 
 tag_name() {
 	date +'avargit-v%Y-%m-%d-%H%M%S'
@@ -437,19 +457,25 @@ do
 	then
 		continue
 	fi
-	t="$series_list.range-diff.t"
-	/usr/bin/time -f "%E" -o "$t" \
-		git --no-pager range-diff --color --no-notes --right-only $range_diff_to...$branch \
-		>$series_list.range-diff
-	grep -E -v -- " ----------+ >" $series_list.range-diff >$series_list.range-diff.no-new || :
-	if test -s $series_list.range-diff.no-new
+	branch_rev=$(git rev-parse "$branch")
+	f="$CACHE_DIR/range-diff-${range_diff_to_rev}...${branch_rev}.out"
+	if ! test -f "$f"
 	then
-		echo "$(cat "$t"): Have partial merge in rangediff of $range_diff_to...$branch, rebase!:"
-		cat $series_list.range-diff
-	else
-		echo "$(cat "$t"): Have $(wc -l $series_list.range-diff | cut -d ' ' -f1) unmerged in range-diff of $range_diff_to...$branch"
+		git --no-pager range-diff --color --no-notes --right-only $range_diff_to...$branch >"$f"
 	fi
-	rm "$t"
+
+	if ! test -f "$f".no-new
+	then
+		grep -E -v -- " ----------+ >" "$f" >"$f".no-new || :
+	fi
+
+	if test -s "$f".no-new
+	then
+		echo "Have partial merge in rangediff of $range_diff_to...$branch, rebase!:"
+		cat "$f"
+	else
+		echo "Have $(wc -l "$f" | cut -d ' ' -f1) unmerged in range-diff of $range_diff_to...$branch"
+	fi
 done <$series_list
 test -n "$only_range_diff" && exit
 
