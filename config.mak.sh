@@ -19,7 +19,6 @@ do
 		;;
 	    --do-release)
 		do_release=1
-		shift
 		;;
 	    --cflags)
 		cflags="$2"
