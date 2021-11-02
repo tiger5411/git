@@ -2,6 +2,10 @@
 set -e
 set -x
 
+## Usage:
+#
+# ./make-install-avargit.sh --only-merge --merge-compile-args "all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
+
 ## Options
 no_sanity=
 no_range_diff=
@@ -11,6 +15,8 @@ only_range_diff=
 only_merge=
 merge_full_tests=
 no_merge_compile=
+merge_compile_args="git-objs check-docs"
+merge_compile_test=
 only_test=
 force_push=
 auto_rebase=
@@ -40,6 +46,14 @@ do
 		;;
 	--merge-full-tests)
 		merge_full_tests=yes
+		;;
+	--merge-compile-args)
+		merge_compile_args="$2"
+		shift
+		;;
+	--merge-compile-test)
+		merge_compile_test="$2"
+		shift
 		;;
 	--no-merge-compile)
 		no_merge_compile=yes
@@ -132,7 +146,12 @@ reset_it() {
 test_compile () {
 	full=$1
 
-	make -j $(nproc) git-objs check-docs
+	make -j $(nproc) $merge_compile_args
+
+	if test -n "$merge_compile_test"
+	then
+		$merge_compile_test
+	fi
 
 	if test -z "$full"
 	then
