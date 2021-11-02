@@ -364,7 +364,7 @@ do
 	esac
 
 	# --check sanity
-	if ! git -P log --oneline --check $upstream..$branch >/dev/null
+	if ! git -P log --no-decorate --oneline --check $upstream..$branch >/dev/null
 	then
 		# Whitelist branches that have legitimate whitespace
 		# issues but have .gitattributes files. TODO: Make
