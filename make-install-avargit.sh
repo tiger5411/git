@@ -134,6 +134,13 @@ test_compile () {
 
 	make -j $(nproc) git-objs check-docs
 
+	# Flaky test
+	for i in $(seq 1 20)
+	do
+		make -j $(nproc) all
+		make -C t prove T=t5811-proto-disable-git.sh
+	done
+
 	if test -z "$full"
 	then
 		return
