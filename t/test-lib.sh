@@ -660,8 +660,9 @@ fi
 say_color_tap() {
 	say_color_tap=$1
 	shift
-	printf "%s" "${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }"
-	say_color "$say_color_tap" "$@"
+	prefix=$(printf "%s" "${GIT_TEST_TEE_STARTED:+GIT_TEST_TEE_STARTED }")
+	out="$(say_color "$say_color_tap" "$@")"
+	printf "%s%s\n" "$prefix" "$out"
 }
 
 # Comments starting with "#" are TAP syntax, we add our own comment
