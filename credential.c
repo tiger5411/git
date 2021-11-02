@@ -5,6 +5,7 @@
 #include "run-command.h"
 #include "url.h"
 #include "prompt.h"
+#include "prompt-password.h"
 #include "sigchain.h"
 #include "urlmatch.h"
 
@@ -169,11 +170,11 @@ static void credential_format(struct credential *c, struct strbuf *out)
 	}
 }
 
-static char *credential_ask_one(const char *what, struct credential *c,
-				int flags)
+static char *credential_ask_one(struct credential *c, unsigned int password)
 {
 	struct strbuf desc = STRBUF_INIT;
 	struct strbuf prompt = STRBUF_INIT;
+	const char *what = password ? "Password" : "Username";
 	char *r;
 
 	credential_describe(c, &desc);
@@ -182,7 +183,11 @@ static char *credential_ask_one(const char *what, struct credential *c,
 	else
 		strbuf_addf(&prompt, "%s: ", what);
 
-	r = git_prompt(prompt.buf, flags);
+	/* We'll try "askpass" for both usernames and passwords */
+	r = git_prompt_askpass(prompt.buf);
+	if (!r)
+		r = password ? git_prompt_noecho(prompt.buf)
+			     : git_prompt_echo(prompt.buf);
 
 	strbuf_release(&desc);
 	strbuf_release(&prompt);
@@ -192,11 +197,9 @@ static char *credential_ask_one(const char *what, struct credential *c,
 static void credential_getpass(struct credential *c)
 {
 	if (!c->username)
-		c->username = credential_ask_one("Username", c,
-						 PROMPT_ASKPASS|PROMPT_ECHO);
+		c->username = credential_ask_one(c, 0);
 	if (!c->password)
-		c->password = credential_ask_one("Password", c,
-						 PROMPT_ASKPASS);
+		c->password = credential_ask_one(c, 1);
 }
 
 int credential_read(struct credential *c, FILE *fp)

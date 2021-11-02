@@ -644,7 +644,7 @@ const char *help_unknown_cmd(const char *cmd)
 			char *answer;
 			struct strbuf msg = STRBUF_INIT;
 			strbuf_addf(&msg, _("Run '%s' instead? (y/N)"), assumed);
-			answer = git_prompt(msg.buf, PROMPT_ECHO);
+			answer = git_prompt_echo(msg.buf);
 			strbuf_release(&msg);
 			if (!(starts_with(answer, "y") ||
 			      starts_with(answer, "Y")))
