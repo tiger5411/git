@@ -197,7 +197,7 @@ test_compile () {
 	)
 
 	# Run special test setups
-	make -j $(nproc) SANITIZE=leak
+	make -j $(nproc) SANITIZE=leak CFLAGS="-O0 -g"
 	(
 		cd t
 		make clean-except-prove-cache
