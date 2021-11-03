@@ -37,6 +37,10 @@ static int num_threads;
 
 static pthread_t *threads;
 
+struct grep_cmd_opt {
+	const char *const prefix;
+};
+
 /* We use one producer thread and THREADS consumer
  * threads. The producer adds struct work_items to 'todo' and the
  * consumers pick work items from the same array.
@@ -312,14 +316,15 @@ static int grep_cmd_config(const char *var, const char *value, void *cb)
 static void grep_source_name(struct grep_opt *opt, const char *filename,
 			     int tree_name_len, struct strbuf *out)
 {
+	struct grep_cmd_opt *opt_cmd = opt->caller_priv;
 	strbuf_reset(out);
 
 	if (opt->null_following_name) {
-		if (opt->relative && opt->prefix) {
+		if (opt->relative && opt_cmd->prefix) {
 			struct strbuf rel_buf = STRBUF_INIT;
 			const char *rel_name =
 				relative_path(filename + tree_name_len,
-					      opt->prefix, &rel_buf);
+					      opt_cmd->prefix, &rel_buf);
 
 			if (tree_name_len)
 				strbuf_add(out, filename, tree_name_len);
@@ -332,8 +337,8 @@ static void grep_source_name(struct grep_opt *opt, const char *filename,
 		return;
 	}
 
-	if (opt->relative && opt->prefix)
-		quote_path(filename + tree_name_len, opt->prefix, out, 0);
+	if (opt->relative && opt_cmd->prefix)
+		quote_path(filename + tree_name_len, opt_cmd->prefix, out, 0);
 	else
 		quote_c_style(filename + tree_name_len, out, NULL, 0);
 
@@ -837,6 +842,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 	int external_grep_allowed__ignored;
 	const char *show_in_pager = NULL, *default_pager = "dummy";
 	struct grep_opt opt;
+	struct grep_cmd_opt opt_cmd = { .prefix = prefix };
 	struct object_array list = OBJECT_ARRAY_INIT;
 	struct pathspec pathspec;
 	struct string_list path_list = STRING_LIST_INIT_DUP;
@@ -964,7 +970,8 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 	};
 
 	git_config(grep_cmd_config, NULL);
-	grep_init(&opt, the_repository, prefix);
+	grep_init(&opt, the_repository);
+	opt.caller_priv = &opt_cmd;
 
 	/*
 	 * If there is no -- then the paths must exist in the working
