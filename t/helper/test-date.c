@@ -34,7 +34,7 @@ static void show_human_dates(const char **argv)
 
 static void show_dates(const char **argv, const char *format)
 {
-	struct date_mode mode;
+	struct date_mode mode = { 0 };
 
 	parse_date_format(format, &mode);
 	for (; *argv; argv++) {
@@ -53,6 +53,8 @@ static void show_dates(const char **argv, const char *format)
 
 		printf("%s -> %s\n", *argv, show_date(t, tz, &mode));
 	}
+
+	free((void *)mode.strftime_fmt);
 }
 
 static void parse_dates(const char **argv)
