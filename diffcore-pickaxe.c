@@ -197,6 +197,13 @@ static void pickaxe(struct diff_queue_struct *q, struct diff_options *o,
 	*q = outq;
 }
 
+
+static void grep_init(struct grep_opt *opt)
+{
+	struct grep_opt blank = GREP_OPT_INIT;
+	memcpy(opt, &blank, sizeof(*opt));
+}
+
 static void compile_pickaxe(struct diff_options *o)
 {
 	const char *needle = o->pickaxe;
@@ -210,18 +217,17 @@ static void compile_pickaxe(struct diff_options *o)
 	    (!needle || !*needle))
 		BUG("should have needle under -G or -S");
 	if (opts & (DIFF_PICKAXE_REGEX | DIFF_PICKAXE_KIND_GS_MASK)) {
-		grep_init(&o->pickaxe_grep_opt, the_repository, NULL);
+		grep_init(&o->pickaxe_grep_opt);
+		o->pickaxe_grep_opt.pattern_type_option = GREP_PATTERN_TYPE_ERE;
 #ifdef USE_LIBPCRE2
-		grep_commit_pattern_type(GREP_PATTERN_TYPE_PCRE, &o->pickaxe_grep_opt);
-#else
-		grep_commit_pattern_type(GREP_PATTERN_TYPE_ERE, &o->pickaxe_grep_opt);
+		o->pickaxe_grep_opt.pattern_type_option = GREP_PATTERN_TYPE_PCRE;
 #endif
 
 		if (o->pickaxe_opts & DIFF_PICKAXE_IGNORE_CASE)
 			o->pickaxe_grep_opt.ignore_case = 1;
 		if (opts & DIFF_PICKAXE_KIND_S &&
 		    !(opts & DIFF_PICKAXE_REGEX))
-			o->pickaxe_grep_opt.fixed = 1;
+			o->pickaxe_grep_opt.pattern_type_option = GREP_PATTERN_TYPE_FIXED;
 
 		append_grep_pattern(&o->pickaxe_grep_opt, needle, "diffcore-pickaxe", 0, GREP_PATTERN);
 		compile_grep_patterns(&o->pickaxe_grep_opt);
