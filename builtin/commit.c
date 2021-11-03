@@ -1689,6 +1689,7 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 	struct commit *current_head = NULL;
 	struct commit_extra_header *extra = NULL;
 	struct strbuf err = STRBUF_INIT;
+	int ret = 0;
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(builtin_commit_usage, builtin_commit_options);
@@ -1715,8 +1716,10 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 	if (verbose == -1)
 		verbose = (config_commit_verbose < 0) ? 0 : config_commit_verbose;
 
-	if (dry_run)
-		return dry_run_commit(argv, prefix, current_head, &s);
+	if (dry_run) {
+		ret = dry_run_commit(argv, prefix, current_head, &s);
+		goto cleanup;
+	}
 	index_file = prepare_index(argv, prefix, current_head, 0);
 
 	/* Set up everything for writing the commit object.  This includes
@@ -1724,7 +1727,8 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 	if (!prepare_to_commit(index_file, prefix,
 			       current_head, &s, &author_ident)) {
 		rollback_index_files();
-		return 1;
+		ret = 1;
+		goto cleanup;
 	}
 
 	/* Determine parents */
@@ -1863,7 +1867,9 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 
 	apply_autostash(git_path_merge_autostash(the_repository));
 
-	UNLEAK(err);
-	UNLEAK(sb);
-	return 0;
+cleanup:
+	strbuf_release(&author_ident);
+	strbuf_release(&err);
+	strbuf_release(&sb);
+	return ret;
 }
