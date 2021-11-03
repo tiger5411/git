@@ -135,7 +135,6 @@ struct grep_opt {
 	struct repository *repo;
 
 	const char *prefix;
-	int prefix_length;
 	int linenum;
 	int columnnum;
 	int invert;

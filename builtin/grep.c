@@ -315,7 +315,7 @@ static void grep_source_name(struct grep_opt *opt, const char *filename,
 	strbuf_reset(out);
 
 	if (opt->null_following_name) {
-		if (opt->relative && opt->prefix_length) {
+		if (opt->relative && opt->prefix) {
 			struct strbuf rel_buf = STRBUF_INIT;
 			const char *rel_name =
 				relative_path(filename + tree_name_len,
@@ -332,7 +332,7 @@ static void grep_source_name(struct grep_opt *opt, const char *filename,
 		return;
 	}
 
-	if (opt->relative && opt->prefix_length)
+	if (opt->relative && opt->prefix)
 		quote_path(filename + tree_name_len, opt->prefix, out, 0);
 	else
 		quote_c_style(filename + tree_name_len, out, NULL, 0);
