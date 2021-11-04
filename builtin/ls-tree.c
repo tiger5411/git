@@ -147,16 +147,15 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		OPT__ABBREV(&abbrev),
 		OPT_END()
 	};
-
-	git_config(git_default_config, NULL);
 	ls_tree_prefix = prefix;
-	if (prefix && *prefix)
+	if (prefix)
 		chomp_prefix = strlen(prefix);
 
+	git_config(git_default_config, NULL);
 	argc = parse_options(argc, argv, prefix, ls_tree_options,
 			     ls_tree_usage, 0);
 	if (full_tree) {
-		ls_tree_prefix = prefix = NULL;
+		ls_tree_prefix = NULL;
 		chomp_prefix = 0;
 	}
 	/* -d -r should imply -t, but -d by itself should not have to. */
@@ -178,7 +177,7 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	parse_pathspec(&pathspec, PATHSPEC_ALL_MAGIC &
 				  ~(PATHSPEC_FROMTOP | PATHSPEC_LITERAL),
 		       PATHSPEC_PREFER_CWD,
-		       prefix, argv + 1);
+		       ls_tree_prefix, argv + 1);
 	for (i = 0; i < pathspec.nr; i++)
 		pathspec.items[i].nowildcard_len = pathspec.items[i].len;
 	pathspec.has_wildcard = 0;
