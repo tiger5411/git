@@ -145,7 +145,7 @@ void grep_init(struct grep_opt *opt, struct repository *repo, const char *prefix
 
 	opt->repo = repo;
 	opt->prefix = prefix;
-	opt->prefix_length = (prefix && *prefix) ? strlen(prefix) : 0;
+	opt->prefix_length = prefix ? strlen(prefix) : 0;
 	opt->pattern_tail = &opt->pattern_list;
 	opt->header_tail = &opt->header_list;
 }
