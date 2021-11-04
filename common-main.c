@@ -1,6 +1,10 @@
 #include "cache.h"
 #include "exec-cmd.h"
 #include "attr.h"
+#if defined(SANITIZE_LEAK) || defined(SANITIZE_ADDRESS)
+#include <sanitizer/asan_interface.h>
+#define XSAN_INTERFACE
+#endif
 
 /*
  * Many parts of Git have subprograms communicate via pipe, expect the
@@ -23,10 +27,26 @@ static void restore_sigpipe_to_default(void)
 	signal(SIGPIPE, SIG_DFL);
 }
 
+#ifdef XSAN_INTERFACE
+const char *__asan_default_options(void)
+{
+	BUG("called");
+	return XSAN_OPTIONS;
+}
+
+static void git_xsan_options(void)
+{
+	return;
+}
+#endif
+
 int main(int argc, const char **argv)
 {
 	int result;
 
+#ifdef XSAN_INTERFACE
+	git_xsan_options();
+#endif
 	trace2_initialize_clock();
 
 	/*

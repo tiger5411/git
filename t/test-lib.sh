@@ -36,19 +36,6 @@ then
 fi
 GIT_BUILD_DIR="$TEST_DIRECTORY"/..
 
-# If we were built with ASAN, it may complain about leaks
-# of program-lifetime variables. Disable it by default to lower
-# the noise level. This needs to happen at the start of the script,
-# before we even do our "did we build git yet" check (since we don't
-# want that one to complain to stderr).
-: ${ASAN_OPTIONS=detect_leaks=0:abort_on_error=1}
-export ASAN_OPTIONS
-
-# If LSAN is in effect we _do_ want leak checking, but we still
-# want to abort so that we notice the problems.
-: ${LSAN_OPTIONS=abort_on_error=1}
-export LSAN_OPTIONS
-
 if test ! -f "$GIT_BUILD_DIR"/GIT-BUILD-OPTIONS
 then
 	echo >&2 'error: GIT-BUILD-OPTIONS missing (has Git been built?).'

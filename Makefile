@@ -576,6 +576,7 @@ EXTRA_CPPFLAGS =
 FUZZ_OBJS =
 FUZZ_PROGRAMS =
 GIT_OBJS =
+GIT_DEFAULT_LSAN_OPTIONS =
 LIB_OBJS =
 OBJECTS =
 PROGRAM_OBJS =
@@ -1218,8 +1219,9 @@ PTHREAD_CFLAGS =
 SPARSE_FLAGS ?=
 SP_EXTRA_FLAGS = -Wno-universal-initializer
 
-# For informing GIT-BUILD-OPTIONS of the SANITIZE=leak target
+# For informing GIT-BUILD-OPTIONS of the SANITIZE=[leak address] target
 SANITIZE_LEAK =
+SANITIZE_ADDRESS =
 
 # For the 'coccicheck' target; setting SPATCH_BATCH_SIZE higher will
 # usually result in less CPU usage at the cost of higher peak memory.
@@ -1269,6 +1271,7 @@ SANITIZE_LEAK = YesCompiledWithIt
 endif
 ifneq ($(filter address,$(SANITIZERS)),)
 NO_REGEX = NeededForASAN
+SANITIZE_ADDRESS = YesCompiledWithIt
 endif
 endif
 
@@ -2213,6 +2216,13 @@ git.sp git.s git.o: EXTRA_CPPFLAGS = \
 git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
 		$(filter %.o,$^) $(LIBS)
+
+ifneq ($(SANITIZE_LEAK)$(SANITIZE_ADDRESS),)
+common-main.sp common-main.s common-main.o: EXTRA_CPPFLAGS = \
+	'-DSANITIZE_LEAK="$(SANITIZE_LEAK)"' \
+	'-DSANITIZE_ADDRESS="$(SANITIZE_ADDRESS)"' \
+	'-DXSAN_OPTIONS="abort_on_error=1:fast_unwind_on_malloc=0"'
+endif
 
 help.sp help.s help.o: command-list.h
 hook.sp hook.s hook.o: hook-list.h
