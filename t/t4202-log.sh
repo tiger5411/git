@@ -449,6 +449,22 @@ test_expect_success !FAIL_PREREQS 'log with various grep.patternType configurati
 	)
 '
 
+for cmd in show whatchanged reflog format-patch
+do
+	myarg=
+	if test "$cmd" = "format-patch"
+	then
+		myarg="HEAD~.."
+	fi
+
+	test_expect_success PCRE "$cmd: understands grep.patternType=perl, like 'log'" '
+		git -c grep.patternType=fixed -C pattern-type $cmd --grep="1(?=\|2)" $myarg >actual &&
+		test_must_be_empty actual &&
+		git -c grep.patternType=perl -C pattern-type $cmd --grep="1(?=\|2)" $myarg >actual &&
+		test_file_not_empty actual
+	'
+done
+
 test_expect_success 'log --author' '
 	cat >expect <<-\EOF &&
 	Author: <BOLD;RED>A U<RESET> Thor <author@example.com>
