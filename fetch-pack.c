@@ -1015,11 +1015,9 @@ static struct ref *do_fetch_pack(struct fetch_pack_args *args,
 	struct object_id oid;
 	const char *agent_feature;
 	int agent_len;
-	struct fetch_negotiator negotiator_alloc;
-	struct fetch_negotiator *negotiator;
+	struct fetch_negotiator negotiator;
 
-	negotiator = &negotiator_alloc;
-	fetch_negotiator_init(r, negotiator);
+	fetch_negotiator_init(r, &negotiator);
 
 	sort_ref_list(&ref, ref_compare_name);
 	QSORT(sought, nr_sought, cmp_ref_by_name);
@@ -1110,13 +1108,13 @@ static struct ref *do_fetch_pack(struct fetch_pack_args *args,
 	if (!server_supports_hash(the_hash_algo->name, NULL))
 		die(_("Server does not support this repository's object format"));
 
-	mark_complete_and_common_ref(negotiator, args, &ref);
+	mark_complete_and_common_ref(&negotiator, args, &ref);
 	filter_refs(args, &ref, sought, nr_sought);
 	if (everything_local(args, &ref)) {
 		packet_flush(fd[1]);
 		goto all_done;
 	}
-	if (find_common(negotiator, args, fd, &oid, ref) < 0)
+	if (find_common(&negotiator, args, fd, &oid, ref) < 0)
 		if (!args->keep_pack)
 			/* When cloning, it is not unusual to have
 			 * no common commit.
@@ -1141,8 +1139,7 @@ static struct ref *do_fetch_pack(struct fetch_pack_args *args,
 		die("fsck failed");
 
  all_done:
-	if (negotiator)
-		negotiator->release(negotiator);
+	negotiator.release(&negotiator);
 	return ref;
 }
 
@@ -1384,8 +1381,7 @@ static int process_ack(struct fetch_negotiator *negotiator,
 			if (!get_oid_hex(arg, common_oid)) {
 				struct commit *commit;
 				commit = lookup_commit(the_repository, common_oid);
-				if (negotiator)
-					negotiator->ack(negotiator, commit);
+				negotiator->ack(negotiator, commit);
 			}
 			return 1;
 		}
@@ -1560,8 +1556,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	struct packet_reader reader;
 	int in_vain = 0, negotiation_started = 0;
 	int haves_to_send = INITIAL_FLUSH;
-	struct fetch_negotiator negotiator_alloc;
-	struct fetch_negotiator *negotiator;
+	struct fetch_negotiator negotiator;
 	int seen_ack = 0;
 	struct object_id common_oid;
 	int received_ready = 0;
@@ -1569,8 +1564,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	int i;
 	struct strvec index_pack_args = STRVEC_INIT;
 
-	negotiator = &negotiator_alloc;
-	fetch_negotiator_init(r, negotiator);
+	fetch_negotiator_init(r, &negotiator);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
@@ -1594,15 +1588,15 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				args->deepen = 1;
 
 			/* Filter 'ref' by 'sought' and those that aren't local */
-			mark_complete_and_common_ref(negotiator, args, &ref);
+			mark_complete_and_common_ref(&negotiator, args, &ref);
 			filter_refs(args, &ref, sought, nr_sought);
 			if (everything_local(args, &ref))
 				state = FETCH_DONE;
 			else
 				state = FETCH_SEND_REQUEST;
 
-			mark_tips(negotiator, args->negotiation_tips);
-			for_each_cached_alternate(negotiator,
+			mark_tips(&negotiator, args->negotiation_tips);
+			for_each_cached_alternate(&negotiator,
 						  insert_one_alternate_object);
 			break;
 		case FETCH_SEND_REQUEST:
@@ -1612,7 +1606,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 						    "negotiation_v2",
 						    the_repository);
 			}
-			if (send_fetch_request(negotiator, fd[1], args, ref,
+			if (send_fetch_request(&negotiator, fd[1], args, ref,
 					       &common,
 					       &haves_to_send, &in_vain,
 					       reader.use_sideband,
@@ -1624,7 +1618,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		case FETCH_PROCESS_ACKS:
 			/* Process ACKs/NAKs */
 			process_section_header(&reader, "acknowledgments", 0);
-			while (process_ack(negotiator, &reader, &common_oid,
+			while (process_ack(&negotiator, &reader, &common_oid,
 					   &received_ready)) {
 				in_vain = 0;
 				seen_ack = 1;
@@ -1734,8 +1728,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	if (fsck_finish(&fsck_options))
 		die("fsck failed");
 
-	if (negotiator)
-		negotiator->release(negotiator);
+	negotiator.release(&negotiator);
 
 	oidset_clear(&common);
 	return ref;
