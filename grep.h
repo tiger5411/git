@@ -171,11 +171,33 @@ struct grep_opt {
 	int show_hunk_mark;
 	int file_break;
 	int heading;
+	void *caller_priv;
 	void *priv;
 
 	void (*output)(struct grep_opt *opt, const void *data, size_t size);
 	void *output_priv;
 };
+
+#define GREP_OPT_INIT { \
+	.relative = 1, \
+	.pathname = 1, \
+	.max_depth = -1, \
+	.pattern_type_option = GREP_PATTERN_TYPE_UNSPECIFIED, \
+	.colors = { \
+		[GREP_COLOR_CONTEXT] = "", \
+		[GREP_COLOR_FILENAME] = "", \
+		[GREP_COLOR_FUNCTION] = "", \
+		[GREP_COLOR_LINENO] = "", \
+		[GREP_COLOR_COLUMNNO] = "", \
+		[GREP_COLOR_MATCH_CONTEXT] = GIT_COLOR_BOLD_RED, \
+		[GREP_COLOR_MATCH_SELECTED] = GIT_COLOR_BOLD_RED, \
+		[GREP_COLOR_SELECTED] = "", \
+		[GREP_COLOR_SEP] = GIT_COLOR_CYAN, \
+	}, \
+	.only_matching = 0, \
+	.color = -1, \
+	.output = std_output, \
+}
 
 int grep_config(const char *var, const char *value, void *);
 void grep_init(struct grep_opt *, struct repository *repo);
