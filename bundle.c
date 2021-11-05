@@ -182,20 +182,19 @@ static int list_refs(struct string_list *r, int argc, const char **argv)
 /* Remember to update object flag allocation in object.h */
 #define PREREQ_MARK (1u<<16)
 
-int verify_bundle(struct repository *r,
-		  struct bundle_header *header,
-		  int verbose)
+int verify_bundle_extended(struct repository *r, struct bundle_header *header,
+			   struct string_list *missing)
 {
 	/*
 	 * Do fast check, then if any prereqs are missing then go line by line
 	 * to be verbose about the errors
 	 */
 	struct string_list *p = &header->prerequisites;
+	struct string_list_item *e;
 	struct rev_info revs = { 0 };
 	const char *argv[] = {NULL, "--all", NULL};
 	struct commit *commit;
 	int i, ret = 0, req_nr;
-	const char *message = _("Repository lacks these prerequisite commits:");
 
 	if (!r || !r->objects || !r->objects->odb) {
 		ret = error(_("need a repository to verify a bundle"));
@@ -203,8 +202,7 @@ int verify_bundle(struct repository *r,
 	}
 
 	repo_init_revisions(r, &revs, NULL);
-	for (i = 0; i < p->nr; i++) {
-		struct string_list_item *e = p->items + i;
+	for_each_string_list_item(e, p) {
 		const char *name = e->string;
 		struct object_id *oid = e->util;
 		struct object *o = parse_object(r, oid);
@@ -213,12 +211,13 @@ int verify_bundle(struct repository *r,
 			add_pending_object(&revs, o, name);
 			continue;
 		}
-		if (++ret == 1)
-			error("%s", message);
-		error("%s %s", oid_to_hex(oid), name);
+
+		string_list_append(missing, oid_to_hex(oid))->util = xstrdup(name);
 	}
-	if (revs.pending.nr != p->nr)
+	if (revs.pending.nr != p->nr) {
+		ret = 1;
 		goto cleanup;
+	}
 	req_nr = revs.pending.nr;
 	setup_revisions(2, argv, &revs, NULL);
 
@@ -230,50 +229,81 @@ int verify_bundle(struct repository *r,
 		if (commit->object.flags & PREREQ_MARK)
 			i--;
 
-	for (i = 0; i < p->nr; i++) {
-		struct string_list_item *e = p->items + i;
+	for_each_string_list_item(e, p) {
 		const char *name = e->string;
 		const struct object_id *oid = e->util;
 		struct object *o = parse_object(r, oid);
 		assert(o); /* otherwise we'd have returned early */
 		if (o->flags & SHOWN)
 			continue;
-		if (++ret == 1)
-			error("%s", message);
-		error("%s %s", oid_to_hex(oid), name);
+
+		string_list_append(missing, oid_to_hex(oid))->util = xstrdup(name);
+		ret = 1;
 	}
 
 	/* Clean up objects used, as they will be reused. */
-	for (i = 0; i < p->nr; i++) {
-		struct string_list_item *e = p->items + i;
+	for_each_string_list_item(e, p) {
 		struct object_id *oid = e->util;
 		commit = lookup_commit_reference_gently(r, oid, 1);
 		if (commit)
 			clear_commit_marks(commit, ALL_REV_FLAGS);
 	}
 
-	if (verbose) {
-		struct string_list *r;
+cleanup:
+	release_revisions(&revs);
+	return ret;
+}
 
-		r = &header->references;
-		printf_ln(Q_("The bundle contains this ref:",
-			     "The bundle contains these %d refs:",
+static int verify_bundle_missing_commits(struct string_list *missing)
+{
+	struct string_list_item *item;
+
+	error(_("Repository lacks these prerequisite commits:"));
+	for_each_string_list_item(item, missing)
+		error("%s %s", item->string, (char *)item->util);
+
+	return missing->nr;
+}
+
+static void verify_bundle_verbose(struct bundle_header *header)
+{
+	struct string_list *r;
+
+	r = &header->references;
+	printf_ln(Q_("The bundle contains this ref:",
+		     "The bundle contains these %d refs:",
+		     r->nr),
+		  r->nr);
+	list_refs(r, 0, NULL);
+	r = &header->prerequisites;
+	if (!r->nr) {
+		printf_ln(_("The bundle records a complete history."));
+	} else {
+		printf_ln(Q_("The bundle requires this ref:",
+			     "The bundle requires these %d refs:",
 			     r->nr),
 			  r->nr);
 		list_refs(r, 0, NULL);
-		r = &header->prerequisites;
-		if (!r->nr) {
-			printf_ln(_("The bundle records a complete history."));
-		} else {
-			printf_ln(Q_("The bundle requires this ref:",
-				     "The bundle requires these %d refs:",
-				     r->nr),
-				  r->nr);
-			list_refs(r, 0, NULL);
-		}
 	}
+}
+
+int verify_bundle(struct repository *r, struct bundle_header *header,
+		  int verbose)
+{
+	struct string_list missing = STRING_LIST_INIT_DUP;
+	int ret;
+
+	if (verify_bundle_extended(r, header, &missing) < 0)
+		return -1;
+	ret = verify_bundle_missing_commits(&missing);
+	if (ret)
+		goto cleanup;
+
+	if (verbose)
+		verify_bundle_verbose(header);
+
 cleanup:
-	release_revisions(&revs);
+	string_list_clear(&missing, 1);
 	return ret;
 }
 
