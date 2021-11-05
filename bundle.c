@@ -216,7 +216,7 @@ int verify_bundle(struct repository *r,
 		error("%s %s", oid_to_hex(oid), name);
 	}
 	if (revs.pending.nr != p->nr)
-		return ret;
+		goto cleanup;
 	req_nr = revs.pending.nr;
 	setup_revisions(2, argv, &revs, NULL);
 
@@ -270,6 +270,9 @@ int verify_bundle(struct repository *r,
 			list_refs(r, 0, NULL);
 		}
 	}
+
+cleanup:
+	release_revisions(&revs);
 	return ret;
 }
 
@@ -489,6 +492,7 @@ int create_bundle(struct repository *r, const char *path,
 	int min_version = the_hash_algo == &hash_algos[GIT_HASH_SHA1] ? 2 : 3;
 	struct bundle_prerequisites_info bpi;
 	int i;
+	int ret = 0;
 
 	bundle_to_stdout = !strcmp(path, "-");
 	if (bundle_to_stdout)
@@ -562,10 +566,14 @@ int create_bundle(struct repository *r, const char *path,
 		if (commit_lock_file(&lock))
 			die_errno(_("cannot create '%s'"), path);
 	}
-	return 0;
+	goto cleanup;
 err:
 	rollback_lock_file(&lock);
-	return -1;
+	ret = -1;
+cleanup:
+	release_revisions(&revs);
+	object_array_clear(&revs_copy.pending);
+	return ret;
 }
 
 int unbundle(struct repository *r, struct bundle_header *header,
