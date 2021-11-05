@@ -1109,6 +1109,7 @@ static void *threaded_second_pass(void *data)
 			list_add(&child->list, &work_head);
 			base_cache_used += child->size;
 			prune_base_data(NULL);
+			free_base_data(child);
 		} else {
 			/*
 			 * This child does not have its own children. It may be
@@ -1131,6 +1132,7 @@ static void *threaded_second_pass(void *data)
 
 				p = next_p;
 			}
+			FREE_AND_NULL(child);
 		}
 		work_unlock();
 	}
@@ -1703,6 +1705,7 @@ static void show_pack_info(int stat_only)
 			  i + 1,
 			  chain_histogram[i]);
 	}
+	free(chain_histogram);
 }
 
 int cmd_index_pack(int argc, const char **argv, const char *prefix)
@@ -1941,6 +1944,8 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 		free((void *) curr_index);
 	if (rev_index_name == NULL)
 		free((void *) curr_rev_index);
+
+	free(opts.anomaly);
 
 	/*
 	 * Let the caller know this pack is not self contained
