@@ -11,8 +11,7 @@ grep.patternType::
 	value 'default' will return to the default matching behavior.
 
 grep.extendedRegexp::
-	If set to true, enable `--extended-regexp` option by default. This
-	option is ignored when the `grep.patternType` option is set.
+	Deprecated synonym for 'grep.patternType=extended`.
 
 grep.threads::
 	Number of grep worker threads to use. If unset (or set to 0), Git will
