@@ -27,7 +27,23 @@ int read_bundle_header_fd(int fd, struct bundle_header *header,
 int create_bundle(struct repository *r, const char *path,
 		  int argc, const char **argv, struct strvec *pack_options,
 		  int version);
-int verify_bundle(struct repository *r, struct bundle_header *header, int verbose);
+
+/**
+ * Takes a parsed bundle header and verified it against the
+ * repository, any OIDs that are missing are added to
+ * "missing". Returns <0 on failure.
+ */
+int verify_bundle_extended(struct repository *r, struct bundle_header *header,
+			   struct string_list *missing);
+
+/**
+ * A one-shot convenience wrapper around
+ * verify_bundle_extended(). Emits output about missing OIDs (if any)
+ * depending on "verbose".
+ */
+int verify_bundle(struct repository *r, struct bundle_header *header,
+		  int verbose);
+
 
 /**
  * Unbundle after reading the header with read_bundle_header().
