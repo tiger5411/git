@@ -1,7 +1,11 @@
 #ifndef FETCH_NEGOTIATOR_H
 #define FETCH_NEGOTIATOR_H
 
+<<<<<<< HEAD
 struct commit;
+=======
+#include "repository.h"
+>>>>>>> e1aa84ba041 (My bad)
 struct object_id;
 struct repository;
 
@@ -38,7 +42,7 @@ struct fetch_negotiator {
 	 * Before negotiation starts, indicate that the server is known to have
 	 * this commit.
 	 */
-	void (*known_common)(struct fetch_negotiator *, struct commit *);
+	void (*known_common)(struct fetch_negotiator *, const struct object_id *);
 
 	/*
 	 * Once this function is invoked, known_common() cannot be invoked any
@@ -50,7 +54,7 @@ struct fetch_negotiator {
 	 * Indicate that this commit and all its ancestors are to be checked
 	 * for commonality with the server.
 	 */
-	void (*add_tip)(struct fetch_negotiator *, struct commit *);
+	void (*add_tip)(struct fetch_negotiator *, const struct object_id *);
 
 	/*
 	 * Once this function is invoked, known_common() and add_tip() cannot
@@ -68,9 +72,13 @@ struct fetch_negotiator {
 	 * Inform the negotiator that the server has a given OID. This
 	 * method must only be called on OIDs returned by next().
 	 */
+<<<<<<< HEAD
 	int (*ack)(struct fetch_negotiator *, struct repository *r,
 		   const struct object_id *oid,
 		   enum fetch_neg_ack_flags flags);
+=======
+	int (*ack)(struct fetch_negotiator *, const struct object_id *);
+>>>>>>> e1aa84ba041 (My bad)
 
 	void (*release)(struct fetch_negotiator *);
 
@@ -85,7 +93,7 @@ struct fetch_negotiator {
 void fetch_negotiator_init(struct fetch_negotiator *negotiator,
 			   enum fetch_negotiation_setting backend);
 
-void known_common_BUG(struct fetch_negotiator *, struct commit *);
-void add_tip_BUG(struct fetch_negotiator *, struct commit *);
+void known_common_BUG(struct fetch_negotiator *, const struct object_id *);
+void add_tip_BUG(struct fetch_negotiator *, const struct object_id *);
 
 #endif

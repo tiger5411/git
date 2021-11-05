@@ -25,12 +25,12 @@ void fetch_negotiator_init(struct fetch_negotiator *negotiator,
 }
 
 void known_common_BUG(struct fetch_negotiator *negotiator,
-		      struct commit *commit)
+		      struct object_id *oid)
 {
 	BUG("known_common() called after add_tip() and/or next() was called");
 }
 
-void add_tip_BUG(struct fetch_negotiator *negotiator, struct commit *commit)
+void add_tip_BUG(struct fetch_negotiator *negotiator, struct object_id *oid)
 {
 	BUG("add_tip() called after next() called");
 }

@@ -159,7 +159,7 @@ static int rev_list_insert_ref(struct fetch_negotiator *negotiator,
 	struct commit *c = deref_without_lazy_fetch(oid, 0);
 
 	if (c)
-		negotiator->add_tip(negotiator, c);
+		negotiator->add_tip(negotiator, oid);
 	return 0;
 }
 
@@ -458,11 +458,16 @@ static int find_common(struct fetch_negotiator *negotiator,
 				case ACK_common:
 				case ACK_ready:
 				case ACK_continue: {
+<<<<<<< HEAD
 					int was_common;
 
 					was_common = negotiator->ack(negotiator, the_repository,
 								     result_oid,
 								     FETCH_NEG_ACK_VALIDATE);
+=======
+					int was_common = negotiator->ack(negotiator, result_oid);
+
+>>>>>>> e1aa84ba041 (My bad)
 					if (args->stateless_rpc
 					 && ack == ACK_common
 					 && !was_common) {
@@ -734,14 +739,8 @@ static void mark_complete_and_common_ref(struct fetch_negotiator *negotiator,
 	 * Don't mark them common yet; the server has to be told so first.
 	 */
 	trace2_region_enter("fetch-pack", "mark_common_remote_refs", NULL);
-	for (ref = *refs; ref; ref = ref->next) {
-		struct commit *c = deref_without_lazy_fetch(&ref->old_oid, 0);
-
-		if (!c || !(c->object.flags & COMPLETE))
-			continue;
-
-		negotiator->known_common(negotiator, c);
-	}
+	for (ref = *refs; ref; ref = ref->next)
+		negotiator->known_common(negotiator, &ref->old_oid);
 	trace2_region_leave("fetch-pack", "mark_common_remote_refs", NULL);
 
 	save_commit_buffer = old_save_commit_buffer;
@@ -1387,8 +1386,12 @@ static int process_ack(struct fetch_negotiator *negotiator,
 
 		if (skip_prefix(reader->line, "ACK ", &arg)) {
 			if (!get_oid_hex(arg, common_oid))
+<<<<<<< HEAD
 				negotiator->ack(negotiator, the_repository,
 						common_oid, 0);
+=======
+				negotiator->ack(negotiator, common_oid);
+>>>>>>> e1aa84ba041 (My bad)
 			return 1;
 		}
 
