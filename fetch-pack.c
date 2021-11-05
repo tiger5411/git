@@ -1003,6 +1003,17 @@ static int cmp_ref_by_name(const void *a_, const void *b_)
 	return strcmp(a->name, b->name);
 }
 
+static void fetch_pack_negotiator_init(struct fetch_negotiator *negotiator)
+{
+	struct repository *r = the_repository;
+	enum fetch_negotiation_setting backend;
+
+	prepare_repo_settings(r);
+	backend = r->settings.fetch_negotiation_algorithm;
+
+	fetch_negotiator_init(negotiator, backend);
+}
+
 static struct ref *do_fetch_pack(struct fetch_pack_args *args,
 				 int fd[2],
 				 const struct ref *orig_ref,
@@ -1017,7 +1028,7 @@ static struct ref *do_fetch_pack(struct fetch_pack_args *args,
 	int agent_len;
 	struct fetch_negotiator negotiator;
 
-	fetch_negotiator_init(r, &negotiator);
+	fetch_pack_negotiator_init(&negotiator);
 
 	sort_ref_list(&ref, ref_compare_name);
 	QSORT(sought, nr_sought, cmp_ref_by_name);
@@ -1549,7 +1560,6 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				    struct shallow_info *si,
 				    struct string_list *pack_lockfiles)
 {
-	struct repository *r = the_repository;
 	struct ref *ref = copy_ref_list(orig_ref);
 	enum fetch_state state = FETCH_CHECK_LOCAL;
 	struct oidset common = OIDSET_INIT;
@@ -1564,7 +1574,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	int i;
 	struct strvec index_pack_args = STRVEC_INIT;
 
-	fetch_negotiator_init(r, &negotiator);
+	fetch_pack_negotiator_init(&negotiator);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
@@ -2014,7 +2024,7 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 	int last_iteration = 0;
 	timestamp_t min_generation = GENERATION_NUMBER_INFINITY;
 
-	fetch_negotiator_init(the_repository, &negotiator);
+	fetch_pack_negotiator_init(&negotiator);
 	mark_tips(&negotiator, negotiation_tips);
 
 	packet_reader_init(&reader, fd[0], NULL, 0,

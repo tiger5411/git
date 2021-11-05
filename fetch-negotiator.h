@@ -4,6 +4,17 @@
 struct commit;
 struct repository;
 
+/**
+ * Our negotiation algorithm, this maps onto
+ * fetch.negotiationAlgorithm and is used by fetch_negotiator_init()
+ * below.
+ */
+enum fetch_negotiation_setting {
+	FETCH_NEGOTIATION_DEFAULT,
+	FETCH_NEGOTIATION_SKIPPING,
+	FETCH_NEGOTIATION_NOOP,
+};
+
 /*
  * An object that supplies the information needed to negotiate the contents of
  * the to-be-sent packfile during a fetch.
@@ -60,8 +71,12 @@ struct fetch_negotiator {
 	void *data;
 };
 
-void fetch_negotiator_init(struct repository *r,
-			   struct fetch_negotiator *negotiator);
+/**
+ * Takes a pointer to a "struct fetch_negotiator" to populate, and a
+ * "enum fetch_negotiation_setting" indicating the backend to use.
+ */
+void fetch_negotiator_init(struct fetch_negotiator *negotiator,
+			   enum fetch_negotiation_setting backend);
 
 void known_common_BUG(struct fetch_negotiator *, struct commit *);
 void add_tip_BUG(struct fetch_negotiator *, struct commit *);

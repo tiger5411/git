@@ -2,6 +2,7 @@
 #define REPOSITORY_H
 
 #include "path.h"
+#include "fetch-negotiator.h"
 
 struct config_set;
 struct git_hash_algo;
@@ -16,12 +17,6 @@ enum untracked_cache_setting {
 	UNTRACKED_CACHE_KEEP,
 	UNTRACKED_CACHE_REMOVE,
 	UNTRACKED_CACHE_WRITE,
-};
-
-enum fetch_negotiation_setting {
-	FETCH_NEGOTIATION_DEFAULT,
-	FETCH_NEGOTIATION_SKIPPING,
-	FETCH_NEGOTIATION_NOOP,
 };
 
 struct repo_settings {
