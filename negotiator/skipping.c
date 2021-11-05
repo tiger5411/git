@@ -195,15 +195,19 @@ static const struct object_id *get_rev(struct data *data)
 	return &to_send->object.oid;
 }
 
-static void known_common(struct fetch_negotiator *n, struct commit *c)
+static void known_common(struct fetch_negotiator *n, const struct object_id *oid)
 {
+	struct commit *c = NULL;
+
 	if (c->object.flags & SEEN)
 		return;
 	rev_list_push(n->data, c, ADVERTISED);
 }
 
-static void add_tip(struct fetch_negotiator *n, struct commit *c)
+static void add_tip(struct fetch_negotiator *n, const struct object_id *oid)
 {
+	struct commit *c = NULL;
+
 	n->known_common = known_common_BUG;
 	if (c->object.flags & SEEN)
 		return;
@@ -217,11 +221,18 @@ static const struct object_id *next(struct fetch_negotiator *n)
 	return get_rev(n->data);
 }
 
+<<<<<<< HEAD
 static int ack(struct fetch_negotiator *n, struct repository *r,
 	       const struct object_id *oid, enum fetch_neg_ack_flags flags)
 {
 	struct commit *c = lookup_commit(r, oid);
+=======
+static int ack(struct fetch_negotiator *n, const struct object_id *oid)
+{
+	struct commit *c = NULL;
+>>>>>>> e8c16a4a696 (Undoing last comming)
 	int known_to_be_common = !!(c->object.flags & COMMON);
+
 	if (!(c->object.flags & SEEN))
 		die("received ack for commit %s not sent as 'have'\n",
 		    oid_to_hex(&c->object.oid));

@@ -3,12 +3,12 @@
 #include "../commit.h"
 #include "../fetch-negotiator.h"
 
-static void known_common(struct fetch_negotiator *n, struct commit *c)
+static void known_common(struct fetch_negotiator *n, const struct object_id *oid)
 {
 	/* do nothing */
 }
 
-static void add_tip(struct fetch_negotiator *n, struct commit *c)
+static void add_tip(struct fetch_negotiator *n, const struct object_id *oid)
 {
 	/* do nothing */
 	n->known_common = known_common_BUG;
@@ -21,8 +21,12 @@ static const struct object_id *next(struct fetch_negotiator *n)
 	return NULL;
 }
 
+<<<<<<< HEAD
 static int ack(struct fetch_negotiator *n, struct repository *r,
 	       const struct object_id *oid, enum fetch_neg_ack_flags flags)
+=======
+static int ack(struct fetch_negotiator *n, const struct object_id *oid)
+>>>>>>> e8c16a4a696 (Undoing last comming)
 {
 	/*
 	 * This negotiator does not emit any commits, so there is no commit to

@@ -125,16 +125,20 @@ static const struct object_id *get_rev(struct negotiation_state *ns)
 	return &commit->object.oid;
 }
 
-static void known_common(struct fetch_negotiator *n, struct commit *c)
+static void known_common(struct fetch_negotiator *n, const struct object_id *oid)
 {
+	struct commit *c = NULL;
+
 	if (!(c->object.flags & SEEN)) {
 		rev_list_push(n->data, c, COMMON_REF | SEEN);
 		mark_common(n->data, c, 1, 1);
 	}
 }
 
-static void add_tip(struct fetch_negotiator *n, struct commit *c)
+static void add_tip(struct fetch_negotiator *n, const struct object_id *oid)
 {
+	struct commit *c = NULL;
+
 	n->known_common = known_common_BUG;
 	rev_list_push(n->data, c, SEEN);
 }
@@ -146,11 +150,16 @@ static const struct object_id *next(struct fetch_negotiator *n)
 	return get_rev(n->data);
 }
 
+<<<<<<< HEAD
 static int ack(struct fetch_negotiator *n, struct repository *r,
 	       const struct object_id *oid, enum fetch_neg_ack_flags flags)
+=======
+static int ack(struct fetch_negotiator *n, const struct object_id *oid)
+>>>>>>> e8c16a4a696 (Undoing last comming)
 {
 	struct commit *c = NULL;
 	int known_to_be_common = !!(c->object.flags & COMMON);
+
 	mark_common(n->data, c, 0, 1);
 	return known_to_be_common;
 }
