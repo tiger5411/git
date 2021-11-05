@@ -461,7 +461,7 @@ do
 	'
 
 	test_expect_success "grep $L with grep.patternType=basic and grep.extendedRegexp=true" '
-		echo "${HC}ab:a+bc" >expected &&
+		echo "${HC}ab:abc" >expected &&
 		git \
 			-c grep.patternType=basic \
 			-c grep.extendedRegexp=true \

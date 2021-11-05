@@ -33,9 +33,8 @@ static const char *color_grep_slots[] = {
 
 static int parse_pattern_type_arg(const char *opt, const char *arg)
 {
-	if (!strcmp(arg, "default"))
-		return GREP_PATTERN_TYPE_UNSPECIFIED;
-	else if (!strcmp(arg, "basic"))
+	if (!strcmp(arg, "basic") ||
+	    !strcmp(arg, "default"))
 		return GREP_PATTERN_TYPE_BRE;
 	else if (!strcmp(arg, "extended"))
 		return GREP_PATTERN_TYPE_ERE;
@@ -60,8 +59,7 @@ int grep_config(const char *var, const char *value, void *cb)
 	if (userdiff_config(var, value) < 0)
 		return -1;
 
-	if (opt->pattern_type_option == GREP_PATTERN_TYPE_UNSPECIFIED &&
-	    !strcmp(var, "grep.extendedregexp") &&
+	if (!strcmp(var, "grep.extendedregexp") &&
 	    git_config_bool(var, value)) {
 		opt->pattern_type_option = GREP_PATTERN_TYPE_ERE;
 		return 0;
