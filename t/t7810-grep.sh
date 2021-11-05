@@ -443,7 +443,7 @@ do
 	'
 
 	test_expect_success "grep $L with grep.extendedRegexp=true and grep.patternType=default" '
-		echo "${HC}ab:abc" >expected &&
+		echo "${HC}ab:a+bc" >expected &&
 		git \
 			-c grep.extendedRegexp=true \
 			-c grep.patternType=default \
