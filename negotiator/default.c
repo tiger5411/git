@@ -146,8 +146,10 @@ static const struct object_id *next(struct fetch_negotiator *n)
 	return get_rev(n->data);
 }
 
-static int ack(struct fetch_negotiator *n, struct commit *c)
+static int ack(struct fetch_negotiator *n, struct repository *r,
+	       const struct object_id *oid, enum fetch_neg_ack_flags flags)
 {
+	struct commit *c = NULL;
 	int known_to_be_common = !!(c->object.flags & COMMON);
 	mark_common(n->data, c, 0, 1);
 	return known_to_be_common;

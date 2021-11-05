@@ -21,7 +21,8 @@ static const struct object_id *next(struct fetch_negotiator *n)
 	return NULL;
 }
 
-static int ack(struct fetch_negotiator *n, struct commit *c)
+static int ack(struct fetch_negotiator *n, struct repository *r,
+	       const struct object_id *oid, enum fetch_neg_ack_flags flags)
 {
 	/*
 	 * This negotiator does not emit any commits, so there is no commit to

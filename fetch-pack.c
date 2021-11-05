@@ -458,14 +458,11 @@ static int find_common(struct fetch_negotiator *negotiator,
 				case ACK_common:
 				case ACK_ready:
 				case ACK_continue: {
-					struct commit *commit =
-						lookup_commit(the_repository,
-							      result_oid);
 					int was_common;
 
-					if (!commit)
-						die(_("invalid commit %s"), oid_to_hex(result_oid));
-					was_common = negotiator->ack(negotiator, commit);
+					was_common = negotiator->ack(negotiator, the_repository,
+								     result_oid,
+								     FETCH_NEG_ACK_VALIDATE);
 					if (args->stateless_rpc
 					 && ack == ACK_common
 					 && !was_common) {
@@ -1389,11 +1386,9 @@ static int process_ack(struct fetch_negotiator *negotiator,
 			continue;
 
 		if (skip_prefix(reader->line, "ACK ", &arg)) {
-			if (!get_oid_hex(arg, common_oid)) {
-				struct commit *commit;
-				commit = lookup_commit(the_repository, common_oid);
-				negotiator->ack(negotiator, commit);
-			}
+			if (!get_oid_hex(arg, common_oid))
+				negotiator->ack(negotiator, the_repository,
+						common_oid, 0);
 			return 1;
 		}
 

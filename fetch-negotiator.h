@@ -2,6 +2,7 @@
 #define FETCH_NEGOTIATOR_H
 
 struct commit;
+struct object_id;
 struct repository;
 
 /**
@@ -14,6 +15,10 @@ enum fetch_negotiation_setting {
 	FETCH_NEGOTIATION_SKIPPING,
 	FETCH_NEGOTIATION_NOOP,
 };
+
+enum fetch_neg_ack_flags {
+	FETCH_NEG_ACK_VALIDATE = 1<<0,
+};	
 
 /*
  * An object that supplies the information needed to negotiate the contents of
@@ -60,10 +65,12 @@ struct fetch_negotiator {
 	const struct object_id *(*next)(struct fetch_negotiator *);
 
 	/*
-	 * Inform the negotiator that the server has the given commit. This
-	 * method must only be called on commits returned by next().
+	 * Inform the negotiator that the server has a given OID. This
+	 * method must only be called on OIDs returned by next().
 	 */
-	int (*ack)(struct fetch_negotiator *, struct commit *);
+	int (*ack)(struct fetch_negotiator *, struct repository *r,
+		   const struct object_id *oid,
+		   enum fetch_neg_ack_flags flags);
 
 	void (*release)(struct fetch_negotiator *);
 
