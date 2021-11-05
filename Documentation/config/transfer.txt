@@ -84,6 +84,13 @@ transfer.bundleURI::
 	using bundles to bootstap is possible. Defaults to `true`,
 	i.e. bundle-uri is tried whenever a server offers it.
 
+transfer.bundleURI.downloader::
+	When set to `<program>` will be invoked when
+	`transfer.bundleURI` is in effect to download URIs containing
+	bundles. Expected to take one `URI` as an argument, and to
+	emit the bundle on STDOUT. Defaults to "curl --silent --output
+	- --". I.e. we'll invoke "curl --silent --output - -- <URI>".
+
 transfer.injectBundleURI::
 	Allows for the injection of `bundle-uri` lines into the
 	protocol v2 transport dialog (see `protocol.version` in

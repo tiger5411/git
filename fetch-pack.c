@@ -1113,12 +1113,15 @@ static int get_bundle_uri(struct string_list_item *item, unsigned int nth,
 	const char *uri = item->string;
 	FILE *out;
 	int out_fd;
+	const char *downloader[] = {"curl", "--silent", "--output", "-", "--", NULL};
+	const char *tmp = NULL;
 
-	strvec_push(&cmd.args, "curl");
-	strvec_push(&cmd.args, "--silent");
-	strvec_push(&cmd.args, "--output");
-	strvec_push(&cmd.args, "-");
-	strvec_push(&cmd.args, "--");
+	if (!git_config_get_string_tmp("transfer.bundleURI.downloader", &tmp)) {
+		strvec_push(&cmd.args, tmp);
+		cmd.use_shell = 1;
+	} else {
+		strvec_pushv(&cmd.args, downloader);
+	}
 	strvec_push(&cmd.args, item->string);
 	cmd.git_cmd = 0;
 	cmd.no_stdin = 1;
