@@ -16,11 +16,13 @@ ifndef PERL_PATH
 	PERL_PATH = perl
 endif
 
-# Shell quote (do not use $(call) to accommodate ancient setups);
-DESTDIR_SQ = $(subst ','\'',$(DESTDIR))
-PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
-SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
-template_instdir_SQ = $(subst ','\'',$(template_instdir))
+# Shell quote
+$(eval $(call make-SQ-vars, \
+DESTDIR \
+PERL_PATH \
+SHELL_PATH \
+template_instdir \
+))
 
 all: boilerplates.made custom
 

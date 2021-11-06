@@ -207,9 +207,11 @@ endif
 SHELL_PATH ?= $(SHELL)
 
 # Shell quote;
-DEFAULT_EDITOR_SQ = $(subst ','\'',$(DEFAULT_EDITOR))
-DEFAULT_PAGER_SQ = $(subst ','\'',$(DEFAULT_PAGER))
-SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
+$(eval $(call make-SQ-vars, \
+DEFAULT_EDITOR \
+DEFAULT_PAGER \
+SHELL_PATH \
+))
 
 ifdef DEFAULT_PAGER
 ASCIIDOC_EXTRA += -a 'git-default-pager=$(DEFAULT_PAGER_SQ)'
@@ -311,7 +313,7 @@ mergetools-list.made: ../git-mergetool--lib.sh $(wildcard ../mergetools/*)
 		show_tool_names can_merge "* " || :' >mergetools-merge.txt && \
 	date >$@
 
-TRACK_ASCIIDOCFLAGS = $(subst ','\'',$(ASCIIDOC_COMMON):$(ASCIIDOC_HTML):$(ASCIIDOC_DOCBOOK))
+TRACK_ASCIIDOCFLAGS = $(call shq,$(ASCIIDOC_COMMON):$(ASCIIDOC_HTML):$(ASCIIDOC_DOCBOOK))
 $(eval $(call TRACK_template,GIT-ASCIIDOCFLAGS,TRACK_ASCIIDOCFLAGS))
 
 clean:

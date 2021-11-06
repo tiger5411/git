@@ -1362,7 +1362,7 @@ endif
 endif
 
 ifdef SANE_TOOL_PATH
-SANE_TOOL_PATH_SQ = $(subst ','\'',$(SANE_TOOL_PATH))
+SANE_TOOL_PATH_SQ = $(call shq,$(SANE_TOOL_PATH))
 BROKEN_PATH_FIX = 's|^\# @@BROKEN_PATH_FIX@@$$|git_broken_path_fix "$(SANE_TOOL_PATH_SQ)"|'
 PATH := $(SANE_TOOL_PATH):${PATH}
 else
@@ -2024,49 +2024,48 @@ ifneq ("$(PROFILE)","")
 endif
 endif
 
-# Shell quote (do not use $(call) to accommodate ancient setups);
-DESTDIR_SQ = $(subst ','\'',$(DESTDIR))
-DIFF_SQ = $(subst ','\'',$(DIFF))
-ETC_GITATTRIBUTES_SQ = $(subst ','\'',$(ETC_GITATTRIBUTES))
-ETC_GITCONFIG_SQ = $(subst ','\'',$(ETC_GITCONFIG))
-GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
-NO_GETTEXT_SQ = $(subst ','\'',$(NO_GETTEXT))
-NO_PERL_CPAN_FALLBACKS_SQ = $(subst ','\'',$(NO_PERL_CPAN_FALLBACKS))
-PAGER_ENV_SQ = $(subst ','\'',$(PAGER_ENV))
-PERLLIB_EXTRA_SQ = $(subst ','\'',$(PERLLIB_EXTRA))
-PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
-PROCFS_EXECUTABLE_PATH_SQ = $(subst ','\'',$(PROCFS_EXECUTABLE_PATH))
-PYTHON_PATH_SQ = $(subst ','\'',$(PYTHON_PATH))
-SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
-TCLTK_PATH_SQ = $(subst ','\'',$(TCLTK_PATH))
-TEST_SHELL_PATH_SQ = $(subst ','\'',$(TEST_SHELL_PATH))
-bindir_SQ = $(subst ','\'',$(bindir))
-bindir_relative_SQ = $(subst ','\'',$(bindir_relative))
-gitexecdir_SQ = $(subst ','\'',$(gitexecdir))
-gitexecdir_relative_SQ = $(subst ','\'',$(gitexecdir_relative))
-gitwebdir_SQ = $(subst ','\'',$(gitwebdir))
-htmldir_relative_SQ = $(subst ','\'',$(htmldir_relative))
-infodir_relative_SQ = $(subst ','\'',$(infodir_relative))
-localedir_SQ = $(subst ','\'',$(localedir))
-localedir_relative_SQ = $(subst ','\'',$(localedir_relative))
-mandir_SQ = $(subst ','\'',$(mandir))
-mandir_relative_SQ = $(subst ','\'',$(mandir_relative))
-perllibdir_SQ = $(subst ','\'',$(perllibdir))
-perllibdir_relative_SQ = $(subst ','\'',$(perllibdir_relative))
-prefix_SQ = $(subst ','\'',$(prefix))
-template_dir_SQ = $(subst ','\'',$(template_dir))
+# Shell quote
+$(eval $(call make-SQ-vars, \
+DESTDIR \
+DIFF \
+ETC_GITATTRIBUTES \
+ETC_GITCONFIG \
+GIT_USER_AGENT \
+NO_GETTEXT \
+NO_PERL_CPAN_FALLBACKS \
+PAGER_ENV \
+PERLLIB_EXTRA \
+PERL_PATH \
+PROCFS_EXECUTABLE_PATH \
+PYTHON_PATH \
+SHELL_PATH \
+TCLTK_PATH \
+TEST_SHELL_PATH \
+bindir \
+bindir_relative \
+gitexecdir \
+gitexecdir_relative \
+gitwebdir \
+htmldir_relative \
+infodir_relative \
+localedir \
+localedir_relative \
+mandir \
+mandir_relative \
+perllibdir \
+perllibdir_relative \
+prefix \
+template_dir \
+))
 
 # C quote
-DEFAULT_EDITOR_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_EDITOR)))"
-DEFAULT_EDITOR_CQ_SQ = $(subst ','\'',$(DEFAULT_EDITOR_CQ))
-DEFAULT_PAGER_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_PAGER)))"
-DEFAULT_PAGER_CQ_SQ = $(subst ','\'',$(DEFAULT_PAGER_CQ))
-GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
-GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
-PAGER_ENV_CQ = "$(subst ",\",$(subst \,\\,$(PAGER_ENV)))"
-PAGER_ENV_CQ_SQ = $(subst ','\'',$(PAGER_ENV_CQ))
-SHELL_PATH_CQ = "$(subst ",\",$(subst \,\\,$(SHELL_PATH)))"
-SHELL_PATH_CQ_SQ = $(subst ','\'',$(SHELL_PATH_CQ))
+$(eval $(call make-CQ_SQ-vars, \
+DEFAULT_EDITOR \
+DEFAULT_PAGER \
+GIT_USER_AGENT \
+PAGER_ENV \
+SHELL_PATH \
+))
 
 # RUNTIME_PREFIX's resolution logic requires resource paths to be expressed
 # relative to each other and share an installation path.
@@ -2995,7 +2994,7 @@ gitexec_instdir = $(gitexecdir)
 else
 gitexec_instdir = $(prefix)/$(gitexecdir)
 endif
-gitexec_instdir_SQ = $(subst ','\'',$(gitexec_instdir))
+gitexec_instdir_SQ = $(call shq,$(gitexec_instdir))
 export gitexec_instdir
 
 ifneq ($(filter /%,$(firstword $(mergetoolsdir))),)
@@ -3003,7 +3002,7 @@ mergetools_instdir = $(mergetoolsdir)
 else
 mergetools_instdir = $(prefix)/$(mergetoolsdir)
 endif
-mergetools_instdir_SQ = $(subst ','\'',$(mergetools_instdir))
+mergetools_instdir_SQ = $(call shq,$(mergetools_instdir))
 
 install_bindir_xprograms := $(patsubst %,%$X,$(BINDIR_PROGRAMS_NEED_X))
 install_bindir_programs := $(install_bindir_xprograms) $(BINDIR_PROGRAMS_NO_X)

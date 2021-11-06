@@ -5,7 +5,7 @@ include ../../shared.mak
 export GIT_TEST_OPTIONS
 
 SHELL_PATH ?= $(SHELL)
-SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
+SHELL_PATH_SQ = $(call shq,$(SHELL_PATH))
 T = $(sort $(wildcard i[0-9][0-9][0-9][0-9]-*.sh))
 
 all: $(T)
