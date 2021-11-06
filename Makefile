@@ -2424,19 +2424,22 @@ missing_compdb_dir =
 compdb_args =
 endif
 
-ASM_SRC := $(wildcard $(OBJECTS:o=S))
-ASM_OBJ := $(ASM_SRC:S=o)
-C_OBJ := $(filter-out $(ASM_OBJ),$(OBJECTS))
-
 .SUFFIXES:
 
-$(C_OBJ): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
-	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
-$(ASM_OBJ): %.o: %.S GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
-	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
-
-%.s: %.c GIT-CFLAGS FORCE
-	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+define compile_objects_template
+# How we compile *.o and *.s files from *.c or *.S
+$(1)_SRC = $$(wildcard $$(OBJECTS:%.o=$(3)))
+$(1)_OBJ = $$($(1)_SRC:$(3)=$(2))
+$$($(1)_OBJ): $(2): $(3) GIT-CFLAGS $(4)
+	$$(QUIET_CC)$$(CC) -o $(5) $(6) $(7) $$(ALL_CFLAGS) $$(EXTRA_CPPFLAGS) $$<
+endef
+define compile_CS_objects_template
+# Convenience wrapper for *.c and *.S
+$(call compile_objects_template,$(1),$(2),$(3),$$(missing_dep_dirs) $$(missing_compdb_dir),$$*.o,-c,$$(dep_args) $$(compdb_args))
+endef
+$(eval $(call compile_CS_objects_template,C,%.o,%.c))
+$(eval $(call compile_CS_objects_template,S,%.o,%.S))
+$(eval $(call compile_objects_template,ASM,%.s,%.c,,$$@,-S,))
 
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
 # Take advantage of gcc's on-the-fly dependency generation
