@@ -50,39 +50,39 @@ ifneq ($(findstring s,$(MAKEFLAGS)),s)
 ifndef V
 ## common
 	QUIET_SUBDIR0  = +@subdir=
-	QUIET_SUBDIR1  = ;$(NO_SUBDIR) echo '   ' SUBDIR $$subdir; \
+	QUIET_SUBDIR1  = ;$(NO_SUBDIR) echo $(wspfx_sq) SUBDIR $$subdir; \
 			 $(MAKE) $(PRINT_DIR) -C $$subdir
 
 	QUIET          = @
-	QUIET_GEN      = @echo '   ' GEN $@;
+	QUIET_GEN      = @echo $(wspfx_sq) GEN $@;
 
 ## Used in "Makefile"
-	QUIET_CC       = @echo '   ' CC $@;
-	QUIET_AR       = @echo '   ' AR $@;
-	QUIET_LINK     = @echo '   ' LINK $@;
-	QUIET_BUILT_IN = @echo '   ' BUILTIN $@;
-	QUIET_LNCP     = @echo '   ' LN/CP $@;
-	QUIET_XGETTEXT = @echo '   ' XGETTEXT $@;
-	QUIET_MSGFMT   = @echo '   ' MSGFMT $@;
-	QUIET_GCOV     = @echo '   ' GCOV $@;
-	QUIET_SP       = @echo '   ' SP $<;
-	QUIET_HDR      = @echo '   ' HDR $(<:hcc=h);
-	QUIET_RC       = @echo '   ' RC $@;
-	QUIET_SPATCH   = @echo '   ' SPATCH $<;
+	QUIET_CC       = @echo $(wspfx_sq) CC $@;
+	QUIET_AR       = @echo $(wspfx_sq) AR $@;
+	QUIET_LINK     = @echo $(wspfx_sq) LINK $@;
+	QUIET_BUILT_IN = @echo $(wspfx_sq) BUILTIN $@;
+	QUIET_LNCP     = @echo $(wspfx_sq) LN/CP $@;
+	QUIET_XGETTEXT = @echo $(wspfx_sq) XGETTEXT $@;
+	QUIET_MSGFMT   = @echo $(wspfx_sq) MSGFMT $@;
+	QUIET_GCOV     = @echo $(wspfx_sq) GCOV $@;
+	QUIET_SP       = @echo $(wspfx_sq) SP $<;
+	QUIET_HDR      = @echo $(wspfx_sq) HDR $(<:hcc=h);
+	QUIET_RC       = @echo $(wspfx_sq) RC $@;
+	QUIET_SPATCH   = @echo $(wspfx_sq) SPATCH $<;
 
 ## Used in "Documentation/Makefile"
-	QUIET_ASCIIDOC	= @echo '   ' ASCIIDOC $@;
-	QUIET_XMLTO	= @echo '   ' XMLTO $@;
-	QUIET_DB2TEXI	= @echo '   ' DB2TEXI $@;
-	QUIET_MAKEINFO	= @echo '   ' MAKEINFO $@;
-	QUIET_DBLATEX	= @echo '   ' DBLATEX $@;
-	QUIET_XSLTPROC	= @echo '   ' XSLTPROC $@;
-	QUIET_GEN	= @echo '   ' GEN $@;
+	QUIET_ASCIIDOC	= @echo $(wspfx_sq) ASCIIDOC $@;
+	QUIET_XMLTO	= @echo $(wspfx_sq) XMLTO $@;
+	QUIET_DB2TEXI	= @echo $(wspfx_sq) DB2TEXI $@;
+	QUIET_MAKEINFO	= @echo $(wspfx_sq) MAKEINFO $@;
+	QUIET_DBLATEX	= @echo $(wspfx_sq) DBLATEX $@;
+	QUIET_XSLTPROC	= @echo $(wspfx_sq) XSLTPROC $@;
+	QUIET_GEN	= @echo $(wspfx_sq) GEN $@;
 	QUIET_STDERR	= 2> /dev/null
 
-	QUIET_LINT_GITLINK	= @echo '   ' LINT GITLINK $<;
-	QUIET_LINT_MANSEC	= @echo '   ' LINT MAN SEC $<;
-	QUIET_LINT_MANEND	= @echo '   ' LINT MAN END $<;
+	QUIET_LINT_GITLINK	= @echo $(wspfx_sq) LINT GITLINK $<;
+	QUIET_LINT_MANSEC	= @echo $(wspfx_sq) LINT MAN SEC $<;
+	QUIET_LINT_MANEND	= @echo $(wspfx_sq) LINT MAN END $<;
 
 	export V
 endif
