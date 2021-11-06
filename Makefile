@@ -2402,7 +2402,7 @@ $(dep_dirs):
 
 missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
 dep_file = $(dir $@).depend/$(notdir $@).d
-dep_args = -MF $(dep_file) -MQ $@ -MMD -MP
+dep_args = -MF $(dep_file) -MQ $@ -MMD
 endif
 
 ifneq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
