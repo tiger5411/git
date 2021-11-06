@@ -8,6 +8,20 @@
 #    info make --index-search=.DELETE_ON_ERROR
 .DELETE_ON_ERROR:
 
+### Quoting helpers
+
+## Quote a ' inside a '': FOO='$(call shq,$(BAR))'
+shq = $(subst ','\'',$(1))
+
+## Quote a ' and provide a '': FOO=$(call shq,$(BAR))
+shellquote = '$(call shq,$(1))'
+
+## Quote a " inside a ""
+shdq = $(subst ",\",$(1))
+
+## Quote ' for the shell, and embedded " for C: -DFOO=$(call shelldquote,$(BAR))
+shelldquote = '"$(call shdq,$(call shq,$(1)))"'
+
 ### Global variables
 
 ## comma, empty, space: handy variables as these tokens are either
