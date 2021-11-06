@@ -89,6 +89,8 @@ ifndef V
 	QUIET          = @
 	QUIET_GEN      = @echo $(wspfx_SQ) GEN $@;
 
+	QUIET_MKDIR_P_PARENT  = @echo $(wspfx_SQ) MKDIR -p $(@D);
+
 ## Used in "Makefile"
 	QUIET_CC       = @echo $(wspfx_SQ) CC $@;
 	QUIET_AR       = @echo $(wspfx_SQ) AR $@;
@@ -120,6 +122,11 @@ ifndef V
 	export V
 endif
 endif
+
+## Helpers
+define mkdir_p_parent_template
+$(if $(wildcard $(@D)),,$(QUIET_MKDIR_P_PARENT)$(shell mkdir -p $(@D)))
+endef
 
 ### Templates
 
