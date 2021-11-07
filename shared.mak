@@ -24,6 +24,22 @@
 #    info make --index-search=.DELETE_ON_ERROR
 .DELETE_ON_ERROR:
 
+### GNU Make version detection
+# We don't care about "release" versions like the "90" in "3.99.90"
+MAKE_VERSION_MAJOR = $(word 1,$(subst ., ,$(MAKE_VERSION)))
+MAKE_VERSION_MINOR = $(word 2,$(subst ., ,$(MAKE_VERSION)))
+
+# The oldest supported version of GNU make is 3-something. So "not v3"
+# is a future-proof way to ask "is it modern?"
+ifneq ($(MAKE_VERSION_MAJOR),3)
+# $(file >[...]) and $(file >>[...]) is in 4.0...
+MAKE_HAVE_FILE_WRITE = Need version 4.0 or later (released in late 2013)
+# .. but we need 4.2 for $(file <[...])
+ifneq ($(filter-out 0 1,$(MAKE_VERSION_MINOR)),)
+MAKE_HAVE_FILE_READ = Need version 4.2 or later (released in mid-2016)
+endif
+endif
+
 ### Quoting helpers
 
 ## shq ([s]hell[q]quote):
@@ -157,6 +173,10 @@ endef
 
 ## TRACK_template: maintain a GIT-SOMETHING file, which changes if a
 ## TRACK_SOMETHING variable changes.
+##
+## This is the slower version used on GNU make <4.2.
+ifndef MAKE_HAVE_FILE_READ
+
 define TRACK_template
 .PHONY: FORCE
 $(1): FORCE
@@ -169,3 +189,42 @@ $(1): FORCE
 		printf "%s\n" "$$$$FLAGS" >$(1); \
 	fi
 endef
+
+endif # !MAKE_HAVE_FILE_READ
+
+## A TRACK_template template compatible with the one above. Uses
+## features of GNU make >=4.2 to avoid shelling out for this "hot"
+## "FORCE" logic.
+##
+## Since version >=4.2 can do both "I" and "O" in I/O with using
+## $(file <)/$(file >) we read the GIT-SOMETHING file into a variable
+## with the former, and if it's different from our expected value
+## write it out with the latter.
+ifdef MAKE_HAVE_FILE_READ
+
+define TRACK_template_eval
+$(1)_WRITE =
+$(1)_EXISTS = $(wildcard $(1))
+ifeq ($$($(1)_EXISTS),)
+$(1)_WRITE = new
+else
+$(1)_CONTENT = $(file <$(1))
+ifeq ($$($(1)_CONTENT),$($(2)))
+$(1)_WRITE = same
+else
+$(1)_WRITE = changed
+endif
+endif
+ifneq ($$($(1)_WRITE),same)
+$$(info $$(wspfx) $(1) parameters ($$($(1)_WRITE)))
+$$(file >$(1),$($(2)))
+endif
+endef # TRACK_template_eval
+
+define TRACK_template
+.PHONY: FORCE
+$(1): FORCE
+	$$(eval $$(call TRACK_template_eval,$(1),$(2)))
+endef
+
+endif # MAKE_HAVE_FILE_READ
