@@ -9,6 +9,7 @@
 #include "prio-queue.h"
 #include "hash-lookup.h"
 #include "commit-slab.h"
+#include "object-array.h"
 
 /*
  * One day.  See the 'name a rev shortly after epoch' test in t6120 when
