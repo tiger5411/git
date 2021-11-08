@@ -13,6 +13,7 @@
 #include "sigchain.h"
 #include "strvec.h"
 #include "packfile.h"
+#include "object-list.h"
 #include "object-store.h"
 #include "commit-reach.h"
 
