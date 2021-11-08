@@ -25,6 +25,7 @@
 #include "submodule-config.h"
 #include "object-store.h"
 #include "packfile.h"
+#include "object-array.h"
 
 static const char *grep_prefix;
 
