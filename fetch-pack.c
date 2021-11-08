@@ -26,6 +26,7 @@
 #include "commit-reach.h"
 #include "commit-graph.h"
 #include "sigchain.h"
+#include "object-array.h"
 
 static int transfer_unpack_limit = -1;
 static int fetch_unpack_limit = -1;
