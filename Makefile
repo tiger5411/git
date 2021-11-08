@@ -975,6 +975,7 @@ LIB_OBJS += notes-utils.o
 LIB_OBJS += notes.o
 LIB_OBJS += object-file.o
 LIB_OBJS += object-name.o
+LIB_OBJS += object-queue.o
 LIB_OBJS += object.o
 LIB_OBJS += oid-array.o
 LIB_OBJS += oidmap.o

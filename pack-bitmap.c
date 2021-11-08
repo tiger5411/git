@@ -11,6 +11,7 @@
 #include "pack-objects.h"
 #include "packfile.h"
 #include "repository.h"
+#include "object-queue.h"
 #include "object-store.h"
 #include "list-objects-filter-options.h"
 #include "midx.h"

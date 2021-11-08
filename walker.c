@@ -1,6 +1,7 @@
 #include "cache.h"
 #include "walker.h"
 #include "repository.h"
+#include "object-queue.h"
 #include "object-store.h"
 #include "commit.h"
 #include "tree.h"
