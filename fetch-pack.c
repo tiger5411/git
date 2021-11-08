@@ -2028,7 +2028,7 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 {
 	struct fetch_negotiator negotiator;
 	struct packet_reader reader;
-	struct object_array nt_object_array = OBJECT_ARRAY_INIT;
+	struct object_list nt_object_array = OBJECT_ARRAY_INIT;
 	struct strbuf req_buf = STRBUF_INIT;
 	int haves_to_send = INITIAL_FLUSH;
 	int in_vain = 0;
@@ -2046,7 +2046,7 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 
 	for_each_oid_array_oid(oid, negotiation_tips) {
 		struct object *o = lookup_object(the_repository, oid);
-		add_object_array(o, "", &nt_object_array);
+		object_list_insert(&nt_object_array, o);
 	}
 
 	while (!last_iteration) {
@@ -2097,6 +2097,8 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 						 min_generation))
 			last_iteration = 1;
 	}
+
+	object_list_clear(&nt_object_array);
 	clear_common_flag(acked_commits);
 	strbuf_release(&req_buf);
 }

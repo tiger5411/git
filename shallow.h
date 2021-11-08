@@ -2,6 +2,7 @@
 #define SHALLOW_H
 
 #include "lockfile.h"
+#include "object-list.h"
 #include "object.h"
 #include "repository.h"
 #include "strbuf.h"
@@ -32,8 +33,7 @@ int commit_shallow_file(struct repository *r, struct shallow_lock *lk);
 /* rollback $GIT_DIR/shallow and reset stat-validity checks */
 void rollback_shallow_file(struct repository *r, struct shallow_lock *lk);
 
-struct object_array;
-struct commit_list *get_shallow_commits(struct object_array *heads,
+struct commit_list *get_shallow_commits(struct object_list *heads,
 					int depth, int shallow_flag, int not_shallow_flag);
 struct commit_list *get_shallow_commits_by_rev_list(
 		int ac, const char **av, int shallow_flag, int not_shallow_flag);
