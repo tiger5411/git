@@ -7,7 +7,7 @@
 #include "ref-filter.h"
 #include "string-list.h"
 #include "tag.h"
-#include "object-array.h"
+#include "object-array-bare.h"
 
 static void print_sorted_commit_ids(struct commit_list *list)
 {
@@ -32,7 +32,7 @@ int cmd__reach(int ac, const char **av)
 	struct object_id oid_A, oid_B;
 	struct commit *A, *B;
 	struct commit_list *X, *Y;
-	struct object_array X_obj = OBJECT_ARRAY_INIT;
+	struct object_array_bare X_obj = OBJECT_ARRAY_BARE_INIT;
 	struct commit **X_array, **Y_array;
 	int X_nr, X_alloc, Y_nr, Y_alloc;
 	struct strbuf buf = STRBUF_INIT;
@@ -89,7 +89,7 @@ int cmd__reach(int ac, const char **av)
 				commit_list_insert(c, &X);
 				ALLOC_GROW(X_array, X_nr + 1, X_alloc);
 				X_array[X_nr++] = c;
-				add_object_array(orig, NULL, &X_obj);
+				object_array_bare_insert(&X_obj, orig);
 				break;
 
 			case 'Y':
@@ -167,5 +167,6 @@ int cmd__reach(int ac, const char **av)
 		print_sorted_commit_ids(list);
 	}
 
+	object_array_bare_clear(&X_obj);
 	return 0;
 }

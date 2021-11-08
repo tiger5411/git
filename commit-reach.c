@@ -8,6 +8,7 @@
 #include "revision.h"
 #include "tag.h"
 #include "commit-reach.h"
+#include "object-array-bare.h"
 
 /* Remember to update object flag allocation in object.h */
 #define PARENT1		(1u<<16)
@@ -716,7 +717,7 @@ int commit_contains(struct ref_filter *filter, struct commit *commit,
 	return repo_is_descendant_of(the_repository, commit, list);
 }
 
-int can_all_from_reach_with_flag(struct object_array *from,
+int can_all_from_reach_with_flag(struct object_array_bare *from,
 				 unsigned int with_flag,
 				 unsigned int assign_flag,
 				 time_t min_commit_date,
@@ -724,13 +725,14 @@ int can_all_from_reach_with_flag(struct object_array *from,
 {
 	struct commit **list = NULL;
 	int i;
-	int nr_commits;
+	size_t nr_commits = 0;
 	int result = 1;
+	struct object_array_bare_item *item;
 
 	ALLOC_ARRAY(list, from->nr);
-	nr_commits = 0;
-	for (i = 0; i < from->nr; i++) {
-		struct object *from_one = from->objects[i].item;
+	for_each_object_array_bare_item(item, from) {
+		struct object *const item_obj = item->item;
+		struct object *from_one = item_obj;
 
 		if (!from_one || from_one->flags & assign_flag)
 			continue;
@@ -744,7 +746,7 @@ int can_all_from_reach_with_flag(struct object_array *from,
 			 * leave a note to ourselves not to worry about
 			 * this object anymore.
 			 */
-			from->objects[i].item->flags |= assign_flag;
+			item_obj->flags |= assign_flag;
 			continue;
 		}
 
@@ -808,8 +810,8 @@ cleanup:
 	clear_commit_marks_many(nr_commits, list, RESULT | assign_flag);
 	free(list);
 
-	for (i = 0; i < from->nr; i++)
-		from->objects[i].item->flags &= ~assign_flag;
+	for_each_object_array_bare_item(item, from)
+		item->item->flags &= ~assign_flag;
 
 	return result;
 }
@@ -817,14 +819,14 @@ cleanup:
 int can_all_from_reach(struct commit_list *from, struct commit_list *to,
 		       int cutoff_by_min_date)
 {
-	struct object_array from_objs = OBJECT_ARRAY_INIT;
+	struct object_array_bare from_objs = OBJECT_ARRAY_INIT;
 	time_t min_commit_date = cutoff_by_min_date ? from->item->date : 0;
 	struct commit_list *from_iter = from, *to_iter = to;
 	int result;
 	timestamp_t min_generation = GENERATION_NUMBER_INFINITY;
 
 	while (from_iter) {
-		add_object_array(&from_iter->item->object, NULL, &from_objs);
+		object_array_bare_insert(&from_objs, &from_iter->item->object);
 
 		if (!parse_commit(from_iter->item)) {
 			timestamp_t generation;
@@ -868,7 +870,7 @@ int can_all_from_reach(struct commit_list *from, struct commit_list *to,
 		to = to->next;
 	}
 
-	object_array_clear(&from_objs);
+	object_array_bare_clear(&from_objs);
 	return result;
 }
 

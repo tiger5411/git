@@ -5,6 +5,7 @@
 #include "sideband.h"
 #include "repository.h"
 #include "object-store.h"
+#include "object-array-bare.h"
 #include "tag.h"
 #include "object.h"
 #include "commit.h"
@@ -58,14 +59,14 @@ enum allow_uor {
  */
 struct upload_pack_data {
 	struct string_list symref;				/* v0 only */
-	struct object_array want_obj;
-	struct object_array have_obj;
+	struct object_array_bare want_obj;
+	struct object_array_bare have_obj;
 	struct oid_array haves;					/* v2 only */
 	struct string_list wanted_refs;				/* v2 only */
 
-	struct object_array shallows;
+	struct object_array_bare shallows;
 	struct string_list deepen_not;
-	struct object_array extra_edge_obj;
+	struct object_array_bare extra_edge_obj;
 	int depth;
 	timestamp_t deepen_since;
 	int deepen_rev_list;
@@ -118,13 +119,13 @@ static void upload_pack_data_init(struct upload_pack_data *data)
 {
 	struct string_list symref = STRING_LIST_INIT_DUP;
 	struct string_list wanted_refs = STRING_LIST_INIT_DUP;
-	struct object_array want_obj = OBJECT_ARRAY_INIT;
-	struct object_array have_obj = OBJECT_ARRAY_INIT;
+	struct object_array_bare want_obj = OBJECT_ARRAY_BARE_INIT;
+	struct object_array_bare have_obj = OBJECT_ARRAY_BARE_INIT;
 	struct oid_array haves = OID_ARRAY_INIT;
-	struct object_array shallows = OBJECT_ARRAY_INIT;
+	struct object_array_bare shallows = OBJECT_ARRAY_BARE_INIT;
 	struct string_list deepen_not = STRING_LIST_INIT_DUP;
 	struct string_list uri_protocols = STRING_LIST_INIT_DUP;
-	struct object_array extra_edge_obj = OBJECT_ARRAY_INIT;
+	struct object_array_bare extra_edge_obj = OBJECT_ARRAY_BARE_INIT;
 	struct string_list allowed_filters = STRING_LIST_INIT_DUP;
 
 	memset(data, 0, sizeof(*data));
@@ -150,12 +151,12 @@ static void upload_pack_data_clear(struct upload_pack_data *data)
 {
 	string_list_clear(&data->symref, 1);
 	string_list_clear(&data->wanted_refs, 1);
-	object_array_clear(&data->want_obj);
-	object_array_clear(&data->have_obj);
+	object_array_bare_clear(&data->want_obj);
+	object_array_bare_clear(&data->have_obj);
 	oid_array_clear(&data->haves);
-	object_array_clear(&data->shallows);
+	object_array_bare_clear(&data->shallows);
 	string_list_clear(&data->deepen_not, 0);
-	object_array_clear(&data->extra_edge_obj);
+	object_array_bare_clear(&data->extra_edge_obj);
 	list_objects_filter_release(&data->filter_options);
 	string_list_clear(&data->allowed_filters, 0);
 
@@ -280,6 +281,7 @@ static void create_pack_file(struct upload_pack_data *pack_data,
 	char abort_msg[] = "aborting due to possible repository "
 		"corruption on the remote side.";
 	ssize_t sz;
+	struct object_array_bare_item *item;
 	int i;
 	FILE *pipe_fd;
 
@@ -333,16 +335,16 @@ static void create_pack_file(struct upload_pack_data *pack_data,
 	if (pack_data->shallow_nr)
 		for_each_commit_graft(write_one_shallow, pipe_fd);
 
-	for (i = 0; i < pack_data->want_obj.nr; i++)
+	for_each_object_array_bare_item(item, &pack_data->want_obj)
 		fprintf(pipe_fd, "%s\n",
-			oid_to_hex(&pack_data->want_obj.objects[i].item->oid));
+			oid_to_hex(&item->item->oid));
 	fprintf(pipe_fd, "--not\n");
-	for (i = 0; i < pack_data->have_obj.nr; i++)
+	for_each_object_array_bare_item(item, &pack_data->have_obj)
 		fprintf(pipe_fd, "%s\n",
-			oid_to_hex(&pack_data->have_obj.objects[i].item->oid));
-	for (i = 0; i < pack_data->extra_edge_obj.nr; i++)
+			oid_to_hex(&item->item->oid));
+	for_each_object_array_bare_item(item, &pack_data->extra_edge_obj)
 		fprintf(pipe_fd, "%s\n",
-			oid_to_hex(&pack_data->extra_edge_obj.objects[i].item->oid));
+			oid_to_hex(&item->item->oid));
 	fprintf(pipe_fd, "\n");
 	fflush(pipe_fd);
 	fclose(pipe_fd);
@@ -482,7 +484,7 @@ static int do_got_oid(struct upload_pack_data *data, const struct object_id *oid
 			parents->item->object.flags |= THEY_HAVE;
 	}
 	if (!we_knew_they_have) {
-		add_object_array(o, NULL, &data->have_obj);
+		object_array_bare_insert(&data->have_obj, o);
 		return 1;
 	}
 	return 0;
@@ -599,13 +601,13 @@ static int is_our_ref(struct object *o, enum allow_uor allow_uor)
  * on successful case, it's up to the caller to close cmd->out
  */
 static int do_reachable_revlist(struct child_process *cmd,
-				struct object_array *src,
-				struct object_array *reachable,
+				struct object_array_bare *src,
+				struct object_array_bare *reachable,
 				enum allow_uor allow_uor)
 {
-	struct object *o;
 	FILE *cmd_in = NULL;
 	int i;
+	struct object_array_bare_item *item;
 
 	strvec_pushl(&cmd->args, "rev-list", "--stdin", NULL);
 	cmd->git_cmd = 1;
@@ -626,7 +628,7 @@ static int do_reachable_revlist(struct child_process *cmd,
 	cmd_in = xfdopen(cmd->in, "w");
 
 	for (i = get_max_object_index(); 0 < i; ) {
-		o = get_indexed_object(--i);
+		struct object *o = get_indexed_object(--i);
 		if (!o)
 			continue;
 		if (reachable && o->type == OBJ_COMMIT)
@@ -636,11 +638,11 @@ static int do_reachable_revlist(struct child_process *cmd,
 		if (fprintf(cmd_in, "^%s\n", oid_to_hex(&o->oid)) < 0)
 			goto error;
 	}
-	for (i = 0; i < src->nr; i++) {
-		o = src->objects[i].item;
+	for_each_object_array_bare_item(item, src) {
+		struct object *o = item->item;
 		if (is_our_ref(o, allow_uor)) {
 			if (reachable)
-				add_object_array(o, NULL, reachable);
+				object_array_bare_insert(reachable, o);
 			continue;
 		}
 		if (reachable && o->type == OBJ_COMMIT)
@@ -667,7 +669,7 @@ error:
 }
 
 static int get_reachable_list(struct upload_pack_data *data,
-			      struct object_array *reachable)
+			      struct object_array_bare *reachable)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	int i;
@@ -695,8 +697,8 @@ static int get_reachable_list(struct upload_pack_data *data,
 		o = get_indexed_object(i - 1);
 		if (o && o->type == OBJ_COMMIT &&
 		    (o->flags & TMP_MARK)) {
-			add_object_array(o, NULL, reachable);
-				o->flags &= ~TMP_MARK;
+			object_array_bare_insert(reachable, o);
+			o->flags &= ~TMP_MARK;
 		}
 	}
 	close(cmd.out);
@@ -707,7 +709,7 @@ static int get_reachable_list(struct upload_pack_data *data,
 	return 0;
 }
 
-static int has_unreachable(struct object_array *src, enum allow_uor allow_uor)
+static int has_unreachable(struct object_array_bare *src, enum allow_uor allow_uor)
 {
 	struct child_process cmd = CHILD_PROCESS_INIT;
 	char buf[1];
@@ -745,7 +747,7 @@ error:
 
 static void check_non_tip(struct upload_pack_data *data)
 {
-	int i;
+	struct object_array_bare_item *item;
 
 	/*
 	 * In the normal in-process case without
@@ -760,8 +762,8 @@ static void check_non_tip(struct upload_pack_data *data)
 
 error:
 	/* Pick one of them (we know there at least is one) */
-	for (i = 0; i < data->want_obj.nr; i++) {
-		struct object *o = data->want_obj.objects[i].item;
+	for_each_object_array_bare_item(item, &data->want_obj) {
+		struct object *o = item->item;
 		if (!is_our_ref(o, data->allow_uor)) {
 			packet_writer_error(&data->writer,
 					    "upload-pack: not our ref %s",
@@ -789,10 +791,10 @@ static void send_shallow(struct upload_pack_data *data,
 
 static void send_unshallow(struct upload_pack_data *data)
 {
-	int i;
+	struct object_array_bare_item *item;
 
-	for (i = 0; i < data->shallows.nr; i++) {
-		struct object *object = data->shallows.objects[i].item;
+	for_each_object_array_bare_item(item, &data->shallows) {
+		struct object *object = item->item;
 		if (object->flags & NOT_SHALLOW) {
 			struct commit_list *parents;
 			packet_writer_write(&data->writer, "unshallow %s",
@@ -810,11 +812,11 @@ static void send_unshallow(struct upload_pack_data *data)
 			parse_commit_or_die((struct commit *)object);
 			parents = ((struct commit *)object)->parents;
 			while (parents) {
-				add_object_array(&parents->item->object,
-						 NULL, &data->want_obj);
+				object_array_bare_insert(&data->want_obj,
+							 &parents->item->object);
 				parents = parents->next;
 			}
-			add_object_array(object, NULL, &data->extra_edge_obj);
+			object_array_bare_insert(&data->extra_edge_obj, object);
 		}
 		/* make sure commit traversal conforms to client */
 		register_shallow(the_repository, &object->oid);
@@ -826,14 +828,14 @@ static int check_ref(const char *refname_full, const struct object_id *oid,
 static void deepen(struct upload_pack_data *data, int depth)
 {
 	if (depth == INFINITE_DEPTH && !is_repository_shallow(the_repository)) {
-		int i;
+		struct object_array_bare_item *item;
 
-		for (i = 0; i < data->shallows.nr; i++) {
-			struct object *object = data->shallows.objects[i].item;
+		for_each_object_array_bare_item(item, &data->shallows) {
+			struct object *object = item->item;
 			object->flags |= NOT_SHALLOW;
 		}
 	} else if (data->deepen_relative) {
-		struct object_array reachable_shallows = OBJECT_ARRAY_INIT;
+		struct object_array_bare reachable_shallows = OBJECT_ARRAY_BARE_INIT;
 		struct commit_list *result;
 
 		/*
@@ -849,7 +851,7 @@ static void deepen(struct upload_pack_data *data, int depth)
 					     SHALLOW, NOT_SHALLOW);
 		send_shallow(data, result);
 		free_commit_list(result);
-		object_array_clear(&reachable_shallows);
+		object_array_bare_clear(&reachable_shallows);
 	} else {
 		struct commit_list *result;
 
@@ -887,40 +889,38 @@ static int send_shallow_list(struct upload_pack_data *data)
 		ret = 1;
 	} else if (data->deepen_rev_list) {
 		struct strvec av = STRVEC_INIT;
-		int i;
+		struct object_array_bare_item *item;
 
 		strvec_push(&av, "rev-list");
 		if (data->deepen_since)
 			strvec_pushf(&av, "--max-age=%"PRItime, data->deepen_since);
 		if (data->deepen_not.nr) {
+			struct string_list_item *s;
+
 			strvec_push(&av, "--not");
-			for (i = 0; i < data->deepen_not.nr; i++) {
-				struct string_list_item *s = data->deepen_not.items + i;
+			for_each_string_list_item(s, &data->deepen_not)
 				strvec_push(&av, s->string);
-			}
 			strvec_push(&av, "--not");
 		}
-		for (i = 0; i < data->want_obj.nr; i++) {
-			struct object *o = data->want_obj.objects[i].item;
+
+		for_each_object_array_bare_item(item, &data->want_obj) {
+			struct object *o = item->item;
 			strvec_push(&av, oid_to_hex(&o->oid));
 		}
 		deepen_by_rev_list(data, av.nr, av.v);
 		strvec_clear(&av);
 		ret = 1;
 	} else {
-		if (data->shallows.nr > 0) {
-			int i;
-			for (i = 0; i < data->shallows.nr; i++)
-				register_shallow(the_repository,
-						 &data->shallows.objects[i].item->oid);
-		}
+		struct object_array_bare_item *item;
+		for_each_object_array_bare_item(item, &data->shallows)
+			register_shallow(the_repository, &item->item->oid);
 	}
 
 	data->shallow_nr += data->shallows.nr;
 	return ret;
 }
 
-static int process_shallow(const char *line, struct object_array *shallows)
+static int process_shallow(const char *line, struct object_array_bare *shallows)
 {
 	const char *arg;
 	if (skip_prefix(line, "shallow ", &arg)) {
@@ -935,7 +935,7 @@ static int process_shallow(const char *line, struct object_array *shallows)
 			die("invalid shallow object %s", oid_to_hex(&oid));
 		if (!(object->flags & CLIENT_SHALLOW)) {
 			object->flags |= CLIENT_SHALLOW;
-			add_object_array(object, NULL, shallows);
+			object_array_bare_insert(shallows, object);
 		}
 		return 1;
 	}
@@ -1130,7 +1130,7 @@ static void receive_needs(struct upload_pack_data *data,
 			if (!((data->allow_uor & ALLOW_ANY_SHA1) == ALLOW_ANY_SHA1
 			      || is_our_ref(o, data->allow_uor)))
 				has_non_tip = 1;
-			add_object_array(o, NULL, &data->want_obj);
+			object_array_bare_insert(&data->want_obj, o);
 		}
 	}
 
@@ -1395,7 +1395,7 @@ void upload_pack(const int advertise_refs, const int stateless_rpc,
 }
 
 static int parse_want(struct packet_writer *writer, const char *line,
-		      struct object_array *want_obj)
+		      struct object_array_bare *want_obj)
 {
 	const char *arg;
 	if (skip_prefix(line, "want ", &arg)) {
@@ -1417,7 +1417,7 @@ static int parse_want(struct packet_writer *writer, const char *line,
 
 		if (!(o->flags & WANTED)) {
 			o->flags |= WANTED;
-			add_object_array(o, NULL, want_obj);
+			object_array_bare_insert(want_obj, o);
 		}
 
 		return 1;
@@ -1428,7 +1428,7 @@ static int parse_want(struct packet_writer *writer, const char *line,
 
 static int parse_want_ref(struct packet_writer *writer, const char *line,
 			  struct string_list *wanted_refs,
-			  struct object_array *want_obj)
+			  struct object_array_bare *want_obj)
 {
 	const char *refname_nons;
 	if (skip_prefix(line, "want-ref ", &refname_nons)) {
@@ -1451,7 +1451,7 @@ static int parse_want_ref(struct packet_writer *writer, const char *line,
 		o = parse_object_or_die(&oid, refname_nons);
 		if (!(o->flags & WANTED)) {
 			o->flags |= WANTED;
-			add_object_array(o, NULL, want_obj);
+			object_array_bare_insert(want_obj, o);
 		}
 
 		return 1;
