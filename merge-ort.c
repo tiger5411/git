@@ -28,6 +28,7 @@
 #include "dir.h"
 #include "entry.h"
 #include "ll-merge.h"
+#include "object-array-bare.h"
 #include "object-store.h"
 #include "promisor-remote.h"
 #include "revision.h"
@@ -1538,10 +1539,10 @@ static int find_first_merges(struct repository *repo,
 			     const char *path,
 			     struct commit *a,
 			     struct commit *b,
-			     struct object_array *result)
+			     struct object_array_bare *result)
 {
-	int i, j;
-	struct object_array merges = OBJECT_ARRAY_INIT;
+	size_t i, j;
+	struct object_array_bare merges = OBJECT_ARRAY_BARE_INIT;
 	struct commit *commit;
 	int contains_another;
 
@@ -1551,7 +1552,6 @@ static int find_first_merges(struct repository *repo,
 	struct rev_info revs;
 	struct setup_revision_opt rev_opts;
 
-	memset(result, 0, sizeof(struct object_array));
 	memset(&rev_opts, 0, sizeof(rev_opts));
 
 	/* get all revisions that merge commit a */
@@ -1568,7 +1568,7 @@ static int find_first_merges(struct repository *repo,
 	while ((commit = get_revision(&revs)) != NULL) {
 		struct object *o = &(commit->object);
 		if (repo_in_merge_bases(repo, b, commit))
-			add_object_array(o, NULL, &merges);
+			object_array_bare_insert(&merges, o);
 	}
 	reset_revision_walk();
 
@@ -1589,10 +1589,10 @@ static int find_first_merges(struct repository *repo,
 		}
 
 		if (!contains_another)
-			add_object_array(merges.objects[i].item, NULL, result);
+			object_array_bare_insert(result, merges.objects[i].item);
 	}
 
-	object_array_clear(&merges);
+	object_array_bare_clear(&merges);
 	release_revisions(&revs);
 	return result->nr;
 }
@@ -1609,7 +1609,7 @@ static int merge_submodule(struct merge_options *opt,
 	int ret = 0;
 	struct commit *commit_o, *commit_a, *commit_b;
 	int parent_count;
-	struct object_array merges;
+	struct object_array_bare merges = OBJECT_ARRAY_BARE_INIT;
 
 	int i;
 	int search = !opt->priv->call_depth;
@@ -1714,7 +1714,7 @@ static int merge_submodule(struct merge_options *opt,
 		strbuf_release(&sb);
 	}
 
-	object_array_clear(&merges);
+	object_array_bare_clear(&merges);
 cleanup:
 	repo_clear(&subrepo);
 	return ret;
