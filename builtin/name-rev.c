@@ -527,7 +527,7 @@ static void name_rev_line(char *p, struct name_ref_data *data)
 
 int cmd_name_rev(int argc, const char **argv, const char *prefix)
 {
-	struct object_array revs = OBJECT_ARRAY_INIT;
+	struct string_list revs = STRING_LIST_INIT_NODUP;
 	int all = 0, annotate_stdin = 0, transform_stdin = 0, allow_undefined = 1, always = 0, peel_tag = 0;
 	struct name_ref_data data = { 0, 0, STRING_LIST_INIT_NODUP, STRING_LIST_INIT_NODUP };
 	struct option opts[] = {
@@ -610,7 +610,7 @@ int cmd_name_rev(int argc, const char **argv, const char *prefix)
 			}
 			object = (struct object *)commit;
 		}
-		add_object_array(object, *argv, &revs);
+		string_list_insert(&revs, *argv)->util = object;
 	}
 
 	if (cutoff) {
@@ -643,12 +643,16 @@ int cmd_name_rev(int argc, const char **argv, const char *prefix)
 				  always, allow_undefined, data.name_only);
 		}
 	} else {
-		int i;
-		for (i = 0; i < revs.nr; i++)
-			show_name(revs.objects[i].item, revs.objects[i].name,
-				  always, allow_undefined, data.name_only);
+		struct string_list_item *item;
+
+		for_each_string_list_item(item, &revs) {
+			const char *const name = item->string;
+			struct object *o = (struct object *)item->util;
+
+			show_name(o, name, always, allow_undefined, data.name_only);
+		}
 	}
 
-	UNLEAK(revs);
+	string_list_clear(&revs, 0);
 	return 0;
 }
