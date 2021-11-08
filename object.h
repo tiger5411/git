@@ -33,11 +33,6 @@ struct parsed_object_pool {
 struct parsed_object_pool *parsed_object_pool_new(void);
 void parsed_object_pool_clear(struct parsed_object_pool *o);
 
-struct object_list {
-	struct object *item;
-	struct object_list *next;
-};
-
 /*
  * object flag allocation:
  * revision.h:               0---------10         15             23------26
@@ -144,13 +139,6 @@ struct object *lookup_unknown_object(struct repository *r, const struct object_i
  */
 struct object *lookup_object_by_type(struct repository *r, const struct object_id *oid,
 				     enum object_type type);
-
-struct object_list *object_list_insert(struct object *item,
-				       struct object_list **list_p);
-
-int object_list_contains(struct object_list *list, struct object *obj);
-
-void object_list_free(struct object_list **list);
 
 void clear_object_flags(unsigned flags);
 
