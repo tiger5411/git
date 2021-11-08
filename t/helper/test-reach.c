@@ -7,6 +7,7 @@
 #include "ref-filter.h"
 #include "string-list.h"
 #include "tag.h"
+#include "object-array.h"
 
 static void print_sorted_commit_ids(struct commit_list *list)
 {

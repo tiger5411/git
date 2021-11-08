@@ -9,6 +9,7 @@
 #include "diff.h"
 #include "commit-slab-decl.h"
 #include "list-objects-filter-options.h"
+#include "object-array.h"
 
 /**
  * The revision walking API offers functions to build a list of revisions
@@ -82,6 +83,7 @@ struct rev_cmdline_info {
 
 struct oidset;
 struct topo_walk_info;
+struct boundary_commits;
 
 struct rev_info {
 	/* Starting list */
