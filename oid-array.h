@@ -91,6 +91,15 @@ int oid_array_for_each(struct oid_array *array,
 		       void *data);
 
 /**
+ * Iterate over each element of the list, as a macro. You'll need to
+ * declare a "struct object_id *" to use as the "oid".
+ */
+#define for_each_oid_array_oid(oid,array)             \
+	for (oid = (array)->oid;                      \
+	     oid && oid < (array)->oid + (array)->nr; \
+	     ++oid)
+
+/**
  * Iterate over each unique element of the list in sorted order, but otherwise
  * behave like `oid_array_for_each`. If the array is not sorted, this function
  * has the side effect of sorting it.

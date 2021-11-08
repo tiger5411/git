@@ -2008,14 +2008,6 @@ cleanup:
 	return ref_cpy;
 }
 
-static int add_to_object_array(const struct object_id *oid, void *data)
-{
-	struct object_array *a = data;
-
-	add_object_array(lookup_object(the_repository, oid), "", a);
-	return 0;
-}
-
 static void clear_common_flag(struct oidset *s)
 {
 	struct oidset_iter iter;
@@ -2043,6 +2035,7 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 	int seen_ack = 0;
 	int last_iteration = 0;
 	timestamp_t min_generation = GENERATION_NUMBER_INFINITY;
+	struct object_id *oid;
 
 	fetch_negotiator_init(the_repository, &negotiator);
 	mark_tips(&negotiator, negotiation_tips);
@@ -2051,9 +2044,10 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 			   PACKET_READ_CHOMP_NEWLINE |
 			   PACKET_READ_DIE_ON_ERR_PACKET);
 
-	oid_array_for_each((struct oid_array *) negotiation_tips,
-			   add_to_object_array,
-			   &nt_object_array);
+	for_each_oid_array_oid(oid, negotiation_tips) {
+		struct object *o = lookup_object(the_repository, oid);
+		add_object_array(o, "", &nt_object_array);
+	}
 
 	while (!last_iteration) {
 		int haves_added;
