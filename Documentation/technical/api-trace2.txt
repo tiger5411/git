@@ -828,16 +828,11 @@ Initialization::
 ----------------
 int main(int argc, const char **argv)
 {
-	int exit_code;
-
 	trace2_initialize();
 	trace2_cmd_start(argv);
 
-	exit_code = cmd_main(argc, argv);
-
-	trace2_cmd_exit(exit_code);
-
-	return exit_code;
+	/* Our exit() will call trace2_cmd_exit_fl() */
+	exit(cmd_main(argc, argv));
 }
 ----------------
 

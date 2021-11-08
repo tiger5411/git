@@ -110,8 +110,6 @@ void trace2_cmd_start_fl(const char *file, int line, const char **argv);
  */
 int trace2_cmd_exit_fl(const char *file, int line, int code);
 
-#define trace2_cmd_exit(code) (trace2_cmd_exit_fl(__FILE__, __LINE__, (code)))
-
 /*
  * Emit an 'error' event.
  *

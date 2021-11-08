@@ -262,8 +262,12 @@ static int print_usage(void)
  *    [] the "cmd_name" event has been generated.
  *    [] this writes various "def_param" events for interesting config values.
  *
- * We further assume that if we return (rather than exit()), trace2_cmd_exit()
- * will be called by test-tool.c:cmd_main().
+ * It doesn't matter if we "return" here or call "exit()", since our
+ * "exit()" is a wrapper that will call trace2_cmd_exit_fl. It would
+ * matter if we bypassed it and called "_exit()". Even if it doesn't
+ * matter for the narrow case of trace2 testing, let's be nice to
+ * test-tool.c's "cmd_main()" and common-main.c's "main()" and
+ * "return" here.
  */
 int cmd__trace2(int argc, const char **argv)
 {
