@@ -6,6 +6,11 @@
  * and "path" "char *", as well as an "unsigned mode". This is used by
  * revision.c for the "pending" array, and in consumers such as merge,
  * diff etc. who are interested in how objects might map onto paths.
+ *
+ * See "struct object_array_bare" (in "object-array-bare.h") if you
+ * only need to keep track of lists of "struct object *", and aren't
+ * interested in the "name", "path" and "mode" members provided by
+ * this API.
  */
 struct object_array {
 	unsigned int nr;
