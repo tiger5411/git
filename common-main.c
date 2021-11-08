@@ -51,7 +51,11 @@ int main(int argc, const char **argv)
 
 	result = cmd_main(argc, argv);
 
-	trace2_cmd_exit(result);
-
-	return result;
+	/*
+	 * This is an "exit()" wrapper defined in "git-compat-util.h",
+	 * which will do trace2 teardown for us. I.e. we are
+	 * guaranteed to correctly log via trace2 even if someone
+	 * called exit() before returning from "cmd_main()".
+	 */
+	exit(result);
 }
