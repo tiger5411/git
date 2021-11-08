@@ -42,4 +42,11 @@ void object_array_bare_insert(struct object_array_bare *array,
  */
 void object_array_bare_clear(struct object_array_bare *array);
 
+/**
+ * object_array_util_pop(): Peels the last item off the array and
+ * returns the "struct object_array_util_item". Passes the ownership
+ * of it over to you.
+ */
+struct object *object_array_bare_pop(struct object_array_bare *array);
+
 #endif
