@@ -19,9 +19,9 @@
 #include "decorate.h"
 #include "packfile.h"
 #include "object-store.h"
+#include "object-list.h"
 #include "run-command.h"
 #include "worktree.h"
-#include "object-array.h"
 
 #define REACHABLE 0x0001
 #define SEEN      0x0002
@@ -108,7 +108,7 @@ static int fsck_error_func(struct fsck_options *o,
 	}
 }
 
-static struct object_array pending;
+static struct object_list pending;
 
 static int mark_object(struct object *obj, enum object_type type,
 		       void *data, struct fsck_options *options)
@@ -161,7 +161,7 @@ static int mark_object(struct object *obj, enum object_type type,
 		return 1;
 	}
 
-	add_object_array(obj, NULL, &pending);
+	object_list_insert(&pending, obj);
 	return 0;
 }
 
@@ -189,7 +189,7 @@ static int traverse_reachable(void)
 	if (show_progress)
 		progress = start_delayed_progress(_("Checking connectivity"), 0);
 	while (pending.nr) {
-		result |= traverse_one_object(object_array_pop(&pending));
+		result |= traverse_one_object(object_list_pop(&pending));
 		display_progress(progress, ++nr);
 	}
 	stop_progress(&progress);
