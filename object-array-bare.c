@@ -17,3 +17,15 @@ void object_array_bare_clear(struct object_array_bare *array)
 	FREE_AND_NULL(array->objects);
 	array->nr = array->alloc = 0;
 }
+
+struct object *object_array_bare_pop(struct object_array_bare *array)
+{
+	struct object_array_bare_item *e;
+
+	if (!array->nr)
+		return NULL;
+
+	e = &array->objects[array->nr - 1];
+	array->nr--;
+	return e->item;
+}
