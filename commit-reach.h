@@ -7,7 +7,6 @@
 struct commit_list;
 struct ref_filter;
 struct object_id;
-struct object_array;
 
 struct commit_list *repo_get_merge_bases(struct repository *r,
 					 struct commit *rev1,
@@ -83,7 +82,8 @@ int commit_contains(struct ref_filter *filter, struct commit *commit,
  * commits with date below 'min_commit_date' or generation below
  * 'min_generation'.
  */
-int can_all_from_reach_with_flag(struct object_array *from,
+struct object_array_bare;
+int can_all_from_reach_with_flag(struct object_array_bare *from,
 				 unsigned int with_flag,
 				 unsigned int assign_flag,
 				 time_t min_commit_date,
