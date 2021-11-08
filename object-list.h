@@ -42,4 +42,10 @@ void object_list_insert(struct object_list *array,
  */
 void object_list_clear(struct object_list *array);
 
+/**
+ * object_list_pop(): Peels the last item off the list and returns the
+ * "struct object_list_item". Passes the ownership of it over to you.
+ */
+struct object *object_list_pop(struct object_list *array);
+
 #endif

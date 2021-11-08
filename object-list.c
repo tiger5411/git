@@ -17,3 +17,15 @@ void object_list_clear(struct object_list *array)
 	FREE_AND_NULL(array->objects);
 	array->nr = array->alloc = 0;
 }
+
+struct object *object_list_pop(struct object_list *array)
+{
+	struct object_list_item *e;
+
+	if (!array->nr)
+		return NULL;
+
+	e = &array->objects[array->nr - 1];
+	array->nr--;
+	return e->item;
+}
