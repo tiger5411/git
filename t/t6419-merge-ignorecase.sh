@@ -5,6 +5,7 @@ test_description='git-merge with case-changing rename on case-insensitive file s
 GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
+TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
 
 if ! test_have_prereq CASE_INSENSITIVE_FS
