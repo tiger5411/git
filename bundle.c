@@ -450,88 +450,105 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 	struct stdin_line_cb *line_cb = stdin_line_priv;
 	struct strbuf *seen_refname = line_cb->seen_refname;
 	const char delim = '\t';
-	struct strbuf **s;
-	struct strbuf *refname;
-	struct strbuf *revname;
-	struct strbuf **fields;
-	int i;
+	const char *refname;
+	const char *revname;
+	struct string_list fields = STRING_LIST_INIT_DUP;
+	size_t i;
+	enum rev_info_stdin_line ret = REV_INFO_STDIN_LINE_PROCESS;
 
 	if (line_cb->after_handle_revision_arg)
 		return write_bundle_after_stdin_line_again(revs, line_cb);
 
 	/* Parse "<revision>" or "<revision>\t<refname>" input */
-	fields = strbuf_split_buf(line->buf, line->len, delim, -1);
-	for (s = fields, i = 0; *s; s++, i++) {
-		struct strbuf *field = *s;
-		enum object_type type;
+	string_list_split(&fields, line->buf, delim, -1);
+	for (i = 0; i < fields.nr; i++) {
+		const char *field = fields.items[i].string;
 
-		/*
-		 * Have a <revision>, maybe followed by a "\t" if
-		 * there's another field.
-		 */
-		if (!i) {
+		if (i && !*field)
+			die(Q_("trailing tab after column #%lu on --stdin line",
+			       "trailing tab after column #%lu on --stdin line",
+			       i), i);
+		switch (i) {
+		case 0:
+		{
+			char *sp;
+			const char *p;
+			enum object_type type;
+
+			/*
+			 * Have a <revision>, may be followed by a
+			 * "\t" if there's another field. The
+			 * *_split() trimmed any "\t".
+			 */
 			revname = field;
-			continue;
-		}
 
-		/* ... trim off that "\t" */
-		if (revname->len > 0 && revname->buf[revname->len - 1] == delim)
-			revname->buf[--revname->len] = '\0';
+			/*
+			 * We haven't validated "<revname>" which
+			 * could contain arbitrary non-"\t" characters
+			 * at this point, e.g. "<oid> commit".
+			 *
+			 * Here we strip " commit", " tree", " blob"
+			 * and " tag" as a special-case for consuming
+			 * the default for-each-ref format.
+			 */
+			sp =  strchr(revname, ' ');
+			p = sp;
+			if (!(sp && p++ && *p))
+				continue;
 
-		/*
-		 * We don't need to explicitly validate >2 fields,
-		 * since check_refname_format() will refuse a refname
-		 * with a trailing tab.
-		 *
-		 * We could supply a max of "2" to strbuf_split_buf()
-		 * above instead of -1; but accepting N fields there
-		 * makes for better error messages here, as the
-		 * invalid ref will contain the trailing tab.
-		 */
-		refname = field;
-		if (check_refname_format(refname->buf, REFNAME_ALLOW_ONELEVEL))
-			die(_("'%s' is not a valid ref name"), refname->buf);
-		strbuf_addbuf(seen_refname, refname);
-
-		/*
-		 * We haven't validated "<revname>" which could
-		 * contain arbitrary non-"\t" characters at this
-		 * point, e.g. "<oid> commit".
-		 *
-		 * Here we strip " commit", " tree", " blob" and " tag" as a
-		 * special-case for consuming the default for-each-ref
-		 * format. We're permissive and don't validate the
-		 * stated type.
-		 *
-		 * Any other validation of "<revname> " will be done
-		 * by revision.c's handle_revision_arg().
-		 */
-		for (type = OBJ_COMMIT; type <= OBJ_TAG; type++) {
-			const char *name = type_name(type);
-			if (strbuf_strip_suffix(revname, name) &&
-			    revname->len > 0 &&
-			    revname->buf[revname->len - 1] == ' ') {
-				revname->buf[--revname->len] = '\0';
-				break;
+			/*
+			 * We're permissive and don't validate that
+			 * the stated <OID>/<type> pair describes an
+			 * <OID> of type <type>. It won't matter for
+			 * the created bundle.
+			 */
+			for (type = OBJ_COMMIT; type <= OBJ_TAG; type++) {
+				if (!strcmp(type_name(type), p))
+					*sp = '\0';
+				continue;
 			}
+
+			/*
+			 * Any other validation of "<revname> " will
+			 * be done by revision.c's
+			 * handle_revision_arg().
+			 */
+			break;
 		}
+		case 1:
+			refname = field;
+			if (check_refname_format(refname, REFNAME_ALLOW_ONELEVEL))
+				die(_("'%s' is not a valid ref name"), refname);
+			strbuf_addstr(seen_refname, refname);
 
-		/*
-		 * Pretend as if only the <revision> was on this line
-		 * in revision.c's read_revisions_from_stdin() by
-		 * juggling around the strbuf it'll pass to its
-		 * handle_revision_arg().
-		 */
-		strbuf_swap(line, revname);
-		strbuf_release(refname);
-		strbuf_release(revname);
-		line_cb->after_handle_revision_arg = 1;
-		strbuf_list_free(fields);
-		return REV_INFO_STDIN_LINE_AGAIN;
+			/*
+			 * Pretend as if only the <revision> was on this line
+			 * in revision.c's read_revisions_from_stdin() by
+			 * juggling around the strbuf it'll pass to its
+			 * handle_revision_arg().
+			 */
+			strbuf_reset(line);
+			strbuf_addstr(line, revname);
+			line_cb->after_handle_revision_arg = 1;
+			ret = REV_INFO_STDIN_LINE_AGAIN;
+			break;
+		case 2:
+			/*
+			 * We don't need to explicitly validate >2 fields,
+			 * since check_refname_format() will refuse a refname
+			 * with a trailing tab.
+			 *
+			 * We could supply a max of "2" to strbuf_split_buf()
+			 * above instead of -1; but accepting N fields there
+			 * makes for better error messages here, as the
+			 * invalid ref will contain the trailing tab.
+			 */
+			die(_("stopped understanding bundle --stdin line at: '%s'"),
+			    field);
+		}
 	}
-	strbuf_list_free(fields);
 
-	return REV_INFO_STDIN_LINE_PROCESS;
+	return ret;
 }
 
 /*

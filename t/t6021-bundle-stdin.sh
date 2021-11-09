@@ -166,7 +166,7 @@ test_expect_success 'bundle --stdin tabular input requires valid refs' '
 	$(git rev-parse :/second)	bad:ref:name
 	EOF
 	cat >expect <<-\EOF &&
-	fatal: '"'"'bad:ref:name'"'"' is not a valid ref name
+	fatal: '\''bad:ref:name'\'' is not a valid ref name
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <in 2>actual &&
 	test_cmp expect actual &&
@@ -179,7 +179,7 @@ test_expect_success 'bundle --stdin tabular input refuses extra fields' '
 	$(git rev-parse :/initial)	refs/heads/a-branch	unknown-field
 	EOF
 	cat >expect <<-\EOF &&
-	fatal: '"'"'refs/heads/a-branch	'"'"' is not a valid ref name
+	fatal: stopped understanding bundle --stdin line at: '\''unknown-field'\''
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <in 2>actual &&
 	test_cmp expect actual &&
@@ -191,7 +191,7 @@ test_expect_success 'bundle --stdin tabular input refuses trailing tab' '
 	$(git rev-parse :/initial)	refs/heads/a-branch	Z
 	EOF
 	cat >expect <<-\EOF &&
-	fatal: '"'"'refs/heads/a-branch	'"'"' is not a valid ref name
+	fatal: trailing tab after column #2 on --stdin line
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <in 2>actual &&
 	test_cmp expect actual &&
@@ -203,7 +203,7 @@ test_expect_success 'bundle --stdin tabular input refuses empty field' '
 	$(git rev-parse :/initial)		refs/heads/a-branch
 	EOF
 	cat >expect <<-\EOF &&
-	fatal: '"'"'	'"'"' is not a valid ref name
+	fatal: trailing tab after column #1 on --stdin line
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <in 2>actual &&
 	test_cmp expect actual &&
@@ -216,7 +216,7 @@ test_expect_success 'bundle --stdin tabular input with non-existing reference' '
 	$(git rev-parse :/initial)	refs/heads/a-branch
 	EOF
 	cat >expect <<-\EOF &&
-	fatal: bad revision '"'"'^topic/deleted'"'"'
+	fatal: bad revision '\''^topic/deleted'\''
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <in 2>actual &&
 	test_cmp expect actual &&
@@ -276,7 +276,7 @@ test_expect_success 'bundle --stdin tabular input is incompatible with "git show
 	git show-ref >sr &&
 
 	cat >expect <<-EOF &&
-	fatal: bad revision '"'"'$(git rev-parse divergent) refs/heads/divergent'"'"'
+	fatal: bad revision '\''$(git rev-parse divergent) refs/heads/divergent'\''
 	EOF
 	test_must_fail git bundle create err.bdl --stdin <sr 2>actual &&
 	test_cmp expect actual &&
@@ -305,7 +305,7 @@ test_expect_success 'bundle --stdin tabular input errors on corrpt "git for-each
 	git for-each-ref >fer.raw &&
 	tr " " "?" <fer.raw >fer &&
 	cat >expect <<-EOF &&
-	fatal: bad revision '"'"'$(git rev-parse divergent)?'"'"'
+	fatal: bad revision '\''$(git rev-parse divergent)?commit'\''
 	EOF
 	test_must_fail git bundle create fer-fmt-bad.bdl --stdin <fer 2>actual &&
 	test_cmp expect actual &&
