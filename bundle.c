@@ -388,7 +388,8 @@ static int write_pack_data(int bundle_fd, struct object_array *pending,
 
 struct stdin_line_cb {
 	struct strbuf *seen_refname;
-	struct string_list refname_to_pending;
+	/* TODO: Can't be embedded, gets zero'd out in revision.c somewhere */
+	struct string_list *refname_to_pending;
 	int after_handle_revision_arg;
 	unsigned int last_pending_nr;
 };
@@ -397,7 +398,7 @@ static enum rev_info_stdin_line write_bundle_after_stdin_line_again(struct rev_i
 								    struct stdin_line_cb *line_cb)
 {
 	struct strbuf *seen_refname = line_cb->seen_refname;
-	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
+	struct string_list *refname_to_pending = line_cb->refname_to_pending;
 	unsigned int last_pending_nr = line_cb->last_pending_nr;
 	unsigned int pending_nr = revs->pending.nr;
 	unsigned nr;
@@ -571,7 +572,7 @@ static int write_bundle_refs(int bundle_fd, struct object_array *pending,
 {
 	unsigned int i;
 	int ref_count = 0;
-	struct string_list *refname_to_pending = &line_cb->refname_to_pending;
+	struct string_list *refname_to_pending = line_cb->refname_to_pending;
 
 
 	for (i = 0; i < pending->nr; i++) {
@@ -710,7 +711,7 @@ int create_bundle(struct repository *r, const char *path,
 	struct string_list refname_to_pending = STRING_LIST_INIT_DUP;
 	struct stdin_line_cb line_cb = {
 		.seen_refname = &seen_refname,
-		.refname_to_pending = refname_to_pending,
+		.refname_to_pending = &refname_to_pending,
 	};
 	int ret = 0;
 	struct object_array_entry *e;
@@ -746,6 +747,7 @@ int create_bundle(struct repository *r, const char *path,
 	revs.handle_stdin_line = write_bundle_handle_stdin_line;
 
 	argc = setup_revisions(argc, argv, &revs, NULL);
+	revs.stdin_line_priv = NULL;
 
 	if (argc > 1) {
 		error(_("unrecognized argument: %s"), argv[1]);

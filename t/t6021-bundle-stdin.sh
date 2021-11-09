@@ -2,6 +2,7 @@
 
 test_description='Test git-bundle --stdin in detail'
 
+TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
 . "$TEST_DIRECTORY"/lib-bundle.sh
 

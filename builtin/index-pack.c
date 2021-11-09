@@ -1426,6 +1426,7 @@ static void fix_unresolved_deltas(struct hashfile *f)
 		 * object).
 		 */
 		append_obj_to_pack(f, d->oid.hash, data, size, type);
+		free(data);
 		threaded_second_pass(NULL);
 
 		display_progress(progress, nr_resolved_deltas);
