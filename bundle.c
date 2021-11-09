@@ -456,8 +456,10 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 	size_t i;
 	enum rev_info_stdin_line ret = REV_INFO_STDIN_LINE_PROCESS;
 
-	if (line_cb->after_handle_revision_arg)
-		return write_bundle_after_stdin_line_again(revs, line_cb);
+	if (line_cb->after_handle_revision_arg) {
+		ret = write_bundle_after_stdin_line_again(revs, line_cb);
+		goto cleanup;
+	}
 
 	/* Parse "<revision>" or "<revision>\t<refname>" input */
 	string_list_split(&fields, line->buf, delim, -1);
@@ -547,6 +549,9 @@ static enum rev_info_stdin_line write_bundle_handle_stdin_line(
 			    field);
 		}
 	}
+
+cleanup:
+	string_list_clear(&fields, 0);
 
 	return ret;
 }
