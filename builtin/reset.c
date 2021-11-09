@@ -274,6 +274,7 @@ static int read_from_tree(const struct pathspec *pathspec,
 		return 1;
 	diffcore_std(&opt);
 	diff_flush(&opt);
+	diff_free(&opt);
 
 	return 0;
 }
