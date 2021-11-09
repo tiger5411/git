@@ -2968,8 +2968,6 @@ static void release_revisions_mailmap(struct string_list *mailmap)
 
 void release_revisions(struct rev_info *revs)
 {
-	if (!revs)
-		return;
 	release_revisions_commit_list(revs);
 	object_array_clear(&revs->pending);
 	release_revisions_cmdline(&revs->cmdline);
@@ -2978,7 +2976,7 @@ void release_revisions(struct rev_info *revs)
 	date_mode_release(&revs->date_mode);
 	release_revisions_mailmap(revs->mailmap);
 	reflog_walk_info_release(revs->reflog_info);
-	//diff_free(&revs->diffopt);
+	diff_free(&revs->diffopt);
 	diff_free(&revs->pruning);
 }
 

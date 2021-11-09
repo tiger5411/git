@@ -257,7 +257,7 @@ static int read_from_tree(const struct pathspec *pathspec,
 	struct diff_options opt;
 
 	memset(&opt, 0, sizeof(opt));
-	copy_pathspec(&opt.pathspec, pathspec);
+	copy_pathspec(&opt.pathspec, pathspec); // double freed due to this...
 	opt.output_format = DIFF_FORMAT_CALLBACK;
 	opt.format_callback = update_index_from_diff;
 	opt.format_callback_data = &intent_to_add;
