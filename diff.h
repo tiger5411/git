@@ -395,8 +395,6 @@ struct diff_options {
 
 	struct repository *repo;
 	struct option *parseopts;
-
-	int no_free;
 };
 
 unsigned diff_filter_bit(char status);

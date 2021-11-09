@@ -2978,7 +2978,7 @@ void release_revisions(struct rev_info *revs)
 	date_mode_release(&revs->date_mode);
 	release_revisions_mailmap(revs->mailmap);
 	reflog_walk_info_release(revs->reflog_info);
-	/* We don't diff_free(&revs->diffopt) */
+	//diff_free(&revs->diffopt);
 	diff_free(&revs->pruning);
 }
 
