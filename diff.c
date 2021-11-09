@@ -6342,7 +6342,6 @@ void diff_free(struct diff_options *options)
 {
 	FREE_AND_NULL(options->parseopts);
 	diff_free_ignore_regex(options);
-	return;
 	diff_free_file(options);
 	clear_pathspec(&options->pathspec);
 
