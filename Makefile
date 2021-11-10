@@ -2331,20 +2331,18 @@ PERL_DEFINES += $(perllibdir_SQ)
 PERL_DEFINES += $(RUNTIME_PREFIX)
 PERL_DEFINES += $(NO_PERL_CPAN_FALLBACKS)
 PERL_DEFINES += $(NO_GETTEXT)
+PERL_DEFINES += $(gitexecdir)
+PERL_DEFINES += $(perllibdir)
+PERL_DEFINES += $(localedir)
+PERL_DEFINES := $(subst $(space),:,$(PERL_DEFINES))
 
-# Support Perl runtime prefix. In this mode, a different header is installed
-# into Perl scripts.
 ifdef RUNTIME_PREFIX
-
 PERL_HEADER_TEMPLATE = perl/header_templates/runtime_prefix.template.pl
 
-# Don't export a fixed $(localedir) path; it will be resolved by the Perl header
-# at runtime.
+# The RUNTIME_PREFIX header defines $Git::I18N::TEXTDOMAINDIR, so
+# $(perl_localedir_SQ) won't be needed
 perl_localedir_SQ =
-
 endif
-
-PERL_DEFINES += $(gitexecdir) $(perllibdir) $(localedir)
 
 $(SCRIPT_PERL_GEN): % : %.perl GIT-PERL-DEFINES GIT-PERL-HEADER GIT-VERSION-FILE
 	$(QUIET_GEN) \
@@ -2358,7 +2356,6 @@ $(SCRIPT_PERL_GEN): % : %.perl GIT-PERL-DEFINES GIT-PERL-HEADER GIT-VERSION-FILE
 	chmod +x $@+ && \
 	mv $@+ $@
 
-PERL_DEFINES := $(subst $(space),:,$(PERL_DEFINES))
 GIT-PERL-DEFINES: FORCE
 	@FLAGS='$(PERL_DEFINES)'; \
 	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
