@@ -257,7 +257,7 @@ static int read_from_tree(const struct pathspec *pathspec,
 	struct diff_options opt;
 
 	memset(&opt, 0, sizeof(opt));
-	copy_pathspec(&opt.pathspec, pathspec); // double freed due to this...
+	copy_pathspec(&opt.pathspec, pathspec);
 	opt.output_format = DIFF_FORMAT_CALLBACK;
 	opt.format_callback = update_index_from_diff;
 	opt.format_callback_data = &intent_to_add;
@@ -274,6 +274,7 @@ static int read_from_tree(const struct pathspec *pathspec,
 		return 1;
 	diffcore_std(&opt);
 	diff_flush(&opt);
+	memset(&opt.pathspec, 0, sizeof(opt.pathspec));
 	diff_free(&opt);
 
 	return 0;
@@ -557,5 +558,6 @@ int cmd_reset(int argc, const char **argv, const char *prefix)
 	if (!pathspec.nr)
 		remove_branch_state(the_repository, 0);
 
+	clear_pathspec(&pathspec);
 	return update_ref_status;
 }
