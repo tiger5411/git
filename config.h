@@ -324,6 +324,9 @@ int git_env_bool(const char *, int);
 unsigned long git_env_ulong(const char *, unsigned long);
 int git_config_system(void);
 int config_error_nonbool(const char *);
+#if defined(__GNUC__)
+#define config_error_nonbool(s) (config_error_nonbool(s), const_error())
+#endif
 
 char *git_system_config(void);
 void git_global_config(char **user, char **xdg);

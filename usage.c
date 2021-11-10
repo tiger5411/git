@@ -6,8 +6,7 @@
 #include "git-compat-util.h"
 #include "cache.h"
 
-static void vreportf(const char *prefix, const char *file, int line,
-		     const char *err, va_list params)
+static void vreportf(const char *prefix, const char *err, va_list params)
 {
 	char msg[4096];
 	char *p, *pend = msg + sizeof(msg);
@@ -32,10 +31,9 @@ static void vreportf(const char *prefix, const char *file, int line,
 	write_in_full(2, msg, p - msg);
 }
 
-static NORETURN void usage_builtin(const char *file, int line, const char *err,
-				   va_list params)
+static NORETURN void usage_builtin(const char *err, va_list params)
 {
-	vreportf("usage: ", file, line, err, params);
+	vreportf("usage: ", err, params);
 
 	/*
 	 * When we detect a usage error *before* the command dispatch in
@@ -57,11 +55,10 @@ static NORETURN void usage_builtin(const char *file, int line, const char *err,
 	exit(129);
 }
 
-static void die_message_builtin(const char *file, int line, const char *err,
-				va_list params)
+static void die_message_builtin(const char *err, va_list params)
 {
-	trace2_cmd_error_va_fl(file, line, err, params);
-	vreportf("fatal: ", file, line, err, params);
+	trace2_cmd_error_va(err, params);
+	vreportf("fatal: ", err, params);
 }
 
 /*
@@ -69,29 +66,26 @@ static void die_message_builtin(const char *file, int line, const char *err,
  * expect it to va_copy 'params' before using it (because an 'ap' can
  * only be walked once).
  */
-static NORETURN void die_builtin(const char *file, int line, const char *err,
-				 va_list params)
+static NORETURN void die_builtin(const char *err, va_list params)
 {
 	report_fn die_message_fn = get_die_message_routine();
 
-	die_message_fn(file, line, err, params);
+	die_message_fn(err, params);
 	exit(128);
 }
 
-static void error_builtin(const char *file, int line, const char *err,
-			  va_list params)
+static void error_builtin(const char *err, va_list params)
 {
-	trace2_cmd_error_va_fl(file, line, err, params);
+	trace2_cmd_error_va(err, params);
 
-	vreportf("error: ", file, line, err, params);
+	vreportf("error: ", err, params);
 }
 
-static void warn_builtin(const char *file, int line, const char *warn,
-			 va_list params)
+static void warn_builtin(const char *warn, va_list params)
 {
-	trace2_cmd_error_va_fl(file, line, warn, params);
+	trace2_cmd_error_va(warn, params);
 
-	vreportf("warning: ", file, line, warn, params);
+	vreportf("warning: ", warn, params);
 }
 
 static int die_is_recursing_builtin(void)
@@ -165,7 +159,7 @@ void NORETURN usagef(const char *err, ...)
 	va_list params;
 
 	va_start(params, err);
-	usage_routine(NULL, 0, err, params);
+	usage_routine(err, params);
 	va_end(params);
 }
 
@@ -174,14 +168,27 @@ void NORETURN usage(const char *err)
 	usagef("%s", err);
 }
 
-int die_message_fl(const char *file, int line, const char *err, ...)
+#undef die_message
+int die_message(const char *err, ...)
 {
 	va_list params;
 
 	va_start(params, err);
-	die_message_routine(file, line, err, params);
+	die_message_routine(err, params);
 	va_end(params);
 	return 128;
+}
+
+void NORETURN die(const char *err, ...)
+{
+	va_list params;
+
+	if (die_is_recursing())
+		exit(die_message("recursion detected in die handler"));
+
+	va_start(params, err);
+	die_routine(err, params);
+	va_end(params);
 }
 
 static const char *fmt_with_err(char *buf, int n, const char *fmt)
@@ -275,13 +282,9 @@ void warning(const char *warn, ...)
 	va_end(params);
 }
 
-NORETURN void die_fl(const char *file, int line, const char *fmt, ...)
+NORETURN void DIE_fl(int is_errno, const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
-
-	if (die_is_recursing())
-		exit(die_message("recursion detected in die handler"));
-
 	va_start(ap, fmt);
 	die_vfl(file, line, fmt, ap);
 	va_end(ap);
@@ -313,7 +316,7 @@ static NORETURN void BUG_vfl(const char *file, int line, const char *fmt, va_lis
 		abort();
 	in_bug = 1;
 
-	trace2_cmd_error_va_fl(file, line, fmt, params_copy);
+	trace2_cmd_error_va(fmt, params_copy);
 
 	if (BUG_exit_code)
 		exit(BUG_exit_code);
@@ -339,7 +342,7 @@ int bug_fl(const char *file, int line, const char *fmt, ...)
 	va_start(ap, fmt);
 	BUG_vfl_common(file, line, fmt, ap);
 	va_end(ap);
-	trace2_cmd_error_va_fl(file, line, fmt, cp);
+	trace2_cmd_error_va(fmt, cp);
 
 	return -1;
 }
