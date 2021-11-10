@@ -109,32 +109,24 @@ extern int bug_called_must_BUG;
 /* General helper functions */
 NORETURN void usage(const char *err);
 NORETURN void usagef(const char *err, ...) __attribute__((format (printf, 1, 2)));
+NORETURN void die(const char *err, ...) __attribute__((format (printf, 1, 2)));
+NORETURN void die_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
+int die_message(const char *err, ...) __attribute__((format (printf, 1, 2)));
+int die_message_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
+int error(const char *err, ...) __attribute__((format (printf, 1, 2)));
+int error_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
+void warning(const char *err, ...) __attribute__((format (printf, 1, 2)));
+void warning_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
 
 /* General helper functions invoked via macro wrappers */
-__attribute__((format (printf, 4, 5))) NORETURN
-int die_fl(int is_errno, const char *file, int line, const char *fmt, ...);
-__attribute__((format (printf, 4, 5)))
-int die_message_fl(int is_errno, const char *file, int line, const char *fmt, ...);
-__attribute__((format (printf, 4, 5)))
-int error_fl(int is_errno, const char *file, int line, const char *fmt, ...);
-__attribute__((format (printf, 4, 5)))
-int warning_fl(int is_errno, const char *file, int line, const char *fmt, ...);
 __attribute__((format (printf, 3, 4))) NORETURN
 void BUG_fl(const char *file, int line, const char *fmt, ...);
 __attribute__((format (printf, 3, 4)))
 int bug_fl(const char *file, int line, const char *fmt, ...);
 
 /* General helper macros */
-#define die(...)		die_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define die_errno(...)		die_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define die_message(...)	die_message_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define die_message_errno(...)	die_message_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define error(...)		error_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define error_errno(...)	error_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define warning(...)		warning_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define warning_errno(...)	warning_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define BUG(...)		BUG_fl(__FILE__, __LINE__, __VA_ARGS__)
-#define bug(...)		bug_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define BUG(...) BUG_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define bug(...) bug_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define BUG_if_bug() do { \
 	if (bug_called_must_BUG) { \
 		bug_called_must_BUG = 0; \

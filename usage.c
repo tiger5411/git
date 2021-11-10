@@ -282,14 +282,6 @@ void warning(const char *warn, ...)
 	va_end(params);
 }
 
-NORETURN void DIE_fl(int is_errno, const char *file, int line, const char *fmt, ...)
-{
-	va_list ap;
-	va_start(ap, fmt);
-	die_vfl(file, line, fmt, ap);
-	va_end(ap);
-}
-
 /* Only set this, ever, from t/helper/, when verifying that bugs are caught. */
 int BUG_exit_code;
 
