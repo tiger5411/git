@@ -111,28 +111,36 @@ NORETURN void usage(const char *err);
 NORETURN void usagef(const char *err, ...) __attribute__((format (printf, 1, 2)));
 
 /* General helper functions invoked via macro wrappers */
-__attribute__((format (printf, 4, 5))) NORETURN
-int die_fl(int is_errno, const char *file, int line, const char *fmt, ...);
-__attribute__((format (printf, 4, 5)))
-int die_message_fl(int is_errno, const char *file, int line, const char *fmt, ...);
-__attribute__((format (printf, 4, 5)))
-int error_fl(int is_errno, const char *file, int line, const char *fmt, ...);
-__attribute__((format (printf, 4, 5)))
-int warning_fl(int is_errno, const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4))) NORETURN
+int die_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4))) NORETURN
+int die_errno_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int die_message_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int die_message_errno_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int error_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int error_errno_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int warning_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int warning_errno_fl(const char *file, int line, const char *fmt, ...);
 __attribute__((format (printf, 3, 4))) NORETURN
 void BUG_fl(const char *file, int line, const char *fmt, ...);
 __attribute__((format (printf, 3, 4)))
 int bug_fl(const char *file, int line, const char *fmt, ...);
 
 /* General helper macros */
-#define die(...)		die_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define die_errno(...)		die_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define die_message(...)	die_message_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define die_message_errno(...)	die_message_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define error(...)		error_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define error_errno(...)	error_fl(1, __FILE__, __LINE__, __VA_ARGS__)
-#define warning(...)		warning_fl(0, __FILE__, __LINE__, __VA_ARGS__)
-#define warning_errno(...)	warning_fl(1, __FILE__, __LINE__, __VA_ARGS__)
+#define die(...)		die_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die_errno(...)		die_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die_message(...)	die_message_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die_message_errno(...)	die_message_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define error(...)		error_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define error_errno(...)	error_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define warning(...)		warning_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define warning_errno(...)	warning_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define BUG(...)		BUG_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define bug(...)		bug_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define BUG_if_bug() do { \
@@ -143,7 +151,7 @@ int bug_fl(const char *file, int line, const char *fmt, ...);
 } while (0)
 
 /* Setting custom handling routines */
-typedef void (*report_fn)(const char *, va_list params);
+typedef void (*report_fn)(const char *file, int line, const char *fmt, va_list ap);
 void set_die_routine(NORETURN_PTR report_fn routine);
 report_fn get_die_message_routine(void);
 void set_error_routine(report_fn routine);
@@ -151,19 +159,5 @@ report_fn get_error_routine(void);
 void set_warn_routine(report_fn routine);
 report_fn get_warn_routine(void);
 void set_die_is_recursing_routine(int (*routine)(void));
-
-/*
- * Let callers be aware of the constant return value; this can help
- * gcc with -Wuninitialized analysis. We restrict this trick to gcc, though,
- * because other compilers may be confused by this.
- */
-#if defined(__GNUC__)
-static inline int const_error(void)
-{
-	return -1;
-}
-#define error(...) (error(__VA_ARGS__), const_error())
-#define error_errno(...) (error_errno(__VA_ARGS__), const_error())
-#endif
 
 #endif
