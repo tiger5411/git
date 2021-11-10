@@ -3464,9 +3464,10 @@ static void git_pack_config(void)
 	}
 	if (!git_config_get_int("pack.indexversion", &indexversion_value)) {
 		pack_idx_opts.version = indexversion_value;
-		if (pack_idx_opts.version > 2)
-			git_die_config("pack.indexversion",
-					"bad pack.indexversion=%"PRIu32, pack_idx_opts.version);
+		if (pack_idx_opts.version > 2) {
+			error("bad pack.indexversion=%"PRIu32, pack_idx_opts.version);
+			git_die_config("pack.indexversion");
+		}
 	}
 	if (!git_config_get_ulong("pack.packsizelimit", &packsizelimit_value))
 		max_packsize = packsizelimit_value;
