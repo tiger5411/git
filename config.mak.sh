@@ -109,7 +109,7 @@ DEFAULT_TEST_TARGET=prove
 INSTALL_SCALAR = Y
 EOF
 
-if ! diff -u $toplevel/config.mak $tmp
+if ! diff -u $toplevel/config.mak $tmp 2>/dev/null
 then
 	cp -v $tmp $toplevel/config.mak
 fi
