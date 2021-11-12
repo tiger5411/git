@@ -7,12 +7,17 @@ then
 	sudo cpupower frequency-set -g performance
 fi
 
+indir=.
 do_release=
 prefix=/tmp/git
 cflags="-O0 -g"
 while test $# != 0
 do
 	case "$1" in
+	    -C)
+		indir=$2
+		shift
+		;;
 	    --prefix)
 		prefix="$2"
 		shift
@@ -31,13 +36,12 @@ do
 	shift
 done
 
-toplevel=$(git rev-parse --show-toplevel)
-git_dir=$(git rev-parse --absolute-git-dir)
-
+toplevel=$(git -C "$indir" rev-parse --show-toplevel)
+git_dir=$(git -C "$indir" rev-parse --absolute-git-dir)
 if test -z "$do_release"
 then
 	# See https://lore.kernel.org/git/87mtr38tvd.fsf@evledraar.gmail.com/
-	if ! grep -q ^"$toplevel"/version "$git_dir"/info/exclude
+	if ! grep -q ^"$toplevel"/version "$git_dir"/info/exclude 2>/dev/null
 	then
 		# Mkdir for worktrees, they don't have "info" pre-created
 		mkdir "$git_dir"/info 2>/dev/null &&
