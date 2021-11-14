@@ -10,7 +10,6 @@ enum parse_opt_type {
 	OPTION_END,
 	OPTION_GROUP,
 	OPTION_NUMBER,
-	OPTION_ALIAS,
 	/* options with no arguments */
 	OPTION_BIT,
 	OPTION_NEGBIT,
@@ -53,6 +52,15 @@ enum parse_opt_flags {
  *   PARSE_OPT_LITERAL_ARGHELP: says that argh shouldn't be enclosed in brackets
  *				(i.e. '<argh>') in the help message.
  *				Useful for options with multiple parameters.
+ * PARSE_OPT_NO_AMBIG:
+ *
+ *	Exclude this option from being considered when resolving
+ *	ambiguous abbreviations. Used for e.g. "git clone"'s
+ *	"--recursive" option, which if "--recurse" is given should not
+ *	conflict with the canonical "--recurse-submodule" option.
+ *
+ *	This flag is incompatible with PARSE_OPT_NO_ABBREV.
+ *
  * PARSE_OPT_NO_ABBREV:
  *
  *	When using the `PARSE_OPT_KEEP_UNKNOWN` flag to
@@ -91,7 +99,7 @@ enum parse_opt_option_flags {
 	PARSE_OPT_LASTARG_DEFAULT = 1 << 4,
 	PARSE_OPT_NODASH = 1 << 5,
 	PARSE_OPT_LITERAL_ARGHELP = 1 << 6,
-	PARSE_OPT_FROM_ALIAS = 1 << 7,
+	PARSE_OPT_NO_AMBIG = 1 << 7,
 	PARSE_OPT_NO_ABBREV = 1 << 8,
 	PARSE_OPT_NOCOMPLETE = 1 << 9,
 	PARSE_OPT_COMP_ARG = 1 << 10,
@@ -231,9 +239,6 @@ struct option {
 	  N_("no-op (backward compatibility)"),		\
 	  PARSE_OPT_HIDDEN | PARSE_OPT_NOARG, parse_opt_noop_cb }
 
-#define OPT_ALIAS(s, l, source_long_name) \
-	{ OPTION_ALIAS, (s), (l), (source_long_name) }
-
 /*
  * parse_options() will filter out the processed options and leave the
  * non-option arguments in argv[]. argv0 is assumed program name and
@@ -324,7 +329,6 @@ struct parse_opt_ctx_t {
 	const char *opt;
 	enum parse_opt_flags flags;
 	const char *prefix;
-	const char **alias_groups; /* must be in groups of 3 elements! */
 	struct option *updated_options;
 };
 
