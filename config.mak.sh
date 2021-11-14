@@ -15,10 +15,15 @@ fi
 
 do_release=
 prefix=/tmp/git
+cc=cc
 cflags="-O0 -g"
 while test $# != 0
 do
 	case "$1" in
+	    --cc)
+		cc="$2"
+		shift
+		;;
 	    --prefix)
 		prefix="$2"
 		shift
@@ -77,7 +82,7 @@ fi
 tmp=$(mktemp /tmp/config.mak-XXXXX)
 cat >$tmp <<EOF
 # CC
-CC = ccache cc
+CC = ccache $cc
 
 # Core flags
 CFLAGS = $cflags
