@@ -106,25 +106,41 @@ extern int BUG_exit_code;
 /* If bug() is called we must have a BUG() invocation afterwards */
 extern int bug_called_must_BUG;
 
-/* General helper functions */
-NORETURN void usage(const char *err);
-NORETURN void usagef(const char *err, ...) __attribute__((format (printf, 1, 2)));
-NORETURN void die(const char *err, ...) __attribute__((format (printf, 1, 2)));
-NORETURN void die_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int die_message(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int die_message_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int error(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int error_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-void warning(const char *err, ...) __attribute__((format (printf, 1, 2)));
-void warning_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-
 /* General helper functions invoked via macro wrappers */
+__attribute__((format (printf, 3, 4))) NORETURN
+void usage_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4))) NORETURN
+void die_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4))) NORETURN
+void die_errno_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int die_message_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int die_message_errno_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int error_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+int error_errno_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+void warning_fl(const char *file, int line, const char *fmt, ...);
+__attribute__((format (printf, 3, 4)))
+void warning_errno_fl(const char *file, int line, const char *fmt, ...);
 __attribute__((format (printf, 3, 4))) NORETURN
 void BUG_fl(const char *file, int line, const char *fmt, ...);
 __attribute__((format (printf, 3, 4)))
 int bug_fl(const char *file, int line, const char *fmt, ...);
 
 /* General helper macros */
+#define usage(...) usage_fl(__FILE__, __LINE__, "%s", __VA_ARGS__)
+#define usagef(...) usage_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die(...) die_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die_errno(...) die_errno_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die_message(...) die_message_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define die_message_errno(...) die_message_errno_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define error(...) error_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define error_errno(...) error_errno_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define warning(...) warning_fl(__FILE__, __LINE__, __VA_ARGS__)
+#define warning_errno(...) warning_errno_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define BUG(...) BUG_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define bug(...) bug_fl(__FILE__, __LINE__, __VA_ARGS__)
 #define BUG_if_bug() do { \
@@ -135,7 +151,8 @@ int bug_fl(const char *file, int line, const char *fmt, ...);
 } while (0)
 
 /* Setting custom handling routines */
-typedef void (*report_fn)(const char *, va_list params);
+typedef void (*report_fn)(const char *file, int line, const char *fmt,
+			  va_list params);
 void set_die_routine(NORETURN_PTR report_fn routine);
 report_fn get_die_message_routine(void);
 void set_error_routine(report_fn routine);
@@ -154,8 +171,10 @@ static inline int const_error(void)
 {
 	return -1;
 }
-#define error(...) (error(__VA_ARGS__), const_error())
-#define error_errno(...) (error_errno(__VA_ARGS__), const_error())
+#undef error
+#undef error_errno
+#define error(...) (error_fl(__FILE__, __LINE__, __VA_ARGS__), const_error())
+#define error_errno(...) (error_errno_fl(__FILE__, __LINE__, __VA_ARGS__), const_error())
 #endif
 
 #endif
