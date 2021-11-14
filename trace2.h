@@ -120,9 +120,6 @@ int trace2_cmd_exit_fl(const char *file, int line, int code);
 void trace2_cmd_error_va_fl(const char *file, int line, const char *fmt,
 			    va_list ap);
 
-#define trace2_cmd_error_va(fmt, ap) \
-	trace2_cmd_error_va_fl(__FILE__, __LINE__, (fmt), (ap))
-
 /*
  * Emit a 'pathname' event with the canonical pathname of the current process
  * This gives post-processors a simple field to identify the command without
