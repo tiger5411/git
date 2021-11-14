@@ -103,8 +103,8 @@ struct apply_state {
 	 * set_error_routine() or set_warn_routine() to install muting
 	 * routines when in verbosity_silent mode.
 	 */
-	void (*saved_error_routine)(const char *err, va_list params);
-	void (*saved_warn_routine)(const char *warn, va_list params);
+	report_fn saved_error_routine;
+	report_fn saved_warn_routine;
 
 	/* These control whitespace errors */
 	enum apply_ws_error_action ws_error_action;
