@@ -7,6 +7,12 @@ then
 	sudo cpupower frequency-set -g performance
 fi
 
+if test -z "$XDG_RUNTIME_DIR"
+then
+	echo "Must have $XDG_RUNTIME_DIR defined, e.g. XDG_RUNTIME_DIR=/run/user/\$(id -u)/!"
+	exit 1
+fi
+
 do_release=
 prefix=/tmp/git
 cflags="-O0 -g"
@@ -31,13 +37,35 @@ do
 	shift
 done
 
-toplevel=$(git rev-parse --show-toplevel)
-git_dir=$(git rev-parse --absolute-git-dir)
-
-if test -z "$do_release"
+# Support being called without a .git repo, I don't really use this
+# for now, but let's be flexible. Maybe I'll test non-checkouts
+toplevel=
+set +e
+toplevel=$(git rev-parse --show-toplevel 2>/dev/null)
+set -e
+if test -z "$toplevel"
 then
+	toplevel="$PWD"
+fi
+
+# For temporary testing trash, unique so I don't have checkouts
+# trampling on each other with parallel tests
+trash_dir=
+case "$toplevel" in
+/run/user/*|/dev/shm/*)
+	# Don't need to use another ramdisk if I'm already on a ramdisk
+	;;
+*)
+	toplevel_no_slash=$(echo "$toplevel" | sed -e 's!^/!!; s!/!-!g')
+	trash_dir="$XDG_RUNTIME_DIR/tmp/git-trash/$toplevel_no_slash"
+	;;
+esac
+
+if test -z "$do_release" && test -e ".git"
+then
+	git_dir=$(git rev-parse --git-dir)
 	# See https://lore.kernel.org/git/87mtr38tvd.fsf@evledraar.gmail.com/
-	if ! grep -q ^"$toplevel"/version "$git_dir"/info/exclude
+	if ! grep -q "^/version$" "$git_dir"/info/exclude 2>/dev/null
 	then
 		# Mkdir for worktrees, they don't have "info" pre-created
 		mkdir "$git_dir"/info 2>/dev/null &&
@@ -94,9 +122,7 @@ LIBPCREDIR=\$(HOME)/g/pcre2/inst
 #NO_GETTEXT = YesPlease
 
 # t/Makefile
-id_u := \$(shell id -u)
-GIT_TEST_OPTS = 
-GIT_TEST_OPTS += --root=/run/user/\$(id_u)/$(basename $(dirname $(git rev-parse --absolute-git-dir)))
+GIT_TEST_OPTS =${trash_dir:+ --root=$trash_dir}
 GIT_TEST_OPTS += --verbose-log
 
 DEFAULT_TEST_TARGET=prove
