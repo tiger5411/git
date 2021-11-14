@@ -656,13 +656,14 @@ static void service_rpc(struct strbuf *hdr, char *service_name)
 }
 
 static int dead;
-static NORETURN void die_webcgi(const char *err, va_list params)
+static NORETURN void die_webcgi(const char *file, int line, const char *err,
+				va_list params)
 {
 	if (dead <= 1) {
 		struct strbuf hdr = STRBUF_INIT;
 		report_fn die_message_fn = get_die_message_routine();
 
-		die_message_fn(err, params);
+		die_message_fn(__FILE__, __LINE__, err, params);
 
 		http_status(&hdr, 500, "Internal Server Error");
 		hdr_nocache(&hdr);

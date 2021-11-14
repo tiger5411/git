@@ -2776,7 +2776,7 @@ void git_die_config(const char *key, const char *err, ...)
 	if (err) {
 		va_list params;
 		va_start(params, err);
-		error_fn(err, params);
+		error_fn(__FILE__, __LINE__, err, params);
 		va_end(params);
 	}
 	values = git_config_get_value_multi(key);
