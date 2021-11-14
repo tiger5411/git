@@ -81,7 +81,7 @@ static void error_builtin(const char *err, va_list params)
 	vreportf("error: ", err, params);
 }
 
-static void warn_builtin(const char *warn, va_list params)
+static void warning_builtin(const char *warn, va_list params)
 {
 	trace2_cmd_error_va(warn, params);
 
@@ -116,7 +116,7 @@ static NORETURN_PTR report_fn usage_routine = usage_builtin;
 static NORETURN_PTR report_fn die_routine = die_builtin;
 static report_fn die_message_routine = die_message_builtin;
 static report_fn error_routine = error_builtin;
-static report_fn warn_routine = warn_builtin;
+static report_fn warning_routine = warning_builtin;
 static int (*die_is_recursing)(void) = die_is_recursing_builtin;
 
 void set_die_routine(NORETURN_PTR report_fn routine)
@@ -139,14 +139,14 @@ report_fn get_error_routine(void)
 	return error_routine;
 }
 
-void set_warn_routine(report_fn routine)
+void set_warning_routine(report_fn routine)
 {
-	warn_routine = routine;
+	warning_routine = routine;
 }
 
-report_fn get_warn_routine(void)
+report_fn get_warning_routine(void)
 {
-	return warn_routine;
+	return warning_routine;
 }
 
 void set_die_is_recursing_routine(int (*routine)(void))
@@ -274,7 +274,7 @@ void warning_errno(const char *warn, ...)
 	va_list params;
 
 	va_start(params, warn);
-	warn_routine(fmt_with_err(buf, sizeof(buf), warn), params);
+	warning_routine(fmt_with_err(buf, sizeof(buf), warn), params);
 	va_end(params);
 }
 
@@ -283,7 +283,7 @@ void warning(const char *warn, ...)
 	va_list params;
 
 	va_start(params, warn);
-	warn_routine(warn, params);
+	warning_routine(warn, params);
 	va_end(params);
 }
 

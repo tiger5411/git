@@ -140,8 +140,8 @@ void set_die_routine(NORETURN_PTR report_fn routine);
 report_fn get_die_message_routine(void);
 void set_error_routine(report_fn routine);
 report_fn get_error_routine(void);
-void set_warn_routine(report_fn routine);
-report_fn get_warn_routine(void);
+void set_warning_routine(report_fn routine);
+report_fn get_warning_routine(void);
 void set_die_is_recursing_routine(int (*routine)(void));
 
 /*

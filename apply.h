@@ -100,11 +100,11 @@ struct apply_state {
 
 	/*
 	 * This is to save reporting routines before using
-	 * set_error_routine() or set_warn_routine() to install muting
+	 * set_error_routine() or set_warning_routine() to install muting
 	 * routines when in verbosity_silent mode.
 	 */
 	report_fn saved_error_routine;
-	report_fn saved_warn_routine;
+	report_fn saved_warning_routine;
 
 	/* These control whitespace errors */
 	enum apply_ws_error_action ws_error_action;
