@@ -10,7 +10,6 @@ enum parse_opt_type {
 	OPTION_END,
 	OPTION_GROUP,
 	OPTION_NUMBER,
-	OPTION_ALIAS,
 	/* options with no arguments */
 	OPTION_BIT,
 	OPTION_NEGBIT,
@@ -44,7 +43,7 @@ enum parse_opt_option_flags {
 	PARSE_OPT_LASTARG_DEFAULT = 1 << 4,
 	PARSE_OPT_NODASH = 1 << 5,
 	PARSE_OPT_LITERAL_ARGHELP = 1 << 6,
-	PARSE_OPT_FROM_ALIAS = 1 << 7,
+	PARSE_OPT_AMBIGUOUS_ALIAS = 1 << 7,
 	PARSE_OPT_NOCOMPLETE = 1 << 9,
 	PARSE_OPT_COMP_ARG = 1 << 10,
 	PARSE_OPT_CMDMODE = 1 << 11,
@@ -196,9 +195,6 @@ struct option {
 	{ OPTION_CALLBACK, (s), (l), NULL, NULL, \
 	  N_("no-op (backward compatibility)"),		\
 	  PARSE_OPT_HIDDEN | PARSE_OPT_NOARG, parse_opt_noop_cb }
-
-#define OPT_ALIAS(s, l, source_long_name) \
-	{ OPTION_ALIAS, (s), (l), (source_long_name) }
 
 /*
  * parse_options() will filter out the processed options and leave the
