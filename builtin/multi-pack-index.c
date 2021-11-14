@@ -154,6 +154,8 @@ static int cmd_multi_pack_index_verify(int argc, const char **argv)
 			N_("force progress reporting"), MIDX_PROGRESS),
 		OPT_END(),
 	};
+	int ret;
+
 	options = add_common_options(builtin_multi_pack_index_verify_options);
 
 	trace2_cmd_mode(argv[0]);
@@ -167,7 +169,9 @@ static int cmd_multi_pack_index_verify(int argc, const char **argv)
 		usage_with_options(builtin_multi_pack_index_verify_usage,
 				   options);
 
-	return verify_midx_file(the_repository, opts.object_dir, opts.flags);
+	ret = verify_midx_file(the_repository, opts.object_dir, opts.flags);
+	free(options);
+	return ret;
 }
 
 static int cmd_multi_pack_index_expire(int argc, const char **argv)
