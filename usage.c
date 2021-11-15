@@ -23,6 +23,7 @@ static void vreportf(enum usage_kind kind,
 	const char *bug_in = "strbuf_vaddf_NOBUG()";
 	static struct strbuf arg = STRBUF_INIT;
 	static struct strbuf out = STRBUF_INIT;
+	static int addln = -1;
 
 	strbuf_reset(&arg);
 	strbuf_reset(&out);
@@ -31,19 +32,38 @@ static void vreportf(enum usage_kind kind,
 		goto buggy;
 	strbuf_escape_cntrl(&arg);
 
+	if (addln < 0) {
+		struct repository *r = the_repository;
+
+		prepare_repo_settings(r);
+		addln = r->settings.usage_add_source;
+	}
+
 	bug_in = "strbuf_addf_NOBUG()";
 	switch (kind) {
 	case USAGE_USAGE:
-		bug = strbuf_addf_NOBUG(&out, _("usage: %s\n"), arg.buf);
+		if (addln)
+			bug = strbuf_addf_NOBUG(&out, _("usage %s:%d: %s\n"), file, line, arg.buf);
+		else
+			bug = strbuf_addf_NOBUG(&out, _("usage: %s\n"), arg.buf);
 		break;
 	case USAGE_DIE:
-		bug = strbuf_addf_NOBUG(&out, _("fatal: %s\n"), arg.buf);
+		if (addln)
+			bug = strbuf_addf_NOBUG(&out, _("fatal %s:%d: %s\n"), file, line, arg.buf);
+		else
+			bug = strbuf_addf_NOBUG(&out, _("fatal: %s\n"), arg.buf);
 		break;
 	case USAGE_ERROR:
-		bug = strbuf_addf_NOBUG(&out, _("error: %s\n"), arg.buf);
+		if (addln)
+			bug = strbuf_addf_NOBUG(&out, _("error %s:%d: %s\n"), file, line, arg.buf);
+		else
+			bug = strbuf_addf_NOBUG(&out, _("error: %s\n"), arg.buf);
 		break;
 	case USAGE_WARNING:
-		bug = strbuf_addf_NOBUG(&out, _("warning: %s\n"), arg.buf);
+		if (addln)
+			bug = strbuf_addf_NOBUG(&out, _("warning %s:%d: %s\n"), file, line, arg.buf);
+		else
+			bug = strbuf_addf_NOBUG(&out, _("warning: %s\n"), arg.buf);
 		break;
 	case USAGE_BUG:
 		bug = strbuf_addf_NOBUG(&out, _("BUG: %s:%d: %s\n"), file, line, arg.buf);
