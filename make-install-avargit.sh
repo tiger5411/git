@@ -4,6 +4,7 @@ set -x
 
 ## Usage:
 #
+# ./make-install-avargit.sh --only-merge --no-merge-compile
 # ./make-install-avargit.sh --only-merge --merge-compile-args "all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
 # ./make-install-avargit.sh --only-merge --merge-compile-args "all" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
 
