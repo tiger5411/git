@@ -1218,7 +1218,7 @@ endif
 # Set CFLAGS, LDFLAGS and other *FLAGS variables. These might be
 # tweaked by config.* below as well as the command-line, both of
 # which'll override these defaults.
-CFLAGS = -g -O2 -Wall
+CFLAGS = -g -O2 -Wall -std=gnu99
 LDFLAGS =
 CC_LD_DYNPATH = -Wl,-rpath,
 BASIC_CFLAGS = -I.
@@ -1229,7 +1229,7 @@ ARFLAGS = rcs
 PTHREAD_CFLAGS =
 
 # For the 'sparse' target
-SPARSE_FLAGS ?=
+SPARSE_FLAGS ?= -std=gnu99
 SP_EXTRA_FLAGS = -Wno-universal-initializer
 
 # For informing GIT-BUILD-OPTIONS of the SANITIZE=leak target
