@@ -20,8 +20,8 @@ and their offsets into multiple packfiles. It contains:
 - A list of packfile names.
 - A sorted list of object IDs.
 - A list of metadata for the ith object ID including:
-  - A value j referring to the jth packfile.
-  - An offset within the jth packfile for the object.
+  * A value j referring to the jth packfile.
+  * An offset within the jth packfile for the object.
 - If large offsets are required, we use another list of large
   offsets similar to version 2 pack-indexes.
 
