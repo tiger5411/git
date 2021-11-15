@@ -61,7 +61,7 @@ int cmd_ls_remote(int argc, const char **argv, const char *prefix)
 		OPT_STRING(0, "upload-pack", &uploadpack, N_("exec"),
 			   N_("path of git-upload-pack on the remote host")),
 		{ OPTION_STRING, 0, "exec", &uploadpack, N_("exec"),
-			   N_("path of git-upload-pack on the remote host"),
+			   NULL,
 			   PARSE_OPT_HIDDEN },
 		OPT_BIT('t', "tags", &flags, N_("limit to tags"), REF_TAGS),
 		OPT_BIT('h', "heads", &flags, N_("limit to heads"), REF_HEADS),

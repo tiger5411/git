@@ -1061,10 +1061,14 @@ struct ref_update *ref_transaction_add_update(
 
 	update->flags = flags;
 
-	if (flags & REF_HAVE_NEW)
+	if (new_oid)
 		oidcpy(&update->new_oid, new_oid);
-	if (flags & REF_HAVE_OLD)
+	else
+		assert(!(flags & REF_HAVE_NEW));
+	if (old_oid)
 		oidcpy(&update->old_oid, old_oid);
+	else
+		assert(!(flags & REF_HAVE_OLD));
 	update->msg = normalize_reflog_message(msg);
 	return update;
 }
@@ -1086,6 +1090,8 @@ int ref_transaction_update(struct ref_transaction *transaction,
 		return -1;
 	}
 
+	if (flags != 0 && !(flags & REF_NO_DEREF))
+		BUG("hi there %d", flags);
 	if (flags & ~REF_TRANSACTION_UPDATE_ALLOWED_FLAGS)
 		BUG("illegal flags 0x%x passed to ref_transaction_update()", flags);
 

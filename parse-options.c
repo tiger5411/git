@@ -462,6 +462,11 @@ static void parse_options_check(const struct option *opts)
 		     opts->long_name))
 			err |= optbug(opts, "uses feature "
 					"not supported for dashless options");
+
+		if (opts->flags & PARSE_OPT_HIDDEN &&
+		    opts->help)
+			err |= optbug(opts, "defines help, but is hidden");
+			
 		switch (opts->type) {
 		case OPTION_COUNTUP:
 		case OPTION_BIT:
