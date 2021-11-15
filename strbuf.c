@@ -49,6 +49,7 @@ int skip_to_optional_arg_default(const char *str, const char *prefix,
  * initialized strbuf.
  */
 char strbuf_slopbuf[1];
+int strbuf_fail;
 
 void strbuf_init(struct strbuf *sb, size_t hint)
 {
@@ -90,6 +91,8 @@ void strbuf_attach(struct strbuf *sb, void *buf, size_t len, size_t alloc)
 void strbuf_grow(struct strbuf *sb, size_t extra)
 {
 	int new_buf = !sb->alloc;
+	if (strbuf_fail)
+		die("noes");
 	if (unsigned_add_overflows(extra, 1) ||
 	    unsigned_add_overflows(sb->len, extra + 1))
 		die("you want to use way too much memory");

@@ -24,10 +24,29 @@ static void vreportf(enum usage_kind kind,
 	static struct strbuf arg = STRBUF_INIT;
 	static struct strbuf out = STRBUF_INIT;
 	static int addln = -1;
+	static int dying;
+	/*
+	 * Just an arbitrary number X where "a < x < b" where "a" is
+	 * "maximum number of pthreads we'll ever plausibly spawn" and
+	 * "b" is "something less than Inf", since the point is to
+	 * prevent infinite recursion.
+	 */
+	static const int recursion_limit = 2;
+
+	dying++;
+	if (dying > recursion_limit) {
+		fprintf(stderr, "Am recursing\n");
+		return;
+	} else if (dying == 2) {
+		fprintf(stderr, "am recursing 2\n");
+		fputs("vreportf() called many times. Recursion error or racy threaded death!", stderr);
+		return;
+	}
 
 	strbuf_reset(&arg);
 	strbuf_reset(&out);
 
+	strbuf_fail = 1
 	if (strbuf_vaddf_NOBUG(&arg, err, params) < 0)
 		goto buggy;
 	strbuf_escape_cntrl(&arg);

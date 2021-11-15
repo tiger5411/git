@@ -70,6 +70,7 @@ struct strbuf {
 };
 
 extern char strbuf_slopbuf[];
+extern int strbuf_fail;
 #define STRBUF_INIT  { .buf = strbuf_slopbuf }
 
 /*
