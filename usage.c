@@ -154,34 +154,6 @@ void set_die_is_recursing_routine(int (*routine)(void))
 	die_is_recursing = routine;
 }
 
-void NORETURN usagef(const char *err, ...)
-{
-	va_list params;
-
-	va_start(params, err);
-	usage_routine(err, params);
-	va_end(params);
-}
-
-void NORETURN usage(const char *err)
-{
-	usagef("%s", err);
-}
-
-void NORETURN die(const char *err, ...)
-{
-	va_list params;
-
-	if (die_is_recursing()) {
-		fputs("fatal: recursion detected in die handler\n", stderr);
-		exit(128);
-	}
-
-	va_start(params, err);
-	die_routine(err, params);
-	va_end(params);
-}
-
 static const char *fmt_with_err(char *buf, int n, const char *fmt)
 {
 	char str_error[256], *err;
@@ -204,6 +176,34 @@ static const char *fmt_with_err(char *buf, int n, const char *fmt)
 	/* Truncation is acceptable here */
 	snprintf(buf, n, "%s: %s", fmt, str_error);
 	return buf;
+}
+
+void NORETURN usage(const char *err)
+{
+	usagef("%s", err);
+}
+
+void NORETURN usagef(const char *err, ...)
+{
+	va_list params;
+
+	va_start(params, err);
+	usage_routine(err, params);
+	va_end(params);
+}
+
+void NORETURN die(const char *err, ...)
+{
+	va_list params;
+
+	if (die_is_recursing()) {
+		fputs("fatal: recursion detected in die handler\n", stderr);
+		exit(128);
+	}
+
+	va_start(params, err);
+	die_routine(err, params);
+	va_end(params);
 }
 
 void NORETURN die_errno(const char *fmt, ...)
@@ -245,6 +245,17 @@ int die_message_errno(const char *fmt, ...)
 	return 128;
 }
 
+#undef error
+int error(const char *err, ...)
+{
+	va_list params;
+
+	va_start(params, err);
+	error_routine(err, params);
+	va_end(params);
+	return -1;
+}
+
 #undef error_errno
 int error_errno(const char *fmt, ...)
 {
@@ -257,15 +268,13 @@ int error_errno(const char *fmt, ...)
 	return -1;
 }
 
-#undef error
-int error(const char *err, ...)
+void warning(const char *warn, ...)
 {
 	va_list params;
 
-	va_start(params, err);
-	error_routine(err, params);
+	va_start(params, warn);
+	warning_routine(warn, params);
 	va_end(params);
-	return -1;
 }
 
 void warning_errno(const char *warn, ...)
@@ -275,15 +284,6 @@ void warning_errno(const char *warn, ...)
 
 	va_start(params, warn);
 	warning_routine(fmt_with_err(buf, sizeof(buf), warn), params);
-	va_end(params);
-}
-
-void warning(const char *warn, ...)
-{
-	va_list params;
-
-	va_start(params, warn);
-	warning_routine(warn, params);
 	va_end(params);
 }
 
