@@ -156,11 +156,33 @@ int strbuf_reencode(struct strbuf *sb, const char *from, const char *to)
 	return 0;
 }
 
-void strbuf_tolower(struct strbuf *sb)
+void strbuf_escape(struct strbuf *sb, strbuf_escape_fn fn)
 {
 	char *p = sb->buf, *end = sb->buf + sb->len;
 	for (; p < end; p++)
-		*p = tolower(*p);
+		*p = fn(*p);
+}
+
+static inline int tolower_fn(int c)
+{
+	return tolower(c);
+}
+
+void strbuf_tolower(struct strbuf *sb)
+{
+	strbuf_escape(sb, tolower_fn);
+}
+
+static inline int escape_cntrl_fn(int c)
+{
+	if (iscntrl(c) && !isspace(c))
+		return '?';
+	return c;
+}
+
+void strbuf_escape_cntrl(struct strbuf *sb)
+{
+	strbuf_escape(sb, escape_cntrl_fn);
 }
 
 struct strbuf **strbuf_split_buf(const char *str, size_t slen,
@@ -336,6 +358,18 @@ void strbuf_addf(struct strbuf *sb, const char *fmt, ...)
 	va_end(ap);
 }
 
+int strbuf_addf_NOBUG(struct strbuf *sb, const char *fmt, ...)
+{
+	int ret;
+
+	va_list ap;
+	va_start(ap, fmt);
+	ret = strbuf_vaddf_NOBUG(sb, fmt, ap);
+	va_end(ap);
+
+	return ret;
+}
+
 static void add_lines(struct strbuf *out,
 			const char *prefix1,
 			const char *prefix2,
@@ -385,7 +419,8 @@ void strbuf_commented_addf(struct strbuf *sb, const char *fmt, ...)
 	strbuf_release(&buf);
 }
 
-void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap)
+static int strbuf_vaddf1(struct strbuf *sb, const char *fmt, va_list ap,
+			  int call_BUG)
 {
 	int len;
 	va_list cp;
@@ -395,15 +430,32 @@ void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap)
 	va_copy(cp, ap);
 	len = vsnprintf(sb->buf + sb->len, sb->alloc - sb->len, fmt, cp);
 	va_end(cp);
-	if (len < 0)
+	if (len < 0 && !call_BUG)
 		BUG("your vsnprintf is broken (returned %d)", len);
+	else if (len < 0)
+		return -1;
 	if (len > strbuf_avail(sb)) {
+		size_t avail;
 		strbuf_grow(sb, len);
 		len = vsnprintf(sb->buf + sb->len, sb->alloc - sb->len, fmt, ap);
-		if (len > strbuf_avail(sb))
+		avail = strbuf_avail(sb);
+		if (len > avail && call_BUG)
 			BUG("your vsnprintf is broken (insatiable)");
+		else if (len > avail)
+			return -1;
 	}
 	strbuf_setlen(sb, sb->len + len);
+	return 0;
+}
+
+void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap)
+{
+	strbuf_vaddf1(sb, fmt, ap, 1);
+}
+
+int strbuf_vaddf_NOBUG(struct strbuf *sb, const char *fmt, va_list ap)
+{
+	return strbuf_vaddf1(sb, fmt, ap, 0);
 }
 
 void strbuf_expand(struct strbuf *sb, const char *format, expand_fn_t fn,

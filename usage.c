@@ -5,35 +5,70 @@
  */
 #include "git-compat-util.h"
 #include "cache.h"
+#include "strbuf.h"
 
-static void vreportf(const char *prefix, const char *err, va_list params)
+enum usage_kind {
+	USAGE_USAGE,
+	USAGE_DIE,
+	USAGE_ERROR,
+	USAGE_WARNING,
+	USAGE_BUG,
+};
+
+static void vreportf(enum usage_kind kind,
+		     const char *file, int line,
+		     const char *err, va_list params)
 {
-	char msg[4096];
-	char *p, *pend = msg + sizeof(msg);
-	size_t prefix_len = strlen(prefix);
+	const char *prefix;
+	static struct strbuf arg = STRBUF_INIT;
+	static struct strbuf out = STRBUF_INIT;
+	int bug;
 
-	if (sizeof(msg) <= prefix_len) {
-		fprintf(stderr, "BUG!!! too long a prefix '%s'\n", prefix);
-		abort();
+	strbuf_reset(&arg);
+	strbuf_reset(&out);
+
+	if (strbuf_vaddf_NOBUG(&arg, err, params) < 0)
+		goto buggy;
+	strbuf_escape_cntrl(&arg);
+
+	switch (kind) {
+	case USAGE_USAGE:
+		prefix = "usage";
+		break;
+	case USAGE_DIE:
+		prefix = "fatal";
+		break;
+	case USAGE_ERROR:
+		prefix = "error";
+		break;
+	case USAGE_WARNING:
+		prefix = "warning";
+		break;
+	case USAGE_BUG:
+		prefix = "BUG";
+		break;
 	}
-	memcpy(msg, prefix, prefix_len);
-	p = msg + prefix_len;
-	if (vsnprintf(p, pend - p, err, params) < 0)
-		*p = '\0'; /* vsnprintf() failed, clip at prefix */
 
-	for (; p != pend - 1 && *p; p++) {
-		if (iscntrl(*p) && *p != '\t' && *p != '\n')
-			*p = '?';
-	}
+	if (kind == USAGE_BUG)
+		bug = strbuf_addf_NOBUG(&out, "%s: %s:%d: %s\n", prefix, file, line, arg.buf);
+	else
+		bug = strbuf_addf_NOBUG(&out, "%s: %s\n", prefix, arg.buf);
+	if (bug < 0)
+		goto buggy;
 
-	*(p++) = '\n'; /* we no longer need a NUL */
 	fflush(stderr);
-	write_in_full(2, msg, p - msg);
+	write_in_full(2, out.buf, out.len);
+	return;
+
+buggy:
+	fprintf(stderr, "BUG!!! strbuf_vaddf_NOBUG() failed when formatting error at '%s':'%d'\n",
+		file, line);
+	abort();
 }
 
 static NORETURN void usage_builtin(const char *file, int line, const char *err, va_list params)
 {
-	vreportf("usage: ", err, params);
+	vreportf(USAGE_USAGE, file, line, err, params);
 
 	/*
 	 * When we detect a usage error *before* the command dispatch in
@@ -58,7 +93,7 @@ static NORETURN void usage_builtin(const char *file, int line, const char *err, 
 static void die_message_builtin(const char *file, int line, const char *err, va_list params)
 {
 	trace2_cmd_error_va_fl(file, line, err, params);
-	vreportf("fatal: ", err, params);
+	vreportf(USAGE_DIE, file, line, err, params);
 }
 
 /*
@@ -78,14 +113,14 @@ static void error_builtin(const char *file, int line, const char *err, va_list p
 {
 	trace2_cmd_error_va_fl(file, line, err, params);
 
-	vreportf("error: ", err, params);
+	vreportf(USAGE_ERROR, file, line, err, params);
 }
 
 static void warning_builtin(const char *file, int line, const char *warn, va_list params)
 {
 	trace2_cmd_error_va_fl(file, line, warn, params);
 
-	vreportf("warning: ", warn, params);
+	vreportf(USAGE_WARNING, file, line, warn, params);
 }
 
 static int die_is_recursing_builtin(void)
@@ -283,24 +318,13 @@ void warning_errno_fl(const char *file, int line, const char *fmt, ...)
 /* Only set this, ever, from t/helper/, when verifying that bugs are caught. */
 int BUG_exit_code;
 
-static void BUG_vfl_common(const char *file, int line, const char *fmt,
-			   va_list params)
-{
-	char prefix[256];
-
-	/* truncation via snprintf is OK here */
-	snprintf(prefix, sizeof(prefix), "BUG: %s:%d: ", file, line);
-
-	vreportf(prefix, fmt, params);
-}
-
 static NORETURN void BUG_vfl(const char *file, int line, const char *fmt, va_list params)
 {
 	va_list params_copy;
 	static int in_bug;
 
 	va_copy(params_copy, params);
-	BUG_vfl_common(file, line, fmt, params);
+	vreportf(USAGE_BUG, file, line, fmt, params);
 
 	if (in_bug)
 		abort();
@@ -330,7 +354,7 @@ int bug_fl(const char *file, int line, const char *fmt, ...)
 
 	va_copy(cp, ap);
 	va_start(ap, fmt);
-	BUG_vfl_common(file, line, fmt, ap);
+	vreportf(USAGE_BUG, file, line, fmt, ap);
 	va_end(ap);
 	trace2_cmd_error_va_fl(file, line, fmt, cp);
 

@@ -200,9 +200,31 @@ void strbuf_trim_trailing_newline(struct strbuf *sb);
 int strbuf_reencode(struct strbuf *sb, const char *from, const char *to);
 
 /**
+ * A character escaping callback whose prototype matches that of
+ * tolower() and toupper().
+ */
+typedef int (*strbuf_escape_fn)(int c);
+
+/**
+ * Escape any characters (bytes) in the strbuf replacing them with
+ * 'to'.
+ */
+void strbuf_escape(struct strbuf *sb, strbuf_escape_fn fn);
+
+/**
  * Lowercase each character in the buffer using `tolower`.
+ *
+ * A wrapper for strbuf_escape() using tolower() as the
+ * 'strbuf_escape_fn'.
  */
 void strbuf_tolower(struct strbuf *sb);
+
+/**
+ * Escape any iscntrl() characters in the the buffer, except those
+ * that match isspace(), replacing them with "?". A wrapper for
+ * strbuf_ecape().
+ */
+void strbuf_escape_cntrl(struct strbuf *sb);
 
 /**
  * Compare two buffers. Returns an integer less than, equal to, or greater
@@ -417,6 +439,24 @@ void strbuf_commented_addf(struct strbuf *sb, const char *fmt, ...);
 
 __attribute__((format (printf,2,0)))
 void strbuf_vaddf(struct strbuf *sb, const char *fmt, va_list ap);
+
+/**
+ * strbuf_vaddf_NOBUG() is a strbuf_vaddf() that'll return a negative value on 
+ * failure, instead of calling BUG() as strbuf_vaddf() would.
+ *
+ * Meant for use in the BUG() code * itself in usage.c.
+ */
+__attribute__((format (printf,2,0)))
+int strbuf_vaddf_NOBUG(struct strbuf *sb, const char *fmt, va_list ap);
+
+/**
+ * strbuf_addf_NOBUG() a strbuf_addf() that calls strbuf_vaddf_NOBUG()
+ * instead of strbuf_vaddf(). Returns whatever strbuf_vaddf_NOBUG()
+ * returns.
+ */
+__attribute__((format (printf,2,3)))
+int strbuf_addf_NOBUG(struct strbuf *sb, const char *fmt, ...);
+
 
 /**
  * Add the time specified by `tm`, as formatted by `strftime`.
