@@ -19,10 +19,10 @@ static void vreportf(enum usage_kind kind,
 		     const char *file, int line,
 		     const char *err, va_list params)
 {
-	const char *prefix;
+	int bug = -1;
+	const char *bug_in = "strbuf_vaddf_NOBUG()";
 	static struct strbuf arg = STRBUF_INIT;
 	static struct strbuf out = STRBUF_INIT;
-	int bug;
 
 	strbuf_reset(&arg);
 	strbuf_reset(&out);
@@ -31,28 +31,24 @@ static void vreportf(enum usage_kind kind,
 		goto buggy;
 	strbuf_escape_cntrl(&arg);
 
+	bug_in = "strbuf_addf_NOBUG()";
 	switch (kind) {
 	case USAGE_USAGE:
-		prefix = "usage";
+		bug = strbuf_addf_NOBUG(&out, _("usage: %s\n"), arg.buf);
 		break;
 	case USAGE_DIE:
-		prefix = "fatal";
+		bug = strbuf_addf_NOBUG(&out, _("fatal: %s\n"), arg.buf);
 		break;
 	case USAGE_ERROR:
-		prefix = "error";
+		bug = strbuf_addf_NOBUG(&out, _("error: %s\n"), arg.buf);
 		break;
 	case USAGE_WARNING:
-		prefix = "warning";
+		bug = strbuf_addf_NOBUG(&out, _("warning: %s\n"), arg.buf);
 		break;
 	case USAGE_BUG:
-		prefix = "BUG";
+		bug = strbuf_addf_NOBUG(&out, _("BUG: %s:%d: %s\n"), file, line, arg.buf);
 		break;
 	}
-
-	if (kind == USAGE_BUG)
-		bug = strbuf_addf_NOBUG(&out, "%s: %s:%d: %s\n", prefix, file, line, arg.buf);
-	else
-		bug = strbuf_addf_NOBUG(&out, "%s: %s\n", prefix, arg.buf);
 	if (bug < 0)
 		goto buggy;
 
@@ -61,8 +57,8 @@ static void vreportf(enum usage_kind kind,
 	return;
 
 buggy:
-	fprintf(stderr, "BUG!!! strbuf_vaddf_NOBUG() failed when formatting error at '%s':'%d'\n",
-		file, line);
+	fprintf(stderr, "BUG!!! %s() failed when formatting error at '%s':'%d'\n",
+		bug_in, file, line);
 	abort();
 }
 
