@@ -165,8 +165,7 @@ test_compile () {
 	fi
 
 	# Compile
-	make -j $(nproc) all
-	make -j $(nproc) man
+	make -j $(nproc) all man
 
 	# Test sanity
 	make -C t test-lint
