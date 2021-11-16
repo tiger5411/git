@@ -8,6 +8,10 @@ set -x
 # ./make-install-avargit.sh --only-merge --merge-compile-args "all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
 # ./make-install-avargit.sh --only-merge --merge-compile-args "all" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
 
+## For "sparse" so that it invokes gcc, not clang
+REAL_CC=gcc
+export REAL_CC
+
 ## Options
 no_sanity=
 no_range_diff=
