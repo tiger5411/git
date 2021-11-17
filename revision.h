@@ -9,6 +9,7 @@
 #include "diff.h"
 #include "commit-slab-decl.h"
 #include "object-array.h"
+#include "object-array-bare.h"
 
 /**
  * The revision walking API offers functions to build a list of revisions
@@ -91,7 +92,7 @@ struct rev_info {
 	struct repository *repo;
 
 	/* Parents of shown commits */
-	struct object_array boundary_commits;
+	struct object_array_bare boundary_commits;
 
 	/* The end-points specified by the end user */
 	struct rev_cmdline_info cmdline;
