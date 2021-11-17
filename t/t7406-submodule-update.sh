@@ -1063,7 +1063,7 @@ test_expect_success 'submodule update --quiet passes quietness to fetch with a s
 
 test_expect_success 'submodule update adds superproject gitdir to older repos' '
 	(cd super &&
-	 git -C submodule config --unset submodule.superprojectGitdir &&
+	 test_might_fail git -C submodule config --unset submodule.superprojectGitdir &&
 	 git submodule update &&
 	 test-tool path-utils relative_path \
 		"$(git rev-parse --absolute-git-dir)" \
@@ -1075,7 +1075,7 @@ test_expect_success 'submodule update adds superproject gitdir to older repos' '
 
 test_expect_success 'submodule update uses config.worktree if applicable' '
 	(cd super &&
-	 git -C submodule config --unset submodule.superprojectGitDir &&
+	 test_might_fail git -C submodule config --unset submodule.superprojectGitDir &&
 	 git -C submodule config extensions.worktreeConfig true &&
 	 git submodule update &&
 	 test-tool path-utils relative_path \
