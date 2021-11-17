@@ -2955,7 +2955,7 @@ void release_revisions(struct rev_info *revs)
 	release_revisions_commit_list(revs);
 	object_array_clear(&revs->pending);
 	release_revisions_cmdline(&revs->cmdline);
-	object_array_clear(&revs->boundary_commits);
+	object_array_bare_clear(&revs->boundary_commits);
 	clear_pathspec(&revs->prune_data);
 	date_mode_release(&revs->date_mode);
 	release_revisions_mailmap(revs->mailmap);
@@ -4099,10 +4099,9 @@ static struct commit *get_revision_1(struct rev_info *revs)
 }
 
 /*
- * Return true for entries that have not yet been shown.  (This is an
- * object_array_each_func_t.)
+ * Return true for entries that have not yet been shown.
  */
-static int entry_unshown(struct object_array_entry *entry, void *cb_data_unused)
+static int entry_unshown(struct object_array_bare_item *entry)
 {
 	return !(entry->item->flags & SHOWN);
 }
@@ -4111,18 +4110,30 @@ static int entry_unshown(struct object_array_entry *entry, void *cb_data_unused)
  * If array is on the verge of a realloc, garbage-collect any entries
  * that have already been shown to try to free up some space.
  */
-static void gc_boundary(struct object_array *array)
+static void gc_boundary(struct object_array_bare *array)
 {
-	if (array->nr == array->alloc)
-		object_array_filter(array, entry_unshown, NULL);
+	size_t nr = array->nr, src, dst;
+	struct object_array_bare_item *objects = array->objects;
+
+	if (nr != array->alloc)
+		return;
+
+	for (src = dst = 0; src < nr; src++) {
+		if (entry_unshown(&objects[src])) {
+			if (src != dst)
+				objects[dst] = objects[src];
+			dst++;
+		}
+	}
+	array->nr = dst;
 }
 
 static void create_boundary_commit_list(struct rev_info *revs)
 {
 	unsigned i;
 	struct commit *c;
-	struct object_array *array = &revs->boundary_commits;
-	struct object_array_entry *objects = array->objects;
+	struct object_array_bare *array = &revs->boundary_commits;
+	struct object_array_bare_item *objects = array->objects;
 
 	/*
 	 * If revs->commits is non-NULL at this point, an error occurred in
@@ -4235,7 +4246,7 @@ static struct commit *get_revision_internal(struct rev_info *revs)
 			continue;
 		p->flags |= CHILD_SHOWN;
 		gc_boundary(&revs->boundary_commits);
-		add_object_array(p, NULL, &revs->boundary_commits);
+		object_array_bare_insert(&revs->boundary_commits, p);
 	}
 
 	return c;
