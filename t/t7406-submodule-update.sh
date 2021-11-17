@@ -13,6 +13,7 @@ GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
 . ./test-lib.sh
+. "$TEST_DIRECTORY"/lib-submodule-superproject.sh
 
 
 compare_head()
@@ -1068,8 +1069,7 @@ test_expect_success 'submodule update adds superproject gitdir to older repos' '
 	 test-tool path-utils relative_path \
 		"$(git rev-parse --absolute-git-dir)" \
 		"$(git -C submodule rev-parse --absolute-git-dir)" >expect &&
-	 git -C submodule config submodule.superprojectGitdir >actual &&
-	 test_cmp expect actual
+	 test_cmp_submodule_superprojectgitdir submodule
 	)
 '
 
@@ -1081,10 +1081,9 @@ test_expect_success 'submodule update uses config.worktree if applicable' '
 	 test-tool path-utils relative_path \
 		"$(git rev-parse --absolute-git-dir)" \
 		"$(git -C submodule rev-parse --absolute-git-dir)" >expect &&
-	 git -C submodule config submodule.superprojectGitdir >actual &&
-	 test_cmp expect actual &&
+	 test_cmp_submodule_superprojectgitdir submodule &&
 
-	 test_file_not_empty "$(git -C submodule rev-parse --absolute-git-dir)/config.worktree"
+	 test_file_not_empty_superprojectgitdir submodule config.worktree
 	)
 '
 

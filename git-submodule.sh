@@ -453,7 +453,7 @@ cmd_update()
 		# changed, unless it's a fresh clone. Write to worktree if
 		# applicable, and point to superproject's worktree gitdir if
 		# applicable.
-		if test -z "$just_cloned"
+		if test -z "$just_cloned" && test "$GIT_TEST_SUBMODULE_CACHE_SUPERPROJECT_DIR" != "false"
 		then
 			sm_gitdir="$(git -C "$sm_path" rev-parse --absolute-git-dir)"
 			relative_gitdir="$(git rev-parse --path-format=relative \

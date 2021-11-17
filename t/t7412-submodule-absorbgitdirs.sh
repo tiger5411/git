@@ -7,6 +7,7 @@ directory into the superproject.
 '
 
 . ./test-lib.sh
+. "$TEST_DIRECTORY"/lib-submodule-superproject.sh
 
 test_expect_success 'setup a real submodule' '
 	git init sub1 &&
@@ -38,9 +39,7 @@ test_expect_success 'absorb the git dir' '
 
 	test-tool path-utils relative_path "$superproject_gitdir" \
 		"$submodule_gitdir" >expect &&
-	git -C sub1 config submodule.superprojectGitDir >actual &&
-
-	test_cmp expect actual
+	test_cmp_submodule_superprojectgitdir sub1
 '
 
 test_expect_success 'absorbing does not fail for deinitialized submodules' '
@@ -78,9 +77,7 @@ test_expect_success 'absorb the git dir in a nested submodule' '
 
 	test-tool path-utils relative_path "$sub1_gitdir" "$sub1_nested_gitdir" \
 		>expect &&
-	git -C sub1/nested config submodule.superprojectGitDir >actual &&
-
-	test_cmp expect actual
+	test_cmp_submodule_superprojectgitdir sub1
 '
 
 test_expect_success 're-setup nested submodule' '
@@ -170,9 +167,7 @@ test_expect_success 'absorbgitdirs works when called from a superproject worktre
 
 	test-tool path-utils relative_path "$superproject_gitdir" \
 		"$submodule_gitdir" >expect &&
-	git -C sub4 config submodule.superprojectGitDir >actual &&
-
-	test_cmp expect actual
+	test_cmp_submodule_superprojectgitdir sub4
 	)
 '
 
@@ -199,12 +194,10 @@ test_expect_success 'absorbgitdirs works with a submodule with worktree config' 
 
 	test-tool path-utils relative_path "$superproject_gitdir" \
 		"$submodule_gitdir" >expect &&
-	git -C sub5 config submodule.superprojectGitDir >actual &&
-
-	test_cmp expect actual &&
+	test_cmp_submodule_superprojectgitdir sub5 &&
 
 	# make sure the config went into the submodule config.worktree
-	test_file_not_empty "$submodule_gitdir/config.worktree"
+	test_file_not_empty_superprojectgitdir sub5 config.worktree
 	)
 '
 

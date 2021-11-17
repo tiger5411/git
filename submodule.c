@@ -2143,6 +2143,9 @@ static void relocate_single_git_dir_into_superproject(const char *path)
 	if (!git_configset_get_bool(&sub_cs, "extensions.worktreeConfig", &tmp))
 		strbuf_addstr(&config_path, ".worktree");
 
+	if (!git_env_bool("GIT_TEST_SUBMODULE_CACHE_SUPERPROJECT_DIR", 1))
+		goto fallback;
+
 	git_config_set_in_file(config_path.buf, "submodule.superprojectGitdir",
 			       relative_path(absolute_path(get_git_dir()),
 					     real_new_git_dir, &sb));
@@ -2150,6 +2153,8 @@ static void relocate_single_git_dir_into_superproject(const char *path)
 	git_configset_clear(&sub_cs);
 	strbuf_release(&config_path);
 	strbuf_release(&sb);
+
+fallback:
 	free(old_git_dir);
 	free(real_old_git_dir);
 	free(real_new_git_dir);
@@ -2332,6 +2337,8 @@ int get_superproject_working_tree(struct strbuf *buf)
 	const char *wt_prefix = "worktree ";
 	int rc = 0;
 
+	if (!git_env_bool("GIT_TEST_SUBMODULE_CACHE_SUPERPROJECT_DIR", 1))
+		goto fallback;
 
 	/* Do we know we have a superproject? */
 	if (git_config_get_string("submodule.superprojectgitdir", &super_gitdir))
