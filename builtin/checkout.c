@@ -627,7 +627,7 @@ static void show_local_changes(struct object *head,
 	rev.diffopt.flags = opts->flags;
 	rev.diffopt.output_format |= DIFF_FORMAT_NAME_STATUS;
 	diff_setup_done(&rev.diffopt);
-	add_pending_object(&rev, head, NULL);
+	add_pending_object_no_name(&rev, head);
 	run_diff_index(&rev, 0);
 	release_revisions(&rev);
 }
