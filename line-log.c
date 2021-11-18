@@ -473,22 +473,21 @@ static void range_set_map_across_diff(struct range_set *out,
 static struct commit *check_single_commit(struct rev_info *revs)
 {
 	struct object *commit = NULL;
-	int found = -1;
-	int i;
+	struct object_array_entry *entry;
+	const char *name = NULL;
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object *obj = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *obj = entry->item;
 		if (obj->flags & UNINTERESTING)
 			continue;
 		obj = deref_tag(revs->repo, obj, NULL, 0);
 		if (!obj || obj->type != OBJ_COMMIT)
-			die("Non commit %s?", revs->pending.objects[i].name);
+			die("Non commit %s?", entry->name);
 		if (commit)
 			die("More than one commit to dig from: %s and %s?",
-			    revs->pending.objects[i].name,
-			    revs->pending.objects[found].name);
+			    entry->name, name);
 		commit = obj;
-		found = i;
+		name = entry->name;
 	}
 
 	if (!commit)
