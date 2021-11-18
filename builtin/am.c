@@ -1394,7 +1394,7 @@ static void write_commit_patch(const struct am_state *state, struct commit *comm
 	rev_info.diffopt.use_color = 0;
 	rev_info.diffopt.file = fp;
 	rev_info.diffopt.close_file = 1;
-	add_pending_object(&rev_info, &commit->object, "");
+	add_pending_object_no_name(&rev_info, &commit->object);
 	diff_setup_done(&rev_info.diffopt);
 	log_tree_commit(&rev_info, commit);
 	release_revisions(&rev_info);
@@ -1427,7 +1427,7 @@ static void write_index_patch(const struct am_state *state)
 	rev_info.diffopt.use_color = 0;
 	rev_info.diffopt.file = fp;
 	rev_info.diffopt.close_file = 1;
-	add_pending_object(&rev_info, &tree->object, "");
+	add_pending_object_no_name(&rev_info, &tree->object);
 	diff_setup_done(&rev_info.diffopt);
 	run_diff_index(&rev_info, 1);
 	release_revisions(&rev_info);

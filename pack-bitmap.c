@@ -794,7 +794,7 @@ static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 
 		if (pos < 0 || base == NULL || !bitmap_get(base, pos)) {
 			object->flags &= ~UNINTERESTING;
-			add_pending_object(revs, object, "");
+			add_pending_object_no_name(revs, object);
 			needs_walk = 1;
 		} else {
 			object->flags |= SEEN;

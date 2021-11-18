@@ -2364,7 +2364,7 @@ static void reach_filter(struct ref_array *array,
 	for (cr = check_reachable; cr; cr = cr->next) {
 		struct commit *merge_commit = cr->item;
 		merge_commit->object.flags |= UNINTERESTING;
-		add_pending_object(&revs, &merge_commit->object, "");
+		add_pending_object_no_name(&revs, &merge_commit->object);
 	}
 
 	revs.limited = 1;

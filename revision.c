@@ -355,6 +355,11 @@ void add_pending_object(struct rev_info *revs,
 	add_pending_object_with_mode(revs, obj, name, S_IFINVALID);
 }
 
+void add_pending_object_no_name(struct rev_info *revs, struct object *obj)
+{
+	add_pending_object_with_mode(revs, obj, "", S_IFINVALID);
+}
+
 void add_head_to_pending(struct rev_info *revs)
 {
 	struct object_id oid;
@@ -1600,7 +1605,7 @@ static void handle_one_reflog_commit(struct object_id *oid, void *cb_data)
 		if (o) {
 			o->flags |= cb->all_flags;
 			/* ??? CMDLINEFLAGS ??? */
-			add_pending_object(cb->all_revs, o, "");
+			add_pending_object_no_name(cb->all_revs, o);
 		}
 		else if (!cb->warned_bad_reflog) {
 			warning("reflog of '%s' references pruned commits",

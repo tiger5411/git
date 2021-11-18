@@ -954,7 +954,7 @@ static int add_ref_to_pending(const char *refname,
 	if (object->type != OBJ_COMMIT)
 		return 0;
 
-	add_pending_object(revs, object, "");
+	add_pending_object_no_name(revs, object);
 	if (bitmap_is_preferred_refname(revs->repo, refname))
 		object->flags |= NEEDS_BITMAP;
 	return 0;
@@ -1014,7 +1014,7 @@ static int read_refs_snapshot(const char *refs_snapshot,
 		if (preferred)
 			object->flags |= NEEDS_BITMAP;
 
-		add_pending_object(revs, object, "");
+		add_pending_object_no_name(revs, object);
 	}
 
 	fclose(f);

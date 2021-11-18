@@ -491,6 +491,8 @@ void show_object_with_name(FILE *, struct object *, const char *);
  */
 void add_pending_object(struct rev_info *revs,
 			struct object *obj, const char *name);
+void add_pending_object_no_name(struct rev_info *revs, struct object *obj);
+
 
 void add_pending_oid(struct rev_info *revs,
 		     const char *name, const struct object_id *oid,
