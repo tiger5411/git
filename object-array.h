@@ -16,12 +16,6 @@ struct object_array {
 	size_t alloc;
 	struct object_array_entry {
 		struct object *item;
-		/*
-		 * name or NULL.  If non-NULL, the memory pointed to
-		 * is owned by this object *except* if it points at
-		 * object_array_slopbuf, which is a static copy of the
-		 * empty string.
-		 */
 		char *name;
 		char *path;
 		unsigned mode;
@@ -49,8 +43,7 @@ void add_object_array(struct object *obj, const char *name,
 /**
  * add_object_array_with_path(): push an object onto the end of the
  * array. The "name" and "path" can be NULL, when non-NULL they'll be
- * xstrdup()'d. A NULL "name" results in a "name" of
- * object_array_slopbuf.
+ * xstrdup()'d.
  */
 void add_object_array_with_path(struct object *obj, const char *name,
 				struct object_array *array, unsigned mode,

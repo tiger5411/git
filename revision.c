@@ -358,7 +358,7 @@ void add_pending_object(struct rev_info *revs,
 
 void add_pending_object_no_name(struct rev_info *revs, struct object *obj)
 {
-	add_pending_object_with_mode(revs, obj, "", S_IFINVALID);
+	add_pending_object_with_mode(revs, obj, NULL, S_IFINVALID);
 }
 
 void add_head_to_pending(struct rev_info *revs)
@@ -1690,7 +1690,7 @@ static void add_cache_tree(struct cache_tree *it, struct rev_info *revs,
 	if (it->entry_count >= 0) {
 		struct tree *tree = lookup_tree(revs->repo, &it->oid);
 		tree->object.flags |= flags;
-		add_pending_object_with_path(revs, &tree->object, "",
+		add_pending_object_with_path(revs, &tree->object, NULL,
 					     040000, path->buf);
 	}
 
@@ -1722,7 +1722,7 @@ static void do_add_index_objects_to_pending(struct rev_info *revs,
 		if (!blob)
 			die("unable to add index blob to traversal");
 		blob->object.flags |= flags;
-		add_pending_object_with_path(revs, &blob->object, "",
+		add_pending_object_with_path(revs, &blob->object, NULL,
 					     ce->ce_mode, ce->name);
 	}
 
