@@ -764,7 +764,7 @@ int create_bundle(struct repository *r, const char *path,
 		if (e)
 			add_object_array_with_path(e->item, e->name,
 						   &pending_copy,
-						   e->mode, e->path);
+						   0, NULL);
 	}
 
 	/* write prerequisites */
