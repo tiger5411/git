@@ -33,10 +33,7 @@ void add_object_array_with_path(struct object *obj, const char *name,
 	else
 		entry->name = xstrdup(name);
 	entry->mode = mode;
-	if (path)
-		entry->path = xstrdup(path);
-	else
-		entry->path = NULL;
+	entry->path = xstrdup_or_null(path);
 	array->nr = ++nr;
 }
 
