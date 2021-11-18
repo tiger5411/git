@@ -282,7 +282,8 @@ int list_bundle_refs(struct bundle_header *header, int argc, const char **argv)
 	return list_refs(&header->references, argc, argv);
 }
 
-static int is_tag_in_date_range(struct object *tag, struct rev_info *revs)
+static int is_tag_in_date_range(struct object *tag, timestamp_t max_age,
+				timestamp_t min_age)
 {
 	unsigned long size;
 	enum object_type type;
@@ -290,7 +291,7 @@ static int is_tag_in_date_range(struct object *tag, struct rev_info *revs)
 	timestamp_t date;
 	int result = 1;
 
-	if (revs->max_age == -1 && revs->min_age == -1)
+	if (max_age == -1 && min_age == -1)
 		goto out;
 
 	buf = read_object_file(&tag->oid, &type, &size);
@@ -304,8 +305,8 @@ static int is_tag_in_date_range(struct object *tag, struct rev_info *revs)
 	if (!line++)
 		goto out;
 	date = parse_timestamp(line, NULL, 10);
-	result = (revs->max_age == -1 || revs->max_age < date) &&
-		(revs->min_age == -1 || revs->min_age > date);
+	result = (max_age == -1 || max_age < date) &&
+		(min_age == -1 || min_age > date);
 out:
 	free(buf);
 	return result;
@@ -313,7 +314,8 @@ out:
 
 
 /* Write the pack data to bundle_fd */
-static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *pack_options)
+static int write_pack_data(int bundle_fd, struct object_array *pending,
+			   struct strvec *pack_options)
 {
 	struct child_process pack_objects = CHILD_PROCESS_INIT;
 	struct object_array_entry *entry;
@@ -343,7 +345,7 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
 	if (start_command(&pack_objects))
 		return error(_("Could not spawn pack-objects"));
 
-	for_each_object_array_entry(entry, &revs->pending) {
+	for_each_object_array_entry(entry, pending) {
 		struct object *object = entry->item;
 		if (object->flags & UNINTERESTING)
 			write_or_die(pack_objects.in, "^", 1);
@@ -365,12 +367,13 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
  * Returns the number of refs written, or negative
  * on error.
  */
-static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
+static int write_bundle_refs(int bundle_fd, struct object_array *pending,
+			     timestamp_t max_age, timestamp_t min_age)
 {
 	struct object_array_entry *e;
 	int ref_count = 0;
 
-	for_each_object_array_entry(e, &revs->pending) {
+	for_each_object_array_entry(e, pending) {
 		struct object_id oid;
 		char *ref;
 		const char *display_ref;
@@ -385,7 +388,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 		display_ref = (flag & REF_ISSYMREF) ? e->name : ref;
 
 		if (e->item->type == OBJ_TAG &&
-				!is_tag_in_date_range(e->item, revs)) {
+				!is_tag_in_date_range(e->item, max_age, min_age)) {
 			e->item->flags |= UNINTERESTING;
 			goto skip_write_ref;
 		}
@@ -416,7 +419,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 			 * in terms of a tag (e.g. v2.0 from the range
 			 * "v1.0..v2.0")?
 			 */
-			struct commit *one = lookup_commit_reference(revs->repo, &oid);
+			struct commit *one = lookup_commit_reference(the_repository, &oid);
 			struct object *obj;
 
 			if (e->item == &(one->object)) {
@@ -430,7 +433,7 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 				 */
 				obj = parse_object_or_die(&oid, e->name);
 				obj->flags |= SHOWN;
-				add_pending_object(revs, obj, e->name);
+				add_object_array(obj, e->name, pending);
 			}
 			goto skip_write_ref;
 		}
@@ -452,6 +455,8 @@ static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 struct bundle_prerequisites_info {
 	struct object_array *pending;
 	int fd;
+	timestamp_t max_age;
+	timestamp_t min_age;
 };
 
 static void write_bundle_prerequisites(struct commit *commit, void *data)
@@ -487,7 +492,8 @@ int create_bundle(struct repository *r, const char *path,
 	int bundle_fd = -1;
 	int bundle_to_stdout;
 	int ref_count = 0;
-	struct rev_info revs, revs_copy;
+	struct object_array pending_copy = OBJECT_ARRAY_INIT;
+	struct rev_info revs;
 	int min_version = the_hash_algo == &hash_algos[GIT_HASH_SHA1] ? 2 : 3;
 	struct bundle_prerequisites_info bpi;
 	int ret = 0;
@@ -529,14 +535,10 @@ int create_bundle(struct repository *r, const char *path,
 	}
 
 	/* save revs.pending in revs_copy for later use */
-	memcpy(&revs_copy, &revs, sizeof(revs));
-	revs_copy.pending.nr = 0;
-	revs_copy.pending.alloc = 0;
-	revs_copy.pending.objects = NULL;
 	for_each_object_array_entry(e, &revs.pending) {
 		if (e)
 			add_object_array_with_path(e->item, e->name,
-						   &revs_copy.pending,
+						   &pending_copy,
 						   e->mode, e->path);
 	}
 
@@ -545,19 +547,20 @@ int create_bundle(struct repository *r, const char *path,
 	if (prepare_revision_walk(&revs))
 		die("revision walk setup failed");
 	bpi.fd = bundle_fd;
-	bpi.pending = &revs_copy.pending;
+	bpi.pending = &pending_copy;
 	traverse_commit_list(&revs, write_bundle_prerequisites, NULL, &bpi);
-	object_array_remove_duplicates(&revs_copy.pending);
+	object_array_remove_duplicates(&pending_copy);
 
 	/* write bundle refs */
-	ref_count = write_bundle_refs(bundle_fd, &revs_copy);
+	ref_count = write_bundle_refs(bundle_fd, &pending_copy,
+				      revs.max_age, revs.min_age);
 	if (!ref_count)
 		die(_("Refusing to create empty bundle."));
 	else if (ref_count < 0)
 		goto err;
 
 	/* write pack */
-	if (write_pack_data(bundle_fd, &revs_copy, pack_options))
+	if (write_pack_data(bundle_fd, &pending_copy, pack_options))
 		goto err;
 
 	if (!bundle_to_stdout) {
@@ -570,7 +573,7 @@ err:
 	ret = -1;
 cleanup:
 	release_revisions(&revs);
-	object_array_clear(&revs_copy.pending);
+	object_array_clear(&pending_copy);
 	return ret;
 }
 
