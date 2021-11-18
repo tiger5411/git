@@ -475,8 +475,7 @@ static void write_bundle_prerequisites(struct commit *commit, void *data)
 
 	object = (struct object *)commit;
 	object->flags |= UNINTERESTING;
-	add_object_array_with_path(object, buf.buf, bpi->pending, S_IFINVALID,
-				   NULL);
+	add_object_array(object, buf.buf, bpi->pending);
 	strbuf_addch(&buf, '\n');
 	write_or_die(bpi->fd, buf.buf, buf.len);
 	strbuf_release(&buf);
