@@ -225,7 +225,7 @@ static void bitmap_builder_init(struct bitmap_builder *bb,
 		ent->commit_mask = bitmap_new();
 		bitmap_set(ent->commit_mask, i);
 
-		add_pending_object(&revs, &c->object, "");
+		add_pending_object_no_name(&revs, &c->object);
 	}
 
 	if (prepare_revision_walk(&revs))
