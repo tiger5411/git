@@ -2,12 +2,6 @@
 #include "object-array.h"
 #include "object.h"
 
-/*
- * A zero-length string to which object_array_entry::name can be
- * initialized without requiring a malloc/free.
- */
-static char object_array_slopbuf[1];
-
 void add_object_array_with_path(struct object *obj, const char *name,
 				struct object_array *array,
 				unsigned mode, const char *path)
@@ -18,13 +12,7 @@ void add_object_array_with_path(struct object *obj, const char *name,
 	ALLOC_GROW(array->objects, array->nr + 1, array->alloc);
 	entry = &array->objects[array->nr++];
 	entry->item = obj;
-	if (!name)
-		entry->name = NULL;
-	else if (!*name)
-		/* Use our own empty string instead of allocating one: */
-		entry->name = object_array_slopbuf;
-	else
-		entry->name = xstrdup(name);
+	entry->name = xstrdup_or_null(name);
 	entry->mode = mode;
 	entry->path = xstrdup_or_null(path);
 	array->nr = ++nr;
@@ -41,8 +29,7 @@ void add_object_array(struct object *obj, const char *name, struct object_array 
  */
 static void object_array_release_entry(struct object_array_entry *ent)
 {
-	if (ent->name != object_array_slopbuf)
-		free(ent->name);
+	free(ent->name);
 	free(ent->path);
 }
 

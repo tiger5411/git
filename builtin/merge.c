@@ -421,10 +421,10 @@ static void squash_message(struct commit *commit, struct commit_list *remotehead
 	rev.commit_format = CMIT_FMT_MEDIUM;
 
 	commit->object.flags |= UNINTERESTING;
-	add_pending_object(&rev, &commit->object, NULL);
+	add_pending_object_no_name(&rev, &commit->object);
 
 	for (j = remoteheads; j; j = j->next)
-		add_pending_object(&rev, &j->item->object, NULL);
+		add_pending_object_no_name(&rev, &j->item->object);
 
 	setup_revisions(0, NULL, &rev, NULL);
 	if (prepare_revision_walk(&rev))
