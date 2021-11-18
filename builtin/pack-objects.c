@@ -3212,7 +3212,7 @@ static int add_object_entry_from_pack(const struct object_id *oid,
 		 * commits in included packs are used as starting points for the
 		 * subsequent revision walk
 		 */
-		add_pending_oid(revs, NULL, oid, 0);
+		add_pending_oid_no_name(revs, oid, 0);
 	}
 
 	stdin_packs_found_nr++;
