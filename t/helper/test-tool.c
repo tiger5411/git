@@ -43,6 +43,7 @@ static struct test_cmd cmds[] = {
 	{ "match-trees", cmd__match_trees },
 	{ "mergesort", cmd__mergesort },
 	{ "mktemp", cmd__mktemp },
+	{ "object-array", cmd__object_array },
 	{ "oid-array", cmd__oid_array },
 	{ "oidmap", cmd__oidmap },
 	{ "oidtree", cmd__oidtree },
