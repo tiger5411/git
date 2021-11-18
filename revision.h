@@ -438,6 +438,8 @@ void add_pending_object_no_name(struct rev_info *revs, struct object *obj);
 void add_pending_oid(struct rev_info *revs,
 		     const char *name, const struct object_id *oid,
 		     unsigned int flags);
+void add_pending_oid_no_name(struct rev_info *revs,
+			     const struct object_id *oid, unsigned int flags);
 
 void add_head_to_pending(struct rev_info *);
 void add_reflogs_to_pending(struct rev_info *, unsigned int flags);

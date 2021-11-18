@@ -396,7 +396,7 @@ static struct object *get_reference(struct rev_info *revs, const char *name,
 			return object;
 		if (revs->exclude_promisor_objects && is_promisor_object(oid))
 			return NULL;
-		die("bad object %s", name);
+		die("bad object %s", name ? name : oid_to_hex(oid));
 	}
 	object->flags |= flags;
 	return object;
@@ -407,6 +407,13 @@ void add_pending_oid(struct rev_info *revs, const char *name,
 {
 	struct object *object = get_reference(revs, name, oid, flags);
 	add_pending_object(revs, object, name);
+}
+
+void add_pending_oid_no_name(struct rev_info *revs,
+			     const struct object_id *oid, unsigned int flags)
+{
+	struct object *object = get_reference(revs, NULL, oid, flags);
+	add_pending_object_no_name(revs, object);
 }
 
 static struct commit *handle_commit(struct rev_info *revs,
