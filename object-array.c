@@ -13,17 +13,10 @@ void add_object_array_with_path(struct object *obj, const char *name,
 				unsigned mode, const char *path)
 {
 	unsigned nr = array->nr;
-	unsigned alloc = array->alloc;
-	struct object_array_entry *objects = array->objects;
 	struct object_array_entry *entry;
 
-	if (nr >= alloc) {
-		alloc = (alloc + 32) * 2;
-		REALLOC_ARRAY(objects, alloc);
-		array->alloc = alloc;
-		array->objects = objects;
-	}
-	entry = &objects[nr];
+	ALLOC_GROW(array->objects, array->nr + 1, array->alloc);
+	entry = &array->objects[array->nr++];
 	entry->item = obj;
 	if (!name)
 		entry->name = NULL;
