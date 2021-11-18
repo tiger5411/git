@@ -208,7 +208,10 @@ int verify_bundle_extended(struct repository *r, struct bundle_header *header,
 		struct object *o = parse_object(r, oid);
 		if (o) {
 			o->flags |= PREREQ_MARK;
-			add_pending_object(&revs, o, name);
+			if (strlen(name))
+				add_pending_object(&revs, o, name);
+			else
+				add_pending_object_no_name(&revs, o);
 			continue;
 		}
 
