@@ -64,7 +64,9 @@ void object_array_remove_duplicates(struct object_array *array)
 
 	array->nr = 0;
 	for (src = 0; src < nr; src++) {
-		if (!contains_object(array, objects[src].item,
+		/* wtf are we doing here if we're getting NULL entries anyway? */
+		if (!objects[src].name ||
+		    !contains_object(array, objects[src].item,
 				     objects[src].name)) {
 			if (src != array->nr)
 				objects[array->nr] = objects[src];
