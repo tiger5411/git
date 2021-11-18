@@ -703,11 +703,11 @@ int cmd_rev_list(int argc, const char **argv, const char *prefix)
 	}
 
 	if (filter_provided_objects) {
+		struct object_array_entry *pending;
 		struct commit_list *c;
-		for (i = 0; i < revs.pending.nr; i++) {
-			struct object_array_entry *pending = revs.pending.objects + i;
+
+		for_each_object_array_entry(pending, &revs.pending)
 			pending->item->flags |= NOT_USER_GIVEN;
-		}
 		for (c = revs.commits; c; c = c->next)
 			c->item->object.flags |= NOT_USER_GIVEN;
 	}

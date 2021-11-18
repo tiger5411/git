@@ -48,9 +48,10 @@ static void object_array_release_entry(struct object_array_entry *ent)
 
 void object_array_clear(struct object_array *array)
 {
-	int i;
-	for (i = 0; i < array->nr; i++)
-		object_array_release_entry(&array->objects[i]);
+	struct object_array_entry *entry;
+
+	for_each_object_array_entry(entry, array)
+		object_array_release_entry(entry);
 	FREE_AND_NULL(array->objects);
 	array->nr = array->alloc = 0;
 }
@@ -61,10 +62,10 @@ void object_array_clear(struct object_array *array)
 static int contains_object(struct object_array *array,
 			   const struct object *item, const char *name)
 {
-	unsigned nr = array->nr, i;
+	struct object_array_entry *entry;
 	struct object_array_entry *object = array->objects;
 
-	for (i = 0; i < nr; i++, object++)
+	for_each_object_array_entry(entry, array)
 		if (item == object->item && !strcmp(object->name, name))
 			return 1;
 	return 0;

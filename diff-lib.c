@@ -551,12 +551,13 @@ static int diff_cache(struct rev_info *revs,
 
 void diff_get_merge_base(const struct rev_info *revs, struct object_id *mb)
 {
+	struct object_array_entry *entry;
 	int i;
 	struct commit *mb_child[2] = {0};
 	struct commit_list *merge_bases;
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object *obj = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *obj = entry->item;
 		if (obj->flags)
 			die(_("--merge-base does not work with ranges"));
 		if (obj->type != OBJ_COMMIT)

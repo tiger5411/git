@@ -3578,16 +3578,15 @@ static void expand_topo_walk(struct rev_info *revs, struct commit *commit)
 
 int prepare_revision_walk(struct rev_info *revs)
 {
-	int i;
 	struct object_array old_pending;
+	struct object_array_entry *e;
 	struct commit_list **next = &revs->commits;
 
 	memcpy(&old_pending, &revs->pending, sizeof(old_pending));
 	revs->pending.nr = 0;
 	revs->pending.alloc = 0;
 	revs->pending.objects = NULL;
-	for (i = 0; i < old_pending.nr; i++) {
-		struct object_array_entry *e = old_pending.objects + i;
+	for_each_object_array_entry(e, &old_pending) {
 		struct commit *commit = handle_commit(revs, e);
 		if (commit) {
 			if (!(commit->object.flags & SEEN)) {

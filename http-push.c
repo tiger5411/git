@@ -1327,7 +1327,7 @@ static struct object_queue **process_tree(struct tree *tree,
 
 static int get_delta(struct rev_info *revs, struct remote_lock *lock)
 {
-	int i;
+	struct object_array_entry *entry;
 	struct commit *commit;
 	struct object_queue **p = &objects;
 	int count = 0;
@@ -1339,8 +1339,7 @@ static int get_delta(struct rev_info *revs, struct remote_lock *lock)
 			count += add_send_request(&commit->object, lock);
 	}
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object_array_entry *entry = revs->pending.objects + i;
+	for_each_object_array_entry(entry, &revs->pending) {
 		struct object *obj = entry->item;
 		const char *name = entry->name;
 

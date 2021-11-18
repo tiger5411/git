@@ -678,24 +678,23 @@ static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
 static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
 			const struct object_array *list)
 {
-	unsigned int i;
+	struct object_array_entry *entry;
 	int hit = 0;
-	const unsigned int nr = list->nr;
 
-	for (i = 0; i < nr; i++) {
+	for_each_object_array_entry(entry, list) {
 		struct object *real_obj;
 
 		obj_read_lock();
-		real_obj = deref_tag(opt->repo, list->objects[i].item,
+		real_obj = deref_tag(opt->repo, entry->item,
 				     NULL, 0);
 		obj_read_unlock();
 
 		if (!real_obj) {
 			char hex[GIT_MAX_HEXSZ + 1];
-			const char *name = list->objects[i].name;
+			const char *name = entry->name;
 
 			if (!name) {
-				oid_to_hex_r(hex, &list->objects[i].item->oid);
+				oid_to_hex_r(hex, &entry->item->oid);
 				name = hex;
 			}
 			die(_("invalid object '%s' given."), name);
@@ -708,8 +707,8 @@ static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
 			gitmodules_config_oid(&real_obj->oid);
 			obj_read_unlock();
 		}
-		if (grep_object(opt, pathspec, real_obj, list->objects[i].name,
-				list->objects[i].path)) {
+		if (grep_object(opt, pathspec, real_obj, entry->name,
+				entry->path)) {
 			hit = 1;
 			if (opt->status_only)
 				break;

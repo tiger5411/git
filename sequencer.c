@@ -4830,15 +4830,16 @@ int sequencer_pick_revisions(struct repository *r,
 {
 	struct todo_list todo_list = TODO_LIST_INIT;
 	struct object_id oid;
-	int i, res;
+	int res;
+	struct object_array_entry *entry;
 
 	assert(opts->revs);
 	if (read_and_refresh_cache(r, opts))
 		return -1;
 
-	for (i = 0; i < opts->revs->pending.nr; i++) {
+	for_each_object_array_entry(entry, &opts->revs->pending) {
 		struct object_id oid;
-		const char *name = opts->revs->pending.objects[i].name;
+		const char *name = entry->name;
 
 		/* This happens when using --stdin. */
 		if (!strlen(name))
