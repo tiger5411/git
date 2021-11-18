@@ -40,6 +40,14 @@ void add_object_array(struct object *obj, const char *name,
 		      struct object_array *array);
 
 /**
+ * Iterate over each entry, as a macro.
+ */
+#define for_each_object_array_entry(entry,array)      \
+	for (entry = (array)->objects;                       \
+	     entry && entry < (array)->objects + (array)->nr; \
+	     ++entry)
+
+/**
  * add_object_array_with_path(): push an object onto the end of the
  * array. The "name" and "path" can be NULL, when non-NULL they'll be
  * xstrdup()'d. A NULL "name" results in a "name" of
