@@ -351,7 +351,7 @@ void mark_edges_uninteresting(struct rev_info *revs,
 
 static void add_pending_tree(struct rev_info *revs, struct tree *tree)
 {
-	add_pending_object(revs, &tree->object, "");
+	add_pending_object_no_name(revs, &tree->object);
 }
 
 static void traverse_non_commits(struct traversal_context *ctx,

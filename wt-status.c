@@ -2572,7 +2572,7 @@ int has_uncommitted_changes(struct repository *r,
 		 * which will complain if the index is non-empty.
 		 */
 		struct tree *tree = lookup_tree(r, the_hash_algo->empty_tree);
-		add_pending_object(&rev_info, &tree->object, "");
+		add_pending_object_no_name(&rev_info, &tree->object);
 	}
 
 	diff_setup_done(&rev_info.diffopt);

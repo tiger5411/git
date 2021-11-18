@@ -169,7 +169,7 @@ int cmd_prune(int argc, const char **argv, const char *prefix)
 		if (!get_oid(name, &oid)) {
 			struct object *object = parse_object_or_die(&oid,
 								    name);
-			add_pending_object(&revs, object, "");
+			add_pending_object_no_name(&revs, object);
 		}
 		else
 			die("unrecognized argument: %s", name);
