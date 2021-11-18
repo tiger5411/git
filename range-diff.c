@@ -578,18 +578,20 @@ int is_range_diff_range(const char *arg)
 {
 	char *copy = xstrdup(arg); /* setup_revisions() modifies it */
 	const char *argv[] = { "", copy, "--", NULL };
-	int i, positive = 0, negative = 0;
+	int positive = 0, negative = 0;
 	struct rev_info revs;
 
 	init_revisions(&revs, NULL);
 	if (setup_revisions(3, argv, &revs, NULL) == 1) {
-		for (i = 0; i < revs.pending.nr; i++)
-			if (revs.pending.objects[i].item->flags & UNINTERESTING)
+		struct object_array_entry *entry;
+
+		for_each_object_array_entry(entry, &revs.pending)
+			if (entry->item->flags & UNINTERESTING)
 				negative++;
 			else
 				positive++;
-		for (i = 0; i < revs.pending.nr; i++) {
-			struct object *obj = revs.pending.objects[i].item;
+		for_each_object_array_entry(entry, &revs.pending) {
+			struct object *obj = entry->item;
 
 			if (obj->type == OBJ_COMMIT)
 				clear_commit_marks((struct commit *)obj,

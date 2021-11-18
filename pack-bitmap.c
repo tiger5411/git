@@ -1226,7 +1226,7 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 					 struct list_objects_filter_options *filter,
 					 int filter_provided_objects)
 {
-	unsigned int i;
+	struct object_array_entry *entry;
 
 	struct object_array_bare wants = OBJECT_ARRAY_BARE_INIT;
 	struct object_array_bare haves = OBJECT_ARRAY_BARE_INIT;
@@ -1253,8 +1253,8 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 	if (open_bitmap(revs->repo, bitmap_git) < 0)
 		goto cleanup;
 
-	for (i = 0; i < revs->pending.nr; ++i) {
-		struct object *object = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *object = entry->item;
 
 		if (object->type == OBJ_NONE)
 			parse_object_or_die(&object->oid, NULL);

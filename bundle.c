@@ -316,7 +316,7 @@ out:
 static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *pack_options)
 {
 	struct child_process pack_objects = CHILD_PROCESS_INIT;
-	int i;
+	struct object_array_entry *entry;
 
 	strvec_pushl(&pack_objects.args,
 		     "pack-objects",
@@ -343,8 +343,8 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
 	if (start_command(&pack_objects))
 		return error(_("Could not spawn pack-objects"));
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object *object = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *object = entry->item;
 		if (object->flags & UNINTERESTING)
 			write_or_die(pack_objects.in, "^", 1);
 		write_or_die(pack_objects.in, oid_to_hex(&object->oid), the_hash_algo->hexsz);
@@ -367,11 +367,10 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
  */
 static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 {
-	int i;
+	struct object_array_entry *e;
 	int ref_count = 0;
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object_array_entry *e = revs->pending.objects + i;
+	for_each_object_array_entry(e, &revs->pending) {
 		struct object_id oid;
 		char *ref;
 		const char *display_ref;
@@ -491,8 +490,8 @@ int create_bundle(struct repository *r, const char *path,
 	struct rev_info revs, revs_copy;
 	int min_version = the_hash_algo == &hash_algos[GIT_HASH_SHA1] ? 2 : 3;
 	struct bundle_prerequisites_info bpi;
-	int i;
 	int ret = 0;
+	struct object_array_entry *e;
 
 	bundle_to_stdout = !strcmp(path, "-");
 	if (bundle_to_stdout)
@@ -534,8 +533,7 @@ int create_bundle(struct repository *r, const char *path,
 	revs_copy.pending.nr = 0;
 	revs_copy.pending.alloc = 0;
 	revs_copy.pending.objects = NULL;
-	for (i = 0; i < revs.pending.nr; i++) {
-		struct object_array_entry *e = revs.pending.objects + i;
+	for_each_object_array_entry(e, &revs.pending) {
 		if (e)
 			add_object_array_with_path(e->item, e->name,
 						   &revs_copy.pending,
