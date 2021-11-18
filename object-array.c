@@ -65,6 +65,7 @@ void object_array_remove_duplicates(struct object_array *array)
 	array->nr = 0;
 	for (src = 0; src < nr; src++) {
 		/* wtf are we doing here if we're getting NULL entries anyway? */
+		/* todo: missing test for "~/g/git/git bundle create o.bdl meta meta" duplicate test */
 		if (!objects[src].name ||
 		    !contains_object(array, objects[src].item,
 				     objects[src].name)) {
