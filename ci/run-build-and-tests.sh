@@ -44,6 +44,8 @@ linux-gcc-4.8)
 	;;
 esac
 
+find "$cache_dir/" -type f
+
 case "$MAKE_TARGETS" in
 *test*)
 	case "$CI_OS_NAME" in
