@@ -83,7 +83,7 @@ check_unignored_build_artifacts ()
 export TERM=${TERM:-dumb}
 
 # Clear MAKEFLAGS that may come from the outside world.
-export MAKEFLAGS=
+export MAKEFLAGS="${MAKEFLAGS:+$MAKEFLAGS }$EXTRA_MAKEFLAGS"
 
 # Set 'exit on error' for all CI scripts to let the caller know that
 # something went wrong.

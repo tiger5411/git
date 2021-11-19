@@ -1,16 +1,14 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Build and test Git
 #
 
 . ${0%/*}/lib.sh
 
-case "$CI_OS_NAME" in
-windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
-*) ln -s "$cache_dir/.prove" t/.prove;;
-esac
-
-export MAKE_TARGETS="all test"
+if test -z "$MAKE_TARGETS"
+then
+	export MAKE_TARGETS="all test"
+fi
 
 case "$jobname" in
 linux-gcc)
@@ -43,6 +41,38 @@ pedantic)
 	;;
 linux-gcc-4.8)
 	export MAKE_TARGETS=all
+	;;
+esac
+
+case "$MAKE_TARGETS" in
+*test*)
+	case "$CI_OS_NAME" in
+	windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
+	*) ln -s "$cache_dir/.prove" t/.prove;;
+	esac
+	;;
+esac
+
+filter_log () {
+	sed -e '/^GIT_VERSION = /d' \
+	    -e "/constant Gem::ConfigMap is deprecated/d" \
+	    -e '/^    \* new asciidoc flags$/d' \
+	    -e '/stripped namespace before processing/d' \
+	    -e '/Attributed.*IDs for element/d' \
+	    "$1"
+}
+
+case "$jobname" in
+doc-*)
+
+	make $MAKE_TARGETS > >(tee stdout.log) 2> >(tee stderr.raw >&2)
+	rm -f stdout.log stderr.log stderr.raw
+	cat stderr.raw
+	filter_log stderr.raw >stderr.log
+	test ! -s stderr.log
+	;;
+*)
+	make $MAKE_TARGETS > >(tee stdout.log) 2> >(tee stderr.raw >&2)
 	;;
 esac
 

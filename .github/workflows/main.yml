@@ -337,13 +337,22 @@ jobs:
       run: ci/install-dependencies.sh
     - run: make sparse
   documentation:
-    name: documentation
+    name: ${{matrix.vector.jobname}}
     needs: ci-config
     if: needs.ci-config.outputs.enabled == 'yes'
+    strategy:
+      fail-fast: false
+      matrix:
+        vector:
+          - jobname: doc-asciidoc
+          - jobname: doc-asciidoctor
+            makeflags: USE_ASCIIDOCTOR=Y
     env:
-      jobname: Documentation
+      jobname: ${{matrix.vector.jobname}}
+      MAKE_TARGETS: check-builtins check-docs doc ${{matrix.vector.makeflags}}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - run: ci/install-dependencies.sh
+    - run: ci/run-build-and-tests.sh
     - run: ci/test-documentation.sh
