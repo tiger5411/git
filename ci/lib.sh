@@ -131,7 +131,7 @@ then
 
 	cache_dir="$HOME/none"
 
-	export GIT_PROVE_OPTS="--timer --jobs 10"
+	export GIT_PROVE_OPTS="--timer --state=failed,slow,save --jobs 10"
 	export GIT_TEST_OPTS="--verbose-log -x"
 	MAKEFLAGS="$MAKEFLAGS --jobs=10"
 	test windows != "$CI_OS_NAME" ||

@@ -121,3 +121,16 @@ perf:
 	$(MAKE) -C perf/ all
 
 .PHONY: pre-clean $(T) aggregate-results clean valgrind perf check-chainlint clean-chainlint
+
+.PHONY: mock-.prove
+mock-.prove:
+	git -P grep -c -w \
+		-e 'test_expect[a-z_]*' \
+		-e 'match' \
+		-e checkout_files \
+		-- $(T) | \
+	awk -F: ' \
+		BEGIN { print "---\ntests:" } \
+		{ print "  " $$1 ":"; print "    elapsed: " $$2 } \
+		END { print "..." } \
+	' >.prove
