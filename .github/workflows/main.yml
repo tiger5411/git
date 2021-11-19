@@ -267,7 +267,7 @@ jobs:
         - jobname: linux-musl
           os: alpine
           image: alpine
-        - jobname: Linux32
+        - jobname: linux32
           os: ubuntu32
           image: daald/ubuntu32:xenial
         - jobname: pedantic

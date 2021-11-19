@@ -25,7 +25,7 @@ matrix:
       os: linux
       dist: trusty
       compiler:
-    - env: jobname=Linux32
+    - env: jobname=linux32
       os: linux
       compiler:
       addons:
