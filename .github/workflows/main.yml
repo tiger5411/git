@@ -229,6 +229,7 @@ jobs:
           - jobname: linux-gcc
             cc: gcc
             os: ubuntu
+            cc_package: gcc-8
             pool: ubuntu-latest
           - jobname: osx-clang
             cc: clang
@@ -237,6 +238,7 @@ jobs:
           - jobname: osx-gcc
             cc: gcc
             os: osx
+            cc_package: gcc-9
             pool: macos-latest
           - jobname: linux-gcc-default
             cc: gcc
@@ -248,7 +250,9 @@ jobs:
             pool: ubuntu-latest
     env:
       CC: ${{matrix.vector.cc}}
+      CC_PACKAGE: ${{matrix.vector.cc_package}}
       jobname: ${{matrix.vector.jobname}}
+      runs_on_pool: ${{matrix.vector.pool}}
     runs-on: ${{matrix.vector.pool}}
     steps:
     - uses: actions/checkout@v2
