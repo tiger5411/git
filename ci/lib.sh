@@ -34,7 +34,7 @@ save_good_tree () {
 # successfully before (e.g. because the branch got rebased, changing only
 # the commit messages).
 skip_good_tree () {
-	if test "$TRAVIS_DEBUG_MODE" = true || test true = "$GITHUB_ACTIONS"
+	if test "$GITHUB_ACTIONS" = true
 	then
 		return
 	fi
@@ -91,29 +91,7 @@ export MAKEFLAGS=
 # and installing dependencies.
 set -ex
 
-if test true = "$TRAVIS"
-then
-	CI_TYPE=travis
-	# When building a PR, TRAVIS_BRANCH refers to the *target* branch. Not
-	# what we want here. We want the source branch instead.
-	CI_BRANCH="${TRAVIS_PULL_REQUEST_BRANCH:-$TRAVIS_BRANCH}"
-	CI_COMMIT="$TRAVIS_COMMIT"
-	CI_JOB_ID="$TRAVIS_JOB_ID"
-	CI_JOB_NUMBER="$TRAVIS_JOB_NUMBER"
-	CI_OS_NAME="$TRAVIS_OS_NAME"
-	CI_REPO_SLUG="$TRAVIS_REPO_SLUG"
-
-	cache_dir="$HOME/travis-cache"
-
-	url_for_job_id () {
-		echo "https://travis-ci.org/$CI_REPO_SLUG/jobs/$1"
-	}
-
-	BREW_INSTALL_PACKAGES="git-lfs gettext"
-	export GIT_PROVE_OPTS="--timer --jobs 3 --state=failed,slow,save"
-	export GIT_TEST_OPTS="--verbose-log -x --immediate"
-	MAKEFLAGS="$MAKEFLAGS --jobs=2"
-elif test -n "$SYSTEM_COLLECTIONURI" || test -n "$SYSTEM_TASKDEFINITIONSURI"
+if test -n "$SYSTEM_COLLECTIONURI" || test -n "$SYSTEM_TASKDEFINITIONSURI"
 then
 	CI_TYPE=azure-pipelines
 	# We are running in Azure Pipelines
@@ -214,11 +192,6 @@ osx-clang|osx-gcc)
 	else
 		MAKEFLAGS="$MAKEFLAGS PYTHON_PATH=$(which python2)"
 	fi
-
-	# t9810 occasionally fails on Travis CI OS X
-	# t9816 occasionally fails with "TAP out of sequence errors" on
-	# Travis CI OS X
-	export GIT_SKIP_TESTS="t9810 t9816"
 	;;
 linux-gcc-default)
 	;;
