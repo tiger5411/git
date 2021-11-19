@@ -48,7 +48,12 @@ case "$MAKE_TARGETS" in
 *test*)
 	case "$CI_OS_NAME" in
 	windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
-	*) ln -s "$cache_dir/.prove" t/.prove;;
+	*)
+		ln -s "$cache_dir/.prove" t/.prove
+		if ! test -s t/.prove
+		then
+			make -C t mock-.prove >/dev/null || :
+		fi
 	esac
 	;;
 esac
