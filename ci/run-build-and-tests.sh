@@ -5,12 +5,10 @@
 
 . ${0%/*}/lib.sh
 
-case "$CI_OS_NAME" in
-windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
-*) ln -s "$cache_dir/.prove" t/.prove;;
-esac
-
-export MAKE_TARGETS="all test"
+if test -z "$MAKE_TARGETS"
+then
+	export MAKE_TARGETS="all test"
+fi
 
 case "$jobname" in
 linux-gcc)
@@ -43,6 +41,15 @@ pedantic)
 	;;
 linux-gcc-4.8)
 	export MAKE_TARGETS=all
+	;;
+esac
+
+case "$MAKE_TARGETS" in
+*test*)
+	case "$CI_OS_NAME" in
+	windows*) cmd //c mklink //j t\\.prove "$(cygpath -aw "$cache_dir/.prove")";;
+	*) ln -s "$cache_dir/.prove" t/.prove;;
+	esac
 	;;
 esac
 
