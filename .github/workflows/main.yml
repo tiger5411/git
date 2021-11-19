@@ -225,7 +225,14 @@ jobs:
           - jobname: linux-clang
             cc: clang
             pool: ubuntu-latest
+          - jobname: linux-sha256
+            cc: clang
+            pool: ubuntu-latest
           - jobname: linux-gcc
+            cc: gcc
+            cc_package: gcc-8
+            pool: ubuntu-latest
+          - jobname: linux-TEST-vars
             cc: gcc
             cc_package: gcc-8
             pool: ubuntu-latest
