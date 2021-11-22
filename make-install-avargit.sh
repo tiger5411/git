@@ -202,7 +202,7 @@ test_compile () {
 	)
 
 	# Run special test setups
-	make -j $(nproc) SANITIZE=leak CFLAGS="-O0 -g"
+	make -j $(nproc) SANITIZE=leak
 	(
 		cd t
 		make clean-except-prove-cache
@@ -507,7 +507,7 @@ test -n "$only_range_diff" && exit
 reset_it
 
 # Configure with prefix & cflags, fake "version" still
-~/g/git.meta/config.mak.sh --prefix /home/avar/local --cc clang --cflags "-O2 -g"
+~/g/git.meta/config.mak.sh --prefix /home/avar/local
 
 # Test master first, for basic sanity
 if test -z "$no_merge_compile"
@@ -550,7 +550,7 @@ test -n "$only_merge" && exit
 
 # Configure with prefix & cflags, and a non-fake "version" for release
 rm version
-~/g/git.meta/config.mak.sh --do-release --prefix /home/avar/local --cc clang --cflags "-O2 -g"
+~/g/git.meta/config.mak.sh --do-release --prefix /home/avar/local --cflags "-O2 -g"
 
 # Compile, unless we were doing it in the merge loop
 if test -z "$merge_full_tests"
