@@ -341,3 +341,36 @@ jobs:
     - uses: actions/checkout@v2
     - run: ci/install-dependencies.sh
     - run: ci/test-documentation.sh
+  pcre2:
+    needs: ci-config
+    if: needs.ci-config.outputs.enabled == 'yes'
+    strategy:
+      fail-fast: false
+      matrix:
+        jit: ['--enable-jit', '--disable-jit']
+        unicode: ['--enable-unicode', '--disable-unicode']
+        version:
+        - 'pcre2-10.20'
+        - 'pcre2-10.31'
+        - 'pcre2-10.34'
+        - 'pcre2-10.36'
+        - '`git tag -l --sort=-version:refname | head -n 1`'
+    env:
+      jobname: linux-gcc-default
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: echo "VER=${{matrix.version}}" >>$GITHUB_ENV
+    - uses: actions/checkout@v2
+      with:
+        repository: 'PhilipHazel/pcre2'
+        path: 'compat/pcre2-repo'
+        ref: ${{env.VER}}
+    - run: ci/install-dependencies.sh
+    - run: |
+        cd compat/pcre2-repo &&
+        ./autogen.sh &&
+        ./configure ${{matrix.jit}} ${{matrix.unicode}} --prefix="$PWD/inst" &&
+        make install
+    - run: make USE_LIBPCRE=Y LIBPCREDIR="$PWD/compat/pcre2-repo/inst"
+    - run: cd t && make *{grep,log,pickaxe}*
