@@ -375,9 +375,20 @@ static void batch_object_write(const char *obj_name,
 	}
 
 	if (!opt->format && !opt->print_contents) {
-		fprintf(stdout, "%s %s %"PRIuMAX"\n", oid_to_hex(&data->oid),
-			data->info.type_name->buf,
-			(uintmax_t)*data->info.sizep);
+		char buf[1024];
+		size_t len;
+
+		snprintf(buf, sizeof(buf), "%s %s %"PRIuMAX"\n", oid_to_hex(&data->oid),
+			 data->info.type_name->buf,
+			 (uintmax_t)*data->info.sizep);
+		len = strlen(buf);
+
+		if (opt->buffer_output) {
+			if (fwrite(buf, 1, len, stdout) != len)
+				die_errno("unable to write to stdout");
+		} else {
+			write_or_die(1, buf, len);
+		}
 	} else {
 		const char *fmt = opt->format ? opt->format : default_format;
 		strbuf_reset(scratch);
