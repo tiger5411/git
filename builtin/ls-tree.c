@@ -30,10 +30,11 @@ static const char * const ls_tree_usage[] = {
 	NULL
 };
 
-enum {
+enum ls_tree_cmdmode {
 	MODE_UNSPECIFIED = 0,
 	MODE_NAME_ONLY,
-	MODE_OID_ONLY
+	MODE_OID_ONLY,
+	MODE_LONG,
 };
 
 static int cmdmode = MODE_UNSPECIFIED;
@@ -131,11 +132,22 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 	return retval;
 }
 
+static struct {
+	enum ls_tree_cmdmode cmdmode;
+	const char *fmt;
+} allowed_formats[] = {
+	{ MODE_UNSPECIFIED,	"%(objectmode) %(objecttype) %(objectname)%09%(path)" },
+	{ MODE_NAME_ONLY,	"%(path)" },
+	{ MODE_OID_ONLY,	"%(objectname)" },
+	{ MODE_LONG,		"%(objectmode) %(objecttype) %(objectsize) %(objectname)%09%(path)" },
+};
+
 int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 {
 	struct object_id oid;
 	struct tree *tree;
 	int i, full_tree = 0;
+	const char *format = NULL;
 	const struct option ls_tree_options[] = {
 		OPT_BIT('d', NULL, &ls_options, N_("only show trees"),
 			LS_TREE_ONLY),
@@ -149,7 +161,8 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 			LS_SHOW_SIZE),
 		OPT_CMDMODE('n', "name-only", &cmdmode, N_("list only filenames"), MODE_NAME_ONLY),
 		OPT_CMDMODE('s', "name-status", &cmdmode, N_("list only filenames"), MODE_NAME_ONLY),
-		OPT_CMDMODE('o', "oid-only", &cmdmode, N_("list only oids"), MODE_OID_ONLY),
+		OPT_STRING(0 , "format", &format, N_("format"),
+			   N_("(limited) format to use for the output")),
 		OPT_SET_INT(0, "full-name", &chomp_prefix,
 			    N_("use full path names"), 0),
 		OPT_BOOL(0, "full-tree", &full_tree,
@@ -170,6 +183,22 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		ls_tree_prefix = prefix = NULL;
 		chomp_prefix = 0;
 	}
+
+	if (format && cmdmode)
+		die(_("--format and --name-only, --long etc. are incompatible"));
+	if (format) {
+		size_t i;
+
+		for (i = 0; i <= ARRAY_SIZE(allowed_formats); i++) {
+			if (i == ARRAY_SIZE(allowed_formats))
+				die(_("your --format=%s is not on the whitelist of supported formats"), format);
+			if (!strcmp(format, allowed_formats[i].fmt)) {
+				cmdmode = allowed_formats[i].cmdmode;
+				break;
+			}
+		}
+	}
+
 	/* -d -r should imply -t, but -d by itself should not have to. */
 	if ( (LS_TREE_ONLY|LS_RECURSIVE) ==
 	    ((LS_TREE_ONLY|LS_RECURSIVE) & ls_options))
