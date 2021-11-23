@@ -342,11 +342,13 @@ jobs:
     - run: ci/install-dependencies.sh
     - run: ci/test-documentation.sh
   pcre2:
+    name: ${{matrix.vector.jobname}} (${{matrix.vector.pool}})
     needs: ci-config
     if: needs.ci-config.outputs.enabled == 'yes'
     strategy:
       fail-fast: false
       matrix:
+        pool: ubuntu-latest
         jit: ['--enable-jit', '--disable-jit']
         unicode: ['--enable-unicode', '--disable-unicode']
         version:
@@ -356,21 +358,29 @@ jobs:
         - 'pcre2-10.36'
         - '`git tag -l --sort=-version:refname | head -n 1`'
     env:
-      jobname: linux-gcc-default
-    runs-on: ubuntu-latest
+      jobname: pcre2-${{matrix.version}}
+      runs_on_pool: ${{matrix.vector.pool}}
+    runs-on: ${{matrix.pool}}
     steps:
     - uses: actions/checkout@v2
     - run: echo "VER=${{matrix.version}}" >>$GITHUB_ENV
+    - run: ci/install-dependencies.sh
     - uses: actions/checkout@v2
       with:
         repository: 'PhilipHazel/pcre2'
         path: 'compat/pcre2-repo'
         ref: ${{env.VER}}
-    - run: ci/install-dependencies.sh
     - run: |
         cd compat/pcre2-repo &&
         ./autogen.sh &&
         ./configure ${{matrix.jit}} ${{matrix.unicode}} --prefix="$PWD/inst" &&
         make install
-    - run: make USE_LIBPCRE=Y LIBPCREDIR="$PWD/compat/pcre2-repo/inst"
-    - run: cd t && make *{grep,log,pickaxe}*
+    - run: LIBPCREDIR="$PWD/compat/pcre2-repo/inst" ci/run-build-and-tests.sh
+    - run: ci/print-test-failures.sh
+      if: failure()
+    - name: Upload failed tests' directories
+      if: failure() && env.FAILED_TEST_ARTIFACTS != ''
+      uses: actions/upload-artifact@v2
+      with:
+        name: failed-tests-${{matrix.vector.jobname}}
+        path: ${{env.FAILED_TEST_ARTIFACTS}}

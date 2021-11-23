@@ -43,6 +43,9 @@ pedantic)
 	export DEVOPTS=pedantic
 	export MAKE_TARGETS=all
 	;;
+pcre2-*)
+	export MAKE_TARGETS="all test USE_LIBPCRE=Y ${LIBPCREDIR:+LIBPCREDIR=\"$LIBPCREDIR\"} T=\"t*grep* t*log* t*pickaxe*\""
+	;;
 esac
 
 # Any new "test" targets should not go after this "make", but should
