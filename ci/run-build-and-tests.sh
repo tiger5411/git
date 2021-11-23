@@ -44,7 +44,7 @@ pedantic)
 	export MAKE_TARGETS=all
 	;;
 pcre2-*)
-	export MAKE_TARGETS="all test USE_LIBPCRE=Y ${LIBPCREDIR:+LIBPCREDIR=\"$LIBPCREDIR\"} T=\"t*grep* t*log* t*pickaxe*\""
+	export MAKE_TARGETS="all test USE_LIBPCRE=Y ${LIBPCREDIR:+LIBPCREDIR=\"$LIBPCREDIR\"} \"T=\\\"t*grep* t*log*\\\"\""
 	;;
 esac
 

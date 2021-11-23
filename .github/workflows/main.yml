@@ -342,28 +342,23 @@ jobs:
     - run: ci/install-dependencies.sh
     - run: ci/test-documentation.sh
   pcre2:
-    name: ${{matrix.vector.jobname}} (${{matrix.vector.pool}})
+    name: pcre2-${{matrix.version}} (${{matrix.pool}}; ${{matrix.jit}}; ${{matrix.unicode}})
     needs: ci-config
     if: needs.ci-config.outputs.enabled == 'yes'
     strategy:
       fail-fast: false
       matrix:
-        pool: ubuntu-latest
-        jit: ['--enable-jit', '--disable-jit']
-        unicode: ['--enable-unicode', '--disable-unicode']
-        version:
-        - 'pcre2-10.20'
-        - 'pcre2-10.31'
-        - 'pcre2-10.34'
-        - 'pcre2-10.36'
-        - '`git tag -l --sort=-version:refname | head -n 1`'
+        pool: ['ubuntu-latest']
+        version: ['10.20', '10.31', '10.34', '10.36']
+        jit: ['enable-jit', 'disable-jit']
+        unicode: ['enable-unicode', 'disable-unicode']
     env:
-      jobname: pcre2-${{matrix.version}}
-      runs_on_pool: ${{matrix.vector.pool}}
+      jobname: pcre2-${{matrix.version}}-${{matrix.jit}}-${{matrix.unicode}}
+      runs_on_pool: ${{matrix.pool}}
     runs-on: ${{matrix.pool}}
     steps:
     - uses: actions/checkout@v2
-    - run: echo "VER=${{matrix.version}}" >>$GITHUB_ENV
+    - run: echo "VER=pcre2-${{matrix.version}}" >>$GITHUB_ENV
     - run: ci/install-dependencies.sh
     - uses: actions/checkout@v2
       with:
@@ -373,7 +368,7 @@ jobs:
     - run: |
         cd compat/pcre2-repo &&
         ./autogen.sh &&
-        ./configure ${{matrix.jit}} ${{matrix.unicode}} --prefix="$PWD/inst" &&
+        ./configure --${{matrix.jit}} --${{matrix.unicode}} --prefix="$PWD/inst" &&
         make install
     - run: LIBPCREDIR="$PWD/compat/pcre2-repo/inst" ci/run-build-and-tests.sh
     - run: ci/print-test-failures.sh
@@ -382,5 +377,5 @@ jobs:
       if: failure() && env.FAILED_TEST_ARTIFACTS != ''
       uses: actions/upload-artifact@v2
       with:
-        name: failed-tests-${{matrix.vector.jobname}}
+        name: failed-tests-${{matrix.jobname}}
         path: ${{env.FAILED_TEST_ARTIFACTS}}
