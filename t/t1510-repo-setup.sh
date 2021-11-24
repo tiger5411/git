@@ -40,8 +40,14 @@ A few rules for repo setup:
     prefix is NULL.
 "
 
-# This test heavily relies on the standard error of nested function calls.
-test_untraceable=UnfortunatelyYes
+test_must_be_empty_trace () {
+	if want_trace
+	then
+		say "$TEST_NAME does not check test_must_be_empty on \"$@\" under -x"
+		return 0
+	fi
+	test_must_be_empty "$@"
+}
 
 TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
@@ -235,14 +241,14 @@ test_expect_success '#0: nonbare repo, no explicit configuration' '
 	try_repo 0 unset unset unset "" unset \
 		.git "$here/0" "$here/0" "(null)" \
 		.git "$here/0" "$here/0" sub/ 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#1: GIT_WORK_TREE without explicit GIT_DIR is accepted' '
 	try_repo 1 "$here" unset unset "" unset \
 		"$here/1/.git" "$here" "$here" 1/ \
 		"$here/1/.git" "$here" "$here" 1/sub/ 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#2: worktree defaults to cwd with explicit GIT_DIR' '
@@ -269,7 +275,7 @@ test_expect_success '#4: core.worktree without GIT_DIR set is accepted' '
 	try_case 4 unset unset \
 		.git "$here/4/sub" "$here/4" "(null)" \
 		"$here/4/.git" "$here/4/sub" "$here/4/sub" "(null)" 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#5: core.worktree + GIT_WORK_TREE is accepted' '
@@ -280,7 +286,7 @@ test_expect_success '#5: core.worktree + GIT_WORK_TREE is accepted' '
 	try_repo 5a .. unset "$here/5a" "" unset \
 		"$here/5a/.git" "$here" "$here" 5a/ \
 		"$here/5a/.git" "$here/5a" "$here/5a" sub/ &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#6: setting GIT_DIR brings core.worktree to life' '
@@ -377,7 +383,7 @@ test_expect_success '#9: GIT_WORK_TREE accepted with gitfile' '
 	try_repo 9 wt unset unset gitfile unset \
 		"$here/9.git" "$here/9/wt" "$here/9" "(null)" \
 		"$here/9.git" "$here/9/sub/wt" "$here/9/sub" "(null)" 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#10: GIT_DIR can point to gitfile' '
@@ -403,7 +409,7 @@ test_expect_success '#12: core.worktree with gitfile is accepted' '
 	try_repo 12 unset unset "$here/12" gitfile unset \
 		"$here/12.git" "$here/12" "$here/12" "(null)" \
 		"$here/12.git" "$here/12" "$here/12" sub/ 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#13: core.worktree+GIT_WORK_TREE accepted (with gitfile)' '
@@ -411,7 +417,7 @@ test_expect_success '#13: core.worktree+GIT_WORK_TREE accepted (with gitfile)' '
 	try_repo 13 non-existent-too unset non-existent gitfile unset \
 		"$here/13.git" "$here/13/non-existent-too" "$here/13" "(null)" \
 		"$here/13.git" "$here/13/sub/non-existent-too" "$here/13/sub" "(null)" 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 # case #14.
@@ -566,7 +572,7 @@ test_expect_success '#17: GIT_WORK_TREE without explicit GIT_DIR is accepted (ba
 	try_repo 17c "$here/17c" unset unset "" true \
 		.git "$here/17c" "$here/17c" "(null)" \
 		"$here/17c/.git" "$here/17c" "$here/17c" sub/ 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#18: bare .git named by GIT_DIR has no worktree' '
@@ -595,7 +601,7 @@ test_expect_success '#20a: core.worktree without GIT_DIR accepted (inside .git)'
 		"$here/20a/.git" "$here/20a" "$here/20a" .git/wt/ &&
 	try_case 20a/.git/wt/sub unset unset \
 		"$here/20a/.git" "$here/20a" "$here/20a" .git/wt/sub/ &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#20b/c: core.worktree and core.bare conflict' '
@@ -627,7 +633,7 @@ test_expect_success '#21: setup, core.worktree warns before overriding core.bare
 		export GIT_WORK_TREE &&
 		git status >/dev/null
 	) 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 
 '
 run_wt_tests 21
@@ -743,7 +749,7 @@ test_expect_success '#25: GIT_WORK_TREE accepted if GIT_DIR unset (bare gitfile 
 	try_repo 25 "$here/25" unset unset gitfile true \
 		"$here/25.git" "$here/25" "$here/25" "(null)"  \
 		"$here/25.git" "$here/25" "$here/25" "sub/" 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 
 test_expect_success '#26: bare repo has no worktree (GIT_DIR -> gitfile case)' '
@@ -781,7 +787,7 @@ test_expect_success '#29: setup' '
 		export GIT_WORK_TREE &&
 		git status
 	) 2>message &&
-	test_must_be_empty message
+	test_must_be_empty_trace message
 '
 run_wt_tests 29 gitfile
 
