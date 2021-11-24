@@ -588,7 +588,7 @@ int strbuf_readlink(struct strbuf *sb, const char *path, size_t hint)
 	return -1;
 }
 
-int strbuf_getcwd(struct strbuf *sb)
+static int strbuf_getcwd_1(struct strbuf *sb, int *gone)
 {
 	size_t oldalloc = sb->alloc;
 	size_t guessed_len = 128;
@@ -597,6 +597,21 @@ int strbuf_getcwd(struct strbuf *sb)
 		strbuf_grow(sb, guessed_len);
 		if (getcwd(sb->buf, sb->alloc)) {
 			strbuf_setlen(sb, strlen(sb->buf));
+			if (gone)
+				*gone = 0;
+			return 0;
+		}
+
+		if (errno == ENOENT && gone) {
+			const char *pwd = getenv("PWD");
+
+			*gone = 1;
+			if (!pwd)
+				return error(_("current working directory doesn't exist, and no PWD in the environment"));
+			if (!*pwd)
+				return error(_("current working directory doesn't exist, and an empty PWD in the environment"));
+
+			strbuf_addstr(sb, pwd);
 			return 0;
 		}
 
@@ -618,6 +633,16 @@ int strbuf_getcwd(struct strbuf *sb)
 	else
 		strbuf_reset(sb);
 	return -1;
+}
+
+int strbuf_getcwdpwd(struct strbuf *sb, int *gone)
+{
+	return strbuf_getcwd_1(sb, gone);
+}
+
+int strbuf_getcwd(struct strbuf *sb)
+{
+	return strbuf_getcwd_1(sb, NULL);
 }
 
 #ifdef HAVE_GETDELIM

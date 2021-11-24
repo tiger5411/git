@@ -6,6 +6,10 @@
 # files in bin-wrappers, substituting
 # @@BUILD_DIR@@ and @@PROG@@.
 
+if test -n "$GIT_TEST_BIN_WRAPPER_SET_PWD"
+then
+	PWD="$GIT_TEST_BIN_WRAPPER_SET_PWD"
+fi
 GIT_EXEC_PATH='@@BUILD_DIR@@'
 if test -n "$NO_SET_GIT_TEMPLATE_DIR"
 then

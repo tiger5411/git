@@ -528,6 +528,15 @@ int strbuf_getwholeline_fd(struct strbuf *sb, int fd, int term);
 int strbuf_getcwd(struct strbuf *sb);
 
 /**
+ * Set the buffer to the path of the current working directory, and if
+ * that doesn't work and we get ENOENT fallback on trying to get "PWD"
+ * from the environment. On a successful return the "gone" variable
+ * will be updated to 0 if we could getcwd(), and 1 if we're using the
+ * "PWD" fallback.
+ */
+int strbuf_getcwdpwd(struct strbuf *sb, int *gone);
+
+/**
  * Add a path to a buffer, converting a relative path to an
  * absolute one in the process.  Symbolic links are not
  * resolved.

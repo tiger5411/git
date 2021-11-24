@@ -809,4 +809,36 @@ test_expect_success '#31: setup' '
 '
 run_wt_tests 31 gitfile
 
+test_lazy_prereq PWD_ON_NO_CWD '
+	mkdir dir &&
+	cd dir &&
+	test-tool getcwd >../expect &&
+	rmdir ../dir &&
+	echo $PWD >../actual &&
+	cd .. &&
+	test_cmp expect actual 
+'
+
+test_expect_success 'handle getcwd() failing, but PWD working' '
+	test_when_finished "rm -rf repo" &&
+	git init repo &&
+	(
+		cd repo &&
+		test_commit A &&
+		mkdir dir &&
+		(
+			cd dir &&
+			echo $PWD &&
+			rmdir ../dir &&
+
+			# TODO: The GIT_TEST_BIN_WRAPPER_SET_PWD is only
+			# needed because the bin-wrapper/git is a POSIX
+			# shellscript, which set PWD to the empty string as it
+			# fails to discover the current working
+			# directory. When invoking the real git binary this works.
+			GIT_TEST_BIN_WRAPPER_SET_PWD="$PWD" git status
+		)
+	)
+'
+
 test_done

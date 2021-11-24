@@ -1048,10 +1048,13 @@ enum discovery_result {
  * the directory where the search ended, and `gitdir` will contain the path of
  * the discovered .git/ directory, if any. If `gitdir` is not absolute, it
  * is relative to `dir` (i.e. *not* necessarily the cwd).
+ * The `gone` parameter indicates that the directory doesn't exist,
+ * but we got it from "PWD" in the environment.
  */
 static enum discovery_result setup_git_directory_gently_1(struct strbuf *dir,
 							  struct strbuf *gitdir,
-							  int die_on_error)
+							  int die_on_error,
+							  int gone)
 {
 	const char *env_ceiling_dirs = getenv(CEILING_DIRECTORIES_ENVIRONMENT);
 	struct string_list ceiling_dirs = STRING_LIST_INIT_DUP;
@@ -1101,7 +1104,7 @@ static enum discovery_result setup_git_directory_gently_1(struct strbuf *dir,
 	 * - ../../.git
 	 *   etc.
 	 */
-	one_filesystem = !git_env_bool("GIT_DISCOVERY_ACROSS_FILESYSTEM", 0);
+	one_filesystem = !gone && !git_env_bool("GIT_DISCOVERY_ACROSS_FILESYSTEM", 0);
 	if (one_filesystem)
 		current_device = get_device_or_die(dir->buf, NULL, 0);
 	for (;;) {
@@ -1154,12 +1157,13 @@ int discover_git_directory(struct strbuf *commondir,
 	size_t gitdir_offset = gitdir->len, cwd_len;
 	size_t commondir_offset = commondir->len;
 	struct repository_format candidate = REPOSITORY_FORMAT_INIT;
+	int gone;
 
-	if (strbuf_getcwd(&dir))
+	if (strbuf_getcwdpwd(&dir, &gone))
 		return -1;
 
 	cwd_len = dir.len;
-	if (setup_git_directory_gently_1(&dir, gitdir, 0) <= 0) {
+	if (setup_git_directory_gently_1(&dir, gitdir, 0, gone) <= 0) {
 		strbuf_release(&dir);
 		return -1;
 	}
@@ -1209,6 +1213,7 @@ const char *setup_git_directory_gently(int *nongit_ok)
 	struct strbuf dir = STRBUF_INIT, gitdir = STRBUF_INIT;
 	const char *prefix = NULL;
 	struct repository_format repo_fmt = REPOSITORY_FORMAT_INIT;
+	int gone;
 
 	/*
 	 * We may have read an incomplete configuration before
@@ -1227,11 +1232,11 @@ const char *setup_git_directory_gently(int *nongit_ok)
 	if (nongit_ok)
 		*nongit_ok = 0;
 
-	if (strbuf_getcwd(&cwd))
+	if (strbuf_getcwdpwd(&cwd, &gone))
 		die_errno(_("Unable to read current working directory"));
 	strbuf_addbuf(&dir, &cwd);
 
-	switch (setup_git_directory_gently_1(&dir, &gitdir, 1)) {
+	switch (setup_git_directory_gently_1(&dir, &gitdir, 1, gone)) {
 	case GIT_DIR_EXPLICIT:
 		prefix = setup_explicit_git_dir(gitdir.buf, &cwd, &repo_fmt, nongit_ok);
 		break;
