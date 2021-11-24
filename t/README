@@ -86,9 +86,6 @@ appropriately before running "make". Short options can be bundled, i.e.
 -x::
 	Turn on shell tracing (i.e., `set -x`) during the tests
 	themselves. Implies `--verbose`.
-	Ignored in test scripts that set the variable 'test_untraceable'
-	to a non-empty value, unless it's run with a Bash version
-	supporting BASH_XTRACEFD, i.e. v4.1 or later.
 
 -d::
 --debug::

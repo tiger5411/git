@@ -381,29 +381,6 @@ then
 	exit
 fi
 
-if test -n "$trace" && test -n "$test_untraceable"
-then
-	# '-x' tracing requested, but this test script can't be reliably
-	# traced, unless it is run with a Bash version supporting
-	# BASH_XTRACEFD (introduced in Bash v4.1).
-	#
-	# Perform this version check _after_ the test script was
-	# potentially re-executed with $TEST_SHELL_PATH for '--tee' or
-	# '--verbose-log', so the right shell is checked and the
-	# warning is issued only once.
-	if test -n "$BASH_VERSION" && eval '
-	     test ${BASH_VERSINFO[0]} -gt 4 || {
-	       test ${BASH_VERSINFO[0]} -eq 4 &&
-	       test ${BASH_VERSINFO[1]} -ge 1
-	     }
-	   '
-	then
-		: Executed by a Bash version supporting BASH_XTRACEFD.  Good.
-	else
-		echo >&2 "warning: ignoring -x; '$0' is untraceable without BASH_XTRACEFD"
-		trace=
-	fi
-fi
 if test -n "$trace" && test -z "$verbose_log"
 then
 	verbose=t
