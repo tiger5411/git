@@ -13,6 +13,7 @@ REAL_CC=gcc
 export REAL_CC
 
 ## Options
+prefix=$HOME/local
 no_sanity=
 no_range_diff=
 only_sanity=
@@ -31,6 +32,10 @@ debug=
 while test $# != 0
 do
 	case "$1" in
+	--prefix)
+		prefix="$2"
+		shift
+		;;
 	--no-range-diff)
 		no_range_diff=yes
 		;;
@@ -245,11 +250,11 @@ suggest_bisect() {
 		exit 0
 	fi
 
-	~/g/git.meta/config.mak.sh --prefix /home/avar/local
+	~/g/git.meta/config.mak.sh --prefix "$prefix"
 	if ! make -j \$(nproc) all check-docs
 	then
 		git clean -dxf
-		~/g/git.meta/config.mak.sh --prefix /home/avar/local
+		~/g/git.meta/config.mak.sh --prefix "$prefix"
 		if ! make -j \$(nproc) all check-docs
 		then
 			exit 125
@@ -507,7 +512,7 @@ test -n "$only_range_diff" && exit
 reset_it
 
 # Configure with prefix & cflags, fake "version" still
-~/g/git.meta/config.mak.sh --prefix /home/avar/local
+~/g/git.meta/config.mak.sh --prefix "$prefix"
 
 # Test master first, for basic sanity
 if test -z "$no_merge_compile"
@@ -550,7 +555,7 @@ test -n "$only_merge" && exit
 
 # Configure with prefix & cflags, and a non-fake "version" for release
 rm version
-~/g/git.meta/config.mak.sh --do-release --prefix /home/avar/local --cflags "-O2 -g"
+~/g/git.meta/config.mak.sh --do-release --prefix "$prefix" --cflags "-O2 -g"
 
 # Compile, unless we were doing it in the merge loop
 if test -z "$merge_full_tests"
