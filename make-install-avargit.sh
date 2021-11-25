@@ -572,6 +572,11 @@ new_tagname=$(tag_name)
 new_tag=$(tag_it "$(git rev-parse HEAD)" "$new_tagname")
 last_version=$(git rev-parse avar/private)
 make -j $(nproc) install install-man
+## Install git completions, same paths as the "git" debian package
+install -d -m 755 "$prefix/lib/git-core"
+install -m 644 contrib/completion/git-prompt.sh "$prefix/lib/git-core/"git-sh-prompt
+install -d -m 755 "$prefix/share/bash-completion/completions"
+install -m 644 contrib/completion/git-completion.bash "$prefix/share/bash-completion/completions/"git
 
 # Post-install & report
 echo "Range-diff between last built and what I've got now:"
