@@ -83,6 +83,10 @@ ifndef V
 	QUIET_LINT_MANSEC	= @echo '   ' LINT MAN SEC $<;
 	QUIET_LINT_MANEND	= @echo '   ' LINT MAN END $<;
 
+## Used in "t/Makefile"
+	QUIET_CHAINLINT		= @echo '   ' CHAINLINT $@;
+	QUIET_CHAINLINT_DEP	= @echo '   ' CHAINLINT DEP $@;
+
 	export V
 endif
 endif
