@@ -487,8 +487,9 @@ int delete_reflog(const char *refname);
  */
 typedef int each_reflog_ent_fn(
 		struct object_id *old_oid, struct object_id *new_oid,
-		const char *committer, timestamp_t timestamp,
-		int tz, const char *msg, void *cb_data);
+		const char *committer_name, const char *committer_email,
+		timestamp_t timestamp, int tz,
+		const char *msg, void *cb_data);
 
 /* Iterate over reflog entries in the log for `refname`. */
 
@@ -862,7 +863,7 @@ typedef void reflog_expiry_prepare_fn(const char *refname,
 				      void *cb_data);
 typedef int reflog_expiry_should_prune_fn(struct object_id *ooid,
 					  struct object_id *noid,
-					  const char *email,
+					  const char *author, const char *email,
 					  timestamp_t timestamp, int tz,
 					  const char *message, void *cb_data);
 typedef void reflog_expiry_cleanup_fn(void *cb_data);

@@ -1993,7 +1993,10 @@ static int files_delete_reflog(struct ref_store *ref_store,
 static int show_one_reflog_ent(struct strbuf *sb, each_reflog_ent_fn fn, void *cb_data)
 {
 	struct object_id ooid, noid;
-	char *email_end, *message;
+	const char *name;
+	char *email;
+	char *email_end;
+	char *message;
 	timestamp_t timestamp;
 	int tz;
 	const char *p = sb->buf;
@@ -2002,6 +2005,8 @@ static int show_one_reflog_ent(struct strbuf *sb, each_reflog_ent_fn fn, void *c
 	if (!sb->len || sb->buf[sb->len - 1] != '\n' ||
 	    parse_oid_hex(p, &ooid, &p) || *p++ != ' ' ||
 	    parse_oid_hex(p, &noid, &p) || *p++ != ' ' ||
+	    !(name = p) ||
+	    !(email = strchr(p, '<')) ||
 	    !(email_end = strchr(p, '>')) ||
 	    email_end[1] != ' ' ||
 	    !(timestamp = parse_timestamp(email_end + 2, &message, 10)) ||
@@ -2010,13 +2015,20 @@ static int show_one_reflog_ent(struct strbuf *sb, each_reflog_ent_fn fn, void *c
 	    !isdigit(message[2]) || !isdigit(message[3]) ||
 	    !isdigit(message[4]) || !isdigit(message[5]))
 		return 0; /* corrupt? */
-	email_end[1] = '\0';
+	/* \0 the SP before "<", marks end of "name"... */
+	*(email - 1) = '\0';
+	/* ... and advance past the opening... "<" */
+	email++;
+	/* ...and stop at the ">" */
+	email_end[0] = '\0';
+
 	tz = strtol(message + 1, NULL, 10);
 	if (message[6] != '\t')
 		message += 6;
 	else
 		message += 7;
-	return fn(&ooid, &noid, p, timestamp, tz, message, cb_data);
+	return fn(&ooid, &noid, name, email, timestamp, tz, message,
+		  cb_data);
 }
 
 static char *find_beginning_of_line(char *bob, char *scan)
@@ -3114,7 +3126,8 @@ struct expire_reflog_cb {
 };
 
 static int expire_reflog_ent(struct object_id *ooid, struct object_id *noid,
-			     const char *email, timestamp_t timestamp, int tz,
+			     const char *author, const char *email,
+			     timestamp_t timestamp, int tz,
 			     const char *message, void *cb_data)
 {
 	struct expire_reflog_cb *cb = cb_data;
@@ -3123,14 +3136,14 @@ static int expire_reflog_ent(struct object_id *ooid, struct object_id *noid,
 	if (cb->rewrite)
 		ooid = &cb->last_kept_oid;
 
-	if (fn(ooid, noid, email, timestamp, tz, message, cb->policy_cb))
+	if (fn(ooid, noid, author, email, timestamp, tz, message, cb->policy_cb))
 		return 0;
 
 	if (cb->dry_run)
 		return 0; /* --dry-run */
 
-	fprintf(cb->newlog, "%s %s %s %"PRItime" %+05d\t%s", oid_to_hex(ooid),
-		oid_to_hex(noid), email, timestamp, tz, message);
+	fprintf(cb->newlog, "%s %s %s <%s> %"PRItime" %+05d\t%s", oid_to_hex(ooid),
+		oid_to_hex(noid), author, email, timestamp, tz, message);
 	oidcpy(&cb->last_kept_oid, noid);
 
 	return 0;

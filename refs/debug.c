@@ -298,8 +298,9 @@ struct debug_reflog {
 
 static int debug_print_reflog_ent(struct object_id *old_oid,
 				  struct object_id *new_oid,
-				  const char *committer, timestamp_t timestamp,
-				  int tz, const char *msg, void *cb_data)
+				  const char *committer, const char *committer_email,
+				  timestamp_t timestamp, int tz,
+				  const char *msg, void *cb_data)
 {
 	struct debug_reflog *dbg = (struct debug_reflog *)cb_data;
 	int ret;
@@ -311,11 +312,11 @@ static int debug_print_reflog_ent(struct object_id *old_oid,
 	if (new_oid)
 		oid_to_hex_r(n, new_oid);
 
-	ret = dbg->fn(old_oid, new_oid, committer, timestamp, tz, msg,
-		      dbg->cb_data);
+	ret = dbg->fn(old_oid, new_oid, committer, committer_email,
+		      timestamp, tz, msg, dbg->cb_data);
 	trace_printf_key(&trace_refs,
-			 "reflog_ent %s (ret %d): %s -> %s, %s %ld \"%.*s\"\n",
-			 dbg->refname, ret, o, n, committer,
+			 "reflog_ent %s (ret %d): %s -> %s, %s <%s> %ld \"%.*s\"\n",
+			 dbg->refname, ret, o, n, committer, committer_email,
 			 (long int)timestamp, (int)(msgend - msg), msg);
 	return ret;
 }
@@ -397,12 +398,13 @@ static void debug_reflog_expiry_prepare(const char *refname,
 
 static int debug_reflog_expiry_should_prune_fn(struct object_id *ooid,
 					       struct object_id *noid,
-					       const char *email,
+					       const char *committer_name, const char *committer_email,
 					       timestamp_t timestamp, int tz,
 					       const char *message, void *cb_data) {
 	struct debug_reflog_expiry_should_prune *prune = cb_data;
 
-	int result = prune->should_prune(ooid, noid, email, timestamp, tz, message, prune->cb_data);
+	int result = prune->should_prune(ooid, noid, committer_name, committer_email,
+					 timestamp, tz, message, prune->cb_data);
 	trace_printf_key(&trace_refs, "reflog_expire_should_prune: %s %ld: %d\n", message, (long int) timestamp, result);
 	return result;
 }

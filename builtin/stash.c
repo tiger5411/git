@@ -621,7 +621,8 @@ static int apply_stash(int argc, const char **argv, const char *prefix)
 }
 
 static int reject_reflog_ent(struct object_id *ooid, struct object_id *noid,
-			     const char *email, timestamp_t timestamp, int tz,
+			     const char *committer_name, const char *committer_email,
+			     timestamp_t timestamp, int tz,
 			     const char *message, void *cb_data)
 {
 	return 1;
