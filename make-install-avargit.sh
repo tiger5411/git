@@ -189,18 +189,21 @@ test_compile () {
 	then
 		(
 			cd t
-			if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS"
+			if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 			then
 				suggest_bisect "$(git rev-parse HEAD)"
 			fi
 		)
 	fi
 
-	# Run all tests
+	# Run all tests, except those we already ran in the "brief"
+	# mode above.
 	(
 		cd t
 		make clean-except-prove-cache
-		if ! GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+		cut -d '-' -f1 </tmp/git.build-tests >/tmp/git.build-tests.cut
+		tr '\n' ' ' </tmp/git.build-tests.cut >/tmp/git.build-tests.cut.tr
+		if ! GIT_SKIP_TESTS="$(cat /tmp/git.build-tests.cut.tr)" GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 		then
 			suggest_bisect "$(git rev-parse HEAD)"
 		fi
