@@ -2955,6 +2955,7 @@ void release_revisions(struct rev_info *revs)
 	release_revisions_cmdline(&revs->cmdline);
 	object_array_clear(&revs->boundary_commits);
 	clear_pathspec(&revs->prune_data);
+	date_mode_release(&revs->date_mode);
 	release_revisions_mailmap(revs->mailmap);
 	free_grep_patterns(&revs->grep_filter);
 	/* TODO (need to handle "no_free"): diff_free(&revs->diffopt) */
