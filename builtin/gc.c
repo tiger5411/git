@@ -594,8 +594,10 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		if (aggressive_window > 0)
 			strvec_pushf(&repack, "--window=%d", aggressive_window);
 	}
-	if (quiet)
+	if (quiet) {
+		strvec_push(&reflog, "--no-progress");
 		strvec_push(&repack, "-q");
+	}
 
 	if (auto_gc) {
 		/*

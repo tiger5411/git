@@ -55,6 +55,8 @@ static timestamp_t default_reflog_expire_unreachable;
 struct worktree_reflogs {
 	struct worktree *worktree;
 	struct string_list reflogs;
+	struct progress *progress;
+	uint64_t reflogs_progress_cnt;
 };
 
 static int collect_reflog(const char *ref, const struct object_id *oid, int unused, void *cb_data)
@@ -62,6 +64,8 @@ static int collect_reflog(const char *ref, const struct object_id *oid, int unus
 	struct worktree_reflogs *cb = cb_data;
 	struct worktree *worktree = cb->worktree;
 	struct strbuf newref = STRBUF_INIT;
+
+	display_progress(cb->progress, ++cb->reflogs_progress_cnt);
 
 	/*
 	 * Avoid collecting the same shared ref multiple times because
@@ -303,11 +307,17 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	}
 
 	if (do_all) {
+		struct progress *progress = NULL;
 		struct worktree_reflogs collected = {
 			.reflogs = STRING_LIST_INIT_DUP,
 		};
 		struct string_list_item *item;
 		struct worktree **worktrees, **p;
+		uint64_t progress_cnt;
+
+		if (show_progress)
+			collected.progress = start_delayed_progress(_("Enumerating reflogs"),
+								    0);
 
 		worktrees = get_worktrees();
 		for (p = worktrees; *p; p++) {
@@ -318,6 +328,13 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 					     collect_reflog, &collected);
 		}
 		free_worktrees(worktrees);
+		stop_progress(&collected.progress);
+
+		if (show_progress) {
+			progress_cnt = 0;
+			progress = start_delayed_progress(_("Expiring reflogs"),
+							  collected.reflogs.nr);
+		}
 
 		for_each_string_list_item(item, &collected.reflogs) {
 			struct expire_reflog_policy_cb cb = {
@@ -325,6 +342,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 				.dry_run = !!(flags & EXPIRE_REFLOGS_DRY_RUN),
 			};
 
+			display_progress(progress, ++progress_cnt);
 			set_reflog_expiry_param(&cb.cmd,  item->string);
 			status |= reflog_expire(item->string, flags,
 						reflog_expiry_prepare,
@@ -332,6 +350,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 						reflog_expiry_cleanup,
 						&cb);
 		}
+		stop_progress(&progress);
 		string_list_clear(&collected.reflogs, 0);
 	}
 
