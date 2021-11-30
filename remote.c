@@ -2171,7 +2171,7 @@ static int stat_branch_pair(const char *branch_name, const char *base,
 	clear_commit_marks(ours, ALL_REV_FLAGS);
 	clear_commit_marks(theirs, ALL_REV_FLAGS);
 
-	strvec_clear(&argv);
+	strvec_clear(&argv); /* TODO: Leaks as setup_revisions() mutates it! */
 	release_revisions(&revs);
 	return 1;
 }
