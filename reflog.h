@@ -21,7 +21,11 @@ struct expire_reflog_policy_cb {
 	struct cmd_reflog_expire_cb cmd;
 	struct commit *tip_commit;
 	struct commit_list *tips;
-	unsigned int dry_run:1;
+	unsigned int dry_run:1,
+		     show_progress:1,
+		     no_reachable_progress:1;
+	struct progress *reachable_progress;
+	uint64_t reachable_progress_cnt;
 };
 
 int reflog_delete(const char *rev, enum expire_reflog_flags flags,

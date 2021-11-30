@@ -311,9 +311,9 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		struct worktree_reflogs collected = {
 			.reflogs = STRING_LIST_INIT_DUP,
 		};
-		struct string_list_item *item;
 		struct worktree **worktrees, **p;
-		uint64_t progress_cnt;
+		int show_head_progress = show_progress;
+		size_t j;
 
 		if (show_progress)
 			collected.progress = start_delayed_progress(_("Enumerating reflogs"),
@@ -330,26 +330,31 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		free_worktrees(worktrees);
 		stop_progress(&collected.progress);
 
-		if (show_progress) {
-			progress_cnt = 0;
-			progress = start_delayed_progress(_("Expiring reflogs"),
-							  collected.reflogs.nr);
-		}
-
-		for_each_string_list_item(item, &collected.reflogs) {
+		for (j = 0; j < collected.reflogs.nr; j++) {
+			const char *string = collected.reflogs.items[j].string;
 			struct expire_reflog_policy_cb cb = {
 				.cmd = cmd,
 				.dry_run = !!(flags & EXPIRE_REFLOGS_DRY_RUN),
+				.show_progress = show_head_progress,
 			};
 
-			display_progress(progress, ++progress_cnt);
-			set_reflog_expiry_param(&cb.cmd,  item->string);
-			status |= reflog_expire(item->string, flags,
+			display_progress(progress, j + 1);
+			set_reflog_expiry_param(&cb.cmd, string);
+			status |= reflog_expire(string, flags,
 						reflog_expiry_prepare,
 						should_prune_fn,
 						reflog_expiry_cleanup,
 						&cb);
+
+			if (show_head_progress &&
+			    (cb.reachable_progress || cb.no_reachable_progress)) {
+				stop_progress(&cb.reachable_progress);
+				show_head_progress = 0;
+				progress = start_delayed_progress(_("Expiring reflogs"),
+								  collected.reflogs.nr);
+			}
 		}
+		display_progress(progress, collected.reflogs.nr);
 		stop_progress(&progress);
 		string_list_clear(&collected.reflogs, 0);
 	}
