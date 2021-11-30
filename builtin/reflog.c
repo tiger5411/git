@@ -47,7 +47,11 @@ struct expire_reflog_policy_cb {
 	struct commit *tip_commit;
 	struct commit_list *tips;
 	unsigned int dry_run:1,
-		     verbose:1;
+		     verbose:1,
+		     show_progress:1,
+		     no_reachable_progress:1;
+	struct progress *reachable_progress;
+	uint64_t reachable_progress_cnt;
 };
 
 struct worktree_reflogs {
@@ -235,6 +239,8 @@ static void mark_reachable(struct expire_reflog_policy_cb *cb)
 	while (pending) {
 		struct commit_list *parent;
 		struct commit *commit = pop_commit(&pending);
+
+		display_progress(cb->reachable_progress, ++cb->reachable_progress_cnt);
 		if (commit->object.flags & REACHABLE)
 			continue;
 		if (parse_commit(commit))
@@ -375,16 +381,27 @@ static void reflog_expiry_prepare(const char *refname,
 		cb->unreachable_expire_kind = commit ? UE_NORMAL : UE_ALWAYS;
 	}
 
-	if (cb->cmd.expire_unreachable <= cb->cmd.expire_total)
+	if (cb->cmd.expire_unreachable <= cb->cmd.expire_total) {
+		if (cb->show_progress &&
+		    cb->unreachable_expire_kind == UE_HEAD)
+			cb->no_reachable_progress = 1;
 		cb->unreachable_expire_kind = UE_ALWAYS;
+	}
 
 	switch (cb->unreachable_expire_kind) {
 	case UE_ALWAYS:
 		return;
 	case UE_HEAD:
+		if (cb->show_progress) {
+			const char *s = _("Iterating (un)reachable HEAD");
+			cb->reachable_progress = start_delayed_progress(s, 0);
+		}
 		for_each_ref(push_tip_to_list, &cb->tips);
-		for (elem = cb->tips; elem; elem = elem->next)
+		for (elem = cb->tips; elem; elem = elem->next) {
+			display_progress(cb->reachable_progress,
+					 ++cb->reachable_progress_cnt);
 			commit_list_insert(elem->item, &cb->mark_list);
+		}
 		break;
 	case UE_NORMAL:
 		commit_list_insert(commit, &cb->mark_list);
@@ -633,9 +650,9 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		struct worktree_reflogs collected = {
 			.reflogs = STRING_LIST_INIT_NODUP,
 		};
-		struct string_list_item *item;
 		struct worktree **worktrees, **p;
-		uint64_t progress_cnt;
+		int show_head_progress = show_progress;
+		size_t j;
 
 		if (show_progress)
 			collected.progress = start_delayed_progress(_("Enumerating reflogs"),
@@ -652,27 +669,31 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		free_worktrees(worktrees);
 		stop_progress(&collected.progress);
 
-		if (show_progress) {
-			progress_cnt = 0;
-			progress = start_delayed_progress(_("Expiring reflogs"),
-							  collected.reflogs.nr);
-		}
-
-		for_each_string_list_item(item, &collected.reflogs) {
+		for (j = 0; j < collected.reflogs.nr; j++) {
+			const char *string = collected.reflogs.items[j].string;
 			struct expire_reflog_policy_cb cb = {
 				.cmd = cmd,
 				.dry_run = !!(flags & EXPIRE_REFLOGS_DRY_RUN),
 				.verbose = verbose,
+				.show_progress = show_head_progress,
 			};
-
-			display_progress(progress, ++progress_cnt);
-			set_reflog_expiry_param(&cb.cmd, explicit_expiry, item->string);
-			status |= reflog_expire(item->string, flags,
+			display_progress(progress, j + 1);
+			set_reflog_expiry_param(&cb.cmd, explicit_expiry, string);
+			status |= reflog_expire(string, flags,
 						reflog_expiry_prepare,
 						should_expire_reflog_ent,
 						reflog_expiry_cleanup,
 						&cb);
+
+			if (show_head_progress &&
+			    (cb.reachable_progress || cb.no_reachable_progress)) {
+				stop_progress(&cb.reachable_progress);
+				show_head_progress = 0;
+				progress = start_delayed_progress(_("Expiring reflogs"),
+								  collected.reflogs.nr);
+			}
 		}
+		display_progress(progress, collected.reflogs.nr); /* only HEAD? */
 		stop_progress(&progress);
 		collected.reflogs.strdup_strings = 1;
 		string_list_clear(&collected.reflogs, 0);
