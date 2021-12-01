@@ -1018,6 +1018,17 @@ static int get_pack(struct fetch_pack_args *args,
 	return 0;
 }
 
+static int verify_bundle_missing_commits(struct string_list *missing)
+{
+	struct string_list_item *item;
+
+	error(_("Repository lacks these prerequisite commits:"));
+	for_each_string_list_item(item, missing)
+		error("%s %s", item->string, (char *)item->util);
+
+	return missing->nr;
+}
+
 static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 			       unsigned int total_nr, FILE *in, int in_fd,
 			       struct oid_array *bundle_oids,
@@ -1041,6 +1052,7 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 		ret = error("could not verify_bundle_extended(%s)", bundle_uri);
 		goto cleanup;
 	}
+	verify_bundle_missing_commits(&missing);
 	for_each_string_list_item(item, &missing) {
 		const char *sha = item->string;
 		struct object_id oid;
@@ -1084,7 +1096,7 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 		goto cleanup;
 	} else if (want_bundle_oids.nr != bundle_oids->nr) {
 		warning("already have %lu/%lu OIDs advertised in '%s'",
-			bundle_oids->nr - want_bundle_oids.nr, bundle_oids->nr,
+			want_bundle_oids.nr - bundle_oids->nr, bundle_oids->nr,
 			bundle_uri);
 	}
 
