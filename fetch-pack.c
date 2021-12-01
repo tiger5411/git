@@ -1029,18 +1029,29 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 	struct string_list_item *item;
 	struct strbuf progress_title = STRBUF_INIT;
 	int code;
+	struct string_list missing = STRING_LIST_INIT_DUP;
+	struct oid_array want_bundle_oids = OID_ARRAY_INIT;
 
 	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
 	if (ret < 0) {
 		ret = error("could not read_bundle_header(%s)", bundle_uri);
 		goto cleanup;
 	}
-	if (!verify_bundle(the_repository, &header, 1)) {
-		error("already have everything I need from %s", bundle_uri);
-		ret = -2;
+	if (verify_bundle_extended(the_repository, &header, &missing) < 0) {
+		ret = error("could not verify_bundle_extended(%s)", bundle_uri);
 		goto cleanup;
 	}
+	for_each_string_list_item(item, &missing) {
+		const char *sha = item->string;
+		struct object_id oid;
 
+		if (get_oid_hex(sha, &oid)) {
+			ret = error("invalid OID from verify_bundle_extended(%s): '%s'",
+				    bundle_uri, sha);
+			goto cleanup;
+		}
+		oid_array_append(&want_bundle_oids, &oid);
+	}
 	for_each_string_list_item(item, &header.references) {
 		/*
 		 * The bundle's idea of the ref name is
@@ -1065,6 +1076,17 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
 		lseek(in_fd, 0, SEEK_SET);
+
+	if (!want_bundle_oids.nr) {
+		warning("already have the %lu OIDs advertised in '%s'",
+			bundle_oids->nr, bundle_uri);
+		ret = -2;
+		goto cleanup;
+	} else if (want_bundle_oids.nr != bundle_oids->nr) {
+		warning("already have %lu/%lu OIDs advertised in '%s'",
+			bundle_oids->nr - want_bundle_oids.nr, bundle_oids->nr,
+			bundle_uri);
+	}
 
 	strbuf_addf(&progress_title, "Receiving bundle (%d/%d)", nth, total_nr);
 	strvec_pushl(&cmd.args, "index-pack", "--stdin", "-v",
@@ -1103,6 +1125,7 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 	}
 
 cleanup:
+	oid_array_clear(&want_bundle_oids);
 	strbuf_release(&progress_title);
 	bundle_header_release(&header);
 	return ret;
@@ -1142,6 +1165,7 @@ static int get_bundle_uri(struct string_list_item *item, unsigned int nth,
 	ret = unbundle_bundle_uri(uri, nth, total_nr, out, out_fd,
 				  bundle_oids, use_thin_pack);
 	if (ret == -2) {
+		fprintf(stderr, "going to rudely kill %d\n", cmd.pid);
 		int err = kill(cmd.pid, SIGTERM);;
 		if (err == -1) {
 			ret = error("fetch-pack: could not kill curl!");
