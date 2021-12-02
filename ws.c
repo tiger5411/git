@@ -4,6 +4,7 @@
  * Copyright (c) 2007 Junio C Hamano
  */
 #include "cache.h"
+#include "ws.h"
 #include "attr.h"
 
 static struct whitespace_rule {

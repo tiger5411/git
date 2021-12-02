@@ -22,6 +22,7 @@
 #include "rerere.h"
 #include "apply.h"
 #include "entry.h"
+#include "ws.h"
 
 struct gitdiff_data {
 	struct strbuf *root;

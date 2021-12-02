@@ -21,6 +21,7 @@
 #include "dir.h"
 #include "color.h"
 #include "refs.h"
+#include "ws.h"
 
 struct config_source {
 	struct config_source *prev;
