@@ -28,6 +28,7 @@
 #include "promisor-remote.h"
 #include "dir.h"
 #include "ws.h"
+#include "base85.h"
 
 #ifdef NO_FAST_WORKING_DIRECTORY
 #define FAST_WORKING_DIRECTORY 0

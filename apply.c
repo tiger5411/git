@@ -23,6 +23,7 @@
 #include "apply.h"
 #include "entry.h"
 #include "ws.h"
+#include "base85.h"
 
 struct gitdiff_data {
 	struct strbuf *root;

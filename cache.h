@@ -1779,10 +1779,6 @@ extern const char *editor_program;
 extern const char *askpass_program;
 extern const char *excludes_file;
 
-/* base85 */
-int decode_85(char *dst, const char *line, int linelen);
-void encode_85(char *buf, const unsigned char *data, int bytes);
-
 /* pkt-line.c */
 void packet_trace_identity(const char *prog);
 
