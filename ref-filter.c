@@ -23,6 +23,7 @@
 #include "worktree.h"
 #include "hashmap.h"
 #include "strvec.h"
+#include "versioncmp.h"
 
 static struct ref_msg {
 	const char *gone;
