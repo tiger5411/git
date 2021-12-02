@@ -16,6 +16,7 @@
 #include "trace.h"
 #include "utf8.h"
 #include "config.h"
+#include "pager.h"
 
 #define TP_IDX_MAX      8
 

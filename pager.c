@@ -1,4 +1,5 @@
 #include "cache.h"
+#include "pager.h"
 #include "config.h"
 #include "run-command.h"
 #include "sigchain.h"

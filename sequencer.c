@@ -35,6 +35,7 @@
 #include "commit-reach.h"
 #include "rebase-interactive.h"
 #include "reset.h"
+#include "pager.h"
 
 #define GIT_REFLOG_ACTION "GIT_REFLOG_ACTION"
 

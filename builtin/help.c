@@ -10,6 +10,7 @@
 #include "config-list.h"
 #include "help.h"
 #include "alias.h"
+#include "pager.h"
 
 #ifndef DEFAULT_HELP_FORMAT
 #define DEFAULT_HELP_FORMAT "man"

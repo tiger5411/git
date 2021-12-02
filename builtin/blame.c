@@ -28,6 +28,7 @@
 #include "blame.h"
 #include "refs.h"
 #include "tag.h"
+#include "pager.h"
 
 static char blame_usage[] = N_("git blame [<options>] [<rev-opts>] [<rev>] [--] <file>");
 

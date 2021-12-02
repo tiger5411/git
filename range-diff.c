@@ -12,6 +12,7 @@
 #include "userdiff.h"
 #include "apply.h"
 #include "revision.h"
+#include "pager.h"
 
 struct patch_util {
 	/* For the search for an exact match */

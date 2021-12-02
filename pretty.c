@@ -13,6 +13,7 @@
 #include "gpg-interface.h"
 #include "trailer.h"
 #include "run-command.h"
+#include "pager.h"
 
 static char *user_format;
 static struct cmt_fmt_map {
