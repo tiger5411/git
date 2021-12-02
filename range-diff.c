@@ -237,7 +237,7 @@ static int patch_util_cmp(const void *dummy, const struct patch_util *a,
 static void find_exact_matches(struct string_list *a, struct string_list *b)
 {
 	struct hashmap map = HASHMAP_INIT((hashmap_cmp_fn)patch_util_cmp, NULL);
-	int i;
+	size_t i;
 
 	/* First, add the patches of a to a hash map */
 	for (i = 0; i < a->nr; i++) {
@@ -308,11 +308,11 @@ static int diffsize(const char *a, const char *b)
 static void get_correspondences(struct string_list *a, struct string_list *b,
 				int creation_factor)
 {
-	int n = a->nr + b->nr;
+	size_t n = st_add(a->nr, b->nr);
 	int *cost, c, *a2b, *b2a;
-	int i, j;
+	size_t i, j;
 
-	ALLOC_ARRAY(cost, n * n);
+	ALLOC_ARRAY(cost, st_mult(n, n));
 	ALLOC_ARRAY(a2b, n);
 	ALLOC_ARRAY(b2a, n);
 
@@ -473,7 +473,7 @@ static void output(struct string_list *a, struct string_list *b,
 {
 	struct strbuf buf = STRBUF_INIT, dashes = STRBUF_INIT;
 	int patch_no_width = decimal_width(1 + (a->nr > b->nr ? a->nr : b->nr));
-	int i = 0, j = 0;
+	size_t i = 0, j = 0;
 	struct diff_options opts;
 	struct strbuf indent = STRBUF_INIT;
 
