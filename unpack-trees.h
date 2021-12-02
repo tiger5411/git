@@ -52,6 +52,9 @@ enum unpack_trees_reset_type {
 	UNPACK_RESET_OVERWRITE_UNTRACKED
 };
 
+typedef int (*unpack_trees_error)(struct unpack_trees_options *o,
+				  enum unpack_trees_error_types type, va_list ap);
+
 struct unpack_trees_options {
 	unsigned int merge,
 		     update,
@@ -76,6 +79,7 @@ struct unpack_trees_options {
 	int cache_bottom;
 	struct pathspec *pathspec;
 	merge_fn_t fn;
+	unpack_trees_error unpack_error_func;
 	const char *msgs[NB_UNPACK_TREES_WARNING_TYPES];
 	struct strvec msgs_to_free;
 	/*

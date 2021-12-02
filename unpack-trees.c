@@ -61,11 +61,6 @@ static const char *unpack_plumbing_errors[NB_UNPACK_TREES_WARNING_TYPES] = {
 	"Path '%s' already present; will not overwrite with sparse update.",
 };
 
-#define ERRORMSG(o,type) \
-	( ((o) && (o)->msgs[(type)]) \
-	  ? ((o)->msgs[(type)])      \
-	  : (unpack_plumbing_errors[(type)]) )
-
 static const char *super_prefixed(const char *path)
 {
 	/*
@@ -99,6 +94,24 @@ static const char *super_prefixed(const char *path)
 	strbuf_addstr(&buf[idx], path);
 
 	return buf[idx].buf;
+}
+
+static int unpack_error(struct unpack_trees_options *opts,
+			enum unpack_trees_error_types e,
+			struct string_list *list,
+			const char *arg, const char *arg2)
+{
+	const char *fmt;
+
+	if (o->unpack_error_func &&
+	    o->unpack_error_func(opts, e, list, arg, arg2))
+		return -1;
+
+	fmt = unpack_plumbing_errors[e];
+
+	error("dummy error: %s", unpack_plumbing_errors[e]);
+done:
+	return -1;
 }
 
 void setup_unpack_trees_porcelain(struct unpack_trees_options *opts,
@@ -228,7 +241,7 @@ static int add_rejected_path(struct unpack_trees_options *o,
 		return -1;
 
 	if (!o->show_all_errors)
-		return error(ERRORMSG(o, e), super_prefixed(path));
+		return unpack_error(o, e, NULL, super_prefixed(path));
 
 	/*
 	 * Otherwise, insert in a list for future display by
@@ -255,7 +268,7 @@ static void display_error_msgs(struct unpack_trees_options *o)
 			error_displayed = 1;
 			for (i = 0; i < rejects->nr; i++)
 				strbuf_addf(&path, "\t%s\n", rejects->items[i].string);
-			error(ERRORMSG(o, e), super_prefixed(path.buf));
+			unpack_error(o, e, rejects);
 			strbuf_release(&path);
 		}
 		string_list_clear(rejects, 0);
@@ -276,14 +289,8 @@ static void display_warning_msgs(struct unpack_trees_options *o)
 		struct string_list *rejects = &o->unpack_rejects[e];
 
 		if (rejects->nr > 0) {
-			int i;
-			struct strbuf path = STRBUF_INIT;
-
 			warning_displayed = 1;
-			for (i = 0; i < rejects->nr; i++)
-				strbuf_addf(&path, "\t%s\n", rejects->items[i].string);
-			warning(ERRORMSG(o, e), super_prefixed(path.buf));
-			strbuf_release(&path);
+			unpack_error(o, e, rejects);
 		}
 		string_list_clear(rejects, 0);
 	}
@@ -2707,9 +2714,9 @@ int bind_merge(const struct cache_entry * const *src,
 			     o->merge_size);
 	if (a && old)
 		return o->quiet ? -1 :
-			error(ERRORMSG(o, ERROR_BIND_OVERLAP),
-			      super_prefixed(a->name),
-			      super_prefixed(old->name));
+			unpack_error(o, ERROR_BIND_OVERLAP, NULL,
+				     super_prefixed(a->name),
+				     super_prefixed(old->name));
 	if (!a)
 		return keep_entry(old, o);
 	else
