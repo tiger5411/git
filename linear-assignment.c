@@ -7,14 +7,14 @@
 #include "linear-assignment.h"
 #include "compat/gnulib/intprops.h"
 
-static inline int cost_index(int *cost, int a, int b, int c)
+static inline intmax_t cost_index(intmax_t *cost, intmax_t a, intmax_t b, intmax_t c)
 {
-	int r;
+	intmax_t r;
 
 	if (INT_MULTIPLY_WRAPV(a, c, &r))
-		die(_("integer overflow in cost[%d + %d * %d] multiplication"), b, a, c);
+		die(_("integer overflow in cost[%"PRIuMAX" + %"PRIuMAX" * %"PRIuMAX"] multiplication"), b, a, c);
 	if (INT_ADD_WRAPV(b, r, &r))
-		die(_("integer overflow in cost[%d + ((%d * %d) = %d)] addition"), b, a, c, r);
+		die(_("integer overflow in cost[%"PRIuMAX" + ((%"PRIuMAX" * %"PRIuMAX") = %"PRIuMAX")] addition"), b, a, c, r);
 
 	return r;
 }
@@ -22,15 +22,15 @@ static inline int cost_index(int *cost, int a, int b, int c)
 #define COST(column, row) cost[cost_index(cost, column_count, column, row)]
 
 static void columns_reduction(size_t column_count, size_t row_count,
-			      int *cost,
-			      int *column2row, int *row2column,
-			      int *v)
+			      intmax_t *cost,
+			      intmax_t *column2row, intmax_t *row2column,
+			      intmax_t *v)
 {
-	int i, j;
+	intmax_t i, j;
 
 	/* column reduction */
 	for (j = column_count - 1; j >= 0; j--) {
-		int i1 = 0;
+		intmax_t i1 = 0;
 
 		for (i = 1; i < row_count; i++)
 			if (COST(j, i1) > COST(j, i))
@@ -49,22 +49,22 @@ static void columns_reduction(size_t column_count, size_t row_count,
 }
 
 static void reduction_transfer(size_t column_count, size_t row_count,
-			       int *cost,
-			       int *free_row, int *free_count,
-			       int *column2row, int *row2column,
-			       int *v)
+			       intmax_t *cost,
+			       intmax_t *free_row, intmax_t *free_count,
+			       intmax_t *column2row, intmax_t *row2column,
+			       intmax_t *v)
 {
-	int i, j;
+	intmax_t i, j;
 
 	/* reduction transfer */
 	for (i = 0; i < row_count; i++) {
-		int j1 = row2column[i];
+		intmax_t j1 = row2column[i];
 		if (j1 == -1)
 			free_row[(*free_count)++] = i;
 		else if (j1 < -1)
 			row2column[i] = -2 - j1;
 		else {
-			int min = COST(!j1, i) - v[!j1];
+			intmax_t min = COST(!j1, i) - v[!j1];
 			for (j = 1; j < column_count; j++)
 				if (j != j1 && min > COST(j, i) - v[j])
 					min = COST(j, i) - v[j];
@@ -74,31 +74,31 @@ static void reduction_transfer(size_t column_count, size_t row_count,
 }
 
 static void augmenting_row_reduction(size_t column_count,
-				     int *cost,
-				     int *column2row, int *row2column,
-				     int *free_row, int *free_count, int *saved_free_count,
-				     int *v)
+				     intmax_t *cost,
+				     intmax_t *column2row, intmax_t *row2column,
+				     intmax_t *free_row, intmax_t *free_count, intmax_t *saved_free_count,
+				     intmax_t *v)
 {
 	int phase;
 
 	/* augmenting row reduction */
 	for (phase = 0; phase < 2; phase++) {
-		int i;
-		int k = 0;
+		intmax_t i;
+		intmax_t k = 0;
 
 		*saved_free_count = *free_count;
 		*free_count = 0;
 		while (k < *saved_free_count) {
-			int j;
-			int u1, u2;
-			int j1 = 0, j2, i0;
+			intmax_t j;
+			intmax_t u1, u2;
+			intmax_t j1 = 0, j2, i0;
 
 			i = free_row[k++];
 			u1 = COST(j1, i) - v[j1];
 			j2 = -1;
-			u2 = INT_MAX;
+			u2 = INTMAX_MAX;
 			for (j = 1; j < column_count; j++) {
-				int c = COST(j, i) - v[j];
+				intmax_t c = COST(j, i) - v[j];
 				if (u2 > c) {
 					if (u1 < c) {
 						u2 = c;
@@ -137,15 +137,15 @@ static void augmenting_row_reduction(size_t column_count,
 }
 
 static void augmentation(size_t column_count,
-			 int *cost,
-			 int *column2row, int *row2column,
-			 int *free_row, int free_count,
-			 int *v)
+			 intmax_t *cost,
+			 intmax_t *column2row, intmax_t *row2column,
+			 intmax_t *free_row, intmax_t free_count,
+			 intmax_t *v)
 {
-	int i, j;
-	int *d;
-	int *pred, *col;
-	int saved_free_count;
+	intmax_t i, j;
+	intmax_t *d;
+	intmax_t *pred, *col;
+	intmax_t saved_free_count;
 
 	/* augmentation */
 	saved_free_count = free_count;
@@ -153,8 +153,8 @@ static void augmentation(size_t column_count,
 	ALLOC_ARRAY(pred, column_count);
 	ALLOC_ARRAY(col, column_count);
 	for (free_count = 0; free_count < saved_free_count; free_count++) {
-		int i1 = free_row[free_count], low = 0, up = 0, last, k;
-		int min, c, u1;
+		intmax_t i1 = free_row[free_count], low = 0, up = 0, last, k;
+		intmax_t min, c, u1;
 
 		for (j = 0; j < column_count; j++) {
 			d[j] = COST(j, i1) - v[j];
@@ -184,7 +184,7 @@ static void augmentation(size_t column_count,
 
 			/* scan a row */
 			do {
-				int j1 = col[low++];
+				intmax_t j1 = col[low++];
 
 				i = column2row[j1];
 				u1 = COST(j1, i) - v[j1] - min;
@@ -208,14 +208,14 @@ static void augmentation(size_t column_count,
 update:
 		/* updating of the column pieces */
 		for (k = 0; k < last; k++) {
-			int j1 = col[k];
+			intmax_t j1 = col[k];
 			v[j1] += d[j1] - min;
 		}
 
 		/* augmentation */
 		do {
 			if (j < 0)
-				BUG("negative j: %d", j);
+				BUG("negative j: %"PRIuMAX, j);
 			i = pred[j];
 			column2row[j] = i;
 			SWAP(j, row2column[i]);
@@ -232,15 +232,15 @@ update:
  * i is `cost[j + column_count * i].
  */
 void compute_assignment(size_t column_count, size_t row_count,
-			int *cost,
-			int *column2row, int *row2column)
+			intmax_t *cost,
+			intmax_t *column2row, intmax_t *row2column)
 {
-	int *v;
-	int *free_row, free_count = 0, saved_free_count;
+	intmax_t *v;
+	intmax_t *free_row, free_count = 0, saved_free_count;
 
 	assert(column_count > 1);
-	memset(column2row, -1, sizeof(int) * column_count);
-	memset(row2column, -1, sizeof(int) * row_count);
+	memset(column2row, -1, sizeof(intmax_t) * column_count);
+	memset(row2column, -1, sizeof(intmax_t) * row_count);
 	ALLOC_ARRAY(v, column_count);
 
 	columns_reduction(column_count, row_count, cost, column2row,

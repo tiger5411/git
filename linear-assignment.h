@@ -14,10 +14,6 @@
  * row_count).
  */
 void compute_assignment(size_t column_count, size_t row_count,
-			int *cost,
-			int *column2row, int *row2column);
-
-/* The maximal cost in the cost matrix (to prevent integer overflows). */
-#define COST_MAX (1<<16)
-
+			intmax_t *cost,
+			intmax_t *column2row, intmax_t *row2column);
 #endif

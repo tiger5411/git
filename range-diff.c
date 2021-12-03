@@ -302,19 +302,20 @@ static int diffsize(const char *a, const char *b)
 		return count;
 
 	error(_("failed to generate diff"));
-	return COST_MAX;
+	return INT_MAX;
 }
 
 static void get_correspondences(struct string_list *a, struct string_list *b,
 				int creation_factor)
 {
 	size_t n = st_add(a->nr, b->nr);
-	int *cost, c, *a2b, *b2a;
+	intmax_t *cost, c, *a2b, *b2a;
 	size_t i, j;
 
 	CALLOC_ARRAY(cost, st_mult(n, n));
 	CALLOC_ARRAY(a2b, n);
 	CALLOC_ARRAY(b2a, n);
+
 
 	for (i = 0; i < a->nr; i++) {
 		struct patch_util *a_util = a->items[i].util;
@@ -327,12 +328,12 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 			else if (a_util->matching < 0 && b_util->matching < 0)
 				c = diffsize(a_util->diff, b_util->diff);
 			else
-				c = COST_MAX;
+				c = INT_MAX;
 			cost[i + n * j] = c;
 		}
 
 		c = a_util->matching < 0 ?
-			a_util->diffsize * creation_factor / 100 : COST_MAX;
+			a_util->diffsize * creation_factor / 100 : INT_MAX;
 		for (j = b->nr; j < n; j++)
 			cost[i + n * j] = c;
 	}
@@ -341,7 +342,7 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 		struct patch_util *util = b->items[j].util;
 
 		c = util->matching < 0 ?
-			util->diffsize * creation_factor / 100 : COST_MAX;
+			util->diffsize * creation_factor / 100 : INT_MAX;
 		for (i = a->nr; i < n; i++)
 			cost[i + n * j] = c;
 	}
