@@ -5,19 +5,16 @@
  */
 #include "cache.h"
 #include "linear-assignment.h"
+#include "compat/gnulib/intprops.h"
 
 static inline int cost_index(int *cost, int a, int b, int c)
 {
 	int r;
 
-#if defined(__GNUC__) || defined(__clang__)
-	if (__builtin_mul_overflow(a, c, &r))
-		die(_("integer overflow in cost[%d + %d * %c] multiplication"), b, a, c);
-	if (__builtin_add_overflow(b, r, &r))
+	if (INT_MULTIPLY_WRAPV(a, c, &r))
+		die(_("integer overflow in cost[%d + %d * %d] multiplication"), b, a, c);
+	if (INT_ADD_WRAPV(b, r, &r))
 		die(_("integer overflow in cost[%d + ((%d * %d) = %d)] addition"), b, a, c, r);
-#else
-	r = b + a * c;
-#endif
 
 	return r;
 }
