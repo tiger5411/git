@@ -1862,7 +1862,7 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 
 struct simple_input_stream_data {
 	const void *buf;
-	unsigned long len;
+	size_t len;
 };
 
 static const void *feed_simple_input_stream(struct input_stream *in_stream, unsigned long *len)
