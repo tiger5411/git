@@ -87,39 +87,26 @@
 
 #define bitsizeof(x)  (CHAR_BIT * sizeof(x))
 
-#define maximum_signed_value_of_type(a) \
-    (INTMAX_MAX >> (bitsizeof(intmax_t) - bitsizeof(a)))
-
-#define maximum_unsigned_value_of_type(a) \
-    (UINTMAX_MAX >> (bitsizeof(uintmax_t) - bitsizeof(a)))
-
 /*
- * Signed integer overflow is undefined in C, so here's a helper macro
- * to detect if the sum of two integers will overflow.
+ * Helper macros that use gnulib's intprops.h to report integer
+ * properties.
  *
- * Requires: a >= 0, typeof(a) equals typeof(b)
+ * For details, see info gnulib --index-search='Integer Bounds'
  */
-#define signed_add_overflows(a, b) \
-    ((b) > maximum_signed_value_of_type(a) - (a))
-
-#define unsigned_add_overflows(a, b) \
-    ((b) > maximum_unsigned_value_of_type(a) - (a))
+#define maximum_signed_value_of_type(a) TYPE_MAXIMUM(a)
+#define maximum_unsigned_value_of_type(a) TYPE_MINIMUM(a)
 
 /*
- * Returns true if the multiplication of "a" and "b" will
- * overflow. The types of "a" and "b" must match and must be unsigned.
- * Note that this macro evaluates "a" twice!
+ * Helper macros that use gnulib's intprops.h to detect signed and
+ * unsigned overflow.
+ *
+ * For details, see info gnulib --index-search='Integer Type Overflow'
  */
-#define unsigned_mult_overflows(a, b) \
-    ((a) && (b) > maximum_unsigned_value_of_type(a) / (a))
-
-/*
- * Returns true if the left shift of "a" by "shift" bits will
- * overflow. The type of "a" must be unsigned.
- */
-#define unsigned_left_shift_overflows(a, shift) \
-    ((shift) < bitsizeof(a) && \
-     (a) > maximum_unsigned_value_of_type(a) >> (shift))
+#include "compat/gnulib/intprops.h"
+#define signed_add_overflows(a, b) INT_ADD_OVERFLOW(a, b)
+#define unsigned_add_overflows(a, b) INT_ADD_OVERFLOW(a, b)
+#define unsigned_mult_overflows(a, b) INT_MULTIPLY_OVERFLOW(a, b)
+#define unsigned_left_shift_overflows(a, shift) INT_LEFT_SHIFT_OVERFLOW(a, shift)
 
 #ifdef __GNUC__
 #define TYPEOF(x) (__typeof__(x))
