@@ -1958,10 +1958,11 @@ int write_loose_object(const struct object_id *oid, char *hdr,
 	close_loose_object(fd);
 
 	if (is_null_oid(oid)) {
+		struct object_id oid2;
 		int dirlen;
 
-		oidcpy((struct object_id *)oid, &parano_oid);
-		loose_object_path(the_repository, &filename, oid);
+		oidcpy(&oid2, &parano_oid);
+		loose_object_path(the_repository, &filename, &oid2);
 
 		/* We finally know the object path, and create the missing dir. */
 		dirlen = directory_size(filename.buf);
