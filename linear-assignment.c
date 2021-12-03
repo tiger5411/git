@@ -8,7 +8,7 @@
 
 #define COST(column, row) cost[(column) + column_count * (row)]
 
-static void columns_reduction(int column_count, int row_count,
+static void columns_reduction(size_t column_count, size_t row_count,
 			      int *cost,
 			      int *column2row, int *row2column,
 			      int *v)
@@ -35,7 +35,7 @@ static void columns_reduction(int column_count, int row_count,
 	}
 }
 
-static void reduction_transfer(int column_count, int row_count,
+static void reduction_transfer(size_t column_count, size_t row_count,
 			       int *cost,
 			       int *free_row, int *free_count,
 			       int *column2row, int *row2column,
@@ -60,7 +60,7 @@ static void reduction_transfer(int column_count, int row_count,
 	}
 }
 
-static void augmenting_row_reduction(int column_count,
+static void augmenting_row_reduction(size_t column_count,
 				     int *cost,
 				     int *column2row, int *row2column,
 				     int *free_row, int *free_count, int *saved_free_count,
@@ -123,7 +123,7 @@ static void augmenting_row_reduction(int column_count,
 	}
 }
 
-static void augmentation(int column_count,
+static void augmentation(size_t column_count,
 			 int *cost,
 			 int *column2row, int *row2column,
 			 int *free_row, int free_count,
@@ -218,7 +218,7 @@ update:
  * The parameter `cost` is the cost matrix: the cost to assign column j to row
  * i is `cost[j + column_count * i].
  */
-void compute_assignment(int column_count, int row_count,
+void compute_assignment(size_t column_count, size_t row_count,
 			int *cost,
 			int *column2row, int *row2column)
 {
