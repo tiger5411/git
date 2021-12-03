@@ -1860,8 +1860,26 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 	return fd;
 }
 
+struct simple_input_stream_data {
+	const void *buf;
+	unsigned long len;
+};
+
+static const void *feed_simple_input_stream(struct input_stream *in_stream, unsigned long *len)
+{
+	struct simple_input_stream_data *data = in_stream->data;
+
+	if (data->len == 0) {
+		*len = 0;
+		return NULL;
+	}
+	*len = data->len;
+	data->len = 0;
+	return data->buf;
+}
+
 static int write_loose_object(const struct object_id *oid, char *hdr,
-			      int hdrlen, const void *buf, unsigned long len,
+			      int hdrlen, struct input_stream *in_stream,
 			      time_t mtime, unsigned flags)
 {
 	int fd, ret;
@@ -1871,6 +1889,8 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	struct object_id parano_oid;
 	static struct strbuf tmp_file = STRBUF_INIT;
 	static struct strbuf filename = STRBUF_INIT;
+	const void *buf;
+	unsigned long len;
 
 	loose_object_path(the_repository, &filename, oid);
 
@@ -1898,6 +1918,7 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	the_hash_algo->update_fn(&c, hdr, hdrlen);
 
 	/* Then the data itself.. */
+	buf = in_stream->read(in_stream, &len);
 	stream.next_in = (void *)buf;
 	stream.avail_in = len;
 	do {
@@ -1960,6 +1981,14 @@ int write_object_file_flags(const void *buf, unsigned long len,
 {
 	char hdr[MAX_HEADER_LEN];
 	int hdrlen = sizeof(hdr);
+	struct input_stream in_stream = {
+		.read = feed_simple_input_stream,
+		.data = (void *)&(struct simple_input_stream_data) {
+			.buf = buf,
+			.len = len,
+		},
+		.size = len,
+	};
 
 	/* Normally if we have it in the pack then we do not bother writing
 	 * it out into .git/objects/??/?{38} file.
@@ -1968,7 +1997,7 @@ int write_object_file_flags(const void *buf, unsigned long len,
 				  &hdrlen);
 	if (freshen_packed_object(oid) || freshen_loose_object(oid))
 		return 0;
-	return write_loose_object(oid, hdr, hdrlen, buf, len, 0, flags);
+	return write_loose_object(oid, hdr, hdrlen, &in_stream, 0, flags);
 }
 
 int hash_object_file_literally(const void *buf, unsigned long len,
@@ -1977,6 +2006,14 @@ int hash_object_file_literally(const void *buf, unsigned long len,
 {
 	char *header;
 	int hdrlen, status = 0;
+	struct input_stream in_stream = {
+		.read = feed_simple_input_stream,
+		.data = (void *)&(struct simple_input_stream_data) {
+			.buf = buf,
+			.len = len,
+		},
+		.size = len,
+	};
 
 	/* type string, SP, %lu of the length plus NUL must fit this */
 	hdrlen = strlen(type) + MAX_HEADER_LEN;
@@ -1988,7 +2025,7 @@ int hash_object_file_literally(const void *buf, unsigned long len,
 		goto cleanup;
 	if (freshen_packed_object(oid) || freshen_loose_object(oid))
 		goto cleanup;
-	status = write_loose_object(oid, header, hdrlen, buf, len, 0, 0);
+	status = write_loose_object(oid, header, hdrlen, &in_stream, 0, 0);
 
 cleanup:
 	free(header);
@@ -2003,14 +2040,22 @@ int force_object_loose(const struct object_id *oid, time_t mtime)
 	char hdr[MAX_HEADER_LEN];
 	int hdrlen;
 	int ret;
+	struct simple_input_stream_data data;
+	struct input_stream in_stream = {
+		.read = feed_simple_input_stream,
+		.data = &data,
+	};
 
 	if (has_loose_object(oid))
 		return 0;
 	buf = read_object(the_repository, oid, &type, &len);
+	in_stream.size = len;
 	if (!buf)
 		return error(_("cannot read object for %s"), oid_to_hex(oid));
+	data.buf = buf;
+	data.len = len;
 	hdrlen = xsnprintf(hdr, sizeof(hdr), "%s %"PRIuMAX , type_name(type), (uintmax_t)len) + 1;
-	ret = write_loose_object(oid, hdr, hdrlen, buf, len, mtime, 0);
+	ret = write_loose_object(oid, hdr, hdrlen, &in_stream, mtime, 0);
 	free(buf);
 
 	return ret;
