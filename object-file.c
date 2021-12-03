@@ -1892,7 +1892,14 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	const void *buf;
 	unsigned long len;
 
-	loose_object_path(the_repository, &filename, oid);
+	if (is_null_oid(oid)) {
+		/* When oid is not determined, save tmp file to odb path. */
+		strbuf_reset(&filename);
+		strbuf_addstr(&filename, the_repository->objects->odb->path);
+		strbuf_addch(&filename, '/');
+	} else {
+		loose_object_path(the_repository, &filename, oid);
+	}
 
 	fd = create_tmpfile(&tmp_file, filename.buf);
 	if (fd < 0) {
@@ -1939,11 +1946,30 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 		die(_("deflateEnd on object %s failed (%d)"), oid_to_hex(oid),
 		    ret);
 	the_hash_algo->final_oid_fn(&parano_oid, &c);
-	if (!oideq(oid, &parano_oid))
+	if (!is_null_oid(oid) && !oideq(oid, &parano_oid))
 		die(_("confused by unstable object source data for %s"),
 		    oid_to_hex(oid));
 
 	close_loose_object(fd);
+
+	if (is_null_oid(oid)) {
+		int dirlen;
+
+		oidcpy((struct object_id *)oid, &parano_oid);
+		loose_object_path(the_repository, &filename, oid);
+
+		/* We finally know the object path, and create the missing dir. */
+		dirlen = directory_size(filename.buf);
+		if (dirlen) {
+			struct strbuf dir = STRBUF_INIT;
+			strbuf_add(&dir, filename.buf, dirlen - 1);
+			if (mkdir(dir.buf, 0777) && errno != EEXIST)
+				return -1;
+			if (adjust_shared_perm(dir.buf))
+				return -1;
+			strbuf_release(&dir);
+		}
+	}
 
 	if (mtime) {
 		struct utimbuf utb;
