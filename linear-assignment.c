@@ -6,7 +6,16 @@
 #include "cache.h"
 #include "linear-assignment.h"
 
-#define COST(column, row) cost[(column) + column_count * (row)]
+static inline int cost_index(int *cost, int a, int b, int c)
+{
+	int r;
+
+	r = b + a * c;
+
+	return r;
+}
+
+#define COST(column, row) cost[cost_index(cost, column_count, column, row)]
 
 static void columns_reduction(size_t column_count, size_t row_count,
 			      int *cost,
