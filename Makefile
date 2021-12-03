@@ -677,6 +677,7 @@ PROGRAM_OBJS += http-backend.o
 PROGRAM_OBJS += imap-send.o
 PROGRAM_OBJS += sh-i18n--envsubst.o
 PROGRAM_OBJS += shell.o
+PROGRAM_OBJS += strbuf-grow.o
 .PHONY: program-objs
 program-objs: $(PROGRAM_OBJS)
 
