@@ -1878,9 +1878,9 @@ static const void *feed_simple_input_stream(struct input_stream *in_stream, unsi
 	return data->buf;
 }
 
-static int write_loose_object(const struct object_id *oid, char *hdr,
-			      int hdrlen, struct input_stream *in_stream,
-			      time_t mtime, unsigned flags)
+int write_loose_object(const struct object_id *oid, char *hdr,
+		       int hdrlen, struct input_stream *in_stream,
+		       time_t mtime, unsigned flags)
 {
 	int fd, ret;
 	unsigned char compressed[4096];
