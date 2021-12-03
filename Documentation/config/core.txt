@@ -424,6 +424,17 @@ be delta compressed, but larger binary media files won't be.
 +
 Common unit suffixes of 'k', 'm', or 'g' are supported.
 
+core.bigFileStreamingThreshold::
+	Files larger than this will be streamed out to a temporary
+	object file while being hashed, which will when be renamed
+	in-place to a loose object, particularly if the
+	`core.bigFileThreshold' setting dictates that they're always
+	written out as loose objects.
++
+Default is 128 MiB on all platforms.
++
+Common unit suffixes of 'k', 'm', or 'g' are supported.
+
 core.excludesFile::
 	Specifies the pathname to the file that contains patterns to
 	describe paths that are not meant to be tracked, in addition

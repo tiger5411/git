@@ -400,7 +400,7 @@ static void unpack_non_delta_entry(enum object_type type, unsigned long size,
 	void *buf;
 
 	/* Write large blob in stream without allocating full buffer. */
-	if (!dry_run && type == OBJ_BLOB && size > big_file_threshold) {
+	if (!dry_run && type == OBJ_BLOB && size > big_file_streaming_threshold) {
 		write_stream_blob(nr, size);
 		return;
 	}
