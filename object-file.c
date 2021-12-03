@@ -1890,7 +1890,7 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	static struct strbuf tmp_file = STRBUF_INIT;
 	static struct strbuf filename = STRBUF_INIT;
 	const void *buf;
-	unsigned long len;
+	int flush = 0;
 
 	if (is_null_oid(oid)) {
 		/* When oid is not determined, save tmp file to odb path. */
@@ -1925,18 +1925,23 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	the_hash_algo->update_fn(&c, hdr, hdrlen);
 
 	/* Then the data itself.. */
-	buf = in_stream->read(in_stream, &len);
-	stream.next_in = (void *)buf;
-	stream.avail_in = len;
 	do {
 		unsigned char *in0 = stream.next_in;
-		ret = git_deflate(&stream, Z_FINISH);
+		if (!stream.avail_in) {
+			buf = in_stream->read(in_stream, &stream.avail_in);
+			stream.next_in = (void *)buf;
+			in0 = (unsigned char *)buf;
+			/* All data has been read. */
+			if (in_stream->size + hdrlen == stream.total_in + stream.avail_in)
+				flush = Z_FINISH;
+		}
+		ret = git_deflate(&stream, flush);
 		the_hash_algo->update_fn(&c, in0, stream.next_in - in0);
 		if (write_buffer(fd, compressed, stream.next_out - compressed) < 0)
 			die(_("unable to write loose object file"));
 		stream.next_out = compressed;
 		stream.avail_out = sizeof(compressed);
-	} while (ret == Z_OK);
+	} while (ret == Z_OK || ret == Z_BUF_ERROR);
 
 	if (ret != Z_STREAM_END)
 		die(_("unable to deflate new object %s (%d)"), oid_to_hex(oid),
