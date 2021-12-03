@@ -1880,7 +1880,7 @@ int write_loose_object(const struct object_id *oid, char *hdr,
 		       int hdrlen, struct input_stream *in_stream,
 		       time_t mtime, unsigned flags)
 {
-	int fd, ret;
+	int fd, ret, err = 0;
 	unsigned char compressed[4096];
 	git_zstream stream;
 	git_hash_ctx c;
@@ -1892,7 +1892,6 @@ int write_loose_object(const struct object_id *oid, char *hdr,
 
 	if (is_null_oid(oid)) {
 		/* When oid is not determined, save tmp file to odb path. */
-		strbuf_reset(&filename);
 		strbuf_addstr(&filename, the_repository->objects->odb->path);
 		strbuf_addch(&filename, '/');
 	} else {
@@ -1902,11 +1901,12 @@ int write_loose_object(const struct object_id *oid, char *hdr,
 	fd = create_tmpfile(&tmp_file, filename.buf);
 	if (fd < 0) {
 		if (flags & HASH_SILENT)
-			return -1;
+			err = -1;
 		else if (errno == EACCES)
-			return error(_("insufficient permission for adding an object to repository database %s"), get_object_directory());
+			err = error(_("insufficient permission for adding an object to repository database %s"), get_object_directory());
 		else
-			return error_errno(_("unable to create temporary file"));
+			err = error_errno(_("unable to create temporary file"));
+		goto cleanup;
 	}
 
 	/* Set it up */
@@ -1968,10 +1968,13 @@ int write_loose_object(const struct object_id *oid, char *hdr,
 			struct strbuf dir = STRBUF_INIT;
 			strbuf_add(&dir, filename.buf, dirlen - 1);
 			if (mkdir(dir.buf, 0777) && errno != EEXIST)
-				return -1;
-			if (adjust_shared_perm(dir.buf))
-				return -1;
-			strbuf_release(&dir);
+				err = -1;
+			else if (adjust_shared_perm(dir.buf))
+				err = -1;
+			else
+				strbuf_release(&dir);
+			if (err < 0)
+				goto cleanup;
 		}
 	}
 
@@ -1984,7 +1987,10 @@ int write_loose_object(const struct object_id *oid, char *hdr,
 			warning_errno(_("failed utime() on %s"), tmp_file.buf);
 	}
 
-	return finalize_object_file(tmp_file.buf, filename.buf);
+	err = finalize_object_file(tmp_file.buf, filename.buf);
+cleanup:
+	strbuf_release(&filename);
+	return err;
 }
 
 static int freshen_loose_object(const struct object_id *oid)
