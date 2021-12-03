@@ -1869,11 +1869,9 @@ static const void *feed_simple_input_stream(struct input_stream *in_stream, unsi
 {
 	struct simple_input_stream_data *data = in_stream->data;
 
-	if (data->len == 0) {
-		*len = 0;
-		return NULL;
-	}
 	*len = data->len;
+	if (!len)
+		return NULL;
 	data->len = 0;
 	return data->buf;
 }
