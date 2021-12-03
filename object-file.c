@@ -2011,12 +2011,13 @@ int write_object_file_flags(const void *buf, unsigned long len,
 {
 	char hdr[MAX_HEADER_LEN];
 	int hdrlen = sizeof(hdr);
+	struct simple_input_stream_data tmp = {
+		.buf = buf,
+		.len = len,
+	};
 	struct input_stream in_stream = {
 		.read = feed_simple_input_stream,
-		.data = (void *)&(struct simple_input_stream_data) {
-			.buf = buf,
-			.len = len,
-		},
+		.data = (void *)&tmp,
 		.size = len,
 	};
 
