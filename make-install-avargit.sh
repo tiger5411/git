@@ -402,6 +402,9 @@ do
 		# issues but have .gitattributes files. TODO: Make
 		# "git log" accept a .gitattributes from a given HEAD?
 		case "$branch" in
+		avar/range-diff-int-overflow-segfault)
+			# Adds intprops.h from gnulib
+			;;
 		avar-hanwen/reftable*)
 			;;
 		*)
