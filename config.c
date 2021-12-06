@@ -381,26 +381,31 @@ static int at_least_one_url_matches_glob(const char *glob, int glob_len,
 	return found;
 }
 
+static int include_by_remote_url(struct config_include_data *inc,
+				 const char *cond, size_t cond_len)
+{
+	if (inc->opts->unconditional_remote_url)
+		return 1;
+	if (!inc->remote_urls.nr)
+		populate_remote_urls(inc);
+	return at_least_one_url_matches_glob(cond, cond_len,
+					     &inc->remote_urls);
+}
+
 static int include_condition_is_true(struct config_include_data *inc,
 				     const char *cond, size_t cond_len)
 {
 	const struct config_options *opts = inc->opts;
 
-	if (skip_prefix_mem(cond, cond_len, "gitdir:", &cond, &cond_len)) {
+	if (skip_prefix_mem(cond, cond_len, "gitdir:", &cond, &cond_len))
 		return include_by_gitdir(opts, cond, cond_len, 0);
-	} else if (skip_prefix_mem(cond, cond_len, "gitdir/i:", &cond, &cond_len)) {
+	else if (skip_prefix_mem(cond, cond_len, "gitdir/i:", &cond, &cond_len))
 		return include_by_gitdir(opts, cond, cond_len, 1);
-	} else if (skip_prefix_mem(cond, cond_len, "onbranch:", &cond, &cond_len)) {
+	else if (skip_prefix_mem(cond, cond_len, "onbranch:", &cond, &cond_len))
 		return include_by_branch(cond, cond_len);
-	} else if (skip_prefix_mem(cond, cond_len, "hasconfig:remote.*.url:", &cond,
-				   &cond_len)) {
-		if (inc->opts->unconditional_remote_url)
-			return 1;
-		if (!inc->remote_urls.nr)
-			populate_remote_urls(inc);
-		return at_least_one_url_matches_glob(cond, cond_len,
-						     &inc->remote_urls);
-	}
+	else if (skip_prefix_mem(cond, cond_len, "hasconfig:remote.*.url:", &cond,
+				   &cond_len))
+		return include_by_remote_url(inc, cond, cond_len);
 
 	/* unknown conditionals are always false */
 	return 0;
