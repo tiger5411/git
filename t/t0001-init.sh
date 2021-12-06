@@ -173,6 +173,55 @@ test_expect_success 'reinit' '
 	test_must_be_empty again/err2
 '
 
+setup_template_priority() {
+	test_when_finished "rm -rf template" &&
+	mkdir template &&
+	touch template/file &&
+
+	test_when_finished "rm -rf template2" &&
+	mkdir template2 &&
+	touch template2/file2 &&
+
+	# Created by the caller
+	test_when_finished "rm -rf repo"
+}
+
+test_expect_success 'usage priority: --template only' '
+	setup_template_priority &&
+	git init --template=template repo &&
+	test_path_is_file repo/.git/file
+'
+
+test_expect_success 'usage priority: --template takes precedence over GIT_TEMPLATE_DIR' '
+	setup_template_priority &&
+	GIT_TEMPLATE_DIR="$PWD/template2" git init --template=template repo &&
+	test_path_is_file repo/.git/file
+'
+
+test_expect_success 'usage priority: --template takes precedence over init.templateDir' '
+	setup_template_priority &&
+	git -c init.templateDir="$PWD/template2" init --template=template repo &&
+	test_path_is_file repo/.git/file
+'
+
+test_expect_success 'usage priority: --no-template takes precedence over init.templateDir' '
+	setup_template_priority &&
+	git -c init.templateDir="$PWD/template" init --no-template repo &&
+	test_path_is_missing repo/.git/file
+'
+
+test_expect_success 'usage priority: --no-template takes precedence over GIT_TEMPLATE_DIR' '
+	setup_template_priority &&
+	GIT_TEMPLATE_DIR="$PWD/template" git init --no-template repo &&
+	test_path_is_missing repo/.git/file
+'
+
+test_expect_success 'usage priority: GIT_NO_TEMPLATE_DIR=true takes precedence over GIT_TEMPLATE_DIR' '
+	setup_template_priority &&
+	GIT_TEMPLATE_DIR="$PWD/template" GIT_NO_TEMPLATE_DIR=true git init repo &&
+	test_path_is_missing repo/.git/file
+'
+
 test_expect_success 'init with --template' '
 	mkdir template-source &&
 	echo content >template-source/file &&
