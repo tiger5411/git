@@ -2391,11 +2391,11 @@ test_expect_success 'includeIf.hasconfig:remote.*.url' '
 	git init hasremoteurlTest &&
 	test_when_finished "rm -rf hasremoteurlTest" &&
 
-	cat >"$(pwd)"/include-this <<-\EOF &&
+	cat >include-this <<-\EOF &&
 	[user]
 		this = this-is-included
 	EOF
-	cat >"$(pwd)"/dont-include-that <<-\EOF &&
+	cat >dont-include-that <<-\EOF &&
 	[user]
 		that = that-is-not-included
 	EOF
@@ -2419,7 +2419,7 @@ test_expect_success 'includeIf.hasconfig:remote.*.url respects last-config-wins'
 	git init hasremoteurlTest &&
 	test_when_finished "rm -rf hasremoteurlTest" &&
 
-	cat >"$(pwd)"/include-two-three <<-\EOF &&
+	cat >include-two-three <<-\EOF &&
 	[user]
 		two = included-config
 		three = included-config
@@ -2491,7 +2491,7 @@ test_expect_success 'includeIf.hasconfig:remote.*.url forbids remote url in such
 	git init hasremoteurlTest &&
 	test_when_finished "rm -rf hasremoteurlTest" &&
 
-	cat >"$(pwd)"/include-with-url <<-\EOF &&
+	cat >include-with-url <<-\EOF &&
 	[remote "bar"]
 		url = bar
 	EOF
