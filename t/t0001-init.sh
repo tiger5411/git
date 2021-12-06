@@ -173,6 +173,10 @@ test_expect_success 'reinit' '
 	test_must_be_empty again/err2
 '
 
+test_expect_success 'usage: init with --no-template --template' '
+	test_expect_code 128 git init --no-template --template=$PWD
+'
+
 setup_template_priority() {
 	test_when_finished "rm -rf template" &&
 	mkdir template &&
