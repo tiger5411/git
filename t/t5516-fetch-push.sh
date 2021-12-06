@@ -921,6 +921,7 @@ test_expect_success 'fetch with branches' '
 	mk_empty testrepo &&
 	git branch second $the_first_commit &&
 	git checkout second &&
+	mkdir testrepo/.git/branches &&
 	echo ".." > testrepo/.git/branches/branch1 &&
 	(
 		cd testrepo &&
@@ -934,6 +935,7 @@ test_expect_success 'fetch with branches' '
 
 test_expect_success 'fetch with branches containing #' '
 	mk_empty testrepo &&
+	mkdir testrepo/.git/branches &&
 	echo "..#second" > testrepo/.git/branches/branch2 &&
 	(
 		cd testrepo &&
@@ -948,6 +950,7 @@ test_expect_success 'fetch with branches containing #' '
 test_expect_success 'push with branches' '
 	mk_empty testrepo &&
 	git checkout second &&
+	mkdir .git/branches &&
 	echo "testrepo" > .git/branches/branch1 &&
 	git push branch1 &&
 	(
