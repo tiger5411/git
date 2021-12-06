@@ -2453,11 +2453,11 @@ test_expect_success 'includeIf.hasconfig:remote.*.url globs' '
 	git init hasremoteurlTest &&
 	test_when_finished "rm -rf hasremoteurlTest" &&
 
-	printf "[user]\ndss = yes\n" >"$(pwd)/double-star-start" &&
-	printf "[user]\ndse = yes\n" >"$(pwd)/double-star-end" &&
-	printf "[user]\ndsm = yes\n" >"$(pwd)/double-star-middle" &&
-	printf "[user]\nssm = yes\n" >"$(pwd)/single-star-middle" &&
-	printf "[user]\nno = no\n" >"$(pwd)/no" &&
+	printf "[user]\ndss = yes\n" >double-star-start &&
+	printf "[user]\ndse = yes\n" >double-star-end &&
+	printf "[user]\ndsm = yes\n" >double-star-middle &&
+	printf "[user]\nssm = yes\n" >single-star-middle &&
+	printf "[user]\nno = no\n" >no &&
 
 	cat >>hasremoteurlTest/.git/config <<-EOF &&
 	[remote "foo"]
