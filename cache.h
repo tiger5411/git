@@ -653,6 +653,7 @@ int path_inside_repo(const char *prefix, const char *path);
 #define INIT_DB_EXIST_OK 0x0002
 
 int init_db(const char *git_dir, const char *real_git_dir,
+	    int no_template,
 	    const char *template_dir, int hash_algo,
 	    const char *initial_branch, unsigned int flags);
 void initialize_repository_version(int hash_algo, int reinit);

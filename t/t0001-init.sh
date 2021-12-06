@@ -183,6 +183,10 @@ test_expect_success 'init: assets created by the default test template' '
 	test_path_is_file .git/description
 '
 
+test_expect_success 'usage: init with --no-template --template' '
+	test_expect_code 128 git init --no-template --template=$PWD
+'
+
 setup_template_priority() {
 	test_when_finished "rm -rf template" &&
 	mkdir template &&
@@ -243,7 +247,9 @@ test_expect_success 'init with --template (blank)' '
 	git init template-plain &&
 	test_path_is_file template-plain/.git/info/exclude &&
 	git init --template= template-blank &&
-	test_path_is_missing template-blank/.git/info/exclude
+	test_path_is_missing template-blank/.git/info/exclude &&
+	git init --no-template no-template &&
+	test_path_is_missing no-template/.git/info/exclude
 '
 
 no_templatedir_env () {

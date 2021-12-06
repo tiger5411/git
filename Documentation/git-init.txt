@@ -9,7 +9,8 @@ git-init - Create an empty Git repository or reinitialize an existing one
 SYNOPSIS
 --------
 [verse]
-'git init' [-q | --quiet] [--bare] [--template=<template-directory>]
+'git init' [-q | --quiet] [--bare]
+	  [--no-template | --template=<template-directory>]
 	  [--separate-git-dir <git-dir>] [--object-format=<format>]
 	  [-b <branch-name> | --initial-branch=<branch-name>]
 	  [--shared[=<permissions>]] [<directory>]
@@ -61,6 +62,11 @@ include::object-format-disclaimer.txt[]
 
 Specify the directory from which templates will be used.  (See the "TEMPLATE
 DIRECTORY" section below.)
+
+--no-template::
+Do not use any template directory. On older versions of git this can
+be emulated by providing a `--template' argument where
+'<template_directory>' is a path to an empty directory.
 
 --separate-git-dir=<git-dir>::
 
@@ -132,10 +138,17 @@ does not exist, it will be created.
 TEMPLATE DIRECTORY
 ------------------
 
-Files and directories in the template directory whose name do not start with a
+If a template directory is in use files and directories in the
+template directory whose name do not start with a
 dot will be copied to the `$GIT_DIR` after it is created.
 
-The template directory will be one of the following (in order):
+Using a template template directory can be disabled with:
+
+ - The `--no-template` option being given. This option is incompatible
+   with `--template`.
+
+If that conditions isn't true, then the template directory
+will be one of the following (in order):
 
  - the argument given with the `--template` option;
 
