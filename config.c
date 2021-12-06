@@ -130,9 +130,11 @@ struct config_include_data {
 	/*
 	 * All remote URLs discovered when reading all config files.
 	 */
-	struct string_list *remote_urls;
+	struct string_list remote_urls;
 };
-#define CONFIG_INCLUDE_INIT { 0 }
+#define CONFIG_INCLUDE_INIT { \
+	.remote_urls = STRING_LIST_INIT_DUP, \
+}
 
 static int git_config_include(const char *var, const char *value, void *data);
 
@@ -340,9 +342,7 @@ static void populate_remote_urls(struct config_include_data *inc)
 	current_config_kvi = NULL;
 	current_parsing_scope = 0;
 
-	inc->remote_urls = xmalloc(sizeof(*inc->remote_urls));
-	string_list_init_dup(inc->remote_urls);
-	config_with_options(add_remote_url, inc->remote_urls, inc->config_source, &opts);
+	config_with_options(add_remote_url, &inc->remote_urls, inc->config_source, &opts);
 
 	cf = store_cf;
 	current_config_kvi = store_kvi;
@@ -396,10 +396,10 @@ static int include_condition_is_true(struct config_include_data *inc,
 				   &cond_len)) {
 		if (inc->opts->unconditional_remote_url)
 			return 1;
-		if (!inc->remote_urls)
+		if (!inc->remote_urls.nr)
 			populate_remote_urls(inc);
 		return at_least_one_url_matches_glob(cond, cond_len,
-						     inc->remote_urls);
+						     &inc->remote_urls);
 	}
 
 	/* unknown conditionals are always false */
@@ -2061,10 +2061,7 @@ int config_with_options(config_fn_t fn, void *data,
 		ret = do_git_config_sequence(opts, fn, data);
 	}
 
-	if (inc.remote_urls) {
-		string_list_clear(inc.remote_urls, 0);
-		FREE_AND_NULL(inc.remote_urls);
-	}
+	string_list_clear(&inc.remote_urls, 0);
 	return ret;
 }
 
