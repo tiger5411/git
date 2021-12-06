@@ -47,6 +47,7 @@ test_expect_success 'setup' '
 	git commit -m. &&
 
 	git clone --bare . bare &&
+	mkdir bare/info &&
 	cp .git/info/attributes bare/info/attributes
 '
 
