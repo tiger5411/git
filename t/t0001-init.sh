@@ -175,12 +175,12 @@ test_expect_success 'reinit' '
 '
 
 test_expect_success 'init: assets created by the default test template' '
-	test_path_is_dir .git/branches &&
-	test_path_is_dir .git/hooks &&
-	test_path_is_file .git/hooks/update.sample &&
-	test_path_is_dir .git/info &&
-	test_path_is_file .git/info/exclude &&
-	test_path_is_file .git/description
+	test_path_is_missing .git/branches &&
+	test_path_is_missing .git/hooks &&
+	test_path_is_missing .git/hooks/update.sample &&
+	test_path_is_missing .git/info &&
+	test_path_is_missing .git/info/exclude &&
+	test_path_is_missing .git/description
 '
 
 test_expect_success 'usage: init with --no-template --template' '
@@ -244,12 +244,15 @@ test_expect_success 'init with --template' '
 '
 
 test_expect_success 'init with --template (blank)' '
-	git init template-plain &&
-	test_path_is_file template-plain/.git/info/exclude &&
-	git init --template= template-blank &&
-	test_path_is_missing template-blank/.git/info/exclude &&
-	git init --no-template no-template &&
-	test_path_is_missing no-template/.git/info/exclude
+	(
+		sane_unset GIT_NO_TEMPLATE_DIR &&
+		git init template-plain &&
+		test_path_is_file template-plain/.git/info/exclude &&
+		git init --template= template-blank &&
+		test_path_is_missing template-blank/.git/info/exclude &&
+		git init --no-template no-template &&
+		test_path_is_missing no-template/.git/info/exclude
+	)
 '
 
 no_templatedir_env () {
@@ -575,8 +578,9 @@ test_expect_success 'remote init from does not use config from cwd' '
 '
 
 test_expect_success 're-init from a linked worktree' '
-	git init main-worktree &&
 	(
+		sane_unset GIT_NO_TEMPLATE_DIR &&
+		git init main-worktree &&
 		cd main-worktree &&
 		test_commit first &&
 		git worktree add ../linked-worktree &&

@@ -603,6 +603,14 @@ test_hook () {
 
 	git_dir=$(git -C "$indir" rev-parse --absolute-git-dir) &&
 	hook_dir="$git_dir/hooks" &&
+
+	{
+		# TODO: Also be strict about creating and cleaning up
+		# .git/hooks, not just .git/hooks/$1
+		test_when_finished "rmdir \"$hook_dir\" 2>/dev/null || :"
+		mkdir "$hook_dir" || :
+	} &&
+
 	hook_file="$hook_dir/$1" &&
 	if test -n "$disable$remove"
 	then

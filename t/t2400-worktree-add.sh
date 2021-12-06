@@ -561,8 +561,6 @@ test_expect_success 'git worktree --no-guess-remote option overrides config' '
 '
 
 post_checkout_hook () {
-	test_when_finished "rm -rf .git/hooks" &&
-	mkdir .git/hooks &&
 	test_hook -C "$1" post-checkout <<-\EOF
 	{
 		echo $*

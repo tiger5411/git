@@ -106,6 +106,9 @@ static void copy_templates(int no_template, const char *template_dir,
 
 	if (no_template)
 		return;
+	if (!template_dir && !init_template_dir &&
+	    git_env_bool(GIT_NO_TEMPLATE_DIR_ENVIRONMENT, 0))
+		return;
 	if (!template_dir)
 		template_dir = getenv(TEMPLATE_DIR_ENVIRONMENT);
 	if (!template_dir)

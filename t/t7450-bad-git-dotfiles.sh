@@ -54,6 +54,7 @@ test_expect_success 'add evil submodule' '
 
 	mkdir modules &&
 	cp -r .git/modules/evil modules &&
+	mkdir modules/evil/hooks &&
 	write_script modules/evil/hooks/post-checkout <<-\EOF &&
 	echo >&2 "RUNNING POST CHECKOUT"
 	EOF

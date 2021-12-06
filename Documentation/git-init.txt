@@ -150,6 +150,10 @@ Using a template template directory can be disabled by any of of:
  - The `init.templateDirectory' option being set to 'false' (or
    another stand-in for 'false', see linkgit:git-config[1]).
 
+ - The `GIT_NO_TEMPLATE_DIR` variable being set to `true` in the
+   environment (or any other `true` value. See the discussion of
+   boolean canonicalization in linkgit:git-config[1]).
+
 If none of those conditions are true, then the template directory
 will be one of the following (in order):
 

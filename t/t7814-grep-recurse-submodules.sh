@@ -520,6 +520,7 @@ test_expect_failure 'grep --textconv correctly reads submodule .git/info/attribu
 
 	submodule_info="$(git -C submodule rev-parse --path-format=absolute --git-path info)" &&
 	test_when_finished "rm -f \"$submodule_info\"/attributes" &&
+	mkdir "$submodule_info" &&
 	echo "a diff=d2x" >"$submodule_info/attributes" &&
 
 	cat >expect <<-\EOF &&
