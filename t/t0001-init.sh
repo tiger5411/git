@@ -235,7 +235,7 @@ test_expect_success 'init with --template' '
 
 test_expect_success 'init with --template (blank)' '
 	git init template-plain &&
-	test_path_is_file template-plain/.git/info/exclude &&
+	test_path_is_dir template-plain/.git/info &&
 	git init --template= template-blank &&
 	test_path_is_missing template-blank/.git/info/exclude
 '
@@ -246,19 +246,12 @@ no_templatedir_env () {
 	export NO_SET_GIT_TEMPLATE_DIR
 }
 
-init_no_templatedir_env () {
-	(
-		no_templatedir_env &&
-		git init "$1"
-	)
-}
-
 test_expect_success 'init with init.templatedir set' '
 	mkdir templatedir-source &&
 	echo Content >templatedir-source/file &&
 	test_config_global init.templatedir "${HOME}/templatedir-source" &&
 
-	init_no_templatedir_env templatedir-set &&
+	git init templatedir-set &&
 	test_cmp templatedir-source/file templatedir-set/.git/file
 '
 
@@ -267,7 +260,7 @@ test_expect_success 'init with init.templatedir using ~ expansion' '
 	echo Content >templatedir-source/file &&
 	test_config_global init.templatedir "~/templatedir-source" &&
 
-	init_no_templatedir_env templatedir-expansion &&
+	git init templatedir-expansion &&
 	test_cmp templatedir-source/file templatedir-expansion/.git/file
 '
 
@@ -563,15 +556,19 @@ test_expect_success 'remote init from does not use config from cwd' '
 '
 
 test_expect_success 're-init from a linked worktree' '
-	git init main-worktree &&
 	(
+		git init main-worktree &&
+
 		cd main-worktree &&
 		test_commit first &&
 		git worktree add ../linked-worktree &&
+		>empty &&
+		cp empty .git/info/exclude &&
 		mv .git/info/exclude expected-exclude &&
 		cp .git/config expected-config &&
 		find .git/worktrees -print | sort >expected &&
 		git -C ../linked-worktree init &&
+		cp empty .git/info/exclude &&
 		test_cmp expected-exclude .git/info/exclude &&
 		test_cmp expected-config .git/config &&
 		find .git/worktrees -print | sort >actual &&
