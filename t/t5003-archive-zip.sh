@@ -121,6 +121,7 @@ test_expect_success 'prepare file list' '
 test_expect_success \
     'add ignored file' \
     'echo ignore me >a/ignored &&
+     mkdir .git/info &&
      echo ignored export-ignore >.git/info/attributes'
 
 test_expect_success 'add files to repository' '
