@@ -1685,7 +1685,7 @@ test_expect_success 'updateInstead with push-to-checkout hook' '
 	git -C testrepo reset --hard HEAD^^ &&
 	git -C testrepo tag initial &&
 	git -C testrepo config receive.denyCurrentBranch updateInstead &&
-	write_script testrepo/.git/hooks/push-to-checkout <<-\EOF &&
+	test_hook -C testrepo push-to-checkout <<-\EOF &&
 	echo >&2 updating from $(git rev-parse HEAD)
 	echo >&2 updating to "$1"
 
@@ -1741,7 +1741,7 @@ test_expect_success 'updateInstead with push-to-checkout hook' '
 	test_when_finished "rm -rf void" &&
 	git init void &&
 	git -C void config receive.denyCurrentBranch updateInstead &&
-	write_script void/.git/hooks/push-to-checkout <<-\EOF &&
+	test_hook -C void push-to-checkout <<-\EOF &&
 	if git rev-parse --quiet --verify HEAD
 	then
 		has_head=yes
