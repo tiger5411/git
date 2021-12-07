@@ -157,7 +157,7 @@ reset_it() {
 test_compile () {
 	full=$1
 
-	make -j $(nproc) $merge_compile_args
+	make $merge_compile_args
 
 	if test -n "$merge_compile_test"
 	then
@@ -170,7 +170,7 @@ test_compile () {
 	fi
 
 	# Compile
-	make -j $(nproc) all man
+	make all man
 
 	# Test sanity
 	make -C t test-lint
@@ -210,7 +210,7 @@ test_compile () {
 	)
 
 	# Run special test setups
-	make -j $(nproc) SANITIZE=leak
+	make SANITIZE=leak
 	(
 		cd t
 		make clean-except-prove-cache
@@ -577,7 +577,7 @@ new_version=$(git rev-parse HEAD)
 new_tagname=$(tag_name)
 new_tag=$(tag_it "$(git rev-parse HEAD)" "$new_tagname")
 last_version=$(git rev-parse avar/private)
-make -j $(nproc) install install-man
+make install install-man
 ## Install git completions, same paths as the "git" debian package
 install -d -m 755 "$prefix/lib/git-core"
 install -m 644 contrib/completion/git-prompt.sh "$prefix/lib/git-core/"git-sh-prompt
