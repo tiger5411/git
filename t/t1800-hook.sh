@@ -14,11 +14,10 @@ setup_hooks () {
 }
 
 setup_hookdir () {
-	mkdir .git/hooks
-	write_script .git/hooks/pre-commit <<-EOF
+	test_when_finished rm -rf .git/hooks &&
+	write_hook pre-commit <<-EOF
 	echo \"Legacy Hook\"
 	EOF
-	test_when_finished rm -rf .git/hooks
 }
 
 test_expect_success 'git hook usage' '
@@ -46,7 +45,7 @@ test_expect_success 'git hook run: nonexistent hook with --ignore-missing' '
 '
 
 test_expect_success 'git hook run: basic' '
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	echo Test hook
 	EOF
 
@@ -58,7 +57,7 @@ test_expect_success 'git hook run: basic' '
 '
 
 test_expect_success 'git hook run: stdout and stderr both write to our stderr' '
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	echo >&1 Will end up on stderr
 	echo >&2 Will end up on stderr
 	EOF
@@ -73,25 +72,25 @@ test_expect_success 'git hook run: stdout and stderr both write to our stderr' '
 '
 
 test_expect_success 'git hook run: exit codes are passed along' '
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	exit 1
 	EOF
 
 	test_expect_code 1 git hook run test-hook &&
 
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	exit 2
 	EOF
 
 	test_expect_code 2 git hook run test-hook &&
 
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	exit 128
 	EOF
 
 	test_expect_code 128 git hook run test-hook &&
 
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	exit 129
 	EOF
 
@@ -103,7 +102,7 @@ test_expect_success 'git hook run arg u ments without -- is not allowed' '
 '
 
 test_expect_success 'git hook run -- pass arguments' '
-	write_script .git/hooks/test-hook <<-\EOF &&
+	write_hook test-hook <<-\EOF &&
 	echo $1
 	echo $2
 	EOF
@@ -144,7 +143,7 @@ test_expect_success 'git hook run: out-of-repo runs execute global hooks' '
 '
 
 test_expect_success 'git -c core.hooksPath=<PATH> hook run' '
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	echo Test hook
 	EOF
 
@@ -173,7 +172,7 @@ test_expect_success 'git -c core.hooksPath=<PATH> hook run' '
 '
 
 test_expect_success 'stdin to hooks' '
-	write_script .git/hooks/test-hook <<-\EOF &&
+	write_hook test-hook <<-\EOF &&
 	echo BEGIN stdin
 	cat
 	echo END stdin
@@ -307,8 +306,7 @@ test_expect_success 'multiple hooks in series' '
 	test_config hook.series-1.command "echo 1" --add &&
 	test_config hook.series-2.event "test-hook" &&
 	test_config hook.series-2.command "echo 2" --add &&
-	mkdir .git/hooks &&
-	write_script .git/hooks/test-hook <<-EOF &&
+	write_hook test-hook <<-EOF &&
 	echo 3
 	EOF
 
