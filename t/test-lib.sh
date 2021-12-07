@@ -1443,7 +1443,8 @@ remove_trash=t
 if test -z "$TEST_NO_CREATE_REPO"
 then
 	git init "$TRASH_DIRECTORY" >&3 2>&4 ||
-	error "cannot run git init"
+	error "cannot run git init" &&
+	mkdir "$TRASH_DIRECTORY"/.git/info
 else
 	mkdir -p "$TRASH_DIRECTORY"
 fi
