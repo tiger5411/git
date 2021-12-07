@@ -93,37 +93,10 @@ static void copy_templates_1(struct strbuf *path, struct strbuf *template_path,
 	}
 }
 
-static void lazy_mkdir_strbuf_or_die_setlen(struct strbuf *path, size_t oldlen,
-					    const char *dir)
-{
-	strbuf_addstr(path, dir);
-	if (mkdir(path->buf, 0777) < 0) {
-		int saved_errno = errno;
-		struct stat st;
-
-		/*
-		 * Unfortunately there's no EEXIST_{DIR,FILE}, and
-		 * we'd like to pass these only if the path is already
-		 * what we want it to be, not if it's a normal.
-		 */
-		if (lstat(path->buf, &st))
-			die_errno(_("cannot stat '%s'"), path->buf);
-		else if (S_ISDIR(st.st_mode))
-			goto cleanup;
-
-		errno = saved_errno;
-		die_errno(_("cannot mkdir '%s'"), path->buf);
-	}
-cleanup:
-	strbuf_setlen(path, oldlen);
-}
-
-
 static void copy_templates(int no_template, const char *template_dir,
 			   const char *init_template_dir)
 {
 	struct strbuf path = STRBUF_INIT;
-	size_t len;
 	struct strbuf template_path = STRBUF_INIT;
 	size_t template_len;
 	struct repository_format template_format = REPOSITORY_FORMAT_INIT;
@@ -135,7 +108,7 @@ static void copy_templates(int no_template, const char *template_dir,
 		return;
 	if (!template_dir && !init_template_dir &&
 	    git_env_bool(GIT_NO_TEMPLATE_DIR_ENVIRONMENT, 0))
-		goto no_template;
+		return;
 	if (!template_dir)
 		template_dir = getenv(TEMPLATE_DIR_ENVIRONMENT);
 	if (!template_dir)
@@ -185,17 +158,6 @@ free_return:
 	strbuf_release(&template_path);
 	clear_repository_format(&template_format);
 	return;
-no_template:
-	if (!git_env_bool("GIT_TEST_BARE_TEMPLATE", 0))
-		return;
-
-	strbuf_addstr(&path, get_git_common_dir());
-	strbuf_complete(&path, '/');
-	len = path.len;
-
-	lazy_mkdir_strbuf_or_die_setlen(&path, len, "info");
-
-	strbuf_release(&path);
 }
 
 /*

@@ -158,7 +158,6 @@ test_expect_success 'setup export-subst' '
 
 test_expect_success 'create bare clone' '
 	git clone --bare . bare.git &&
-	mkdir bare.git/info &&
 	cp .git/info/attributes bare.git/info/attributes
 '
 
