@@ -164,6 +164,7 @@ test_expect_success 'blame huge graft' '
 			graft="$graft$commit "
 		done
 	done &&
+	mkdir .git/info &&
 	printf "%s " $graft >.git/info/grafts &&
 	check_count -h 00 01 1 10 1
 '

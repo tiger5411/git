@@ -15,6 +15,7 @@ test_description='sparse checkout tests
 . "$TEST_DIRECTORY"/lib-read-tree.sh
 
 test_expect_success 'setup' '
+	mkdir .git/info &&
 	test_commit init &&
 	echo modified >>init.t &&
 

@@ -94,21 +94,23 @@ check () {
 for type in basic parents parents-raw
 do
 	test_expect_success 'without grafts' "
-		rm -f .git/info/grafts &&
 		check $type $B2 -- $B2 $B1 $B0
 	"
 
 	test_expect_success 'with grafts' "
+		test_when_finished 'rm -rf .git/info' &&
+		mkdir .git/info &&
 		echo '$B0 $A2' >.git/info/grafts &&
 		check $type $B2 -- $B2 $B1 $B0 $A2 $A1 $A0
 	"
 
 	test_expect_success 'without grafts, with pathlimit' "
-		rm -f .git/info/grafts &&
 		check $type $B2 subdir -- $B2 $B0
 	"
 
 	test_expect_success 'with grafts, with pathlimit' "
+		test_when_finished 'rm -rf .git/info' &&
+		mkdir .git/info &&
 		echo '$B0 $A2' >.git/info/grafts &&
 		check $type $B2 subdir -- $B2 $B0 $A2 $A0
 	"
@@ -116,6 +118,8 @@ do
 done
 
 test_expect_success 'show advice that grafts are deprecated' '
+	mkdir .git/info &&
+	echo "$B0 $A2" >.git/info/grafts &&
 	git show HEAD 2>err &&
 	test_i18ngrep "git replace" err &&
 	test_config advice.graftFileDeprecated false &&
