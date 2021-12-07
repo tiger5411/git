@@ -573,6 +573,7 @@ write_hook () {
 	done &&
 	git_dir=$(git -C "$indir" rev-parse --absolute-git-dir) &&
 	hook_dir="$git_dir/hooks" &&
+	mkdir -p "$hook_dir" &&
 	hook_file="$hook_dir/$1"
 	write_script "$hook_file"
 }

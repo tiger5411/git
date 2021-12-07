@@ -28,8 +28,7 @@ mk_empty () {
 	(
 		cd "$repo_name" &&
 		git init &&
-		git config receive.denyCurrentBranch warn &&
-		mv .git/hooks .git/hooks-disabled
+		git config receive.denyCurrentBranch warn
 	)
 }
 
@@ -61,7 +60,6 @@ mk_test_with_hooks() {
 	mk_test "$@" &&
 	(
 		cd "$repo_name" &&
-		mkdir .git/hooks &&
 
 		write_hook pre-receive <<-'EOF' &&
 		cat - >>pre-receive.actual

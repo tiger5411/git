@@ -194,7 +194,6 @@ no_template:
 	len = path.len;
 
 	lazy_mkdir_strbuf_or_die_setlen(&path, len, "info");
-	lazy_mkdir_strbuf_or_die_setlen(&path, len, "hooks");
 
 	strbuf_release(&path);
 }
