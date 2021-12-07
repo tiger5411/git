@@ -55,35 +55,24 @@ mk_test () {
 mk_test_with_hooks() {
 	repo_name=$1
 	mk_test "$@" &&
-
-	cat >"$repo_name"/.git/hooks/pre-receive <<-'EOF' &&
-	#!/bin/sh
+	test_hook -C "$repo_name" pre-receive <<-'EOF' &&
 	cat - >>pre-receive.actual
 	EOF
 
-	cat >"$repo_name"/.git/hooks/update <<-'EOF' &&
-	#!/bin/sh
+	test_hook -C "$repo_name" update <<-'EOF' &&
 	printf "%s %s %s\n" "$@" >>update.actual
 	EOF
 
-	cat >"$repo_name"/.git/hooks/post-receive <<-'EOF' &&
-	#!/bin/sh
+	test_hook -C "$repo_name" post-receive <<-'EOF' &&
 	cat - >>post-receive.actual
 	EOF
 
-	cat >"$repo_name"/.git/hooks/post-update <<-'EOF' &&
-	#!/bin/sh
+	test_hook -C "$repo_name" post-update <<-'EOF'
 	for ref in "$@"
 	do
 		printf "%s\n" "$ref" >>post-update.actual
 	done
 	EOF
-
-	chmod +x \
-	      "$repo_name"/.git/hooks/pre-receive \
-	      "$repo_name"/.git/hooks/update \
-	      "$repo_name"/.git/hooks/post-receive \
-	      "$repo_name"/.git/hooks/post-update
 }
 
 mk_child() {

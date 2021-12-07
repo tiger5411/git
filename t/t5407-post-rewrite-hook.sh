@@ -19,12 +19,10 @@ test_expect_success 'setup' '
 	test_commit F foo F &&
 	git checkout main &&
 
-	cat >.git/hooks/post-rewrite <<-EOF &&
-	#!/bin/sh
+	test_hook --setup post-rewrite <<-EOF
 	echo \$@ > "$TRASH_DIRECTORY"/post-rewrite.args
 	cat > "$TRASH_DIRECTORY"/post-rewrite.data
 	EOF
-	chmod u+x .git/hooks/post-rewrite
 '
 
 clear_hook_input () {
