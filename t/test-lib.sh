@@ -1375,9 +1375,6 @@ fi
 
 GITPERLLIB="$GIT_BUILD_DIR"/perl/build/lib
 export GITPERLLIB
-test -d "$GIT_BUILD_DIR"/templates/blt || {
-	error "You haven't built things yet, have you?"
-}
 
 if ! test -x "$GIT_BUILD_DIR"/t/helper/test-tool$X
 then
