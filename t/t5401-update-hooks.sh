@@ -22,42 +22,34 @@ test_expect_success setup '
 	git update-ref refs/heads/main $commit1 &&
 	git update-ref refs/heads/tofail $commit0 &&
 
-	cat >victim.git/hooks/pre-receive <<-\EOF &&
-	#!/bin/sh
+	test_hook --setup -C victim.git pre-receive <<-\EOF &&
 	printf %s "$@" >>$GIT_DIR/pre-receive.args
 	cat - >$GIT_DIR/pre-receive.stdin
 	echo STDOUT pre-receive
 	echo STDERR pre-receive >&2
 	EOF
-	chmod u+x victim.git/hooks/pre-receive &&
 
-	cat >victim.git/hooks/update <<-\EOF &&
-	#!/bin/sh
+	test_hook --setup -C victim.git update <<-\EOF &&
 	echo "$@" >>$GIT_DIR/update.args
 	read x; printf %s "$x" >$GIT_DIR/update.stdin
 	echo STDOUT update $1
 	echo STDERR update $1 >&2
 	test "$1" = refs/heads/main || exit
 	EOF
-	chmod u+x victim.git/hooks/update &&
 
-	cat >victim.git/hooks/post-receive <<-\EOF &&
-	#!/bin/sh
+	test_hook --setup -C victim.git post-receive <<-\EOF &&
 	printf %s "$@" >>$GIT_DIR/post-receive.args
 	cat - >$GIT_DIR/post-receive.stdin
 	echo STDOUT post-receive
 	echo STDERR post-receive >&2
 	EOF
-	chmod u+x victim.git/hooks/post-receive &&
 
-	cat >victim.git/hooks/post-update <<-\EOF &&
-	#!/bin/sh
+	test_hook --setup -C victim.git post-update <<-\EOF
 	echo "$@" >>$GIT_DIR/post-update.args
 	read x; printf %s "$x" >$GIT_DIR/post-update.stdin
 	echo STDOUT post-update
 	echo STDERR post-update >&2
 	EOF
-	chmod u+x victim.git/hooks/post-update
 '
 
 test_expect_success push '
