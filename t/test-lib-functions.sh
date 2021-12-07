@@ -551,6 +551,32 @@ write_script () {
 	chmod +x "$1"
 }
 
+## Usage: write-hook pre-receive
+## Usage: write-hook -C some-dir pre-receive
+write_hook () {
+	indir= &&
+	while test $# != 0
+	do
+		case "$1" in
+		-C)
+			indir="$2"
+			shift
+			;;
+		-*)
+			BUG "invalid write_hook: $1"
+			;;
+		*)
+			break
+			;;
+		esac &&
+		shift
+	done &&
+	git_dir=$(git -C "$indir" rev-parse --absolute-git-dir) &&
+	hook_dir="$git_dir/hooks" &&
+	hook_file="$hook_dir/$1"
+	write_script "$hook_file"
+}
+
 # Use test_set_prereq to tell that a particular prerequisite is available.
 # The prerequisite can later be checked for in two ways:
 #
