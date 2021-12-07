@@ -20,6 +20,7 @@ extract_tar_to_dir () {
 
 test_expect_success 'setup' '
 	echo ignored >ignored &&
+	mkdir .git/info &&
 	echo ignored export-ignore >>.git/info/attributes &&
 	git add ignored &&
 
