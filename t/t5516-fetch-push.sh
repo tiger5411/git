@@ -62,32 +62,25 @@ mk_test_with_hooks() {
 	(
 		cd "$repo_name" &&
 		mkdir .git/hooks &&
-		cd .git/hooks &&
 
-		cat >pre-receive <<-'EOF' &&
-		#!/bin/sh
+		write_hook pre-receive <<-'EOF' &&
 		cat - >>pre-receive.actual
 		EOF
 
-		cat >update <<-'EOF' &&
-		#!/bin/sh
+		write_hook update <<-'EOF' &&
 		printf "%s %s %s\n" "$@" >>update.actual
 		EOF
 
-		cat >post-receive <<-'EOF' &&
-		#!/bin/sh
+		write_hook post-receive <<-'EOF' &&
 		cat - >>post-receive.actual
 		EOF
 
-		cat >post-update <<-'EOF' &&
-		#!/bin/sh
+		write_hook post-update <<-'EOF'
 		for ref in "$@"
 		do
 			printf "%s\n" "$ref" >>post-update.actual
 		done
 		EOF
-
-		chmod +x pre-receive update post-receive post-update
 	)
 }
 

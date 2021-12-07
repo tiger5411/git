@@ -96,11 +96,9 @@ test_expect_success 'create and delete remote branch' '
 	test_must_fail git show-ref --verify refs/remotes/origin/dev
 '
 
-cat >"$HTTPD_DOCUMENT_ROOT_PATH/test_repo.git/hooks/update" <<EOF
-#!/bin/sh
+write_hook -C "$HTTPD_DOCUMENT_ROOT_PATH/test_repo.git" update <<\EOF
 exit 1
 EOF
-chmod a+x "$HTTPD_DOCUMENT_ROOT_PATH/test_repo.git/hooks/update"
 
 cat >exp <<EOF
 remote: error: hook declined to update refs/heads/dev2
