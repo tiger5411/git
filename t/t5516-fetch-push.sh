@@ -1671,7 +1671,7 @@ test_expect_success 'updateInstead with push-to-checkout hook' '
 		git reset --hard HEAD^^ &&
 		git tag initial &&
 		git config receive.denyCurrentBranch updateInstead &&
-		write_script .git/hooks/push-to-checkout <<-\EOF
+		write_hook push-to-checkout <<-\EOF
 		echo >&2 updating from $(git rev-parse HEAD)
 		echo >&2 updating to "$1"
 
@@ -1730,7 +1730,7 @@ test_expect_success 'updateInstead with push-to-checkout hook' '
 	(
 		cd void &&
 		git config receive.denyCurrentBranch updateInstead &&
-		write_script .git/hooks/push-to-checkout <<-\EOF
+		write_hook push-to-checkout <<-\EOF
 		if git rev-parse --quiet --verify HEAD
 		then
 			has_head=yes

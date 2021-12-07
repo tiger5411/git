@@ -103,7 +103,7 @@ test_expect_success 'pre-auto-gc hook can stop auto gc' '
 	git init pre-auto-gc-hook &&
 	(
 		cd pre-auto-gc-hook &&
-		write_script ".git/hooks/pre-auto-gc" <<-\EOF &&
+		write_hook pre-auto-gc <<-\EOF &&
 		echo >&2 no gc for you &&
 		exit 1
 		EOF
@@ -130,7 +130,7 @@ test_expect_success 'pre-auto-gc hook can stop auto gc' '
 
 	(
 		cd pre-auto-gc-hook &&
-		write_script ".git/hooks/pre-auto-gc" <<-\EOF &&
+		write_hook pre-auto-gc <<-\EOF &&
 		echo >&2 will gc for you &&
 		exit 0
 		EOF
