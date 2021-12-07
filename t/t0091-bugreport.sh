@@ -61,10 +61,10 @@ test_expect_success 'can create leading directories outside of a git dir' '
 test_expect_success 'indicates populated hooks' '
 	test_when_finished rm git-bugreport-hooks.txt &&
 
-	write_script .git/hooks/applypatch-msg <<-\EOF &&
+	test_hook applypatch-msg <<-\EOF &&
 	true
 	EOF
-	write_script .git/hooks/unknown-hook <<-\EOF &&
+	test_hook unknown-hook <<-\EOF &&
 	true
 	EOF
 	git bugreport -s hooks &&

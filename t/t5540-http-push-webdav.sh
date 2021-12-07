@@ -42,7 +42,7 @@ test_expect_success 'setup remote repository' '
 	git clone --bare test_repo test_repo.git &&
 	cd test_repo.git &&
 	git --bare update-server-info &&
-	write_script hooks/post-update <<-\EOF &&
+	test_hook --setup post-update <<-\EOF &&
 	exec git update-server-info
 	EOF
 	ORIG_HEAD=$(git rev-parse --verify HEAD) &&
