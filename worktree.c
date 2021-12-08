@@ -28,13 +28,11 @@ static void add_head_info(struct worktree *wt)
 {
 	int flags;
 	const char *target;
-	int ignore_errno;
 
 	target = refs_resolve_ref_unsafe(get_worktree_ref_store(wt),
 					 "HEAD",
 					 0,
-					 &wt->head_oid, &flags,
-					 &ignore_errno);
+					 &wt->head_oid, &flags);
 	if (!target)
 		return;
 
@@ -420,7 +418,6 @@ const struct worktree *find_shared_symref(const char *symref,
 		const char *symref_target;
 		struct ref_store *refs;
 		int flags;
-		int ignore_errno;
 
 		if (wt->is_bare)
 			continue;
@@ -438,8 +435,7 @@ const struct worktree *find_shared_symref(const char *symref,
 
 		refs = get_worktree_ref_store(wt);
 		symref_target = refs_resolve_ref_unsafe(refs, symref, 0,
-							NULL, &flags,
-							&ignore_errno);
+							NULL, &flags);
 		if ((flags & REF_ISSYMREF) &&
 		    symref_target && !strcmp(symref_target, target)) {
 			existing = wt;
@@ -567,7 +563,6 @@ int other_head_refs(each_ref_fn fn, void *cb_data)
 		struct worktree *wt = *p;
 		struct object_id oid;
 		int flag;
-		int ignore_errno;
 
 		if (wt->is_current)
 			continue;
@@ -577,7 +572,7 @@ int other_head_refs(each_ref_fn fn, void *cb_data)
 		if (refs_resolve_ref_unsafe(get_main_ref_store(the_repository),
 					    refname.buf,
 					    RESOLVE_REF_READING,
-					    &oid, &flag, &ignore_errno))
+					    &oid, &flag))
 			ret = fn(refname.buf, &oid, flag, cb_data);
 		if (ret)
 			break;
