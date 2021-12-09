@@ -387,7 +387,6 @@ stat_ref:
 	if (lstat(path, &st) < 0) {
 		int ignore_errno;
 		myerr = errno;
-		errno = 0;
 		if (myerr != ENOENT)
 			goto out;
 		if (refs_read_raw_ref(refs->packed_ref_store, refname, oid,
@@ -404,7 +403,6 @@ stat_ref:
 		strbuf_reset(&sb_contents);
 		if (strbuf_readlink(&sb_contents, path, st.st_size) < 0) {
 			myerr = errno;
-			errno = 0;
 			if (myerr == ENOENT || myerr == EINVAL)
 				/* inconsistent with lstat; retry */
 				goto stat_ref;
@@ -474,6 +472,7 @@ out:
 
 	strbuf_release(&sb_path);
 	strbuf_release(&sb_contents);
+	errno = 0;
 	return ret;
 }
 
