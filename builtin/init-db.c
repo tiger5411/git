@@ -223,6 +223,12 @@ static int create_default_files(const char *original_git_dir,
 	const char *work_tree = get_git_work_tree();
 
 	/*
+	 * We may not have a info/ if the template explicitly omitted
+	 * it.
+	 */
+	safe_create_dir(git_path("info"), 1);
+
+	/*
 	 * We must make sure command-line options continue to override any
 	 * values we might have just re-read from the config.
 	 */
