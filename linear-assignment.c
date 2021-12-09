@@ -5,7 +5,6 @@
  */
 #include "cache.h"
 #include "linear-assignment.h"
-#include "compat/gnulib/intprops.h"
 
 static inline intmax_t cost_index(intmax_t *cost, intmax_t a, intmax_t b, intmax_t c)
 {

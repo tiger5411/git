@@ -611,6 +611,8 @@ static int *list_and_choose(struct menu_opts *opts, struct menu_stuff *stuff)
 		*result = EOF;
 	} else {
 		int j = 0;
+		const int add = 1;
+		int r;
 
 		/*
 		 * recalculate nr, if return back from menu directly with
@@ -621,7 +623,10 @@ static int *list_and_choose(struct menu_opts *opts, struct menu_stuff *stuff)
 				nr += chosen[i];
 		}
 
-		CALLOC_ARRAY(result, st_add(nr, 1));
+
+		if (INT_ADD_WRAPV(nr, add, &r))
+			die(_("integer overflow in %d + %d addition"), nr, add);
+		CALLOC_ARRAY(result, r);
 		for (i = 0; i < stuff->nr && j < nr; i++) {
 			if (chosen[i])
 				result[j++] = i;

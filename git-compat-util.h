@@ -87,6 +87,23 @@
 
 #define bitsizeof(x)  (CHAR_BIT * sizeof(x))
 
+<<<<<<< Updated upstream
+=======
+#define maximum_signed_value_of_type(a) \
+    (INTMAX_MAX >> (bitsizeof(intmax_t) - bitsizeof(a)))
+
+#define maximum_unsigned_value_of_type(a) \
+    (UINTMAX_MAX >> (bitsizeof(uintmax_t) - bitsizeof(a)))
+
+/**
+ * Gnulib's overflow detection macros that work with both signed and
+ * unsigned types, using compiler-native primitives if possible. See
+ * "Wraparound Arithmetic with Integers" and "Integer Properties" in
+ * the Gnulib manual.
+ */
+#include "compat/gnulib/intprops.h"
+
+>>>>>>> Stashed changes
 /*
  * Helper macros that use gnulib's intprops.h to report integer
  * properties.
