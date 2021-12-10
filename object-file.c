@@ -1860,11 +1860,11 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 	return fd;
 }
 
-static int write_loose_object(const struct object_id *oid, char *hdr,
+static int write_loose_object(struct object_id *oid, char *hdr,
 			      int hdrlen, const void *buf, unsigned long len,
 			      time_t mtime, unsigned flags)
 {
-	int fd, ret;
+	int fd, ret, err = 0;
 	unsigned char compressed[4096];
 	git_zstream stream;
 	git_hash_ctx c;
@@ -1872,16 +1872,21 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	static struct strbuf tmp_file = STRBUF_INIT;
 	static struct strbuf filename = STRBUF_INIT;
 
-	loose_object_path(the_repository, &filename, oid);
+	if (flags & HASH_STREAM)
+		/* When oid is not determined, save tmp file to odb path. */
+		strbuf_addf(&filename, "%s/", get_object_directory());
+	else
+		loose_object_path(the_repository, &filename, oid);
 
 	fd = create_tmpfile(&tmp_file, filename.buf);
 	if (fd < 0) {
 		if (flags & HASH_SILENT)
-			return -1;
+			err = -1;
 		else if (errno == EACCES)
-			return error(_("insufficient permission for adding an object to repository database %s"), get_object_directory());
+			err = error(_("insufficient permission for adding an object to repository database %s"), get_object_directory());
 		else
-			return error_errno(_("unable to create temporary file"));
+			err = error_errno(_("unable to create temporary file"));
+		goto cleanup;
 	}
 
 	/* Set it up */
@@ -1923,11 +1928,33 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 		die(_("deflateEnd on object %s failed (%d)"), oid_to_hex(oid),
 		    ret);
 	the_hash_algo->final_oid_fn(&parano_oid, &c);
-	if (!oideq(oid, &parano_oid))
+	if (!(flags & HASH_STREAM) && !oideq(oid, &parano_oid))
 		die(_("confused by unstable object source data for %s"),
 		    oid_to_hex(oid));
 
 	close_loose_object(fd);
+
+	if (flags & HASH_STREAM) {
+		int dirlen;
+
+		oidcpy((struct object_id *)oid, &parano_oid);
+		loose_object_path(the_repository, &filename, oid);
+
+		/* We finally know the object path, and create the missing dir. */
+		dirlen = directory_size(filename.buf);
+		if (dirlen) {
+			struct strbuf dir = STRBUF_INIT;
+			strbuf_add(&dir, filename.buf, dirlen - 1);
+			if (mkdir(dir.buf, 0777) && errno != EEXIST)
+				err = -1;
+			else if (adjust_shared_perm(dir.buf))
+				err = -1;
+			else
+				strbuf_release(&dir);
+			if (err < 0)
+				goto cleanup;
+		}
+	}
 
 	if (mtime) {
 		struct utimbuf utb;
@@ -1938,7 +1965,10 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 			warning_errno(_("failed utime() on %s"), tmp_file.buf);
 	}
 
-	return finalize_object_file(tmp_file.buf, filename.buf);
+	err = finalize_object_file(tmp_file.buf, filename.buf);
+cleanup:
+	strbuf_release(&filename);
+	return err;
 }
 
 static int freshen_loose_object(const struct object_id *oid)
@@ -2015,7 +2045,7 @@ int force_object_loose(const struct object_id *oid, time_t mtime)
 	if (!buf)
 		return error(_("cannot read object for %s"), oid_to_hex(oid));
 	hdrlen = xsnprintf(hdr, sizeof(hdr), "%s %"PRIuMAX , type_name(type), (uintmax_t)len) + 1;
-	ret = write_loose_object(oid, hdr, hdrlen, buf, len, mtime, 0);
+	ret = write_loose_object((struct object_id*) oid, hdr, hdrlen, buf, len, mtime, 0);
 	free(buf);
 
 	return ret;
