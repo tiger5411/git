@@ -324,13 +324,13 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 				c = diffsize(a_util->diff, b_util->diff);
 			else
 				c = COST_MAX;
-			cost[i + column_count * j] = c;
+			COST(i, j) = c;
 		}
 
 		c = a_util->matching < 0 ?
 			a_util->diffsize * creation_factor / 100 : COST_MAX;
 		for (j = b->nr; j < column_count; j++)
-			cost[i + column_count * j] = c;
+			COST(i, j) = c;
 	}
 
 	for (j = 0; j < b->nr; j++) {
@@ -339,7 +339,7 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 		c = util->matching < 0 ?
 			util->diffsize * creation_factor / 100 : COST_MAX;
 		for (i = a->nr; i < column_count; i++)
-			cost[i + column_count * j] = c;
+			COST(i, j) = c;
 	}
 
 	if (column_count > 1)

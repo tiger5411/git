@@ -6,8 +6,6 @@
 #include "cache.h"
 #include "linear-assignment.h"
 
-#define COST(column, row) cost[(column) + column_count * (row)]
-
 static void columns_reduction(size_t column_count, size_t row_count,
 			      int *cost,
 			      int *column2row, int *row2column,
