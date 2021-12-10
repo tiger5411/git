@@ -187,21 +187,9 @@ void initialize_repository_version(int hash_algo, int reinit)
 		git_config_set_gently("extensions.objectformat", NULL);
 }
 
-static int create_default_files(const char *template_path,
-				const char *original_git_dir,
-				const char *initial_branch,
-				const struct repository_format *fmt,
-				int quiet)
+static void create_template_files(const char *template_path)
 {
-	struct stat st1;
-	struct strbuf buf = STRBUF_INIT;
-	char *path;
-	char junk[2];
-	int reinit;
-	int filemode;
-	struct strbuf err = STRBUF_INIT;
 	const char *init_template_dir = NULL;
-	const char *work_tree = get_git_work_tree();
 
 	/*
 	 * First copy the templates -- we might have the default
@@ -218,6 +206,21 @@ static int create_default_files(const char *template_path,
 	git_config_clear();
 	reset_shared_repository();
 	git_config(git_default_config, NULL);
+}
+
+static int create_default_files(const char *original_git_dir,
+				const char *initial_branch,
+				const struct repository_format *fmt,
+				int quiet)
+{
+	struct stat st1;
+	struct strbuf buf = STRBUF_INIT;
+	char *path;
+	char junk[2];
+	int reinit;
+	int filemode;
+	struct strbuf err = STRBUF_INIT;
+	const char *work_tree = get_git_work_tree();
 
 	/*
 	 * We must make sure command-line options continue to override any
@@ -425,7 +428,8 @@ int init_db(const char *git_dir, const char *real_git_dir,
 
 	validate_hash_algorithm(&repo_fmt, hash);
 
-	reinit = create_default_files(template_dir, original_git_dir,
+	create_template_files(template_dir);
+	reinit = create_default_files(original_git_dir,
 				      initial_branch, &repo_fmt,
 				      flags & INIT_DB_QUIET);
 	if (reinit && initial_branch)
