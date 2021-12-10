@@ -193,6 +193,7 @@ void initialize_repository_version(int hash_algo, int reinit)
 static void create_template_files(int no_template, const char *template_path)
 {
 	const char *init_template_dir = NULL;
+	int is_bool, ret;
 
 	/*
 	 * First copy the templates -- we might have the default
@@ -203,7 +204,10 @@ static void create_template_files(int no_template, const char *template_path)
 	 * values (since we've just potentially changed what's available on
 	 * disk).
 	 */
-	git_config_get_pathname("init.templatedir", &init_template_dir);
+	ret = git_config_get_bool_or_pathname("init.templatedir", &is_bool,
+					      &init_template_dir);
+	if (no_template == -1)
+		no_template = is_bool ? !ret : 0;
 	copy_templates(no_template, template_path, init_template_dir);
 	free((char *)init_template_dir);
 	git_config_clear();
@@ -538,7 +542,7 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	const char *git_dir;
 	const char *real_git_dir = NULL;
 	const char *work_tree;
-	int no_template = 0;
+	int no_template = -1;
 	const char *template_dir = NULL;
 	unsigned int flags = 0;
 	const char *object_format = NULL;
@@ -574,7 +578,7 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	if (real_git_dir && !is_absolute_path(real_git_dir))
 		real_git_dir = real_pathdup(real_git_dir, 1);
 
-	if (no_template && template_dir)
+	if (no_template != -1 && template_dir)
 		die(_("--no-template and --template are incompatible"));
 	if (template_dir && *template_dir && !is_absolute_path(template_dir)) {
 		template_dir = absolute_pathdup(template_dir);

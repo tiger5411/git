@@ -55,7 +55,7 @@ static int option_shallow_submodules;
 static int option_reject_shallow = -1;    /* unspecified */
 static int config_reject_shallow = -1;    /* unspecified */
 static int deepen;
-static int option_no_template;
+static int option_no_template = -1; /* unspecified */
 static char *option_template, *option_depth, *option_since;
 static char *option_origin = NULL;
 static char *remote_name = NULL;
@@ -926,7 +926,7 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 		option_no_checkout = 1;
 	}
 
-	if (option_no_template && option_template)
+	if (option_no_template != -1 && option_template)
 		die(_("--no-template and --template are incompatible."));
 
 	repo_name = argv[0];

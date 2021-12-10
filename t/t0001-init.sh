@@ -301,11 +301,9 @@ test_expect_success 'init with init.templateDir=[bool]' '
 	(
 		no_templatedir_env &&
 
-		cat >expect <<-\EOF &&
-		warning: templates not found in false
-		EOF
-		git -c init.templateDir=false init repo 2>actual &&
-		test_cmp expect actual
+		git -c init.templateDir=false init repo 2>err &&
+		test_must_be_empty err &&
+		test_path_is_missing repo/.git/description
 	)
 '
 

@@ -142,19 +142,24 @@ If a template directory is in use files and directories in the
 template directory whose name do not start with a
 dot will be copied to the `$GIT_DIR` after it is created.
 
-Using a template template directory can be disabled with:
+Using a template template directory can be disabled by any of of:
 
  - The `--no-template` option being given. This option is incompatible
    with `--template`.
 
-If that conditions isn't true, then the template directory
+ - The `init.templateDirectory' option being set to 'false' (or
+   another stand-in for 'false', see linkgit:git-config[1]).
+
+If none of those conditions are true, then the template directory
 will be one of the following (in order):
 
  - the argument given with the `--template` option;
 
  - the contents of the `$GIT_TEMPLATE_DIR` environment variable;
 
- - the `init.templateDir` configuration variable; or
+ - the `init.templateDir` configuration variable, if set to 'true' (or
+   another stand-in for 'true', see linkgit:git-config[1]) the default
+   template directory; or
 
  - the default template directory: `/usr/share/git-core/templates`.
 

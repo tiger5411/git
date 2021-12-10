@@ -1444,6 +1444,18 @@ int git_config_pathname(const char **dest, const char *var, const char *value)
 	return 0;
 }
 
+int git_config_bool_or_pathname(const char **dest, const char *name,
+				const char *value, int *is_bool)
+{
+	int v = git_parse_maybe_bool_text(value);
+	if (0 <= v) {
+		*is_bool = 1;
+		return v;
+	}
+	*is_bool = 0;
+	return git_config_pathname(dest, name, value);
+}
+
 int git_config_expiry_date(timestamp_t *timestamp, const char *var, const char *value)
 {
 	if (!value)
@@ -2481,6 +2493,16 @@ int git_configset_get_pathname(struct config_set *cs, const char *key, const cha
 		return 1;
 }
 
+int git_configset_get_bool_or_pathname(struct config_set *cs, const char *key,
+				       int *is_bool, const char **dest)
+{
+	const char *value;
+	if (!git_configset_get_value(cs, key, &value))
+		return git_config_bool_or_pathname(dest, key, value, is_bool);
+	else
+		return 1;
+}
+
 /* Functions use to read configuration from a repository */
 static void repo_read_config(struct repository *repo)
 {
@@ -2614,6 +2636,13 @@ int repo_config_get_pathname(struct repository *repo,
 	return ret;
 }
 
+int repo_config_get_bool_or_pathname(struct repository *repo,
+				     const char *key, int *is_bool, const char **dest)
+{
+	git_config_check_init(repo);
+	return git_configset_get_bool_or_pathname(repo->config, key, is_bool, dest);
+}
+
 /* Functions used historically to read configuration from 'the_repository' */
 void git_config(config_fn_t fn, void *data)
 {
@@ -2673,6 +2702,11 @@ int git_config_get_maybe_bool(const char *key, int *dest)
 int git_config_get_pathname(const char *key, const char **dest)
 {
 	return repo_config_get_pathname(the_repository, key, dest);
+}
+
+int git_config_get_bool_or_pathname(const char *key, int *is_bool, const char **dest)
+{
+	return repo_config_get_bool_or_pathname(the_repository, key, is_bool, dest);
 }
 
 int git_config_get_expiry(const char *key, const char **output)
