@@ -34,7 +34,7 @@ then
 	# elsewhere
 	TEST_OUTPUT_DIRECTORY=$TEST_DIRECTORY
 fi
-GIT_BUILD_DIR="$TEST_DIRECTORY"/..
+GIT_BUILD_DIR="${TEST_DIRECTORY%/t}"
 
 # Prepend a string to a VAR using an arbitrary ":" delimiter, not
 # adding the delimiter if VAR is empty. I.e. a generalized:
