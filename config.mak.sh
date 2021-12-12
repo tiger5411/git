@@ -68,7 +68,7 @@ esac
 
 if test -z "$do_release" && test -e ".git"
 then
-	git_dir=$(git rev-parse --git-dir)
+	git_dir=$(/usr/bin/git rev-parse --git-dir)
 	# See https://lore.kernel.org/git/87mtr38tvd.fsf@evledraar.gmail.com/
 	if ! grep -q "^/version$" "$git_dir"/info/exclude 2>/dev/null
 	then
@@ -76,7 +76,7 @@ then
 		mkdir "$git_dir"/info 2>/dev/null &&
 		echo /version >>"$git_dir"/info/exclude
 	fi
-	echo $(git grep -h -o -P '(?<=^DEF_VER=v).*' 'HEAD:GIT-VERSION-GEN')-dev >"$toplevel"/version
+	echo $(/usr/bin/git grep -h -o -P '(?<=^DEF_VER=v).*' 'HEAD:GIT-VERSION-GEN')-dev >"$toplevel"/version
 fi
 
 tmp=$(mktemp /tmp/config.mak-XXXXX)
