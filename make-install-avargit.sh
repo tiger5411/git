@@ -157,6 +157,11 @@ reset_it() {
 test_compile () {
 	full=$1
 
+	# HACK until Documentation/cmds-*.txt dependencies are
+	# corrected (uses $(wildcard *))
+	make clean
+	git clean -dxf -- 'Documentation/cmds*.txt'
+
 	make $merge_compile_args
 
 	if test -n "$merge_compile_test"
