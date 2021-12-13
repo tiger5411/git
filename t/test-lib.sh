@@ -1473,6 +1473,21 @@ then
 			test_done
 		fi
 	fi
+
+	if test_bool_env GIT_TEST_SANITIZE_LEAK_LOG false
+	then
+		TEST_RESULTS_SAN_DIR="$TEST_RESULTS_DIR/$TEST_NAME.leak"
+		mkdir -p "$TEST_RESULTS_SAN_DIR" || BAIL_OUT "cannot create $TEST_RESULTS_SAN_DIR"
+		TEST_RESULTS_SAN_FILE="$TEST_RESULTS_SAN_DIR/trace"
+
+		# Don't litter *.leak dirs if there was nothing to report
+		test_atexit "rmdir \"$TEST_RESULTS_SAN_DIR\" 2>/dev/null || :"
+
+		prepend_var LSAN_OPTIONS : dedup_token_length=9999
+		prepend_var LSAN_OPTIONS : log_exe_name=1
+		prepend_var LSAN_OPTIONS : log_path=\"$TEST_RESULTS_SAN_FILE\"
+		export LSAN_OPTIONS
+	fi
 elif test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
 then
 	BAIL_OUT "GIT_TEST_PASSING_SANITIZE_LEAK=true has no effect except when compiled with SANITIZE=leak"
