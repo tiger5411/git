@@ -50,6 +50,7 @@ prepend_var () {
 
 # If [AL]SAN is in effect we want to abort so that we notice problems.
 prepend_var XSAN_OPTIONS : abort_on_error=1
+prepend_var XSAN_OPTIONS : strip_path_prefix=\"$GIT_BUILD_DIR/\"
 
 # If we were built with ASAN, it may complain about leaks
 # of program-lifetime variables. Disable it by default to lower
