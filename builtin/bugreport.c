@@ -102,6 +102,7 @@ int cmd_bugreport(int argc, const char **argv, const char *prefix)
 	char *option_suffix = "%Y-%m-%d-%H%M";
 	const char *user_relative_path = NULL;
 	char *prefixed_filename;
+	int ret;
 
 	const struct option bugreport_options[] = {
 		OPT_STRING('o', "output-directory", &option_output, N_("path"),
@@ -160,7 +161,10 @@ int cmd_bugreport(int argc, const char **argv, const char *prefix)
 		user_relative_path);
 
 	free(prefixed_filename);
-	UNLEAK(buffer);
-	UNLEAK(report_path);
-	return !!launch_editor(report_path.buf, NULL, NULL);
+
+	ret = !!launch_editor(report_path.buf, NULL, NULL);
+
+	strbuf_release(&buffer);
+	strbuf_release(&report_path);
+	return ret;
 }
