@@ -935,8 +935,8 @@ static int store_object(
 	git_hash_ctx c;
 	git_zstream s;
 
-	hdrlen = xsnprintf((char *)hdr, sizeof(hdr), "%s %lu",
-			   type_name(type), (unsigned long)dat->len) + 1;
+	hdrlen = format_object_header((char *)hdr, sizeof(hdr), type,
+				      (unsigned long)dat->len);
 	the_hash_algo->init_fn(&c);
 	the_hash_algo->update_fn(&c, hdr, hdrlen);
 	the_hash_algo->update_fn(&c, dat->buf, dat->len);

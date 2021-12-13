@@ -1311,6 +1311,24 @@ enum unpack_loose_header_result unpack_loose_header(git_zstream *stream,
 						    struct strbuf *hdrbuf);
 
 /**
+ * format_object_header() is a thin wrapper around s xsnprintf() that
+ * writes the initial "<type> <obj-len>" part of the loose object
+ * header. It returns the size that snprintf() returns + 1.
+ */
+int format_object_header(char *str, size_t size, enum object_type type,
+			 size_t objsize);
+/**
+ * format_object_header_literally() is like format_object_header(),
+ * except that it takes a "const char *" instead of an "enum
+ * object_type". This is needed for "git hash-object --literally".
+ * Like format_object_header(), it returns the size that snprintf()
+ * returns + 1.
+ */
+int format_object_header_literally(char *str, size_t size, const char *type,
+				   size_t objsize);
+
+
+/**
  * parse_loose_header() parses the starting "<type> <len>\0" of an
  * object. If it doesn't follow that format -1 is returned. To check
  * the validity of the <type> populate the "typep" in the "struct
