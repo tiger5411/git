@@ -373,6 +373,12 @@ by setting "TEST_PASSES_SANITIZE_LEAK=true" before sourcing
 "test-lib.sh" itself at the top of the test script. This test mode is
 used by the "linux-leaks" CI target.
 
+GIT_TEST_SANITIZE_LEAK_LOG=true will log memory leaks to
+"test-results/$TEST_NAME.leak/trace.*" files. Useful in combination
+with "GIT_TEST_PASSING_SANITIZE_LEAK" to check if we're falsely
+reporting a test as "passing" with SANITIZE=leak due to ignored exit
+codes.
+
 GIT_TEST_PROTOCOL_VERSION=<n>, when set, makes 'protocol.version'
 default to n.
 
