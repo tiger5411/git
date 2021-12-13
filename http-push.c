@@ -363,7 +363,7 @@ static void start_put(struct transfer_request *request)
 	git_zstream stream;
 
 	unpacked = read_object_file(&request->obj->oid, &type, &len);
-	hdrlen = xsnprintf(hdr, sizeof(hdr), "%s %"PRIuMAX , type_name(type), (uintmax_t)len) + 1;
+	hdrlen = format_loose_header(hdr, sizeof(hdr), type, (uintmax_t)len);
 
 	/* Set it up */
 	git_deflate_init(&stream, zlib_compression_level);
