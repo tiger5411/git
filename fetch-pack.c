@@ -1571,7 +1571,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	struct object_id common_oid;
 	int received_ready = 0;
 	struct string_list packfile_uris = STRING_LIST_INIT_DUP;
-	int i;
+	struct string_list_item *item;
 	struct strvec index_pack_args = STRVEC_INIT;
 
 	negotiator = &negotiator_alloc;
@@ -1688,17 +1688,17 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		}
 	}
 
-	for (i = 0; i < packfile_uris.nr; i++) {
+	for_each_string_list_item(item, &packfile_uris) {
 		int j;
 		struct child_process cmd = CHILD_PROCESS_INIT;
 		char packname[GIT_MAX_HEXSZ + 1];
-		const char *uri = packfile_uris.items[i].string +
+		const char *uri = item->string +
 			the_hash_algo->hexsz + 1;
 
 		strvec_push(&cmd.args, "http-fetch");
 		strvec_pushf(&cmd.args, "--packfile=%.*s",
 			     (int) the_hash_algo->hexsz,
-			     packfile_uris.items[i].string);
+			     item->string);
 		for (j = 0; j < index_pack_args.nr; j++)
 			strvec_pushf(&cmd.args, "--index-pack-arg=%s",
 				     index_pack_args.v[j]);
@@ -1727,11 +1727,11 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		if (finish_command(&cmd))
 			die("fetch-pack: unable to finish http-fetch");
 
-		if (memcmp(packfile_uris.items[i].string, packname,
+		if (memcmp(item->string, packname,
 			   the_hash_algo->hexsz))
 			die("fetch-pack: pack downloaded from %s does not match expected hash %.*s",
 			    uri, (int) the_hash_algo->hexsz,
-			    packfile_uris.items[i].string);
+			    item->string);
 
 		string_list_append_nodup(pack_lockfiles,
 					 xstrfmt("%s/pack/pack-%s.keep",
