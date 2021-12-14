@@ -1526,11 +1526,16 @@ static void receive_packfile_uris(struct packet_reader *reader,
 	process_section_header(reader, "packfile-uris", 0);
 	while (packet_reader_read(reader) == PACKET_READ_NORMAL) {
 		const size_t hexsz = the_hash_algo->hexsz;
+		char *pack_hash;
+		const char *uri;
 
 		if (reader->pktlen < hexsz || reader->line[hexsz] != ' ')
 			die("expected '<hash> <uri>', got: %s\n", reader->line);
 
-		string_list_append(uris, reader->line);
+		pack_hash = xstrfmt("%.*s", (int)hexsz, reader->line);
+		uri = xstrdup(reader->line + hexsz + 1);
+
+		string_list_append_nodup(uris, pack_hash)->util = (void *)uri;
 	}
 	if (reader->status != PACKET_READ_DELIM)
 		die("expected DELIM");
@@ -1694,11 +1699,10 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		struct child_process cmd = CHILD_PROCESS_INIT;
 		char packname[GIT_MAX_HEXSZ + 1];
 		const size_t hexsz = the_hash_algo->hexsz;
-		const char *uri = item->string + hexsz + 1;
+		const char *uri = item->util;
 
 		strvec_push(&cmd.args, "http-fetch");
-		strvec_pushf(&cmd.args, "--packfile=%.*s", (int)hexsz,
-			     item->string);
+		strvec_pushf(&cmd.args, "--packfile=%s", item->string);
 		for (j = 0; j < index_pack_args.nr; j++)
 			strvec_pushf(&cmd.args, "--index-pack-arg=%s",
 				     index_pack_args.v[j]);
@@ -1717,8 +1721,6 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		    packname[hexsz] != '\n')
 			die("fetch-pack: expected hash then LF at end of http-fetch output");
 
-		packname[hexsz] = '\0';
-
 		parse_gitmodules_oids(cmd.out, &fsck_options.gitmodules_found);
 
 		close(cmd.out);
@@ -1727,15 +1729,15 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 			die("fetch-pack: unable to finish http-fetch");
 
 		if (memcmp(item->string, packname, hexsz))
-			die("fetch-pack: pack downloaded from %s does not match expected hash %.*s",
-			    uri, (int) hexsz, item->string);
+			die("fetch-pack: pack downloaded from %s does not match expected hash %s",
+			    uri, item->string);
 
 		string_list_append_nodup(pack_lockfiles,
 					 xstrfmt("%s/pack/pack-%s.keep",
 						 get_object_directory(),
-						 packname));
+						 item->string));
 	}
-	string_list_clear(&packfile_uris, 0);
+	string_list_clear(&packfile_uris, 1);
 	strvec_clear(&index_pack_args);
 
 	if (fsck_finish(&fsck_options))
