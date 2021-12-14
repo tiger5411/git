@@ -1897,8 +1897,7 @@ ifdef HAVE_GETDELIM
 endif
 
 ifneq ($(PROCFS_EXECUTABLE_PATH),)
-	procfs_executable_path_SQ = $(subst ','\'',$(PROCFS_EXECUTABLE_PATH))
-	BASIC_CFLAGS += '-DPROCFS_EXECUTABLE_PATH="$(procfs_executable_path_SQ)"'
+	BASIC_CFLAGS += '-DPROCFS_EXECUTABLE_PATH="$(PROCFS_EXECUTABLE_PATH_SQ)"'
 endif
 
 ifndef HAVE_PLATFORM_PROCINFO
@@ -2001,9 +2000,13 @@ DESTDIR_SQ = $(subst ','\'',$(DESTDIR))
 DIFF_SQ = $(subst ','\'',$(DIFF))
 ETC_GITATTRIBUTES_SQ = $(subst ','\'',$(ETC_GITATTRIBUTES))
 ETC_GITCONFIG_SQ = $(subst ','\'',$(ETC_GITCONFIG))
+GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
 NO_GETTEXT_SQ = $(subst ','\'',$(NO_GETTEXT))
+NO_PERL_CPAN_FALLBACKS_SQ = $(subst ','\'',$(NO_PERL_CPAN_FALLBACKS))
+PAGER_ENV_SQ = $(subst ','\'',$(PAGER_ENV))
 PERLLIB_EXTRA_SQ = $(subst ','\'',$(PERLLIB_EXTRA))
 PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
+PROCFS_EXECUTABLE_PATH_SQ = $(subst ','\'',$(PROCFS_EXECUTABLE_PATH))
 PYTHON_PATH_SQ = $(subst ','\'',$(PYTHON_PATH))
 SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 TCLTK_PATH_SQ = $(subst ','\'',$(TCLTK_PATH))
@@ -2023,6 +2026,18 @@ perllibdir_SQ = $(subst ','\'',$(perllibdir))
 perllibdir_relative_SQ = $(subst ','\'',$(perllibdir_relative))
 prefix_SQ = $(subst ','\'',$(prefix))
 template_dir_SQ = $(subst ','\'',$(template_dir))
+
+# C quote
+DEFAULT_EDITOR_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_EDITOR)))"
+DEFAULT_EDITOR_CQ_SQ = $(subst ','\'',$(DEFAULT_EDITOR_CQ))
+DEFAULT_PAGER_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_PAGER)))"
+DEFAULT_PAGER_CQ_SQ = $(subst ','\'',$(DEFAULT_PAGER_CQ))
+GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
+GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
+PAGER_ENV_CQ = "$(subst ",\",$(subst \,\\,$(PAGER_ENV)))"
+PAGER_ENV_CQ_SQ = $(subst ','\'',$(PAGER_ENV_CQ))
+SHELL_PATH_CQ = "$(subst ",\",$(subst \,\\,$(SHELL_PATH)))"
+SHELL_PATH_CQ_SQ = $(subst ','\'',$(SHELL_PATH_CQ))
 
 # RUNTIME_PREFIX's resolution logic requires resource paths to be expressed
 # relative to each other and share an installation path.
@@ -2062,32 +2077,18 @@ LIBS = $(filter-out %.o, $(GITLIBS)) $(EXTLIBS)
 BASIC_CFLAGS += $(COMPAT_CFLAGS)
 LIB_OBJS += $(COMPAT_OBJS)
 
-# Quote for C
-
 ifdef DEFAULT_EDITOR
-DEFAULT_EDITOR_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_EDITOR)))"
-DEFAULT_EDITOR_CQ_SQ = $(subst ','\'',$(DEFAULT_EDITOR_CQ))
-
 BASIC_CFLAGS += -DDEFAULT_EDITOR='$(DEFAULT_EDITOR_CQ_SQ)'
 endif
 
 ifdef DEFAULT_PAGER
-DEFAULT_PAGER_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_PAGER)))"
-DEFAULT_PAGER_CQ_SQ = $(subst ','\'',$(DEFAULT_PAGER_CQ))
-
 BASIC_CFLAGS += -DDEFAULT_PAGER='$(DEFAULT_PAGER_CQ_SQ)'
 endif
 
 ifdef SHELL_PATH
-SHELL_PATH_CQ = "$(subst ",\",$(subst \,\\,$(SHELL_PATH)))"
-SHELL_PATH_CQ_SQ = $(subst ','\'',$(SHELL_PATH_CQ))
-
 BASIC_CFLAGS += -DSHELL_PATH='$(SHELL_PATH_CQ_SQ)'
 endif
 
-GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
-GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
-GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
 GIT-USER-AGENT: FORCE
 	@if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
 		echo '$(GIT_USER_AGENT_SQ)' >GIT-USER-AGENT; \
@@ -2680,7 +2681,6 @@ all:: $(LIB_PERL_GEN)
 ifndef NO_PERL_CPAN_FALLBACKS
 all:: $(LIB_CPAN_GEN)
 endif
-NO_PERL_CPAN_FALLBACKS_SQ = $(subst ','\'',$(NO_PERL_CPAN_FALLBACKS))
 endif
 
 perl/build/lib/%.pm: perl/%.pm GIT-PERL-DEFINES
