@@ -1520,14 +1520,39 @@ static void receive_wanted_refs(struct packet_reader *reader,
 		die(_("error processing wanted refs: %d"), reader->status);
 }
 
+static char *find_packfile_uri_path(const char *buffer)
+{
+	const char *URI_MARK = "://";
+	char *path;
+
+	/* First char is sideband mark */
+	buffer += 1;
+	if (!buffer)
+		return NULL;
+
+	path = strstr(buffer, URI_MARK);
+
+	if (!path)
+		return NULL;
+	path = strchr(path + strlen(URI_MARK), '/');
+	if (!path || !*(path + 1))
+		return NULL;
+	/* position after '/' */
+	return ++path;
+}
+
 static void receive_packfile_uris(struct packet_reader *reader,
 				  struct string_list *uris)
 {
+	struct strbuf sb = STRBUF_INIT;
+	int redact_url = git_env_bool("GIT_TRACE_REDACT", 1);
+
 	process_section_header(reader, "packfile-uris", 0);
-	while (packet_reader_read(reader) == PACKET_READ_NORMAL) {
+	while (packet_reader_read_trace(reader, &sb) == PACKET_READ_NORMAL) {
 		const size_t hexsz = the_hash_algo->hexsz;
 		char *pack_hash;
 		const char *uri;
+		const char *uri_path_start;
 
 		if (reader->pktlen < hexsz || reader->line[hexsz] != ' ')
 			die("expected '<hash> <uri>', got: %s\n", reader->line);
@@ -1536,9 +1561,20 @@ static void receive_packfile_uris(struct packet_reader *reader,
 		uri = xstrdup(reader->line + hexsz + 1);
 
 		string_list_append_nodup(uris, pack_hash)->util = (void *)uri;
+
+		if (redact_url &&
+		    (uri_path_start = find_packfile_uri_path(sb.buf))) {
+			const char *redacted = "<redacted>";
+			const size_t plen = uri_path_start - sb.buf;
+			strbuf_splice(&sb, plen, sb.len - plen, redacted,
+				      strlen(redacted));
+		}
+		packet_trace(sb.buf, sb.len, 0);
 	}
 	if (reader->status != PACKET_READ_DELIM)
 		die("expected DELIM");
+
+	strbuf_release(&sb);
 }
 
 enum fetch_state {
@@ -1664,12 +1700,8 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				receive_wanted_refs(&reader, sought, nr_sought);
 
 			/* get the pack(s) */
-			if (git_env_bool("GIT_TRACE_REDACT", 1))
-				reader.options |= PACKET_READ_REDACT_URI_PATH;
 			if (process_section_header(&reader, "packfile-uris", 1))
 				receive_packfile_uris(&reader, &packfile_uris);
-			/* We don't expect more URIs. Reset to avoid expensive URI check. */
-			reader.options &= ~PACKET_READ_REDACT_URI_PATH;
 
 			process_section_header(&reader, "packfile", 0);
 
