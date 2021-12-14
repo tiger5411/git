@@ -1897,7 +1897,7 @@ ifdef HAVE_GETDELIM
 endif
 
 ifneq ($(PROCFS_EXECUTABLE_PATH),)
-	BASIC_CFLAGS += '-DPROCFS_EXECUTABLE_PATH="$(PROCFS_EXECUTABLE_PATH_SQ)"'
+	BASIC_CFLAGS += -DPROCFS_EXECUTABLE_PATH=$(PROCFS_EXECUTABLE_PATH_SQ_CQS)
 endif
 
 ifndef HAVE_PLATFORM_PROCINFO
@@ -1999,15 +1999,12 @@ endif
 $(eval $(call make-SQ-vars, \
 DESTDIR \
 DIFF \
-ETC_GITATTRIBUTES \
-ETC_GITCONFIG \
 GIT_USER_AGENT \
 NO_GETTEXT \
 NO_PERL_CPAN_FALLBACKS \
 PAGER_ENV \
 PERLLIB_EXTRA \
 PERL_PATH \
-PROCFS_EXECUTABLE_PATH \
 PYTHON_PATH \
 SHELL_PATH \
 TCLTK_PATH \
@@ -2017,12 +2014,9 @@ bindir_relative \
 gitexecdir \
 gitexecdir_relative \
 gitwebdir \
-htmldir_relative \
-infodir_relative \
 localedir \
 localedir_relative \
 mandir \
-mandir_relative \
 perllibdir \
 perllibdir_relative \
 prefix \
@@ -2030,12 +2024,25 @@ template_dir \
 ))
 
 # C quote
-$(eval $(call make-CQ_SQ-vars, \
+$(eval $(call make-SQ_CQS-vars, \
 DEFAULT_EDITOR \
+DEFAULT_HELP_FORMAT \
 DEFAULT_PAGER \
+ETC_GITATTRIBUTES \
+ETC_GITCONFIG \
 GIT_USER_AGENT \
+GIT_VERSION \
 PAGER_ENV \
+PROCFS_EXECUTABLE_PATH \
 SHELL_PATH \
+bindir_relative \
+gitexecdir \
+htmldir_relative \
+infodir_relative \
+localedir_relative \
+mandir_relative \
+prefix \
+template_dir \
 ))
 
 # RUNTIME_PREFIX's resolution logic requires resource paths to be expressed
@@ -2077,15 +2084,15 @@ BASIC_CFLAGS += $(COMPAT_CFLAGS)
 LIB_OBJS += $(COMPAT_OBJS)
 
 ifdef DEFAULT_EDITOR
-BASIC_CFLAGS += -DDEFAULT_EDITOR='$(DEFAULT_EDITOR_CQ_SQ)'
+BASIC_CFLAGS += -DDEFAULT_EDITOR=$(DEFAULT_EDITOR_SQ_CQS)
 endif
 
 ifdef DEFAULT_PAGER
-BASIC_CFLAGS += -DDEFAULT_PAGER='$(DEFAULT_PAGER_CQ_SQ)'
+BASIC_CFLAGS += -DDEFAULT_PAGER=$(DEFAULT_PAGER_SQ_CQS)
 endif
 
 ifdef SHELL_PATH
-BASIC_CFLAGS += -DSHELL_PATH='$(SHELL_PATH_CQ_SQ)'
+BASIC_CFLAGS += -DSHELL_PATH=$(SHELL_PATH_SQ_CQS)
 endif
 
 GIT-USER-AGENT: FORCE
@@ -2094,13 +2101,10 @@ GIT-USER-AGENT: FORCE
 	fi
 
 ifdef DEFAULT_HELP_FORMAT
-BASIC_CFLAGS += -DDEFAULT_HELP_FORMAT='"$(DEFAULT_HELP_FORMAT)"'
+BASIC_CFLAGS += -DDEFAULT_HELP_FORMAT=$(DEFAULT_HELP_FORMAT_SQ_CQS)
 endif
 
-PAGER_ENV_SQ = $(subst ','\'',$(PAGER_ENV))
-PAGER_ENV_CQ = "$(subst ",\",$(subst \,\\,$(PAGER_ENV)))"
-PAGER_ENV_CQ_SQ = $(subst ','\'',$(PAGER_ENV_CQ))
-BASIC_CFLAGS += -DPAGER_ENV='$(PAGER_ENV_CQ_SQ)'
+BASIC_CFLAGS += -DPAGER_ENV=$(PAGER_ENV_SQ_CQS)
 
 ALL_CFLAGS += $(BASIC_CFLAGS)
 ALL_LDFLAGS += $(BASIC_LDFLAGS)
@@ -2189,9 +2193,9 @@ strip: $(PROGRAMS) git$X
 
 git.sp git.s git.o: GIT-PREFIX
 git.sp git.s git.o: EXTRA_CPPFLAGS = \
-	'-DGIT_HTML_PATH="$(htmldir_relative_SQ)"' \
-	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
-	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
+	-DGIT_HTML_PATH=$(htmldir_relative_SQ_CQS) \
+	-DGIT_MAN_PATH=$(mandir_relative_SQ_CQS) \
+	-DGIT_INFO_PATH=$(infodir_relative_SQ_CQS)
 
 git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
@@ -2202,14 +2206,14 @@ hook.sp hook.s hook.o: hook-list.h
 
 builtin/help.sp builtin/help.s builtin/help.o: config-list.h hook-list.h GIT-PREFIX
 builtin/help.sp builtin/help.s builtin/help.o: EXTRA_CPPFLAGS = \
-	'-DGIT_HTML_PATH="$(htmldir_relative_SQ)"' \
-	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
-	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
+	-DGIT_HTML_PATH=$(htmldir_relative_SQ_CQS) \
+	-DGIT_MAN_PATH=$(mandir_relative_SQ_CQS) \
+	-DGIT_INFO_PATH=$(infodir_relative_SQ_CQS)
 
 version.sp version.s version.o: GIT-VERSION-FILE GIT-USER-AGENT
 version.sp version.s version.o: EXTRA_CPPFLAGS = \
-	'-DGIT_VERSION="$(GIT_VERSION)"' \
-	'-DGIT_USER_AGENT=$(GIT_USER_AGENT_CQ_SQ)' \
+	-DGIT_VERSION=$(GIT_VERSION_SQ_CQS) \
+	-DGIT_USER_AGENT=$(GIT_USER_AGENT_SQ_CQS) \
 	'-DGIT_BUILT_FROM_COMMIT="$(shell \
 		GIT_CEILING_DIRECTORIES="$(CURDIR)/.." \
 		git rev-parse -q --verify HEAD 2>/dev/null)"'
@@ -2504,26 +2508,26 @@ endif
 
 exec-cmd.sp exec-cmd.s exec-cmd.o: GIT-PREFIX
 exec-cmd.sp exec-cmd.s exec-cmd.o: EXTRA_CPPFLAGS = \
-	'-DGIT_EXEC_PATH="$(gitexecdir_SQ)"' \
-	'-DGIT_LOCALE_PATH="$(localedir_relative_SQ)"' \
-	'-DBINDIR="$(bindir_relative_SQ)"' \
-	'-DFALLBACK_RUNTIME_PREFIX="$(prefix_SQ)"'
+	-DGIT_EXEC_PATH=$(gitexecdir_SQ_CQS) \
+	-DGIT_LOCALE_PATH=$(localedir_relative_SQ_CQS) \
+	-DBINDIR=$(bindir_relative_SQ_CQS) \
+	-DFALLBACK_RUNTIME_PREFIX=$(prefix_SQ_CQS)
 
 builtin/init-db.sp builtin/init-db.s builtin/init-db.o: GIT-PREFIX
 builtin/init-db.sp builtin/init-db.s builtin/init-db.o: EXTRA_CPPFLAGS = \
-	-DDEFAULT_GIT_TEMPLATE_DIR='"$(template_dir_SQ)"'
+	-DDEFAULT_GIT_TEMPLATE_DIR=$(template_dir_SQ_CQS)
 
 config.sp config.s config.o: GIT-PREFIX
 config.sp config.s config.o: EXTRA_CPPFLAGS = \
-	-DETC_GITCONFIG='"$(ETC_GITCONFIG_SQ)"'
+	-DETC_GITCONFIG=$(ETC_GITCONFIG_SQ_CQS)
 
 attr.sp attr.s attr.o: GIT-PREFIX
 attr.sp attr.s attr.o: EXTRA_CPPFLAGS = \
-	-DETC_GITATTRIBUTES='"$(ETC_GITATTRIBUTES_SQ)"'
+	-DETC_GITATTRIBUTES=$(ETC_GITATTRIBUTES_SQ_CQS)
 
 gettext.sp gettext.s gettext.o: GIT-PREFIX
 gettext.sp gettext.s gettext.o: EXTRA_CPPFLAGS = \
-	-DGIT_LOCALE_PATH='"$(localedir_relative_SQ)"'
+	-DGIT_LOCALE_PATH=$(localedir_relative_SQ_CQS)
 
 http-push.sp http.sp http-walker.sp remote-curl.sp imap-send.sp: SP_EXTRA_FLAGS += \
 	-DCURL_DISABLE_TYPECHECK
