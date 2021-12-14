@@ -45,6 +45,11 @@ Cq = $(subst ",\",$(subst \,\\,$(1)))
 ## => Add surrounding "" for C, escape the contents: -DX='$(call shq_Csq,$(X))'
 shq_Csq = "$(call shq,$(call Cq,$(1)))"
 
+## shqq_Csq ([s]hell[q]uote[quote]_[C][q]uote):
+## => Add surrounding "" for C, as well as ' for the shell: -DX=$(call shqq_Cq,$(X))
+## => Equivalent to: -DX=$(call shq,$(call shq_Cq,$(X)))
+shqq_Cq = '$(call shq_Csq,$(1))'
+
 ## make-fn-sfx-vars: make N number of X_<sfx>, Y_<sfx>, ... vars from X Y with <fn>
 ## => make X_SQ and Y_SQ quoted with "shq":
 ## => $(eval $(call make-fn-sfx-vars,SQ,shq,X Y))
@@ -60,10 +65,10 @@ define make-SQ-vars
 $(call make-fn-sfx-vars,SQ,shq,$(1))
 endef
 
-## make-CQ_SQ-vars: Convenience wrapper for $(make-fn-sfx-vars,CQ_SQ,shq_Csq,$(1))
-## => $(eval $(call make-CQ_SQ-vars,X Y) => makes $(X_CQ_SQ) and $(Y_CQ_SQ)
-define make-CQ_SQ-vars
-$(call make-fn-sfx-vars,CQ_SQ,shq_Csq,$(1))
+## make-SQ_CQS-vars: Convenience wrapper for $(make-fn-sfx-vars,SQ_CQS,shqq_Cq,$(1))
+## => $(eval $(call make-SQ_CQS-vars,X Y) => makes $(X_SQ_CQS) and $(Y_SQ_CQS)
+define make-SQ_CQS-vars
+$(call make-fn-sfx-vars,SQ_CQS,shqq_Cq,$(1))
 endef
 
 ### Global variables
