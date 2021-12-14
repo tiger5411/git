@@ -31,7 +31,7 @@ static int packet_trace_pack(const char *buf, unsigned int len, int sideband)
 	}
 }
 
-static void packet_trace(const char *buf, unsigned int len, int write)
+void packet_trace(const char *buf, unsigned int len, int write)
 {
 	int i;
 	struct strbuf out;
@@ -399,7 +399,9 @@ static char *find_packfile_uri_path(const char *buffer)
 enum packet_read_status packet_read_with_status(int fd, char **src_buffer,
 						size_t *src_len, char *buffer,
 						unsigned size, int *pktlen,
-						int options)
+						int options,
+						struct strbuf *trace_to)
+
 {
 	int len;
 	char linelen[4];
@@ -454,7 +456,9 @@ enum packet_read_status packet_read_with_status(int fd, char **src_buffer,
 		len--;
 
 	buffer[len] = 0;
-	if (options & PACKET_READ_REDACT_URI_PATH &&
+	if (trace_to) {
+		strbuf_add(trace_to, buffer, len);
+	} else if (options & PACKET_READ_REDACT_URI_PATH &&
 	    (uri_path_start = find_packfile_uri_path(buffer))) {
 		const char *redacted = "<redacted>";
 		struct strbuf tracebuf = STRBUF_INIT;
@@ -480,7 +484,7 @@ int packet_read(int fd, char *buffer, unsigned size, int options)
 	int pktlen = -1;
 
 	packet_read_with_status(fd, NULL, NULL, buffer, size, &pktlen,
-				options);
+				options, NULL);
 
 	return pktlen;
 }
@@ -548,7 +552,8 @@ int recv_sideband(const char *me, int in_stream, int out)
 		int status = packet_read_with_status(in_stream, NULL, NULL,
 						     buf, LARGE_PACKET_MAX,
 						     &len,
-						     PACKET_READ_GENTLE_ON_EOF);
+						     PACKET_READ_GENTLE_ON_EOF,
+						     NULL);
 		if (!demultiplex_sideband(me, status, buf, len, 0, &scratch,
 					  &sideband_type))
 			continue;
@@ -582,7 +587,8 @@ void packet_reader_init(struct packet_reader *reader, int fd,
 	reader->hash_algo = &hash_algos[GIT_HASH_SHA1];
 }
 
-enum packet_read_status packet_reader_read(struct packet_reader *reader)
+enum packet_read_status packet_reader_read_trace(struct packet_reader *reader,
+						 struct strbuf *trace_to)
 {
 	struct strbuf scratch = STRBUF_INIT;
 
@@ -603,7 +609,8 @@ enum packet_read_status packet_reader_read(struct packet_reader *reader)
 							 reader->buffer,
 							 reader->buffer_size,
 							 &reader->pktlen,
-							 reader->options);
+							 reader->options,
+							 trace_to);
 		if (!reader->use_sideband)
 			break;
 		if (demultiplex_sideband(reader->me, reader->status,
@@ -620,6 +627,11 @@ enum packet_read_status packet_reader_read(struct packet_reader *reader)
 		reader->line = NULL;
 
 	return reader->status;
+}
+
+enum packet_read_status packet_reader_read(struct packet_reader *reader)
+{
+	return packet_reader_read_trace(reader, NULL);
 }
 
 enum packet_read_status packet_reader_peek(struct packet_reader *reader)
