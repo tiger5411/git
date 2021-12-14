@@ -28,11 +28,11 @@ CHAINLINTTMP = chainlinttmp
 endif
 
 # Shell quote;
-SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
-TEST_SHELL_PATH_SQ = $(subst ','\'',$(TEST_SHELL_PATH))
-PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
-TEST_RESULTS_DIRECTORY_SQ = $(subst ','\'',$(TEST_RESULTS_DIRECTORY))
 CHAINLINTTMP_SQ = $(subst ','\'',$(CHAINLINTTMP))
+PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
+SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
+TEST_RESULTS_DIRECTORY_SQ = $(subst ','\'',$(TEST_RESULTS_DIRECTORY))
+TEST_SHELL_PATH_SQ = $(subst ','\'',$(TEST_SHELL_PATH))
 
 T = $(sort $(wildcard t[0-9][0-9][0-9][0-9]-*.sh))
 TGITWEB = $(sort $(wildcard t95[0-9][0-9]-*.sh))
