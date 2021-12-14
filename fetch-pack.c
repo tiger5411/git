@@ -1525,8 +1525,9 @@ static void receive_packfile_uris(struct packet_reader *reader,
 {
 	process_section_header(reader, "packfile-uris", 0);
 	while (packet_reader_read(reader) == PACKET_READ_NORMAL) {
-		if (reader->pktlen < the_hash_algo->hexsz ||
-		    reader->line[the_hash_algo->hexsz] != ' ')
+		const size_t hexsz = the_hash_algo->hexsz;
+
+		if (reader->pktlen < hexsz || reader->line[hexsz] != ' ')
 			die("expected '<hash> <uri>', got: %s\n", reader->line);
 
 		string_list_append(uris, reader->line);
@@ -1692,12 +1693,11 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		int j;
 		struct child_process cmd = CHILD_PROCESS_INIT;
 		char packname[GIT_MAX_HEXSZ + 1];
-		const char *uri = item->string +
-			the_hash_algo->hexsz + 1;
+		const size_t hexsz = the_hash_algo->hexsz;
+		const char *uri = item->string + hexsz + 1;
 
 		strvec_push(&cmd.args, "http-fetch");
-		strvec_pushf(&cmd.args, "--packfile=%.*s",
-			     (int) the_hash_algo->hexsz,
+		strvec_pushf(&cmd.args, "--packfile=%.*s", (int)hexsz,
 			     item->string);
 		for (j = 0; j < index_pack_args.nr; j++)
 			strvec_pushf(&cmd.args, "--index-pack-arg=%s",
@@ -1713,12 +1713,11 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		    memcmp(packname, "keep\t", 5))
 			die("fetch-pack: expected keep then TAB at start of http-fetch output");
 
-		if (read_in_full(cmd.out, packname,
-				 the_hash_algo->hexsz + 1) < 0 ||
-		    packname[the_hash_algo->hexsz] != '\n')
+		if (read_in_full(cmd.out, packname, hexsz + 1) < 0 ||
+		    packname[hexsz] != '\n')
 			die("fetch-pack: expected hash then LF at end of http-fetch output");
 
-		packname[the_hash_algo->hexsz] = '\0';
+		packname[hexsz] = '\0';
 
 		parse_gitmodules_oids(cmd.out, &fsck_options.gitmodules_found);
 
@@ -1727,11 +1726,9 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		if (finish_command(&cmd))
 			die("fetch-pack: unable to finish http-fetch");
 
-		if (memcmp(item->string, packname,
-			   the_hash_algo->hexsz))
+		if (memcmp(item->string, packname, hexsz))
 			die("fetch-pack: pack downloaded from %s does not match expected hash %.*s",
-			    uri, (int) the_hash_algo->hexsz,
-			    item->string);
+			    uri, (int) hexsz, item->string);
 
 		string_list_append_nodup(pack_lockfiles,
 					 xstrfmt("%s/pack/pack-%s.keep",
