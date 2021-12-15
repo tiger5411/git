@@ -2040,7 +2040,6 @@ TCLTK_PATH \
 TEST_SHELL_PATH \
 bindir \
 bindir_relative \
-gitexecdir \
 gitexecdir_relative \
 gitwebdir \
 localedir \
@@ -2049,7 +2048,6 @@ mandir \
 perllibdir \
 perllibdir_relative \
 prefix \
-template_dir \
 ))
 
 # C quote
@@ -2267,15 +2265,15 @@ hook-list.h: generate-hooklist.sh Documentation/githooks.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-hooklist.sh >$@
 
 SCRIPT_DEFINES =
-SCRIPT_DEFINES += $(DIFF_SQ)
+SCRIPT_DEFINES += $(DIFF)
 SCRIPT_DEFINES += $(PAGER_ENV)
-SCRIPT_DEFINES += $(PERL_PATH_SQ)
-SCRIPT_DEFINES += $(SANE_TOOL_PATH_SQ)
-SCRIPT_DEFINES += $(SHELL_PATH_SQ)
+SCRIPT_DEFINES += $(PERL_PATH)
+SCRIPT_DEFINES += $(SANE_TOOL_PATH)
+SCRIPT_DEFINES += $(SHELL_PATH)
 SCRIPT_DEFINES += $(USE_GETTEXT_SCHEME)
-SCRIPT_DEFINES += $(gitwebdir_SQ)
-SCRIPT_DEFINES += $(localedir_SQ)
-SCRIPT_DEFINES += $(perllibdir_SQ)
+SCRIPT_DEFINES += $(gitwebdir)
+SCRIPT_DEFINES += $(localedir)
+SCRIPT_DEFINES += $(perllibdir)
 $(eval $(call TRACK_template,GIT-SCRIPT-DEFINES,SCRIPT_DEFINES))
 
 define cmd_munge_script
@@ -2316,9 +2314,9 @@ perl_localedir_SQ = $(localedir_SQ)
 ifndef NO_PERL
 PERL_HEADER_TEMPLATE = perl/header_templates/fixed_prefix.template.pl
 PERL_DEFINES =
-PERL_DEFINES += $(PERL_PATH_SQ)
-PERL_DEFINES += $(PERLLIB_EXTRA_SQ)
-PERL_DEFINES += $(perllibdir_SQ)
+PERL_DEFINES += $(PERL_PATH)
+PERL_DEFINES += $(PERLLIB_EXTRA)
+PERL_DEFINES += $(perllibdir)
 PERL_DEFINES += $(RUNTIME_PREFIX)
 PERL_DEFINES += $(NO_PERL_CPAN_FALLBACKS)
 PERL_DEFINES += $(NO_GETTEXT)
@@ -2785,20 +2783,20 @@ cscope: cscope.out
 
 ### Detect prefix changes
 TRACK_PREFIX =
-TRACK_PREFIX += $(bindir_SQ)
-TRACK_PREFIX += $(gitexecdir_SQ)
-TRACK_PREFIX += $(localedir_SQ)
-TRACK_PREFIX += $(prefix_SQ)
-TRACK_PREFIX += $(template_dir_SQ)
+TRACK_PREFIX += $(bindir)
+TRACK_PREFIX += $(gitexecdir)
+TRACK_PREFIX += $(localedir)
+TRACK_PREFIX += $(prefix)
+TRACK_PREFIX += $(template_dir)
 $(eval $(call TRACK_template,GIT-PREFIX,TRACK_PREFIX))
 
 TRACK_CFLAGS =
 TRACK_CFLAGS += $(CC)
-TRACK_CFLAGS += $(subst ','\'',$(ALL_CFLAGS))
+TRACK_CFLAGS += $(ALL_CFLAGS)
 TRACK_CFLAGS += $(USE_GETTEXT_SCHEME)
 $(eval $(call TRACK_template,GIT-CFLAGS,TRACK_CFLAGS))
 
-TRACK_LDFLAGS = $(subst ','\'',$(ALL_LDFLAGS))
+TRACK_LDFLAGS = $(ALL_LDFLAGS)
 $(eval $(call TRACK_template,GIT-LDFLAGS,TRACK_LDFLAGS))
 
 # We need to apply sq twice, once to protect from the shell
@@ -2871,7 +2869,7 @@ endif
 
 ### Detect Python interpreter path changes
 ifndef NO_PYTHON
-TRACK_PYTHON = $(subst ','\'',-DPYTHON_PATH='$(PYTHON_PATH_SQ)')
+TRACK_PYTHON = $(PYTHON_PATH)
 
 $(eval $(call TRACK_template,GIT-PYTHON-VARS,TRACK_PYTHON))
 endif
