@@ -160,6 +160,29 @@ static void perf_io_write_fl(const char *file, int line, const char *event_name,
 	strbuf_release(&buf_line);
 }
 
+__attribute__((format (printf, 9, 10)))
+static void perf_io_write_fl_fmt(const char *file, int line, const char *event_name,
+				 const struct repository *repo,
+				 uint64_t *p_us_elapsed_absolute,
+				 uint64_t *p_us_elapsed_relative,
+				 const char *category,
+				 const char *thread_name_override,
+				 const char *fmt, ...)
+{
+	va_list ap;
+	struct strbuf sb = STRBUF_INIT;
+
+	va_start(ap, fmt);
+	strbuf_vaddf(&sb, fmt, ap);
+	va_end(ap);
+
+	perf_io_write_fl(file, line, event_name, repo, p_us_elapsed_absolute,
+			 p_us_elapsed_relative, category, &sb,
+			 thread_name_override);
+
+	strbuf_release(&sb);
+}
+
 static void fn_version_fl(const char *file, int line)
 {
 	const char *event_name = "version";
@@ -555,6 +578,29 @@ static void fn_printf_va_fl(const char *file, int line,
 	strbuf_release(&buf_payload);
 }
 
+static void fn_timer(uint64_t us_elapsed_absolute,
+		     const char *thread_name,
+		     const char *category,
+		     const char *timer_name,
+		     uint64_t interval_count,
+		     uint64_t ns_total_time,
+		     uint64_t ns_min_time,
+		     uint64_t ns_max_time)
+{
+	const char *event_name = "timer";
+
+	perf_io_write_fl_fmt(__FILE__, __LINE__, event_name, NULL,
+			     &us_elapsed_absolute, NULL,
+			     category, thread_name,
+			     "name:%s"
+			     " count:%"PRIu64
+			     " ns_total:%"PRIu64
+			     " ns_min:%"PRIu64
+			     " ns_max:%"PRIu64,
+			     timer_name, interval_count, ns_total_time,
+			     ns_min_time, ns_max_time);
+}
+
 struct tr2_tgt tr2_tgt_perf = {
 	&tr2dst_perf,
 
@@ -586,4 +632,5 @@ struct tr2_tgt tr2_tgt_perf = {
 	fn_data_fl,
 	fn_data_json_fl,
 	fn_printf_va_fl,
+	fn_timer,
 };
