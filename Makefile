@@ -2268,10 +2268,16 @@ command-list.h: $(wildcard Documentation/git*.txt)
 hook-list.h: generate-hooklist.sh Documentation/githooks.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-hooklist.sh >$@
 
-SCRIPT_DEFINES = $(SHELL_PATH_SQ):$(DIFF_SQ):\
-	$(localedir_SQ):$(USE_GETTEXT_SCHEME):$(SANE_TOOL_PATH_SQ):\
-	$(gitwebdir_SQ):$(PERL_PATH_SQ):$(PAGER_ENV):\
-	$(perllibdir_SQ)
+SCRIPT_DEFINES =
+SCRIPT_DEFINES += $(DIFF_SQ)
+SCRIPT_DEFINES += $(PAGER_ENV)
+SCRIPT_DEFINES += $(PERL_PATH_SQ)
+SCRIPT_DEFINES += $(SANE_TOOL_PATH_SQ)
+SCRIPT_DEFINES += $(SHELL_PATH_SQ)
+SCRIPT_DEFINES += $(USE_GETTEXT_SCHEME)
+SCRIPT_DEFINES += $(gitwebdir_SQ)
+SCRIPT_DEFINES += $(localedir_SQ)
+SCRIPT_DEFINES += $(perllibdir_SQ)
 GIT-SCRIPT-DEFINES: FORCE
 	@FLAGS='$(SCRIPT_DEFINES)'; \
 	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
@@ -2792,9 +2798,12 @@ cscope.out: $(FOUND_SOURCE_FILES)
 cscope: cscope.out
 
 ### Detect prefix changes
-TRACK_PREFIX = $(bindir_SQ):$(gitexecdir_SQ):$(template_dir_SQ):$(prefix_SQ):\
-		$(localedir_SQ)
-
+TRACK_PREFIX =
+TRACK_PREFIX += $(bindir_SQ)
+TRACK_PREFIX += $(gitexecdir_SQ)
+TRACK_PREFIX += $(localedir_SQ)
+TRACK_PREFIX += $(prefix_SQ)
+TRACK_PREFIX += $(template_dir_SQ)
 GIT-PREFIX: FORCE
 	@FLAGS='$(TRACK_PREFIX)'; \
 	if test x"$$FLAGS" != x"`cat GIT-PREFIX 2>/dev/null`" ; then \
@@ -2802,8 +2811,10 @@ GIT-PREFIX: FORCE
 		echo "$$FLAGS" >GIT-PREFIX; \
 	fi
 
-TRACK_CFLAGS = $(CC):$(subst ','\'',$(ALL_CFLAGS)):$(USE_GETTEXT_SCHEME)
-
+TRACK_CFLAGS =
+TRACK_CFLAGS += $(CC)
+TRACK_CFLAGS += $(subst ','\'',$(ALL_CFLAGS))
+TRACK_CFLAGS += $(USE_GETTEXT_SCHEME)
 GIT-CFLAGS: FORCE
 	@FLAGS='$(TRACK_CFLAGS)'; \
 	    if test x"$$FLAGS" != x"`cat GIT-CFLAGS 2>/dev/null`" ; then \
