@@ -75,7 +75,7 @@ wspfx_SQ = $(call shqq,$(wspfx))
 define TRACK_template
 .PHONY: FORCE
 $(1): FORCE
-	@FLAGS='$$($(2))'; \
+	@FLAGS=$$(call shqq,$$($(2))); \
 	if ! test -f $(1) ; then \
 		echo $(wspfx_SQ) "$(1) PARAMETERS (new)"; \
 		printf "%s\n" "$$$$FLAGS" >$(1); \
