@@ -1686,21 +1686,36 @@ sub _setup_git_cmd_env {
 # by searching for it at proper places.
 sub _execv_git_cmd { exec('git', @_); }
 
+sub _is_sig {
+	my ($v, $n) = @_;
+
+	# Avoid loading all of POSIX.pm unconditionally, just if we
+	# get here.
+	require POSIX;
+	no strict 'refs';
+	$v == &{"POSIX::$n"}();
+}
+
 # Close pipe to a subprocess.
 sub _cmd_close {
 	my $ctx = shift @_;
 	foreach my $fh (@_) {
 		if (close $fh) {
 			# nop
-		} elsif ($!) {
-			# It's just close, no point in fatalities
-			carp "error closing pipe: $!";
 		} elsif ($? >> 8) {
 			# The caller should pepper this.
 			throw Git::Error::Command($ctx, $? >> 8);
+		} elsif ($!) {
+			# It's just close, no point in fatalities
+			carp "error closing pipe: $!";
+		} elsif ($? & 127 && _is_sig($? & 127, "SIGPIPE")) {
+			# we might e.g. closed a live stream; the command
+			# dying of SIGPIPE would drive us here.
+		} elsif ($? & 127 && _is_sig($? & 127, "SIGABRT")) {
+			die "BUG: got SIGABRT";
+		} elsif ($? & 127) {
+			die "got signal " . ($? & 127) . " when closing pipe";
 		}
-		# else we might e.g. closed a live stream; the command
-		# dying of SIGPIPE would drive us here.
 	}
 }
 
