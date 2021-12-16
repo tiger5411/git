@@ -58,7 +58,7 @@ static int task_finished(int result,
 struct testsuite {
 	struct string_list tests, failed;
 	int next;
-	int quiet, immediate, verbose, verbose_log, trace, write_junit_xml;
+	int quiet, immediate, verbose, verbose_log, trace;
 };
 #define TESTSUITE_INIT { \
 	.tests = STRING_LIST_INIT_DUP, \
@@ -85,8 +85,6 @@ static int next_test(struct child_process *cp, struct strbuf *err, void *cb,
 		strvec_push(&cp->args, "-V");
 	if (suite->trace)
 		strvec_push(&cp->args, "-x");
-	if (suite->write_junit_xml)
-		strvec_push(&cp->args, "--write-junit-xml");
 
 	strbuf_addf(err, "Output of '%s':\n", test);
 	*task_cb = (void *)test;
@@ -139,8 +137,6 @@ static int testsuite(int argc, const char **argv)
 		OPT_BOOL('V', "verbose-log", &suite.verbose_log,
 			 "be verbose, redirected to a file"),
 		OPT_BOOL('x', "trace", &suite.trace, "trace shell commands"),
-		OPT_BOOL(0, "write-junit-xml", &suite.write_junit_xml,
-			 "write JUnit-style XML files"),
 		OPT_END()
 	};
 
