@@ -2330,16 +2330,16 @@ endif
 
 PERL_HEADER_TEMPLATE = perl/header_templates/fixed_prefix.template.pl
 
-PERL_DEFINES += $(PERL_PATH_SQ)
-PERL_DEFINES += $(PERLLIB_EXTRA_SQ)
-PERL_DEFINES += $(perllibdir_SQ)
-PERL_DEFINES += $(RUNTIME_PREFIX)
-PERL_DEFINES += $(NO_PERL_CPAN_FALLBACKS)
 PERL_DEFINES += $(NO_GETTEXT)
+PERL_DEFINES += $(NO_PERL_CPAN_FALLBACKS)
+PERL_DEFINES += $(PERLLIB_EXTRA_SQ)
+PERL_DEFINES += $(PERL_PATH_SQ)
+PERL_DEFINES += $(RUNTIME_PREFIX)
+PERL_DEFINES += $(perllibdir_SQ)
 ifdef RUNTIME_PREFIX
 PERL_DEFINES += $(gitexecdir_relative_SQ)
-PERL_DEFINES += $(perllibdir_relative_SQ)
 PERL_DEFINES += $(localedir_relative_SQ)
+PERL_DEFINES += $(perllibdir_relative_SQ)
 else
 PERL_DEFINES += $(perllocaledir_SQ)
 endif
