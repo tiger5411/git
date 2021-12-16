@@ -229,6 +229,9 @@ parse_option () {
 			;;
 		esac
 		;;
+	--invert-exit-code)
+		invert_exit_code=t
+		;;
 	*)
 		echo "error: unknown test option '$opt'" >&2; exit 1 ;;
 	esac
@@ -644,6 +647,13 @@ exec 5>&1
 exec 6<&0
 exec 7>&2
 
+_finalize_plan () {
+	if test -n "$test_finished" && test $test_finished -ge 1
+	then
+		say_color error "1..$test_finished"
+	fi
+}
+
 _error_exit () {
 	finalize_junit_xml
 	GIT_EXIT_OK=t
@@ -652,6 +662,7 @@ _error_exit () {
 
 error () {
 	say_color error "error: $*"
+	_finalize_plan
 	_error_exit
 }
 
@@ -717,6 +728,7 @@ BASH_XTRACEFD=4
 
 test_failure=0
 test_count=0
+test_finished=0
 test_fixed=0
 test_broken=0
 test_success=0
@@ -764,6 +776,25 @@ test_ok_ () {
 }
 
 test_failure_ () {
+	if test -n "$invert_exit_code" # we already checked for --immediate
+	then
+		if test -n "$write_junit_xml"
+		then
+			error "--invert-exit-code does not support --write-junit-xml"
+		fi
+
+		# Should be "$1 # TODO[...]" not "# TODO [...] ($1)",
+		# but a "#" in the "$1" will ruin our TAP
+		# syntax. These need to be escaped in general (also
+		# for "test_known_broken_ok_" and
+		# "test_known_broken_failure_", but work around it for
+		# now.
+		say_color error "not ok $test_count - # TODO pretending that 'not ok' was OK with --immediate --invert-exit-code ($1)"
+		say_color error "1..$test_count"
+		GIT_EXIT_OK=t
+		exit 0
+	fi
+
 	if test -n "$write_junit_xml"
 	then
 		junit_insert="<failure message=\"not ok $test_count -"
@@ -1092,6 +1123,7 @@ test_start_ () {
 }
 
 test_finish_ () {
+	test_finished=$(($test_finished+1))
 	echo >&3 ""
 	maybe_teardown_valgrind
 	maybe_teardown_verbose
@@ -1298,6 +1330,13 @@ test_done () {
 			} ||
 			error "Tests passed but test cleanup failed; aborting"
 		fi
+
+		if test -z "$skip_all" && test -n "$invert_exit_code"
+		then
+			say_color warn "# faking up non-zero exit with --invert-exit-code"
+			exit 1
+		fi
+
 		test_at_end_hook_
 
 		exit 0 ;;
@@ -1462,20 +1501,44 @@ then
 	test_done
 fi
 
+if test -n "$invert_exit_code" && test -z "$immediate"
+then
+	BAIL_OUT "the --invert-exit-code option currently requires --immediate"
+fi
+
 # skip non-whitelisted tests when compiled with SANITIZE=leak
 if test -n "$SANITIZE_LEAK"
 then
-	if test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
-	then
-		# We need to see it in "git env--helper" (via
-		# test_bool_env)
-		export TEST_PASSES_SANITIZE_LEAK
+	# Normalize with test_bool_env
+	passes_sanitize_leak=
 
-		if ! test_bool_env TEST_PASSES_SANITIZE_LEAK false
+	# We need to see TEST_PASSES_SANITIZE_LEAK in "git
+	# env--helper" (via test_bool_env)
+	export TEST_PASSES_SANITIZE_LEAK
+	if test_bool_env TEST_PASSES_SANITIZE_LEAK false
+	then
+		passes_sanitize_leak=t
+	fi
+
+	if test "$GIT_TEST_PASSING_SANITIZE_LEAK" = "check"
+	then
+		if test -n "$invert_exit_code"
 		then
-			skip_all="skipping $this_test under GIT_TEST_PASSING_SANITIZE_LEAK=true"
-			test_done
+			BAIL_OUT "cannot use --invert-exit-code under GIT_TEST_PASSING_SANITIZE_LEAK=check"
 		fi
+
+		say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, using --immediate"
+		immediate=t
+		if test -z "$passes_sanitize_leak"
+		then
+			say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, setting --invert-exit-code for TEST_PASSES_SANITIZE_LEAK != true"
+			invert_exit_code=t
+		fi
+	elif test -z "$passes_sanitize_leak" &&
+	     test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
+	then
+		skip_all="skipping $this_test under GIT_TEST_PASSING_SANITIZE_LEAK=true"
+		test_done
 	fi
 
 	if test_bool_env GIT_TEST_SANITIZE_LEAK_LOG false
@@ -1492,7 +1555,8 @@ then
 		prepend_var LSAN_OPTIONS : log_path=\"$TEST_RESULTS_SAN_FILE\"
 		export LSAN_OPTIONS
 	fi
-elif test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
+elif test "$GIT_TEST_PASSING_SANITIZE_LEAK" = "check" ||
+     test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
 then
 	BAIL_OUT "GIT_TEST_PASSING_SANITIZE_LEAK=true has no effect except when compiled with SANITIZE=leak"
 fi
