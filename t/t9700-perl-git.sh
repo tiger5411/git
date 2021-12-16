@@ -11,6 +11,12 @@ if ! test_have_prereq PERL; then
 	test_done
 fi
 
+if test "$GIT_TEST_PASSING_SANITIZE_LEAK" = "check" && test_have_prereq SANITIZE_LEAK
+then
+	skip_all='SANITIZE=leak and GIT_TEST_PASSING_SANITIZE_LEAK=check do not combine with test_external'
+	test_done
+fi
+
 perl -MTest::More -e 0 2>/dev/null || {
 	skip_all="Perl Test::More unavailable, skipping test"
 	test_done
