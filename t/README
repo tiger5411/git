@@ -366,12 +366,22 @@ excluded as so much relies on it, but this might change in the future.
 GIT_TEST_SPLIT_INDEX=<boolean> forces split-index mode on the whole
 test suite. Accept any boolean values that are accepted by git-config.
 
-GIT_TEST_PASSING_SANITIZE_LEAK=<boolean> when compiled with
+GIT_TEST_PASSING_SANITIZE_LEAK=[check|<boolean>] when compiled with
 SANITIZE=leak will run only those tests that have whitelisted
 themselves as passing with no memory leaks. Tests can be whitelisted
 by setting "TEST_PASSES_SANITIZE_LEAK=true" before sourcing
 "test-lib.sh" itself at the top of the test script. This test mode is
 used by the "linux-leaks" CI target.
+
+Set it to "check" to run with assertions that ensure that our
+"TEST_PASSES_SANITIZE_LEAK=true" markings are current. The "check"
+mode sets "--immediate", but otherwise acts the same for tests that
+have "TEST_PASSES_SANITIZE_LEAK=true" set. For those that don't have
+it set it runs them, and considers them passing without errors a
+failure (by providing "--invert-exit-code"). Thus the "check" mode can
+be used e.g. with "git rebase --exec" to ensure that there's a 1=1
+mapping between "TEST_PASSES_SANITIZE_LEAK=true" and those tests that
+pass under "SANITIZE=leak".
 
 GIT_TEST_SANITIZE_LEAK_LOG=true will log memory leaks to
 "test-results/$TEST_NAME.leak/trace.*" files. Useful in combination
