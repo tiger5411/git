@@ -20,6 +20,7 @@ static int line_termination = '\n';
 #define LS_SHOW_TREES 4
 #define LS_NAME_ONLY 8
 #define LS_SHOW_SIZE 16
+#define LS_OBJECT_ONLY 32
 static int abbrev;
 static int ls_options;
 static struct pathspec pathspec;
@@ -31,6 +32,7 @@ static const char *ls_tree_prefix;
  */
 static const char *ls_tree_format_d = "%(objectmode) %(objecttype) %(objectname)%x09%(path)";
 static const char *ls_tree_format_l = "%(objectmode) %(objecttype) %(objectname) %(objectsize:padded)%x09%(path)";
+static const char *ls_tree_format_o = "%(objectname)";
 static const char *ls_tree_format_n = "%(path)";
 
 static const  char * const ls_tree_usage[] = {
@@ -271,6 +273,8 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 			LS_NAME_ONLY),
 		OPT_BIT(0, "name-status", &ls_options, N_("list only filenames"),
 			LS_NAME_ONLY),
+		OPT_BIT(0, "object-only", &ls_options, N_("list only objects"),
+			LS_OBJECT_ONLY),
 		OPT_SET_INT(0, "full-name", &chomp_prefix,
 			    N_("use full path names"), 0),
 		OPT_BOOL(0, "full-tree", &full_tree,
@@ -302,6 +306,8 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		implicit_format = ls_tree_format_n;
 	if (ls_options & LS_SHOW_SIZE)
 		implicit_format = ls_tree_format_l;
+	if (ls_options & LS_OBJECT_ONLY)
+		implicit_format = ls_tree_format_o;
 
 	if (format && implicit_format)
 		usage_msg_opt(_("providing --format cannot be combined with other format-altering options"),
