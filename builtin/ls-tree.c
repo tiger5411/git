@@ -202,6 +202,7 @@ static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
 	strbuf_addch(&sb, line_termination);
 	fwrite(sb.buf, sb.len, 1, stdout);
 	strbuf_setlen(base, baselen);
+	strbuf_release(&sb);
 
 	return retval;
 }
@@ -286,6 +287,7 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 	read_tree_fn_t fn = show_tree;
+	int ret;
 
 	git_config(git_default_config, NULL);
 	ls_tree_prefix = prefix;
@@ -357,6 +359,10 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		fn = show_tree_fmt;
 
 	read_tree_cb_data.format = format;
-	return !!read_tree(the_repository, tree,
+	ret = !!read_tree(the_repository, tree,
 			   &pathspec, fn, &read_tree_cb_data);
+
+	strbuf_release(&read_tree_cb_data.sb_scratch);
+	strbuf_release(&read_tree_cb_data.sb_tmp);
+	return ret;
 }
