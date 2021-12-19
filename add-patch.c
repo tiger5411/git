@@ -383,6 +383,17 @@ static int is_octal(const char *p, size_t len)
 	return 1;
 }
 
+static void complete_file(char marker, size_t *splittable_into)
+{
+	if (marker == '-' || marker == '+')
+		/*
+		 * Last hunk ended in non-context line (i.e. it
+		 * appended lines to the file, so there are no
+		 * trailing context lines).
+		 */
+		(*splittable_into)++;
+}
+
 static int parse_diff(struct add_p_state *s, const struct pathspec *ps)
 {
 	struct strvec args = STRVEC_INIT;
@@ -488,12 +499,12 @@ static int parse_diff(struct add_p_state *s, const struct pathspec *ps)
 		else if (starts_with(p, "@@ ") ||
 			 (hunk == &file_diff->head &&
 			  (skip_prefix(p, "deleted file", &deleted)))) {
-			if (marker == '-' || marker == '+')
-				/*
-				 * Should not happen; previous hunk did not end
-				 * in a context line? Handle it anyway.
-				 */
-				hunk->splittable_into++;
+			/*
+			 * Should not increment "splittable_into";
+			 * previous hunk did not end in a context
+			 * line? Handle it anyway.
+			 */
+			complete_file(marker, &hunk->splittable_into);
 
 			ALLOC_GROW_BY(file_diff->hunk, file_diff->hunk_nr, 1,
 				   file_diff->hunk_alloc);
@@ -566,8 +577,8 @@ static int parse_diff(struct add_p_state *s, const struct pathspec *ps)
 			    (int)(eol - (plain->buf + file_diff->head.start)),
 			    plain->buf + file_diff->head.start);
 
-		if ((marker == '-' || marker == '+') && *p == ' ')
-			hunk->splittable_into++;
+		if (*p == ' ')
+			complete_file(marker, &hunk->splittable_into);
 		if (marker && *p != '\\')
 			marker = *p;
 
@@ -599,12 +610,7 @@ static int parse_diff(struct add_p_state *s, const struct pathspec *ps)
 		}
 	}
 
-	if (marker == '-' || marker == '+')
-		/*
-		 * Last hunk ended in non-context line (i.e. it appended lines
-		 * to the file, so there are no trailing context lines).
-		 */
-		hunk->splittable_into++;
+	complete_file(marker, &hunk->splittable_into);
 
 	/* non-colored shorter than colored? */
 	if (colored_p != colored_pend) {
