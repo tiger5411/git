@@ -804,8 +804,8 @@ test_failure_ () {
 		# for "test_known_broken_ok_" and
 		# "test_known_broken_failure_", but work around it for
 		# now.
-		say_color error "not ok $test_count - # TODO pretending that 'not ok' was OK with --immediate --invert-exit-code ($1)"
-		say_color error "1..$test_count"
+		say_color_tap error "not ok $test_count - # TODO pretending that 'not ok' was OK with --immediate --invert-exit-code ($1)"
+		say_color_tap error "1..$test_count"
 		GIT_EXIT_OK=t
 		exit 0
 	fi

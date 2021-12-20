@@ -108,7 +108,7 @@ test_expect_success 'subtest: --immediate' '
 		<<-\EOF_OUT 3<<-EOF_ERR
 	> ok 1 - passing test #1
 	> not ok 2 - failing test #2
-	> #	false
+	> #false
 	> 1..2
 	EOF_OUT
 	EOF_ERR
