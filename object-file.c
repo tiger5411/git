@@ -1768,6 +1768,25 @@ static void write_object_file_prepare_literally(const struct git_hash_algo *algo
 }
 
 /*
+ * Move the just written object with proper mtime into its final resting place.
+ */
+static int finalize_object_file_with_mtime(const char *tmpfile,
+					   const char *filename,
+					   time_t mtime,
+					   unsigned flags)
+{
+	struct utimbuf utb;
+
+	if (mtime) {
+		utb.actime = mtime;
+		utb.modtime = mtime;
+		if (utime(tmpfile, &utb) < 0 && !(flags & HASH_SILENT))
+			warning_errno(_("failed utime() on %s"), tmpfile);
+	}
+	return finalize_object_file(tmpfile, filename);
+}
+
+/*
  * Move the just written object into its final resting place.
  */
 int finalize_object_file(const char *tmpfile, const char *filename)
@@ -1875,7 +1894,8 @@ static inline int directory_size(const char *filename)
  * We want to avoid cross-directory filename renames, because those
  * can have problems on various filesystems (FAT, NFS, Coda).
  */
-static int create_tmpfile(struct strbuf *tmp, const char *filename)
+static int create_tmpfile(struct strbuf *tmp, const char *filename,
+			  unsigned flags)
 {
 	int fd, dirlen = directory_size(filename);
 
@@ -1883,7 +1903,9 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 	strbuf_add(tmp, filename, dirlen);
 	strbuf_addstr(tmp, "tmp_obj_XXXXXX");
 	fd = git_mkstemp_mode(tmp->buf, 0444);
-	if (fd < 0 && dirlen && errno == ENOENT) {
+	do {
+		if (fd >= 0 || !dirlen || errno != ENOENT)
+			break;
 		/*
 		 * Make sure the directory exists; note that the contents
 		 * of the buffer are undefined after mkstemp returns an
@@ -1893,15 +1915,46 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename)
 		strbuf_reset(tmp);
 		strbuf_add(tmp, filename, dirlen - 1);
 		if (mkdir(tmp->buf, 0777) && errno != EEXIST)
-			return -1;
+			break;
 		if (adjust_shared_perm(tmp->buf))
-			return -1;
+			break;
 
 		/* Try again */
 		strbuf_addstr(tmp, "/tmp_obj_XXXXXX");
 		fd = git_mkstemp_mode(tmp->buf, 0444);
+	} while (0);
+
+	if (fd < 0 && !(flags & HASH_SILENT)) {
+		if (errno == EACCES)
+			return error(_("insufficient permission for adding an "
+				       "object to repository database %s"),
+				     get_object_directory());
+		else
+			return error_errno(_("unable to create temporary file"));
 	}
+
 	return fd;
+}
+
+static void setup_stream_and_header(git_zstream *stream,
+				    unsigned char *compressed,
+				    unsigned long compressed_size,
+				    git_hash_ctx *c,
+				    char *hdr,
+				    int hdrlen)
+{
+	/* Set it up */
+	git_deflate_init(stream, zlib_compression_level);
+	stream->next_out = compressed;
+	stream->avail_out = compressed_size;
+	the_hash_algo->init_fn(c);
+
+	/* First header.. */
+	stream->next_in = (unsigned char *)hdr;
+	stream->avail_in = hdrlen;
+	while (git_deflate(stream, 0) == Z_OK)
+		; /* nothing */
+	the_hash_algo->update_fn(c, hdr, hdrlen);
 }
 
 static int write_loose_object(const struct object_id *oid, char *hdr,
@@ -1918,28 +1971,13 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 
 	loose_object_path(the_repository, &filename, oid);
 
-	fd = create_tmpfile(&tmp_file, filename.buf);
-	if (fd < 0) {
-		if (flags & HASH_SILENT)
-			return -1;
-		else if (errno == EACCES)
-			return error(_("insufficient permission for adding an object to repository database %s"), get_object_directory());
-		else
-			return error_errno(_("unable to create temporary file"));
-	}
+	fd = create_tmpfile(&tmp_file, filename.buf, flags);
+	if (fd < 0)
+		return -1;
 
-	/* Set it up */
-	git_deflate_init(&stream, zlib_compression_level);
-	stream.next_out = compressed;
-	stream.avail_out = sizeof(compressed);
-	the_hash_algo->init_fn(&c);
-
-	/* First header.. */
-	stream.next_in = (unsigned char *)hdr;
-	stream.avail_in = hdrlen;
-	while (git_deflate(&stream, 0) == Z_OK)
-		; /* nothing */
-	the_hash_algo->update_fn(&c, hdr, hdrlen);
+	/* Set it up and write header */
+	setup_stream_and_header(&stream, compressed, sizeof(compressed),
+				&c, hdr, hdrlen);
 
 	/* Then the data itself.. */
 	stream.next_in = (void *)buf;
@@ -1968,16 +2006,8 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 
 	close_loose_object(fd);
 
-	if (mtime) {
-		struct utimbuf utb;
-		utb.actime = mtime;
-		utb.modtime = mtime;
-		if (utime(tmp_file.buf, &utb) < 0 &&
-		    !(flags & HASH_SILENT))
-			warning_errno(_("failed utime() on %s"), tmp_file.buf);
-	}
-
-	return finalize_object_file(tmp_file.buf, filename.buf);
+	return finalize_object_file_with_mtime(tmp_file.buf, filename.buf,
+					       mtime, flags);
 }
 
 static int freshen_loose_object(const struct object_id *oid)
