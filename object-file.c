@@ -1957,6 +1957,22 @@ static void setup_stream_and_header(git_zstream *stream,
 	the_hash_algo->update_fn(c, hdr, hdrlen);
 }
 
+static void end_loose_object_common(int ret, git_hash_ctx *c,
+				    git_zstream *stream,
+				    struct object_id *parano_oid,
+				    const struct object_id *expected_oid,
+				    const char *zstream_end_fmt,
+				    const char *z_ok_fmt)
+{
+	if (ret != Z_STREAM_END)
+		die(_(zstream_end_fmt), ret, expected_oid);
+	ret = git_deflate_end_gently(stream);
+	if (ret != Z_OK)
+		die(_(z_ok_fmt), ret, expected_oid);
+	the_hash_algo->final_oid_fn(parano_oid, c);
+}
+
+
 static int write_loose_object(const struct object_id *oid, char *hdr,
 			      int hdrlen, const void *buf, unsigned long len,
 			      time_t mtime, unsigned flags)
@@ -1992,14 +2008,9 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 		stream.avail_out = sizeof(compressed);
 	} while (ret == Z_OK);
 
-	if (ret != Z_STREAM_END)
-		die(_("unable to deflate new object %s (%d)"), oid_to_hex(oid),
-		    ret);
-	ret = git_deflate_end_gently(&stream);
-	if (ret != Z_OK)
-		die(_("deflateEnd on object %s failed (%d)"), oid_to_hex(oid),
-		    ret);
-	the_hash_algo->final_oid_fn(&parano_oid, &c);
+	end_loose_object_common(ret, &c, &stream, &parano_oid, oid,
+				N_("unable to deflate new object %s (%d)"),
+				N_("deflateEnd on object %s failed (%d)"));
 	if (!oideq(oid, &parano_oid))
 		die(_("confused by unstable object source data for %s"),
 		    oid_to_hex(oid));
@@ -2078,12 +2089,9 @@ int write_stream_object_file(struct input_stream *in_stream, size_t len,
 		stream.avail_out = sizeof(compressed);
 	} while (ret == Z_OK || ret == Z_BUF_ERROR);
 
-	if (ret != Z_STREAM_END)
-		die(_("unable to deflate new object streamingly (%d)"), ret);
-	ret = git_deflate_end_gently(&stream);
-	if (ret != Z_OK)
-		die(_("deflateEnd on object streamingly failed (%d)"), ret);
-	the_hash_algo->final_oid_fn(&parano_oid, &c);
+	end_loose_object_common(ret, &c, &stream, &parano_oid, NULL,
+				N_("unable to deflate new object streamingly (%d)"),
+				N_("deflateEnd on object streamingly failed (%d)"));
 
 	close_loose_object(fd);
 
