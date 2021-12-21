@@ -34,6 +34,11 @@ struct object_directory {
 	char *path;
 };
 
+struct input_stream {
+	const void *(*read)(struct input_stream *, unsigned long *len);
+	void *data;
+};
+
 KHASH_INIT(odb_path_map, const char * /* key: odb_path */,
 	struct object_directory *, 1, fspathhash, fspatheq)
 
@@ -250,6 +255,10 @@ static inline int write_object_file(const void *buf, unsigned long len,
 int hash_write_object_file_literally(const void *buf, unsigned long len,
 				     const char *type, struct object_id *oid,
 				     unsigned flags);
+
+int write_stream_object_file(struct input_stream *in_stream, size_t len,
+			     enum object_type type, time_t mtime,
+			     unsigned flags, struct object_id *oid);
 
 /*
  * Add an object file to the in-memory object store, without writing it
