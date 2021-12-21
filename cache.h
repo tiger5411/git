@@ -1339,9 +1339,14 @@ int format_object_header_literally(char *str, size_t size, const char *type,
 struct object_info;
 int parse_loose_header(const char *hdr, struct object_info *oi);
 
-int check_object_signature(struct repository *r, const struct object_id *oid,
-			   void *buf, unsigned long size, enum object_type type,
-			   struct object_id *real_oidp);
+
+/**
+ * stream_object_signature() tries to read the object named with "oid"
+ * using the streaming interface and rehash it to make sure the object
+ * name actually matches "oid" to detect object corruption.
+ */
+int stream_object_signature(struct repository *r, const struct object_id *oid,
+			    struct object_id *real_oidp);
 
 int finalize_object_file(const char *tmpfile, const char *filename);
 
