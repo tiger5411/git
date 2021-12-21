@@ -2061,8 +2061,7 @@ static int freshen_packed_object(const struct object_id *oid)
 }
 
 int write_stream_object_file(struct input_stream *in_stream, size_t len,
-			     enum object_type type, time_t mtime,
-			     unsigned flags, struct object_id *oid)
+			     struct object_id *oid)
 {
 	int fd, ret, flush = 0;
 	unsigned char compressed[4096];
@@ -2081,9 +2080,9 @@ int write_stream_object_file(struct input_stream *in_stream, size_t len,
 	/* When oid is not determined, save tmp file to odb path. */
 	strbuf_addf(&filename, "%s/", get_object_directory());
 
-	fd = start_loose_object_common(&tmp_file, filename.buf, flags,
+	fd = start_loose_object_common(&tmp_file, filename.buf, 0,
 				       &stream, compressed, sizeof(compressed),
-				       &c, type, len, hdr, &hdrlen);
+				       &c, OBJ_BLOB, len, hdr, &hdrlen);
 	if (fd < 0)
 		return -1;
 
@@ -2135,7 +2134,7 @@ int write_stream_object_file(struct input_stream *in_stream, size_t len,
 		strbuf_release(&dir);
 	}
 
-	return finalize_object_file_with_mtime(tmp_file.buf, filename.buf, mtime, flags);
+	return finalize_object_file(tmp_file.buf, filename.buf);
 }
 
 int write_object_file_flags(const void *buf, unsigned long len,

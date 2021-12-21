@@ -375,8 +375,7 @@ static void write_stream_blob(unsigned nr, size_t size)
 	data.zstream = &zstream;
 	git_inflate_init(&zstream);
 
-	if (write_stream_object_file(&in_stream, size, OBJ_BLOB, 0, 0,
-				     &obj_list[nr].oid))
+	if (write_stream_object_file(&in_stream, size, &obj_list[nr].oid))
 		die(_("failed to write object in stream"));
 
 	if (zstream.total_out != size || data.status != Z_STREAM_END)
