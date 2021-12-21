@@ -13,6 +13,11 @@ export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 prepare_dest () {
 	test_when_finished "rm -rf dest.git" &&
 	git init --bare dest.git
+	if test -n "$1"
+	then
+		git -C dest.git config core.bigFileStreamingThreshold $1
+		git -C dest.git config core.bigFileThreshold $1
+	fi
 }
 
 test_expect_success "setup repo with big blobs (1.5 MB)" '
@@ -33,7 +38,7 @@ test_expect_success 'setup env: GIT_ALLOC_LIMIT to 1MB' '
 '
 
 test_expect_success 'fail to unpack-objects: cannot allocate' '
-	prepare_dest &&
+	prepare_dest 2m &&
 	test_must_fail git -C dest.git unpack-objects <test-$PACK.pack 2>err &&
 	grep "fatal: attempting to allocate" err &&
 	(
@@ -42,6 +47,35 @@ test_expect_success 'fail to unpack-objects: cannot allocate' '
 	) >actual &&
 	test_file_not_empty actual &&
 	! test_cmp expect actual
+'
+
+test_expect_success 'unpack big object in stream' '
+	prepare_dest 1m &&
+	mkdir -p dest.git/objects/05 &&
+	git -C dest.git unpack-objects <test-$PACK.pack &&
+	git -C dest.git fsck &&
+	(
+		cd dest.git &&
+		find objects/?? -type f | sort
+	) >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'unpack big object in stream with existing oids' '
+	prepare_dest 1m &&
+	git -C dest.git index-pack --stdin <test-$PACK.pack &&
+	(
+		cd dest.git &&
+		find objects/?? -type f | sort
+	) >actual &&
+	test_must_be_empty actual &&
+	git -C dest.git unpack-objects <test-$PACK.pack &&
+	git -C dest.git fsck &&
+	(
+		cd dest.git &&
+		find objects/?? -type f | sort
+	) >actual &&
+	test_must_be_empty actual
 '
 
 test_expect_success 'unpack-objects dry-run' '

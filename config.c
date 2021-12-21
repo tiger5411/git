@@ -1408,6 +1408,11 @@ static int git_default_core_config(const char *var, const char *value, void *cb)
 		return 0;
 	}
 
+	if (!strcmp(var, "core.bigfilestreamingthreshold")) {
+		big_file_streaming_threshold = git_config_ulong(var, value);
+		return 0;
+	}
+
 	if (!strcmp(var, "core.packedgitlimit")) {
 		packed_git_limit = git_config_ulong(var, value);
 		return 0;
