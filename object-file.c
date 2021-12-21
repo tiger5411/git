@@ -1957,6 +1957,30 @@ static void setup_stream_and_header(git_zstream *stream,
 	the_hash_algo->update_fn(c, hdr, hdrlen);
 }
 
+static int start_loose_object_common(struct strbuf *tmp_file,
+				     const char *filename, unsigned flags,
+				     git_zstream *stream,
+				     unsigned char *buf, size_t buflen,
+				     git_hash_ctx *c,
+				     enum object_type type, size_t len,
+				     char *hdr, int *hdrlen)
+{
+	int fd;
+
+	fd = create_tmpfile(tmp_file, filename, flags);
+	if (fd < 0)
+		return -1;
+
+	if (type != OBJ_NONE)
+		*hdrlen = format_object_header(hdr, *hdrlen, type, len);
+
+	/* Set it up and write header */
+	setup_stream_and_header(stream, buf, buflen, c, hdr, *hdrlen);
+
+	return fd;
+
+}
+
 static void end_loose_object_common(int ret, git_hash_ctx *c,
 				    git_zstream *stream,
 				    struct object_id *parano_oid,
@@ -1986,14 +2010,11 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 	static struct strbuf filename = STRBUF_INIT;
 
 	loose_object_path(the_repository, &filename, oid);
-
-	fd = create_tmpfile(&tmp_file, filename.buf, flags);
+	fd = start_loose_object_common(&tmp_file, filename.buf, flags,
+				       &stream, compressed, sizeof(compressed),
+				       &c, OBJ_NONE, 0, hdr, &hdrlen);
 	if (fd < 0)
 		return -1;
-
-	/* Set it up and write header */
-	setup_stream_and_header(&stream, compressed, sizeof(compressed),
-				&c, hdr, hdrlen);
 
 	/* Then the data itself.. */
 	stream.next_in = (void *)buf;
@@ -2060,15 +2081,11 @@ int write_stream_object_file(struct input_stream *in_stream, size_t len,
 	/* When oid is not determined, save tmp file to odb path. */
 	strbuf_addf(&filename, "%s/", get_object_directory());
 
-	fd = create_tmpfile(&tmp_file, filename.buf, flags);
+	fd = start_loose_object_common(&tmp_file, filename.buf, flags,
+				       &stream, compressed, sizeof(compressed),
+				       &c, type, len, hdr, &hdrlen);
 	if (fd < 0)
 		return -1;
-
-	hdrlen = format_object_header(hdr, hdrlen, type, len);
-
-	/* Set it up and write header */
-	setup_stream_and_header(&stream, compressed, sizeof(compressed),
-				&c, hdr, hdrlen);
 
 	/* Then the data itself.. */
 	do {
