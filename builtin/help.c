@@ -75,8 +75,8 @@ static struct option builtin_help_options[] = {
 };
 
 static const char * const builtin_help_usage[] = {
-	N_("git help [-a|--all] [--[no-]verbose]]\n"
-	   "         [[-i|--info] [-m|--man] [-w|--web]] [<command>]"),
+	N_("git help [-a|--all] [--[no-]verbose]]"),
+	N_("git help [[-i|--info] [-m|--man] [-w|--web]] [<command>]"),
 	N_("git help [-g|--guides]"),
 	N_("git help [-c|--config]"),
 	NULL
@@ -581,6 +581,13 @@ static void no_extra_argc(int argc)
 			      builtin_help_usage, builtin_help_options);
 }
 
+static void no_format(void)
+{
+	if (help_format != HELP_FORMAT_NONE)
+		usage_msg_opt(_("[-a|--all] cannot be combined with [[-i|--info] [-m|--man] [-w|--web]]"),
+			      builtin_help_usage, builtin_help_options);
+}
+
 int cmd_help(int argc, const char **argv, const char *prefix)
 {
 	int nongit;
@@ -593,6 +600,7 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 
 	switch (cmd_mode) {
 	case HELP_ACTION_ALL:
+		no_format();
 		if (verbose) {
 			setup_pager();
 			list_all_cmds_help();
@@ -605,19 +613,27 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 		break;
 	case HELP_ACTION_GUIDES:
 		no_extra_argc(argc);
+		no_format();
+
 		list_guides_help();
 		printf("%s\n", _(git_more_info_string));
 		return 0;
 	case HELP_ACTION_CONFIG_FOR_COMPLETION:
 		no_extra_argc(argc);
+		no_format();
+
 		list_config_help(SHOW_CONFIG_VARS);
 		return 0;
 	case HELP_ACTION_CONFIG_SECTIONS_FOR_COMPLETION:
 		no_extra_argc(argc);
+		no_format();
+
 		list_config_help(SHOW_CONFIG_SECTIONS);
 		return 0;
 	case HELP_ACTION_CONFIG:
 		no_extra_argc(argc);
+		no_format();
+
 		setup_pager();
 		list_config_help(SHOW_CONFIG_HUMAN);
 		printf("\n%s\n", _("'git help config' for more information"));
