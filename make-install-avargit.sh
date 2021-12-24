@@ -527,10 +527,6 @@ reset_it
 # Configure with prefix & cflags, fake "version" still
 ~/g/git.meta/config.mak.sh --prefix "$prefix"
 
-# TODO: Undo 44c7e62e51e (repo-settings: prepare_repo_settings only in
-# git repos, 2021-12-06)
-git revert --no-edit 44c7e62e51e
-
 # Test master first, for basic sanity
 if test -z "$no_merge_compile"
 then
