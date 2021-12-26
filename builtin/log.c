@@ -2246,6 +2246,7 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 		free_patch_ids(&ids);
 
 done:
+	release_revisions(&rev);
 	oid_array_clear(&idiff_prev);
 	strbuf_release(&idiff_title);
 	strbuf_release(&rdiff1);
