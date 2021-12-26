@@ -2973,6 +2973,7 @@ void release_revisions(struct rev_info *revs)
 	release_revisions_cmdline(&revs->cmdline);
 	object_array_bare_clear(&revs->boundary_commits);
 	clear_pathspec(&revs->prune_data);
+	free((char *)revs->extra_headers);
 	date_mode_release(&revs->date_mode);
 	release_revisions_mailmap(revs->mailmap);
 	reflog_walk_info_release(revs->reflog_info);
