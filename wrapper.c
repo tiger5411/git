@@ -3,6 +3,7 @@
  */
 #include "cache.h"
 #include "config.h"
+#include "wrapper.h"
 
 static int memory_limit_check(size_t size, int gentle)
 {

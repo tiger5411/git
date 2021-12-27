@@ -486,8 +486,6 @@ static inline int git_has_dir_sep(const char *path)
 
 #include "wildmatch.h"
 
-struct strbuf;
-
 /* General helper functions */
 void vreportf(const char *prefix, const char *err, va_list params);
 NORETURN void usage(const char *err);
@@ -1260,13 +1258,6 @@ void BUG(const char *fmt, ...);
  * not exist.
  */
 int unlink_or_warn(const char *path);
- /*
-  * Tries to unlink file.  Returns 0 if unlink succeeded
-  * or the file already didn't exist.  Returns -1 and
-  * appends a message to err suitable for
-  * 'error("%s", err->buf)' on error.
-  */
-int unlink_or_msg(const char *file, struct strbuf *err);
 /*
  * Preserves errno, prints a message, but gives no warning for ENOENT.
  * Returns 0 on success, which includes trying to remove a directory that does

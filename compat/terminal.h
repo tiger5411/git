@@ -1,5 +1,6 @@
 #ifndef COMPAT_TERMINAL_H
 #define COMPAT_TERMINAL_H
+#include "strbuf.h"
 
 int save_term(int full_duplex);
 void restore_term(void);

@@ -2,7 +2,7 @@
 #define RUN_COMMAND_H
 
 #include "thread-utils.h"
-
+#include "strbuf.h"
 #include "strvec.h"
 
 /**

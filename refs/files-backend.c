@@ -11,6 +11,7 @@
 #include "../dir.h"
 #include "../chdir-notify.h"
 #include "worktree.h"
+#include "wrapper.h"
 
 /*
  * This backend uses the following flags in `ref_update::flags` for
