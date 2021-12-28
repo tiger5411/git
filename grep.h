@@ -22,6 +22,10 @@ typedef int pcre2_general_context;
 #endif
 #include "thread-utils.h"
 #include "userdiff.h"
+/* Outside of "#ifdef USE_LIBPCRE2", used unconditionally */
+#ifndef PCRE2_MULTILINE
+#define PCRE2_MULTILINE 0
+#endif
 
 struct repository;
 

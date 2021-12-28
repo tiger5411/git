@@ -284,12 +284,11 @@ static void pcre2_free(void *pointer, MAYBE_UNUSED void *memory_data)
 	free(pointer);
 }
 
-static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt)
+static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt, int options)
 {
 	int error;
 	PCRE2_UCHAR errbuf[256];
 	PCRE2_SIZE erroffset;
-	int options = PCRE2_MULTILINE;
 	int jitret;
 	int patinforet;
 	size_t jitsizearg;
@@ -415,7 +414,7 @@ static void free_pcre2_pattern(struct grep_pat *p)
 	pcre2_general_context_free(p->pcre2_general_context);
 }
 #else /* !USE_LIBPCRE2 */
-static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt)
+static void compile_pcre2_pattern(struct grep_pat *p, const struct grep_opt *opt, int options)
 {
 	die("cannot use Perl-compatible regexes when not compiled with USE_LIBPCRE");
 }
@@ -485,35 +484,14 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 #endif
 	if (p->fixed || p->is_fixed) {
 #ifdef USE_LIBPCRE2
-		if (p->is_fixed) {
-			compile_pcre2_pattern(p, opt);
-		} else {
-			/*
-			 * E.g. t7811-grep-open.sh relies on the
-			 * pattern being restored.
-			 */
-			char *old_pattern = p->pattern;
-			size_t old_patternlen = p->patternlen;
-			struct strbuf sb = STRBUF_INIT;
-
-			/*
-			 * There is the PCRE2_LITERAL flag, but it's
-			 * only in PCRE v2 10.30 and later. Needing to
-			 * ifdef our way around that and dealing with
-			 * it + PCRE2_MULTILINE being an error is more
-			 * complex than just quoting this ourselves.
-			*/
-			strbuf_add(&sb, "\\Q", 2);
-			strbuf_add(&sb, p->pattern, p->patternlen);
-			strbuf_add(&sb, "\\E", 2);
-
-			p->pattern = sb.buf;
-			p->patternlen = sb.len;
-			compile_pcre2_pattern(p, opt);
-			p->pattern = old_pattern;
-			p->patternlen = old_patternlen;
-			strbuf_release(&sb);
-		}
+		if (p->is_fixed)
+			compile_pcre2_pattern(p, opt, 0);
+		else
+#ifdef PCRE2_LITERAL
+			compile_pcre2_pattern(p, opt, PCRE2_LITERAL);
+#else
+			compile_fixed_regexp(p, opt);
+#endif
 #else /* !USE_LIBPCRE2 */
 		compile_fixed_regexp(p, opt);
 #endif /* !USE_LIBPCRE2 */
@@ -521,7 +499,7 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 	}
 
 	if (pcre2) {
-		compile_pcre2_pattern(p, opt);
+		compile_pcre2_pattern(p, opt, PCRE2_MULTILINE);
 		return;
 	}
 
