@@ -34,7 +34,7 @@ static const char *color_grep_slots[] = {
 static int parse_pattern_type_arg(const char *opt, const char *arg)
 {
 	if (!strcmp(arg, "default"))
-		return GREP_PATTERN_TYPE_UNSPECIFIED;
+		return 0;
 	else if (!strcmp(arg, "basic"))
 		return GREP_PATTERN_TYPE_BRE;
 	else if (!strcmp(arg, "extended"))
@@ -50,8 +50,7 @@ define_list_config_array_extra(color_grep_slots, {"match"});
 
 static void adjust_pattern_type(enum grep_pattern_type *pto, const int ero)
 {
-	if (*pto == GREP_PATTERN_TYPE_UNSPECIFIED)
-		*pto = ero ? GREP_PATTERN_TYPE_ERE : GREP_PATTERN_TYPE_BRE;
+	*pto = ero ? GREP_PATTERN_TYPE_ERE : GREP_PATTERN_TYPE_BRE;
 }
 
 /*
@@ -69,12 +68,16 @@ int grep_config(const char *var, const char *value, void *cb)
 
 	if (!strcmp(var, "grep.extendedregexp")) {
 		ero = git_config_bool(var, value);
+		if (opt->pattern_type_option)
+			return 0;
 		adjust_pattern_type(&opt->pattern_type_option, ero);
 		return 0;
 	}
 
 	if (!strcmp(var, "grep.patterntype")) {
 		opt->pattern_type_option = parse_pattern_type_arg(var, value);
+		if (opt->pattern_type_option)
+			return 0;
 		if (ero == -1)
 			return 0;
 		adjust_pattern_type(&opt->pattern_type_option, ero);
