@@ -437,7 +437,6 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 					    ? GREP_PATTERN_TYPE_ERE
 					    : GREP_PATTERN_TYPE_BRE);
 
-	p->word_regexp = opt->word_regexp;
 	p->fixed = opt->pattern_type_option == GREP_PATTERN_TYPE_FIXED;
 
 	if (opt->pattern_type_option != GREP_PATTERN_TYPE_PCRE &&
@@ -874,7 +873,8 @@ static struct {
 static int headerless_match_one_pattern(struct grep_pat *p,
 					const char *bol, const char *eol,
 					enum grep_context ctx,
-					regmatch_t *pmatch, int eflags)
+					regmatch_t *pmatch, int eflags,
+					const int word_regexp)
 {
 	int hit = 0;
 	const char *start = bol;
@@ -886,7 +886,7 @@ static int headerless_match_one_pattern(struct grep_pat *p,
  again:
 	hit = patmatch(p, bol, eol, pmatch, eflags);
 
-	if (hit && p->word_regexp) {
+	if (hit && word_regexp) {
 		if ((pmatch[0].rm_so < 0) ||
 		    (eol - bol) < pmatch[0].rm_so ||
 		    (pmatch[0].rm_eo < 0) ||
@@ -936,7 +936,7 @@ static int headerless_match_one_pattern(struct grep_pat *p,
 static int match_one_pattern(struct grep_pat *p,
 			     const char *bol, const char *eol,
 			     enum grep_context ctx, regmatch_t *pmatch,
-			     int eflags)
+			     int eflags, const int word_regexp)
 {
 	const char *field;
 	size_t len;
@@ -959,7 +959,8 @@ static int match_one_pattern(struct grep_pat *p,
 		}
 	}
 
-	return headerless_match_one_pattern(p, bol, eol, ctx, pmatch, eflags);
+	return headerless_match_one_pattern(p, bol, eol, ctx, pmatch, eflags,
+					    word_regexp);
 }
 
 
@@ -980,7 +981,7 @@ static int match_expr_eval(struct grep_opt *opt, struct grep_expr *x,
 		{
 			regmatch_t tmp;
 			h = match_one_pattern(x->u.atom, bol, eol, ctx,
-					      &tmp, 0);
+					      &tmp, 0, opt->word_regexp);
 			if (h && (*col < 0 || tmp.rm_so < *col))
 				*col = tmp.rm_so;
 		}
@@ -1058,7 +1059,8 @@ static int match_line(struct grep_opt *opt,
 	/* we do not call with collect_hits without being extended */
 	for (p = opt->pattern_list; p; p = p->next) {
 		regmatch_t tmp;
-		if (match_one_pattern(p, bol, eol, ctx, &tmp, 0)) {
+		if (match_one_pattern(p, bol, eol, ctx, &tmp, 0,
+				      opt->word_regexp)) {
 			hit |= 1;
 			if (!opt->columnnum) {
 				/*
@@ -1079,11 +1081,13 @@ static int match_line(struct grep_opt *opt,
 static int match_next_pattern(struct grep_pat *p,
 			      const char *bol, const char *eol,
 			      enum grep_context ctx,
-			      regmatch_t *pmatch, int eflags)
+			      regmatch_t *pmatch, int eflags,
+			      const int word_regexp)
 {
 	regmatch_t match;
 
-	if (!headerless_match_one_pattern(p, bol, eol, ctx, &match, eflags))
+	if (!headerless_match_one_pattern(p, bol, eol, ctx, &match, eflags,
+					  word_regexp))
 		return 0;
 	if (match.rm_so < 0 || match.rm_eo < 0)
 		return 0;
@@ -1120,7 +1124,8 @@ int grep_next_match(struct grep_opt *opt,
 			case GREP_PATTERN: /* atom */
 			case GREP_PATTERN_BODY:
 				hit |= match_next_pattern(p, bol, eol, ctx,
-							  pmatch, eflags);
+							  pmatch, eflags,
+							  opt->word_regexp);
 				break;
 			default:
 				break;
