@@ -239,6 +239,21 @@ static int is_fixed(const char *s, size_t len)
 	return 1;
 }
 
+static void compile_posix_regexp(struct grep_pat *p, struct grep_opt *opt,
+				 const char *pattern, int regflags)
+{
+	int err;
+
+	if (opt->ignore_case)
+		regflags |= REG_ICASE;
+	err = regcomp(&p->regexp, pattern, regflags);
+	if (err) {
+		char errbuf[1024];
+		regerror(err, &p->regexp, errbuf, sizeof(errbuf));
+		compile_regexp_failed(p, errbuf);
+	}
+}
+
 #ifdef USE_LIBPCRE2
 #define GREP_PCRE2_DEBUG_MALLOC 0
 
@@ -411,25 +426,15 @@ static void free_pcre2_pattern(struct grep_pat *p)
 static void compile_fixed_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
 	struct strbuf sb = STRBUF_INIT;
-	int err;
-	int regflags = 0;
 
 	basic_regex_quote_buf(&sb, p->pattern);
-	if (opt->ignore_case)
-		regflags |= REG_ICASE;
-	err = regcomp(&p->regexp, sb.buf, regflags);
+	compile_posix_regexp(p, opt, sb.buf, 0);
 	strbuf_release(&sb);
-	if (err) {
-		char errbuf[1024];
-		regerror(err, &p->regexp, errbuf, sizeof(errbuf));
-		compile_regexp_failed(p, errbuf);
-	}
 }
 #endif /* !USE_LIBPCRE2 */
 
 static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
-	int err;
 	int regflags = REG_NEWLINE;
 
 	if (opt->pattern_type_option == GREP_PATTERN_TYPE_UNSPECIFIED)
@@ -496,16 +501,9 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		return;
 	}
 
-	if (opt->ignore_case)
-		regflags |= REG_ICASE;
 	if (opt->pattern_type_option == GREP_PATTERN_TYPE_ERE)
 		regflags |= REG_EXTENDED;
-	err = regcomp(&p->regexp, p->pattern, regflags);
-	if (err) {
-		char errbuf[1024];
-		regerror(err, &p->regexp, errbuf, 1024);
-		compile_regexp_failed(p, errbuf);
-	}
+	compile_posix_regexp(p, opt, p->pattern, regflags);
 }
 
 static struct grep_expr *grep_not_expr(struct grep_expr *expr)
