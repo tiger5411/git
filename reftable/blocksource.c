@@ -13,12 +13,6 @@ https://developers.google.com/open-source/licenses/bsd
 #include "reftable-blocksource.h"
 #include "reftable-error.h"
 
-static void strbuf_return_block(void *b, struct reftable_block *dest)
-{
-	memset(dest->data, 0xff, dest->len);
-	reftable_free(dest->data);
-}
-
 static void strbuf_close(void *b)
 {
 }
@@ -42,7 +36,6 @@ static uint64_t strbuf_size(void *b)
 static struct reftable_block_source_vtable strbuf_vtable = {
 	.size = &strbuf_size,
 	.read_block = &strbuf_read_block,
-	.return_block = &strbuf_return_block,
 	.close = &strbuf_close,
 };
 
@@ -54,19 +47,7 @@ void block_source_from_strbuf(struct reftable_block_source *bs,
 	bs->arg = buf;
 }
 
-static void malloc_return_block(void *b, struct reftable_block *dest)
-{
-	memset(dest->data, 0xff, dest->len);
-	reftable_free(dest->data);
-}
-
-static struct reftable_block_source_vtable malloc_vtable = {
-	.return_block = &malloc_return_block,
-};
-
-static struct reftable_block_source malloc_block_source_instance = {
-	.ops = &malloc_vtable,
-};
+static struct reftable_block_source malloc_block_source_instance = { 0 };
 
 struct reftable_block_source malloc_block_source(void)
 {
@@ -81,12 +62,6 @@ struct file_block_source {
 static uint64_t file_size(void *b)
 {
 	return ((struct file_block_source *)b)->size;
-}
-
-static void file_return_block(void *b, struct reftable_block *dest)
-{
-	memset(dest->data, 0xff, dest->len);
-	reftable_free(dest->data);
 }
 
 static void file_close(void *b)
@@ -115,7 +90,6 @@ static int file_read_block(void *v, struct reftable_block *dest, uint64_t off,
 static struct reftable_block_source_vtable file_vtable = {
 	.size = &file_size,
 	.read_block = &file_read_block,
-	.return_block = &file_return_block,
 	.close = &file_close,
 };
 
