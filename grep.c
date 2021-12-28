@@ -438,7 +438,6 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 					    : GREP_PATTERN_TYPE_BRE);
 
 	p->word_regexp = opt->word_regexp;
-	p->ignore_case = opt->ignore_case;
 	p->fixed = opt->pattern_type_option == GREP_PATTERN_TYPE_FIXED;
 
 	if (opt->pattern_type_option != GREP_PATTERN_TYPE_PCRE &&
@@ -498,7 +497,7 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		return;
 	}
 
-	if (p->ignore_case)
+	if (opt->ignore_case)
 		regflags |= REG_ICASE;
 	if (opt->pattern_type_option == GREP_PATTERN_TYPE_ERE)
 		regflags |= REG_EXTENDED;
