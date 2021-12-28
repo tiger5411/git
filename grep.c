@@ -436,16 +436,33 @@ static void compile_fixed_regexp(struct grep_pat *p, struct grep_opt *opt)
 static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 {
 	int regflags = REG_NEWLINE;
+	int pcre2 = 0;
+	int posix = 0;
 
 	if (opt->pattern_type_option == GREP_PATTERN_TYPE_UNSPECIFIED)
 		opt->pattern_type_option = (opt->extended_regexp_option
 					    ? GREP_PATTERN_TYPE_ERE
 					    : GREP_PATTERN_TYPE_BRE);
 
-	p->fixed = opt->pattern_type_option == GREP_PATTERN_TYPE_FIXED;
+	switch (opt->pattern_type_option)
+	{
+	case GREP_PATTERN_TYPE_FIXED:
+		p->fixed = 1;
+		break;
+	case GREP_PATTERN_TYPE_PCRE:
+		pcre2 = 1;
+		break;
+	case GREP_PATTERN_TYPE_ERE:
+		regflags |= REG_EXTENDED;
+		/* fallthrough */
+	case GREP_PATTERN_TYPE_BRE:
+		posix = 1;
+		break;
+	case GREP_PATTERN_TYPE_UNSPECIFIED:
+		BUG("unreachable");
+	}
 
-	if (opt->pattern_type_option != GREP_PATTERN_TYPE_PCRE &&
-	    memchr(p->pattern, 0, p->patternlen))
+	if (!pcre2 && memchr(p->pattern, 0, p->patternlen))
 		die(_("given pattern contains NULL byte (via -f <file>). This is only supported with -P under PCRE v2"));
 
 	p->is_fixed = is_fixed(p->pattern, p->patternlen);
@@ -496,13 +513,13 @@ static void compile_regexp(struct grep_pat *p, struct grep_opt *opt)
 		return;
 	}
 
-	if (opt->pattern_type_option == GREP_PATTERN_TYPE_PCRE) {
+	if (pcre2) {
 		compile_pcre2_pattern(p, opt);
 		return;
 	}
 
-	if (opt->pattern_type_option == GREP_PATTERN_TYPE_ERE)
-		regflags |= REG_EXTENDED;
+	if (!posix)
+		BUG("should have picked between fixed, PCRE and [BE]RE by now");
 	compile_posix_regexp(p, opt, p->pattern, regflags);
 }
 
