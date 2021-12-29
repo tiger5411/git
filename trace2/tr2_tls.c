@@ -48,7 +48,7 @@ void tr2tls_start_process_clock(void)
 struct tr2tls_thread_ctx *tr2tls_create_self(const char *thread_name,
 					     uint64_t us_thread_start)
 {
-	struct tr2tls_thread_ctx *ctx;
+	struct tr2tls_thread_ctx *ctx = xcalloc(1, sizeof(struct tr2tls_thread_ctx));
 	struct strbuf buf_name = STRBUF_INIT;
 	int thread_id = tr2tls_locked_increment(&tr2_next_thread_id);
 
@@ -56,8 +56,7 @@ struct tr2tls_thread_ctx *tr2tls_create_self(const char *thread_name,
 		strbuf_addf(&buf_name, "th%02d:", thread_id);
 	strbuf_addstr(&buf_name, thread_name);
 
-	FLEX_ALLOC_MEM(ctx, thread_name, buf_name.buf, buf_name.len);
-	strbuf_release(&buf_name);
+	ctx->thread_name = strbuf_detach(&buf_name, NULL);
 
 	ctx->thread_id = thread_id;
 
@@ -188,6 +187,7 @@ void tr2tls_release(void)
 	while (ctx) {
 		struct tr2tls_thread_ctx *next = ctx->next_ctx;
 
+		free((char *)ctx->thread_name);
 		free(ctx->array_us_start);
 		free(ctx);
 

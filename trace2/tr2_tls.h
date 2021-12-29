@@ -6,6 +6,7 @@
 #include "trace2/tr2_tmr.h"
 
 struct tr2tls_thread_ctx {
+	const char *thread_name;
 	struct tr2tls_thread_ctx *next_ctx;
 	uint64_t *array_us_start;
 	size_t alloc;
@@ -14,8 +15,6 @@ struct tr2tls_thread_ctx {
 
 	struct tr2_timer_block timers;
 	struct tr2_counter_block counters;
-
-	char thread_name[FLEX_ARRAY];
 };
 
 /*
