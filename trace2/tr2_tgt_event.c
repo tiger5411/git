@@ -82,16 +82,15 @@ static void fn_term(void)
 static void event_fmt_prepare(const char *event_name, const char *file,
 			      int line, const struct repository *repo,
 			      struct json_writer *jw,
-			      const char *thread_name_override)
+			      struct tr2tls_thread_ctx *ctx)
 {
 	struct tr2_tbuf tb_now;
+	if (!ctx)
+		ctx = tr2tls_get_self();
 
 	jw_object_string(jw, "event", event_name);
 	jw_object_string(jw, "sid", tr2_sid_get());
-	jw_object_string(jw, "thread",
-			 ((thread_name_override && *thread_name_override)
-			  ? thread_name_override
-			  : tr2tls_get_self()->thread_name));
+	jw_object_string(jw, "thread", ctx->thread_name);
 
 	/*
 	 * In brief mode, only emit <time> on these 2 event types.
@@ -109,6 +108,20 @@ static void event_fmt_prepare(const char *event_name, const char *file,
 
 	if (repo)
 		jw_object_intmax(jw, "repo", repo->trace2_repo_id);
+}
+
+static void event_fmt_prepare_tn(const char *event_name, const char *file,
+				 int line, const struct repository *repo,
+				 struct json_writer *jw,
+				 const char *thread_name)
+{
+	struct tr2tls_thread_ctx *ctx = tr2tls_get_self();
+	const char *tmp;
+
+	tmp = ctx->thread_name;
+	ctx->thread_name = thread_name;
+	event_fmt_prepare(event_name, __FILE__, __LINE__, NULL, jw, ctx);
+	ctx->thread_name = tmp;
 }
 
 static void fn_too_many_files_fl(const char *file, int line)
@@ -629,7 +642,7 @@ static void fn_timer(uint64_t us_elapsed_absolute,
 	double t_abs = (double)us_elapsed_absolute / 1000000.0;
 
 	jw_object_begin(&jw, 0);
-	event_fmt_prepare(event_name, __FILE__, __LINE__, NULL, &jw, thread_name);
+	event_fmt_prepare_tn(event_name, __FILE__, __LINE__, NULL, &jw, thread_name);
 	jw_object_double(&jw, "t_abs", 6, t_abs);
 	jw_object_string(&jw, "name", timer_name);
 	jw_object_intmax(&jw, "count", interval_count);
@@ -654,7 +667,7 @@ static void fn_counter(uint64_t us_elapsed_absolute,
 	double t_abs = (double)us_elapsed_absolute / 1000000.0;
 
 	jw_object_begin(&jw, 0);
-	event_fmt_prepare(event_name, __FILE__, __LINE__, NULL, &jw, thread_name);
+	event_fmt_prepare_tn(event_name, __FILE__, __LINE__, NULL, &jw, thread_name);
 	jw_object_double(&jw, "t_abs", 6, t_abs);
 	jw_object_string(&jw, "name", counter_name);
 	jw_object_intmax(&jw, "value", value);
