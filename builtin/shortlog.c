@@ -364,7 +364,7 @@ int cmd_shortlog(int argc, const char **argv, const char *prefix)
 		OPT_END(),
 	};
 
-	struct parse_opt_ctx_t ctx;
+	struct parse_opt_ctx_t ctx = { 0 };
 
 	git_config(git_default_config, NULL);
 	shortlog_init(&log);
