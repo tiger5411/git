@@ -247,7 +247,7 @@ int diff_no_index(struct rev_info *revs,
 	struct strbuf replacement = STRBUF_INIT;
 	const char *prefix = revs->prefix;
 	struct option no_index_options[] = {
-		OPT_BOOL_F(0, "no-index", &no_index, "",
+		OPT_BOOL_F(0, "no-index", &no_index, NULL,
 			   PARSE_OPT_NONEG | PARSE_OPT_HIDDEN),
 		OPT_END(),
 	};

@@ -3954,7 +3954,7 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
 			    WRITE_BITMAP_TRUE),
 		OPT_SET_INT_F(0, "write-bitmap-index-quiet",
 			      &write_bitmap_index,
-			      N_("write a bitmap index if possible"),
+			      NULL,
 			      WRITE_BITMAP_QUIET, PARSE_OPT_HIDDEN),
 		OPT_PARSE_LIST_OBJECTS_FILTER(&filter_options),
 		OPT_CALLBACK_F(0, "missing", NULL, N_("action"),
