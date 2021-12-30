@@ -189,6 +189,7 @@ struct option {
 				       (h), PARSE_OPT_NOARG|(f) }
 #define OPT_SET_INT_F(s, l, v, h, i, f) { OPTION_SET_INT, (s), (l), (v), NULL, \
 					  (h), PARSE_OPT_NOARG | (f), NULL, (i) }
+#define OPT_SET_HIDDEN_INT(s, l, v, i) OPT_SET_INT_F(s, l, v, NULL, i, PARSE_OPT_HIDDEN)
 #define OPT_BOOL_F(s, l, v, h, f)   OPT_SET_INT_F(s, l, v, h, 1, f)
 #define OPT_CALLBACK_F(s, l, v, a, h, f, cb)			\
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), (cb) }

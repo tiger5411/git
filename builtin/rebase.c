@@ -1108,10 +1108,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			N_("let the user edit the list of commits to rebase"),
 			PARSE_OPT_NOARG | PARSE_OPT_NONEG,
 			parse_opt_interactive),
-		OPT_SET_INT_F('p', "preserve-merges", &preserve_merges_selected,
-			      N_("(DEPRECATED) try to recreate merges instead of "
-				 "ignoring them"),
-			      1, PARSE_OPT_HIDDEN),
+		OPT_SET_HIDDEN_INT('p', "preserve-merges",
+				   &preserve_merges_selected, 1),
 		OPT_RERERE_AUTOUPDATE(&options.allow_rerere_autoupdate),
 		OPT_CALLBACK_F(0, "empty", &options, "{drop,keep,ask}",
 			       N_("how to handle commits that become empty"),
