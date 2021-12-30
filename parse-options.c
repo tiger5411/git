@@ -440,7 +440,8 @@ static void check_typos(const char *arg, const struct option *options)
 	}
 }
 
-static void parse_options_check(const struct option *opts)
+static void parse_options_check(const struct option *opts,
+				enum parse_opt_flags flags)
 {
 	int err = 0;
 	char short_opts[128];
@@ -464,6 +465,17 @@ static void parse_options_check(const struct option *opts)
 		     opts->long_name))
 			err |= optbug(opts, "uses feature "
 					"not supported for dashless options");
+
+		if (!(flags & PARSE_OPT_REV_PARSE_PARSEOPT)) {
+			if (opts->flags & PARSE_OPT_HIDDEN &&
+			    opts->help)
+				err |= optbug(opts, "defines help, but is hidden");
+
+			if (opts->flags & PARSE_OPT_HIDDEN &&
+			    opts->argh)
+				err |= optbug(opts, "defines argument help, but is hidden");
+		}
+
 		switch (opts->type) {
 		case OPTION_COUNTUP:
 		case OPTION_BIT:
@@ -520,7 +532,7 @@ void parse_options_start(struct parse_opt_ctx_t *ctx,
 	if ((flags & PARSE_OPT_ONE_SHOT) &&
 	    (flags & PARSE_OPT_KEEP_ARGV0))
 		BUG("Can't keep argv0 if you don't have it");
-	parse_options_check(options);
+	parse_options_check(options, flags);
 }
 
 static void show_negated_gitcomp(const struct option *opts, int show_all,

@@ -428,7 +428,7 @@ static int cmd_parseopt(int argc, const char **argv, const char *prefix)
 
 	strbuf_addstr(&parsed, "set --");
 	argc = parse_options(argc, argv, prefix, parseopt_opts, parseopt_usage,
-	                     PARSE_OPT_KEEP_DASHDASH);
+			     PARSE_OPT_KEEP_DASHDASH | PARSE_OPT_REV_PARSE_PARSEOPT);
 	if (argc < 1 || strcmp(argv[0], "--"))
 		usage_with_options(parseopt_usage, parseopt_opts);
 
@@ -520,7 +520,7 @@ static int cmd_parseopt(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, opts, usage,
 			(keep_dashdash ? PARSE_OPT_KEEP_DASHDASH : 0) |
 			(stop_at_non_option ? PARSE_OPT_STOP_AT_NON_OPTION : 0) |
-			PARSE_OPT_SHELL_EVAL);
+			PARSE_OPT_SHELL_EVAL | PARSE_OPT_REV_PARSE_PARSEOPT);
 
 	strbuf_addstr(&parsed, " --");
 	sq_quote_argv(&parsed, argv);
