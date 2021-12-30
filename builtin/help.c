@@ -54,7 +54,7 @@ static int exclude_guides;
 static struct option builtin_help_options[] = {
 	OPT_CMDMODE('a', "all", &cmd_mode, N_("print all available commands"),
 		    HELP_ACTION_ALL),
-	OPT_HIDDEN_BOOL(0, "exclude-guides", &exclude_guides, N_("exclude guides")),
+	OPT_HIDDEN_BOOL(0, "exclude-guides", &exclude_guides),
 	OPT_SET_INT('m', "man", &help_format, N_("show man page"), HELP_FORMAT_MAN),
 	OPT_SET_INT('w', "web", &help_format, N_("show manual in web browser"),
 			HELP_FORMAT_WEB),
