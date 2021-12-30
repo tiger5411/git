@@ -5,8 +5,10 @@ set -x
 ## Usage:
 #
 # ./make-install-avargit.sh --only-merge --no-merge-compile
-# ./make-install-avargit.sh --only-merge --merge-compile-args "all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
-# ./make-install-avargit.sh --only-merge --merge-compile-args "all" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
+## We default ot these --merge-compile-targets, a --merge-compile will override them
+# ./make-install-avargit.sh --only-merge --merge-compile-targets "sparse check-docs"
+# ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
+# ./make-install-avargit.sh --only-merge --merge-compile "make" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
 
 ## For "sparse" so that it invokes gcc, not clang
 REAL_CC=gcc
@@ -22,7 +24,8 @@ only_range_diff=
 only_merge=
 merge_full_tests=
 no_merge_compile=
-merge_compile_args="git-objs sparse check-docs"
+merge_compile_targets=
+merge_compile=
 merge_compile_test=
 only_test=
 force_push=
@@ -58,8 +61,12 @@ do
 	--merge-full-tests)
 		merge_full_tests=yes
 		;;
-	--merge-compile-args)
-		merge_compile_args="$2"
+	--merge-compile-targets)
+		merge_compile_targets="$2"
+		shift
+		;;
+	--merge-compile)
+		merge_compile="$2"
 		shift
 		;;
 	--merge-compile-test)
@@ -154,19 +161,33 @@ reset_it() {
 	rm -f version
 }
 
+tests_modified_since () {
+	git diff --numstat --relative=t $1.. -- t/t[0-9]*.sh |
+		awk '{print $3}' |
+		sort -n |
+		tr '\n' ' ' |
+		sed 's/ $//'
+}
+
 test_compile () {
 	full=$1
-
-	# HACK until Documentation/cmds-*.txt dependencies are
-	# corrected (uses $(wildcard *))
-	make clean
-	git clean -dxf -- 'Documentation/cmds*.txt'
-
-	make $merge_compile_args
 
 	if test -n "$merge_compile_test"
 	then
 		sh -c "$merge_compile_test"
+	fi
+
+	if test -n "$merge_compile"
+	then
+		sh -c "$merge_compile"
+	else
+		T="$(tests_modified_since HEAD^1)"
+		if test -n "$T"
+		then
+			GIT_SKIP_TESTS="t0000 t1800" make $merge_compile_targets test T="$T"
+		else
+			make $merge_compile_targets
+		fi
 	fi
 
 	if test -z "$full"
