@@ -478,6 +478,7 @@ static void parse_options_check(const struct option *opts)
 {
 	int err = 0;
 	char short_opts[128];
+	struct string_list long_opts = STRING_LIST_INIT_NODUP;
 
 	memset(short_opts, '\0', sizeof(short_opts));
 	for (; opts->type != OPTION_END; opts++) {
@@ -492,6 +493,11 @@ static void parse_options_check(const struct option *opts)
 				err |= optbug(opts, "invalid short name");
 			else if (short_opts[opts->short_name]++)
 				err |= optbug(opts, "short name already used");
+		}
+		if (opts->long_name) {
+			if (string_list_has_string(&long_opts, opts->long_name))
+				err |= optbug(opts, "long name already used");
+			string_list_insert(&long_opts, opts->long_name);
 		}
 		if (opts->flags & PARSE_OPT_NODASH &&
 		    ((opts->flags & PARSE_OPT_OPTARG) ||
@@ -533,6 +539,7 @@ static void parse_options_check(const struct option *opts)
 		    strcspn(opts->argh, " _") != strlen(opts->argh))
 			err |= optbug(opts, "multi-word argh should use dash to separate words");
 	}
+	string_list_clear(&long_opts, 0);
 	if (err)
 		exit(128);
 }
