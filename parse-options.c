@@ -442,6 +442,16 @@ static void parse_options_check_flags(const struct option *opts,
 			err |= optbug(opts, "parse_options() KEEP_UNKNOWN "
 				      "flag and option NO_ABBREV flag are "
 				      "are incompatible");
+
+		if (!(flags & PARSE_OPT_REV_PARSE_PARSEOPT)) {
+			if (opts->flags & PARSE_OPT_HIDDEN &&
+			    opts->help)
+				err |= optbug(opts, "defines help, but is hidden");
+
+			if (opts->flags & PARSE_OPT_HIDDEN &&
+			    opts->argh)
+				err |= optbug(opts, "defines argument help, but is hidden");
+		}
 	}
 
 	if (err)
@@ -484,6 +494,7 @@ static void parse_options_check(const struct option *opts)
 		     opts->long_name))
 			err |= optbug(opts, "uses feature "
 					"not supported for dashless options");
+
 		switch (opts->type) {
 		case OPTION_COUNTUP:
 		case OPTION_BIT:
