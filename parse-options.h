@@ -192,6 +192,7 @@ struct option {
 #define OPT_BOOL_F(s, l, v, h, f)   OPT_SET_INT_F(s, l, v, h, 1, f)
 #define OPT_CALLBACK_F(s, l, v, a, h, f, cb)			\
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), (cb) }
+#define OPT_CALLBACK(s, l, v, a, h, f) OPT_CALLBACK_F(s, l, v, a, h, 0, f)
 #define OPT_STRING_F(s, l, v, a, h, f)   { OPTION_STRING,  (s), (l), (v), (a), (h), (f) }
 #define OPT_INTEGER_F(s, l, v, h, f)     { OPTION_INTEGER, (s), (l), (v), N_("n"), (h), (f) }
 
@@ -206,10 +207,10 @@ struct option {
 #define OPT_COUNTUP(s, l, v, h)     OPT_COUNTUP_F(s, l, v, h, 0)
 #define OPT_SET_INT(s, l, v, h, i)  OPT_SET_INT_F(s, l, v, h, i, 0)
 #define OPT_BOOL(s, l, v, h)        OPT_BOOL_F(s, l, v, h, 0)
-#define OPT_HIDDEN_BOOL(s, l, v) { OPTION_SET_INT, (s), (l), (v), NULL, \
-				      NULL, PARSE_OPT_NOARG | PARSE_OPT_HIDDEN, NULL, 1}
-#define OPT_CMDMODE_F(s, l, v, h, i, f)  { OPTION_SET_INT, (s), (l), (v), NULL, \
-				      (h), PARSE_OPT_CMDMODE|PARSE_OPT_NOARG|PARSE_OPT_NONEG | (f), NULL, (i) }
+#define OPT_HIDDEN_BOOL(s, l, v) OPT_BOOL_F(s, l, v, NULL, \
+					    PARSE_OPT_NOARG | PARSE_OPT_HIDDEN)
+#define OPT_CMDMODE_F(s, l, v, h, i, f) OPT_SET_INT_F(s, l, v, h, i, \
+						      PARSE_OPT_CMDMODE|PARSE_OPT_NONEG | (f))
 #define OPT_CMDMODE(s, l, v, h, i)  OPT_CMDMODE_F(s, l, v, h, i, 0)
 
 #define OPT_INTEGER(s, l, v, h)     OPT_INTEGER_F(s, l, v, h, 0)
@@ -217,14 +218,12 @@ struct option {
 				      N_("n"), (h), PARSE_OPT_NONEG }
 #define OPT_STRING(s, l, v, a, h)   OPT_STRING_F(s, l, v, a, h, 0)
 #define OPT_STRING_LIST(s, l, v, a, h) \
-				    { OPTION_CALLBACK, (s), (l), (v), (a), \
-				      (h), 0, &parse_opt_string_list }
-#define OPT_UYN(s, l, v, h)         { OPTION_CALLBACK, (s), (l), (v), NULL, \
-				      (h), PARSE_OPT_NOARG, &parse_opt_tertiary }
+	OPT_CALLBACK(s, l, v, a, h, &parse_opt_string_list)
+#define OPT_UYN(s, l, v, h) OPT_CALLBACK_F(s, l, v, NULL, h, PARSE_OPT_NOARG, \
+					   &parse_opt_tertiary)
 #define OPT_EXPIRY_DATE(s, l, v, h) \
-	{ OPTION_CALLBACK, (s), (l), (v), N_("expiry-date"),(h), 0,	\
-	  parse_opt_expiry_date_cb }
-#define OPT_CALLBACK(s, l, v, a, h, f) OPT_CALLBACK_F(s, l, v, a, h, 0, f)
+	OPT_CALLBACK_F(s, l, v, N_("expiry-date"), h, 0, \
+		       parse_opt_expiry_date_cb)
 #define OPT_NUMBER_CALLBACK(v, h, f) \
 	{ OPTION_NUMBER, 0, NULL, (v), NULL, (h), \
 	  PARSE_OPT_NOARG | PARSE_OPT_NONEG, (f) }
