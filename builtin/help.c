@@ -71,9 +71,9 @@ static struct option builtin_help_options[] = {
 		    HELP_ACTION_GUIDES),
 	OPT_CMDMODE('c', "config", &cmd_mode, N_("print all configuration variable names"),
 		    HELP_ACTION_CONFIG),
-	OPT_CMDMODE_F(0, "config-for-completion", &cmd_mode, "",
+	OPT_CMDMODE_F(0, "config-for-completion", &cmd_mode, NULL,
 		    HELP_ACTION_CONFIG_FOR_COMPLETION, PARSE_OPT_HIDDEN),
-	OPT_CMDMODE_F(0, "config-sections-for-completion", &cmd_mode, "",
+	OPT_CMDMODE_F(0, "config-sections-for-completion", &cmd_mode, NULL,
 		    HELP_ACTION_CONFIG_SECTIONS_FOR_COMPLETION, PARSE_OPT_HIDDEN),
 
 	OPT_END(),
