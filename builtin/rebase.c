@@ -1114,10 +1114,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		OPT_CALLBACK_F(0, "empty", &options, "{drop,keep,ask}",
 			       N_("how to handle commits that become empty"),
 			       PARSE_OPT_NONEG, parse_opt_empty),
-		OPT_CALLBACK_F('k', "keep-empty", &options, NULL,
-			N_("keep commits which start empty"),
-			PARSE_OPT_NOARG | PARSE_OPT_HIDDEN,
-			parse_opt_keep_empty),
+		OPT_HIDDEN_CALLBACK_F('k', "keep-empty", &options,
+				      PARSE_OPT_NOARG, parse_opt_keep_empty),
 		OPT_BOOL(0, "autosquash", &options.autosquash,
 			 N_("move commits that begin with "
 			    "squash!/fixup! under -i")),
