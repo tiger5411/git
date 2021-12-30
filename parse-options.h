@@ -195,6 +195,7 @@ struct option {
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), (cb) }
 #define OPT_CALLBACK(s, l, v, a, h, f) OPT_CALLBACK_F(s, l, v, a, h, 0, f)
 #define OPT_STRING_F(s, l, v, a, h, f)   { OPTION_STRING,  (s), (l), (v), (a), (h), (f) }
+#define OPT_HIDDEN_STRING(s, l, v) OPT_STRING_F(s, l, v, NULL, NULL, PARSE_OPT_HIDDEN)
 #define OPT_INTEGER_F(s, l, v, h, f)     { OPTION_INTEGER, (s), (l), (v), N_("n"), (h), (f) }
 
 #define OPT_END()                   { OPTION_END }
