@@ -892,7 +892,7 @@ int cmd_blame(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	struct parse_opt_ctx_t ctx;
+	struct parse_opt_ctx_t ctx = { 0 };
 	int cmd_is_annotate = !strcmp(argv[0], "annotate");
 	struct range_set ranges;
 	unsigned int range_i;

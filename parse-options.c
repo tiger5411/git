@@ -551,10 +551,10 @@ static void parse_options_check(const struct option *opts)
 		exit(128);
 }
 
-static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
-				  int argc, const char **argv, const char *prefix,
-				  const struct option *options,
-				  enum parse_opt_flags flags)
+void parse_options_start(struct parse_opt_ctx_t *ctx,
+			 int argc, const char **argv, const char *prefix,
+			 const struct option *options,
+			 enum parse_opt_flags flags)
 {
 	ctx->argc = argc;
 	ctx->argv = argv;
@@ -569,15 +569,6 @@ static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
 	ctx->flags = flags;
 	parse_options_check_flags(options, flags);
 	parse_options_check(options);
-}
-
-void parse_options_start(struct parse_opt_ctx_t *ctx,
-			 int argc, const char **argv, const char *prefix,
-			 const struct option *options,
-			 enum parse_opt_flags flags)
-{
-	memset(ctx, 0, sizeof(*ctx));
-	parse_options_start_1(ctx, argc, argv, prefix, options, flags);
 }
 
 static void show_negated_gitcomp(const struct option *opts, int show_all,
@@ -821,10 +812,9 @@ int parse_options(int argc, const char **argv,
 		  const char * const usagestr[],
 		  enum parse_opt_flags flags)
 {
-	struct parse_opt_ctx_t ctx;
+	struct parse_opt_ctx_t ctx = { 0 };
 
-	memset(&ctx, 0, sizeof(ctx));
-	parse_options_start_1(&ctx, argc, argv, prefix, options, flags);
+	parse_options_start(&ctx, argc, argv, prefix, options, flags);
 	switch (parse_options_step(&ctx, options, usagestr)) {
 	case PARSE_OPT_HELP:
 	case PARSE_OPT_ERROR:
