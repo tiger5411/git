@@ -1128,10 +1128,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		OPT_STRING_LIST('x', "exec", &exec, N_("exec"),
 				N_("add exec lines after each commit of the "
 				   "editable list")),
-		OPT_BOOL_F(0, "allow-empty-message",
-			   &options.allow_empty_message,
-			   N_("allow rebasing commits with empty messages"),
-			   PARSE_OPT_HIDDEN),
+		OPT_HIDDEN_BOOL(0, "allow-empty-message",
+				&options.allow_empty_message),
 		{OPTION_STRING, 'r', "rebase-merges", &rebase_merges,
 			N_("mode"),
 			N_("try to rebase merges instead of skipping them"),
