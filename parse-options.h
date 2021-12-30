@@ -194,6 +194,8 @@ struct option {
 #define OPT_CALLBACK_F(s, l, v, a, h, f, cb)			\
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), (cb) }
 #define OPT_CALLBACK(s, l, v, a, h, f) OPT_CALLBACK_F(s, l, v, a, h, 0, f)
+#define OPT_HIDDEN_CALLBACK_F(s, l, v, f, cb) OPT_CALLBACK_F(s, l, v, NULL, NULL, (f) | PARSE_OPT_HIDDEN, cb)
+#define OPT_HIDDEN_CALLBACK(s, l, v, cb) OPT_HIDDEN_CALLBACK_F(s, l, v, 0, cb)
 #define OPT_STRING_F(s, l, v, a, h, f)   { OPTION_STRING,  (s), (l), (v), (a), (h), (f) }
 #define OPT_HIDDEN_STRING(s, l, v) OPT_STRING_F(s, l, v, NULL, NULL, PARSE_OPT_HIDDEN)
 #define OPT_INTEGER_F(s, l, v, h, f)     { OPTION_INTEGER, (s), (l), (v), N_("n"), (h), (f) }
@@ -235,10 +237,8 @@ struct option {
 	{ OPTION_CALLBACK, (s), (l), (v), N_("when"), (h), PARSE_OPT_OPTARG, \
 		parse_opt_color_flag_cb, (intptr_t)"always" }
 
-#define OPT_NOOP_NOARG(s, l) \
-	{ OPTION_CALLBACK, (s), (l), NULL, NULL, \
-	  N_("no-op (backward compatibility)"),		\
-	  PARSE_OPT_HIDDEN | PARSE_OPT_NOARG, parse_opt_noop_cb }
+#define OPT_NOOP_NOARG(s, l) OPT_HIDDEN_CALLBACK_F((s), (l), NULL, \
+		PARSE_OPT_NOARG, parse_opt_noop_cb)
 
 /*
  * parse_options() will filter out the processed options and leave the
