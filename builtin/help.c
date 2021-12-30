@@ -59,7 +59,7 @@ static struct option builtin_help_options[] = {
 	OPT_BOOL(0, "external-commands", &show_external_commands,
 		 N_("show external commands in --all")),
 	OPT_BOOL(0, "aliases", &show_aliases, N_("show aliases in --all")),
-	OPT_HIDDEN_BOOL(0, "exclude-guides", &exclude_guides, N_("exclude guides")),
+	OPT_HIDDEN_BOOL(0, "exclude-guides", &exclude_guides),
 	OPT_SET_INT('m', "man", &help_format, N_("show man page"), HELP_FORMAT_MAN),
 	OPT_SET_INT('w', "web", &help_format, N_("show manual in web browser"),
 			HELP_FORMAT_WEB),

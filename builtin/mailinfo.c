@@ -73,8 +73,7 @@ int cmd_mailinfo(int argc, const char **argv, const char *prefix)
 		OPT_CALLBACK_F(0, "quoted-cr", &mi.quoted_cr, N_("<action>"),
 			       N_("action when quoted CR is found"),
 			       PARSE_OPT_NONEG, parse_opt_quoted_cr),
-		OPT_HIDDEN_BOOL(0, "inbody-headers", &mi.use_inbody_headers,
-			 N_("use headers in message's body")),
+		OPT_HIDDEN_BOOL(0, "inbody-headers", &mi.use_inbody_headers),
 		OPT_END()
 	};
 

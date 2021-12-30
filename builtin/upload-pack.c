@@ -22,9 +22,8 @@ int cmd_upload_pack(int argc, const char **argv, const char *prefix)
 	struct option options[] = {
 		OPT_BOOL(0, "stateless-rpc", &stateless_rpc,
 			 N_("quit after a single request/response exchange")),
-		OPT_HIDDEN_BOOL(0, "http-backend-info-refs", &advertise_refs,
-				N_("serve up the info/refs for git-http-backend")),
-		OPT_HIDDEN_BOOL(0, "advertise-refs", &advertise_refs, NULL),
+		OPT_HIDDEN_BOOL(0, "http-backend-info-refs", &advertise_refs),
+		OPT_HIDDEN_BOOL(0, "advertise-refs", &advertise_refs),
 		OPT_BOOL(0, "strict", &strict,
 			 N_("do not try <directory>/.git/ if <directory> is no Git directory")),
 		OPT_INTEGER(0, "timeout", &timeout,
