@@ -5367,19 +5367,43 @@ static int diff_opt_rotate_to(const struct option *opt, const char *arg, int uns
 	return 0;
 }
 
+static int diff_opt_bitop(const struct option *opt, const char *arg, int unset,
+			  int and)
+{
+	BUG_ON_OPT_NEG(unset);
+	BUG_ON_OPT_ARG(arg);
+
+	*(int *)opt->value &= ~and;
+	*(int *)opt->value |= opt->defval;
+
+	return 0;
+}
+
+static int diff_opt_bitop_no_output(const struct option *opt,
+				    const char *arg, int unset)
+{
+	return diff_opt_bitop(opt, arg, unset, DIFF_FORMAT_NO_OUTPUT);
+}
+
+static int diff_opt_bitop_xdf_diff(const struct option *opt,
+				   const char *arg, int unset)
+{
+	return diff_opt_bitop(opt, arg, unset, XDF_DIFF_ALGORITHM_MASK);
+}
+
 static void prep_parse_options(struct diff_options *options)
 {
 	struct option parseopts[] = {
 		OPT_GROUP(N_("Diff output format options")),
 		OPT_BITOP('p', "patch", &options->output_format,
 			  N_("generate patch"),
-			  DIFF_FORMAT_PATCH, DIFF_FORMAT_NO_OUTPUT),
+			  DIFF_FORMAT_PATCH, diff_opt_bitop_no_output),
 		OPT_BIT_F('s', "no-patch", &options->output_format,
 			  N_("suppress diff output"),
 			  DIFF_FORMAT_NO_OUTPUT, PARSE_OPT_NONEG),
 		OPT_BITOP('u', NULL, &options->output_format,
 			  N_("generate patch"),
-			  DIFF_FORMAT_PATCH, DIFF_FORMAT_NO_OUTPUT),
+			  DIFF_FORMAT_PATCH, diff_opt_bitop_no_output),
 		OPT_CALLBACK_F('U', "unified", options, N_("<n>"),
 			       N_("generate diffs with <n> lines context"),
 			       PARSE_OPT_NONEG | PARSE_OPT_OPTARG, diff_opt_unified),
@@ -5391,11 +5415,11 @@ static void prep_parse_options(struct diff_options *options)
 		OPT_BITOP(0, "patch-with-raw", &options->output_format,
 			  N_("synonym for '-p --raw'"),
 			  DIFF_FORMAT_PATCH | DIFF_FORMAT_RAW,
-			  DIFF_FORMAT_NO_OUTPUT),
+			  diff_opt_bitop_no_output),
 		OPT_BITOP(0, "patch-with-stat", &options->output_format,
 			  N_("synonym for '-p --stat'"),
 			  DIFF_FORMAT_PATCH | DIFF_FORMAT_DIFFSTAT,
-			  DIFF_FORMAT_NO_OUTPUT),
+			  diff_opt_bitop_no_output),
 		OPT_BIT_F(0, "numstat", &options->output_format,
 			  N_("machine friendly --stat"),
 			  DIFF_FORMAT_NUMSTAT, PARSE_OPT_NONEG),
@@ -5549,7 +5573,7 @@ static void prep_parse_options(struct diff_options *options)
 			       diff_opt_patience),
 		OPT_BITOP(0, "histogram", &options->xdl_opts,
 			  N_("generate diff using the \"histogram diff\" algorithm"),
-			  XDF_HISTOGRAM_DIFF, XDF_DIFF_ALGORITHM_MASK),
+			  XDF_HISTOGRAM_DIFF, diff_opt_bitop_xdf_diff),
 		OPT_CALLBACK_F(0, "diff-algorithm", options, N_("<algorithm>"),
 			       N_("choose a diff algorithm"),
 			       PARSE_OPT_NONEG, diff_opt_diff_algorithm),
