@@ -1877,13 +1877,13 @@ static void close_loose_object(int fd)
 		die_errno(_("error when closing loose object file"));
 }
 
-/* Size of directory component, including the ending '/' */
+/* Size of directory component, excluding the ending '/' */
 static inline int directory_size(const char *filename)
 {
 	const char *s = strrchr(filename, '/');
 	if (!s)
 		return 0;
-	return s - filename + 1;
+	return s - filename;
 }
 
 /*
@@ -1900,7 +1900,7 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename,
 
 	strbuf_reset(tmp);
 	strbuf_add(tmp, filename, dirlen);
-	strbuf_addstr(tmp, "tmp_obj_XXXXXX");
+	strbuf_addstr(tmp, "/tmp_obj_XXXXXX");
 	fd = git_mkstemp_mode(tmp->buf, 0444);
 	do {
 		if (fd >= 0 || !dirlen || errno != ENOENT)
@@ -1912,7 +1912,7 @@ static int create_tmpfile(struct strbuf *tmp, const char *filename,
 		 * scratch.
 		 */
 		strbuf_reset(tmp);
-		strbuf_add(tmp, filename, dirlen - 1);
+		strbuf_add(tmp, filename, dirlen);
 		if (mkdir(tmp->buf, 0777) && errno != EEXIST)
 			break;
 		if (adjust_shared_perm(tmp->buf))
