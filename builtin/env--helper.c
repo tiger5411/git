@@ -63,11 +63,10 @@ int cmd_env__helper(int argc, const char **argv, const char *prefix)
 	case ENV_HELPER_TYPE_BOOL:
 		if (env_default) {
 			default_int = git_parse_maybe_bool(env_default);
-			if (default_int == -1) {
-				error(_("option `--default' expects a boolean value with `--type=bool`, not `%s`"),
-				      env_default);
-				usage_with_options(env__helper_usage, opts);
-			}
+			if (default_int == -1)
+				usage_msg_optf(_("option `--default' expects a boolean value with `--type=bool`, not `%s`"),
+					       env__helper_usage, opts,
+					       env_default);
 		} else {
 			default_int = 0;
 		}
@@ -78,11 +77,10 @@ int cmd_env__helper(int argc, const char **argv, const char *prefix)
 		break;
 	case ENV_HELPER_TYPE_ULONG:
 		if (env_default) {
-			if (!git_parse_ulong(env_default, &default_ulong)) {
-				error(_("option `--default' expects an unsigned long value with `--type=ulong`, not `%s`"),
-				      env_default);
-				usage_with_options(env__helper_usage, opts);
-			}
+			if (!git_parse_ulong(env_default, &default_ulong))
+				usage_msg_optf(_("option `--default' expects an unsigned long value with `--type=ulong`, not `%s`"),
+					       env__helper_usage, opts,
+					       env_default);
 		} else {
 			default_ulong = 0;
 		}

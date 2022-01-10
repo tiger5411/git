@@ -60,10 +60,9 @@ int cmd_for_each_ref(int argc, const char **argv, const char *prefix)
 	git_config(git_default_config, NULL);
 
 	parse_options(argc, argv, prefix, opts, for_each_ref_usage, 0);
-	if (maxcount < 0) {
-		error("invalid --count argument: `%d'", maxcount);
-		usage_with_options(for_each_ref_usage, opts);
-	}
+	if (maxcount < 0)
+		usage_msg_optf("invalid --count argument: `%d'",
+			       for_each_ref_usage, opts, maxcount);
 	if (HAS_MULTI_BITS(format.quote_style)) {
 		error("more than one quoting style?");
 		usage_with_options(for_each_ref_usage, opts);

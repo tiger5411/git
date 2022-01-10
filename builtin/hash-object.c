@@ -134,10 +134,9 @@ int cmd_hash_object(int argc, const char **argv, const char *prefix)
 			errstr = "Can't use --path with --no-filters";
 	}
 
-	if (errstr) {
-		error("%s", errstr);
-		usage_with_options(hash_object_usage, hash_object_options);
-	}
+	if (errstr)
+		usage_msg_optf("%s", hash_object_usage, hash_object_options,
+			       errstr);
 
 	if (hashstdin)
 		hash_fd(0, type, vpath, flags, literally);

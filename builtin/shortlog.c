@@ -395,10 +395,9 @@ parse_done:
 		usage_with_options(shortlog_usage, options);
 	}
 
-	if (setup_revisions(argc, argv, &rev, NULL) != 1) {
-		error(_("unrecognized argument: %s"), argv[1]);
-		usage_with_options(shortlog_usage, options);
-	}
+	if (setup_revisions(argc, argv, &rev, NULL) != 1)
+		usage_msg_optf(_("unrecognized argument: %s"), shortlog_usage,
+			       options, argv[1]);
 
 	log.user_format = rev.commit_format == CMIT_FMT_USERFORMAT;
 	log.abbrev = rev.abbrev;
