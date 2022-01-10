@@ -9,6 +9,11 @@ set -x
 # ./make-install-avargit.sh --only-merge --merge-compile-targets "sparse check-docs"
 # ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
 # ./make-install-avargit.sh --only-merge --merge-compile "make" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
+#
+## Unless --merge-compile is given we find what tests were changed in
+## the merge and run those "make test" (along with our default
+## "--merge-compile-targets". This unconditionally adds to that list:
+# ./make-install-avargit.sh --merge-compile-extra-tests "t0012-help.sh t0040-parse-options.sh"
 
 ## For "sparse" so that it invokes gcc, not clang
 REAL_CC=gcc
@@ -26,6 +31,7 @@ merge_full_tests=
 no_merge_compile=
 merge_compile_targets=
 merge_compile=
+merge_compile_extra_tests=
 merge_compile_test=
 only_test=
 force_push=
@@ -67,6 +73,10 @@ do
 		;;
 	--merge-compile)
 		merge_compile="$2"
+		shift
+		;;
+	--merge-compile-extra-tests)
+		merge_compile_extra_tests="$2"
 		shift
 		;;
 	--merge-compile-test)
@@ -181,7 +191,7 @@ test_compile () {
 	then
 		sh -c "$merge_compile"
 	else
-		T="$(tests_modified_since HEAD^1)"
+		T="${merge_compile_extra_tests:+$merge_compile_extra_tests }$(tests_modified_since HEAD^1)"
 		if test -n "$T"
 		then
 			GIT_SKIP_TESTS="t0000 t1800" make $merge_compile_targets test T="$T"
