@@ -1710,6 +1710,10 @@ test_oid_to_objects_path () {
 	echo .git/objects/"$(test_oid_to_path $1)"
 }
 
+test_rm_loose_oid () {
+	rm -v "$(test_oid_to_objects_path $1)"
+}
+
 # Choose a port number based on the test script's number and store it in
 # the given variable name, unless that variable already contains a number.
 test_set_port () {
