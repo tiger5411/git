@@ -98,8 +98,7 @@ static void check_attr_stdin_paths(const char *prefix,
 
 static NORETURN void error_with_usage(const char *msg)
 {
-	error("%s", msg);
-	usage_with_options(check_attr_usage, check_attr_options);
+	usage_msg_optf("%s", check_attr_usage, check_attr_options, msg);
 }
 
 int cmd_check_attr(int argc, const char **argv, const char *prefix)

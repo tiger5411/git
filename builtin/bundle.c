@@ -215,9 +215,8 @@ int cmd_bundle(int argc, const char **argv, const char *prefix)
 		result = cmd_bundle_list_heads(argc, argv, prefix);
 	else if (!strcmp(argv[0], "unbundle"))
 		result = cmd_bundle_unbundle(argc, argv, prefix);
-	else {
-		error(_("Unknown subcommand: %s"), argv[0]);
-		usage_with_options(builtin_bundle_usage, options);
-	}
+	else
+		usage_msg_optf(_("Unknown subcommand: %s"),
+			       builtin_bundle_usage, options, argv[0]);
 	return result ? 1 : 0;
 }
