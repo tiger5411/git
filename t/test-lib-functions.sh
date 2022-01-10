@@ -1699,6 +1699,13 @@ test_oid () {
 	eval "printf '%s' \"\${$var}\""
 }
 
+# Resolve the loose object directory of an object ID under
+# ".git/objects".  For example, "deadbeef..." becomes ".git/objects/de".
+test_oid_to_objects_dir () {
+	local basename=${1#??}
+	echo ".git/objects/${1%$basename}"
+}
+
 # Insert a slash into an object ID so it can be used to reference a location
 # under ".git/objects".  For example, "deadbeef..." becomes "de/adbeef..".
 test_oid_to_path () {
