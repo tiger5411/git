@@ -5,7 +5,7 @@ set -x
 ## Usage:
 #
 # ./make-install-avargit.sh --only-merge --no-merge-compile
-## We default ot these --merge-compile-targets, a --merge-compile will override them
+## We default to these --merge-compile-targets, a --merge-compile will override them
 # ./make-install-avargit.sh --only-merge --merge-compile-targets "sparse check-docs"
 # ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
 # ./make-install-avargit.sh --only-merge --merge-compile "make" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
