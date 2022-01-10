@@ -41,7 +41,7 @@ test_expect_success 'HEAD is part of refs, valid objects appear valid' '
 # it.
 
 sha1_file () {
-	git rev-parse --git-path objects/$(test_oid_to_path "$1")
+	test_oid_to_objects_path "$1"
 }
 
 remove_object () {
@@ -611,9 +611,8 @@ create_repo_missing () {
 		git commit -m two &&
 		unrelated=$(echo unrelated | git hash-object --stdin -w) &&
 		git tag -m foo tag $unrelated &&
-		sha1=$(git rev-parse --verify "$1") &&
-		path=$(echo $sha1 | sed 's|..|&/|') &&
-		rm .git/objects/$path
+		oid=$(git rev-parse --verify "$1") &&
+		test_rm_loose_oid "$oid"
 	)
 }
 
@@ -678,10 +677,9 @@ test_expect_success 'fsck --connectivity-only' '
 		test_must_fail git fsck --strict &&
 		git fsck --strict --connectivity-only &&
 		tree=$(git rev-parse HEAD:) &&
-		suffix=${tree#??} &&
-		tree=.git/objects/${tree%$suffix}/$suffix &&
-		rm -f $tree &&
-		echo invalid >$tree &&
+		tree_obj="$(test_oid_to_objects_path $tree)" &&
+		rm -f $tree_obj &&
+		echo invalid >$tree_obj &&
 		test_must_fail git fsck --strict --connectivity-only
 	)
 '
