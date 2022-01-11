@@ -39,7 +39,6 @@ writer_reftable_block_stats(struct reftable_writer *w, uint8_t typ)
 		return &w->stats.log_stats;
 	}
 	abort();
-	return NULL;
 }
 
 /* write data, queuing the padding for the next write. Returns negative for

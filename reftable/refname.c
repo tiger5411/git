@@ -132,7 +132,6 @@ static int validate_refname(const char *name)
 			return REFTABLE_REFNAME_ERROR;
 		name = next + 1;
 	}
-	return 0;
 }
 
 int validate_ref_record_addition(struct reftable_table tab,
