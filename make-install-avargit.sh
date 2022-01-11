@@ -4,7 +4,7 @@ set -x
 
 ## Usage:
 #
-# ./make-install-avargit.sh --only-merge --no-merge-compile
+# ./make-install-avargit.sh --only-merge --no-merge-compile --only-test
 ## We default to these --merge-compile-targets, a --merge-compile will override them
 # ./make-install-avargit.sh --only-merge --merge-compile-targets "sparse check-docs"
 # ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
