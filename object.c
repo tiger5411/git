@@ -185,6 +185,18 @@ int oid_is_type_or_error(const struct object_id *oid,
 		     type_name(want));
 }
 
+char* oid_is_type_or_die_msg(const struct object_id *oid,
+			     const enum object_type got,
+			     const enum object_type want)
+{
+	struct strbuf sb = STRBUF_INIT;
+	if (got == want)
+		BUG("call this just to get the message!");
+	strbuf_addf(&sb, _(object_type_mismatch_msg), oid_to_hex(oid),
+		    type_name(got), type_name(want));
+	return strbuf_detach(&sb, NULL);
+}
+
 void *object_as_type(struct object *obj, enum object_type type, int quiet)
 {
 	if (obj->type == type) {
