@@ -125,7 +125,7 @@ static int validate_refname(const char *name)
 			return REFTABLE_REFNAME_ERROR;
 		}
 		if (!next) {
-			return 0;
+			break;
 		}
 		if (next - name == 0 || (next - name == 1 && *name == '.') ||
 		    (next - name == 2 && name[0] == '.' && name[1] == '.'))

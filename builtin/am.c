@@ -1827,7 +1827,6 @@ static void am_run(struct am_state *state, int resume)
 			case DROP_EMPTY_COMMIT:
 				say(state, stdout, _("Skipping: %.*s"), linelen(state->msg), state->msg);
 				goto next;
-				break;
 			case KEEP_EMPTY_COMMIT:
 				to_keep = 1;
 				say(state, stdout, _("Creating an empty commit: %.*s"),
