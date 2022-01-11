@@ -145,6 +145,7 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 	const char *bufptr = data;
 	const char *tail = bufptr + size;
 	const char *nl;
+	size_t taglen;
 
 	if (item->object.parsed)
 		return 0;
@@ -168,10 +169,11 @@ int parse_tag_buffer(struct repository *r, struct tag *item, const void *data, u
 		return -1;
 	bufptr += 5;
 	nl = memchr(bufptr, '\n', tail - bufptr);
-	if (!nl || sizeof(type) <= (nl - bufptr))
+	taglen = nl - bufptr;
+	if (!nl || sizeof(type) <= taglen)
 		return -1;
-	memcpy(type, bufptr, nl - bufptr);
-	type[nl - bufptr] = '\0';
+	memcpy(type, bufptr, taglen);
+	type[taglen] = '\0';
 	bufptr = nl + 1;
 
 	if (!strcmp(type, blob_type)) {
