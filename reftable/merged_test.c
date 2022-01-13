@@ -206,12 +206,38 @@ static void test_merged(void)
 			.value.val1 = hash1,
 		},
 	};
-
+	/*
+	 * We don't use { r2[0], r3[0], ... } for compatibility with
+	 * older IBM xlc.
+	 */
 	struct reftable_ref_record want[] = {
-		r2[0],
-		r1[1],
-		r3[0],
-		r3[1],
+		/* Same as r2[0] */
+		{
+			.refname = "a",
+			.update_index = 2,
+			.value_type = REFTABLE_REF_DELETION,
+		},
+		/* Same as r1[1] */
+		{
+
+			.refname = "b",
+			.update_index = 1,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash1,
+		},
+		/* Same as r3[0..1] */
+		{
+			.refname = "c",
+			.update_index = 3,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash2,
+		},
+		{
+			.refname = "d",
+			.update_index = 3,
+			.value_type = REFTABLE_REF_VAL1,
+			.value.val1 = hash1,
+		},
 	};
 
 	struct reftable_ref_record *refs[] = { r1, r2, r3 };
@@ -345,10 +371,42 @@ static void test_merged_logs(void)
 			.value_type = REFTABLE_LOG_DELETION,
 		},
 	};
+	/*
+	 * We don't use { r2[0], r3[0], ... } for compatibility with
+	 * older IBM xlc.
+	 */
 	struct reftable_log_record want[] = {
-		r2[0],
-		r3[0],
-		r1[1],
+		/* Same as r2[0] */
+		{
+			.refname = "a",
+			.update_index = 3,
+			.value_type = REFTABLE_LOG_UPDATE,
+			.value.update = {
+				.new_hash = hash3,
+				.name = "jane doe",
+				.email = "jane@invalid",
+				.message = "message3",
+			}
+		},
+		/* Same as r3[0] */
+		{
+			.refname = "a",
+			.update_index = 2,
+			.value_type = REFTABLE_LOG_DELETION,
+		},
+		/* Same as r1[1] */
+		{
+			.refname = "a",
+			.update_index = 1,
+			.value_type = REFTABLE_LOG_UPDATE,
+			.value.update = {
+				.old_hash = hash1,
+				.new_hash = hash2,
+				.name = "jane doe",
+				.email = "jane@invalid",
+				.message = "message1",
+			}
+		},
 	};
 
 	struct reftable_log_record *logs[] = { r1, r2, r3 };
