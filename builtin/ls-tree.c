@@ -35,6 +35,14 @@ static unsigned int shown_fields;
 #define FIELD_DEFAULT 29 /* 11101 size is not shown to output by default */
 #define FIELD_LONG_DEFAULT  (FIELD_DEFAULT | FIELD_SIZE)
 
+struct expand_ls_tree_data {
+	unsigned mode;
+	enum object_type type;
+	const struct object_id *oid;
+	const char *pathname;
+	struct strbuf *base;
+};
+
 static const  char * const ls_tree_usage[] = {
 	N_("git ls-tree [<options>] <tree-ish> [<path>...]"),
 	NULL
@@ -48,6 +56,12 @@ enum {
 };
 
 static int cmdmode = MODE_UNSPECIFIED;
+
+static const char *format;
+static const char *ls_tree_format_d = "%(mode) %(type) %(object)%x09%(file)";
+static const char *ls_tree_format_l = "%(mode) %(type) %(object) %(size:padded)%x09%(file)";
+static const char *ls_tree_format_n = "%(file)";
+static const char *ls_tree_format_o = "%(object)";
 
 static int parse_shown_fields(void)
 {
@@ -66,6 +80,72 @@ static int parse_shown_fields(void)
 	if (cmdmode == MODE_LONG)
 		shown_fields = FIELD_LONG_DEFAULT;
 	return 1;
+}
+
+static void expand_objectsize(struct strbuf *sb, const struct object_id *oid,
+			      const enum object_type type, unsigned int padded)
+{
+	if (type == OBJ_BLOB) {
+		unsigned long size;
+		if (oid_object_info(the_repository, oid, &size) < 0)
+			die(_("could not get object info about '%s'"),
+			    oid_to_hex(oid));
+		if (padded)
+			strbuf_addf(sb, "%7"PRIuMAX, (uintmax_t)size);
+		else
+			strbuf_addf(sb, "%"PRIuMAX, (uintmax_t)size);
+	} else if (padded) {
+		strbuf_addf(sb, "%7s", "-");
+	} else {
+		strbuf_addstr(sb, "-");
+	}
+}
+
+static size_t expand_show_tree(struct strbuf *sb, const char *start,
+			       void *context)
+{
+	struct expand_ls_tree_data *data = context;
+	const char *end;
+	const char *p;
+	unsigned int errlen;
+	size_t len = strbuf_expand_literal_cb(sb, start, NULL);
+
+	if (len)
+		return len;
+	if (*start != '(')
+		die(_("bad ls-tree format: as '%s'"), start);
+
+	end = strchr(start + 1, ')');
+	if (!end)
+		die(_("bad ls-tree format: element '%s' does not end in ')'"), start);
+
+	len = end - start + 1;
+	if (skip_prefix(start, "(mode)", &p)) {
+		strbuf_addf(sb, "%06o", data->mode);
+	} else if (skip_prefix(start, "(type)", &p)) {
+		strbuf_addstr(sb, type_name(data->type));
+	} else if (skip_prefix(start, "(size:padded)", &p)) {
+		expand_objectsize(sb, data->oid, data->type, 1);
+	} else if (skip_prefix(start, "(size)", &p)) {
+		expand_objectsize(sb, data->oid, data->type, 0);
+	} else if (skip_prefix(start, "(object)", &p)) {
+		strbuf_add_unique_abbrev(sb, data->oid, abbrev);
+	} else if (skip_prefix(start, "(file)", &p)) {
+		const char *name = data->base->buf;
+		const char *prefix = chomp_prefix ? ls_tree_prefix : NULL;
+		struct strbuf quoted = STRBUF_INIT;
+		struct strbuf s = STRBUF_INIT;
+		strbuf_addstr(data->base, data->pathname);
+		name = relative_path(data->base->buf, prefix, &s);
+		quote_c_style(name, &quoted, NULL, 0);
+		strbuf_addbuf(&s, &quoted);
+		strbuf_release(&s);
+		strbuf_release(&quoted);
+	} else {
+		errlen = (unsigned long)len;
+		die(_("bad ls-tree format: %%%.*s"), errlen, start);
+	}
+	return len;
 }
 
 static int show_recursive(const char *base, size_t baselen,
@@ -99,17 +179,47 @@ static int show_recursive(const char *base, size_t baselen,
 	return 0;
 }
 
-static int show_default(const struct object_id *oid, enum object_type type,
-			const char *pathname, unsigned mode,
-			struct strbuf *base)
+static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
+			 const char *pathname, unsigned mode, void *context)
 {
-	size_t baselen = base->len;
+	size_t baselen;
+	int recurse = 0;
+	struct strbuf line = STRBUF_INIT;
+	enum object_type type = object_type(mode);
+
+	struct expand_ls_tree_data data = {
+		.mode = mode,
+		.type = type,
+		.oid = oid,
+		.pathname = pathname,
+		.base = base,
+	};
+
+	if (type == OBJ_TREE && show_recursive(base->buf, base->len, pathname))
+		recurse = READ_TREE_RECURSIVE;
+	if (type == OBJ_TREE && recurse && !(ls_options & LS_SHOW_TREES))
+		return recurse;
+	if (type == OBJ_BLOB && (ls_options & LS_TREE_ONLY))
+		return 0;
+
+	baselen = base->len;
+	strbuf_expand(&line, format, expand_show_tree, &data);
+	strbuf_addch(&line, line_termination);
+	fwrite(line.buf, line.len, 1, stdout);
+	strbuf_release(&line);
+	strbuf_setlen(base, baselen);
+	return recurse;
+}
+
+static int show_default(struct expand_ls_tree_data *data)
+{
+	size_t baselen = data->base->len;
 
 	if (shown_fields & FIELD_SIZE) {
 		char size_text[24];
-		if (type == OBJ_BLOB) {
+		if (data->type == OBJ_BLOB) {
 			unsigned long size;
-			if (oid_object_info(the_repository, oid, &size) == OBJ_BAD)
+			if (oid_object_info(the_repository, data->oid, &size) == OBJ_BAD)
 				xsnprintf(size_text, sizeof(size_text), "BAD");
 			else
 				xsnprintf(size_text, sizeof(size_text),
@@ -117,18 +227,18 @@ static int show_default(const struct object_id *oid, enum object_type type,
 		} else {
 			xsnprintf(size_text, sizeof(size_text), "-");
 		}
-		printf("%06o %s %s %7s\t", mode, type_name(type),
-		find_unique_abbrev(oid, abbrev), size_text);
+		printf("%06o %s %s %7s\t", data->mode, type_name(data->type),
+		find_unique_abbrev(data->oid, abbrev), size_text);
 	} else {
-		printf("%06o %s %s\t", mode, type_name(type),
-		find_unique_abbrev(oid, abbrev));
+		printf("%06o %s %s\t", data->mode, type_name(data->type),
+		find_unique_abbrev(data->oid, abbrev));
 	}
-	baselen = base->len;
-	strbuf_addstr(base, pathname);
-	write_name_quoted_relative(base->buf,
+	baselen = data->base->len;
+	strbuf_addstr(data->base, data->pathname);
+	write_name_quoted_relative(data->base->buf,
 				   chomp_prefix ? ls_tree_prefix : NULL, stdout,
 				   line_termination);
-	strbuf_setlen(base, baselen);
+	strbuf_setlen(data->base, baselen);
 	return 1;
 }
 
@@ -138,6 +248,14 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 	int recurse = 0;
 	size_t baselen;
 	enum object_type type = object_type(mode);
+
+	struct expand_ls_tree_data data = {
+		.mode = mode,
+		.type = type,
+		.oid = oid,
+		.pathname = pathname,
+		.base = base,
+	};
 
 	if (type == OBJ_TREE && show_recursive(base->buf, base->len, pathname))
 		recurse = READ_TREE_RECURSIVE;
@@ -162,7 +280,7 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 	}
 
 	if (shown_fields >= FIELD_DEFAULT)
-		show_default(oid, type, pathname, mode, base);
+		show_default(&data);
 
 	return recurse;
 }
@@ -172,6 +290,7 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	struct object_id oid;
 	struct tree *tree;
 	int i, full_tree = 0;
+	read_tree_fn_t fn = show_tree;
 	const struct option ls_tree_options[] = {
 		OPT_BIT('d', NULL, &ls_options, N_("only show trees"),
 			LS_TREE_ONLY),
@@ -194,6 +313,9 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		OPT_BOOL(0, "full-tree", &full_tree,
 			 N_("list entire tree; not just current directory "
 			    "(implies --full-name)")),
+		OPT_STRING_F(0, "format", &format, N_("format"),
+			     N_("format to use for the output"),
+			     PARSE_OPT_NONEG),
 		OPT__ABBREV(&abbrev),
 		OPT_END()
 	};
@@ -214,6 +336,10 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	    ((LS_TREE_ONLY|LS_RECURSIVE) & ls_options))
 		ls_options |= LS_SHOW_TREES;
 
+	if (format && cmdmode)
+		usage_msg_opt(
+			_("--format can't be combined with other format-altering options"),
+			ls_tree_usage, ls_tree_options);
 	if (argc < 1)
 		usage_with_options(ls_tree_usage, ls_tree_options);
 	if (get_oid(argv[0], &oid))
@@ -237,6 +363,19 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	tree = parse_tree_indirect(&oid);
 	if (!tree)
 		die("not a tree object");
-	return !!read_tree(the_repository, tree,
-			   &pathspec, show_tree, NULL);
+
+	/*
+	 * The generic show_tree_fmt() is slower than show_tree(), so
+	 * take the fast path if possible.
+	 */
+	if (format &&
+	    (!strcmp(format, ls_tree_format_d) ||
+	     !strcmp(format, ls_tree_format_l) ||
+	     !strcmp(format, ls_tree_format_n) ||
+	     !strcmp(format, ls_tree_format_o)))
+		fn = show_tree;
+	else if (format)
+		fn = show_tree_fmt;
+
+	return !!read_tree(the_repository, tree, &pathspec, fn, NULL);
 }
