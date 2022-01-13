@@ -16,6 +16,7 @@
 #include "packfile.h"
 #include "object-store.h"
 #include "promisor-remote.h"
+#include "strvec.h"
 
 struct batch_options {
 	int enabled;
@@ -517,25 +518,23 @@ enum batch_state {
 };
 
 static void parse_cmd_object(struct batch_options *opt,
-			     const int argc, struct string_list_item *argv,
+			     const int argc, const char **argv,
 			     struct strbuf *output,
 			     struct expand_data *data)
 {
-	batch_one_object(argv[0].string, output, opt, data);
+	batch_one_object(argv[0], output, opt, data);
 }
 
 static void parse_cmd_fflush(struct batch_options *opt,
-			     const int argc, struct string_list_item *argv,
+			     const int argc, const char **argv,
 			     struct strbuf *output,
 			     struct expand_data *data)
 {
-	if (argc > 0)
-		die("fflush: extra input: %s", argv[0].string);
 	fflush(stdout);
 }
 
 typedef void (*parse_cmd_fn_t)(struct batch_options *, const int,
-			       struct string_list_item *, struct strbuf *,
+			       const char **, struct strbuf *,
 			       struct expand_data *);
 
 static const struct parse_cmd {
@@ -559,6 +558,9 @@ static void batch_objects_stdin_cmd(struct batch_options *opt,
 	while (!strbuf_getwholeline(&input, stdin, line_termination)) {
 		size_t i;
 		const struct parse_cmd *cmd = NULL;
+		struct strvec args = STRVEC_INIT;
+		size_t n;
+		const char *p;
 
 		if (*input.buf == line_termination)
 			die("empty command in input");
@@ -592,29 +594,30 @@ static void batch_objects_stdin_cmd(struct batch_options *opt,
 		 * case there is an early EOF to let the command
 		 * handle missing arguments with a proper error message.
 		 */
-		if (input.buf[input.len - 1] == '\n')
-			input.buf[input.len - 1] = '\0';
+		p = input.buf + strlen(cmd->prefix) + 1;
+		if (*p == line_termination || !*p) {
+			n = 0;
+		} else {
+			const char *pos = strstr(p, "\n");
+			char *str = xstrndup(p, pos - p);
 
-		struct string_list l = STRING_LIST_INIT_DUP;
-		string_list_split(&l, input.buf+strlen(cmd->prefix)+1,
-				line_termination, 
-				cmd->args);
-
-		int found_args = l.nr;
-		if (l.nr == 1 && !strcmp(l.items[0].string, ""))
-				found_args = 0;
+			n = strvec_split_delim(&args, str, ' ', - 1);
+			free(str);
+		}
+		for (i = 0; i < args.nr; i++)
+			fprintf(stderr, "%lu: <%s>\n", i, args.v[i]);
+		if (n < cmd->args)
+			die("%s: too few arguments", cmd->prefix);
+		if (n > cmd->args)
+			die("%s: too many arguments", cmd->prefix);
 		
-		if (found_args < cmd->args)
-			die("too few arguments for %s", cmd->prefix);
-
 		switch (state) {
 		case BATCH_STATE_OPEN:
 			/* TODO: command state management */
 			break;
 		}
-
-		cmd->fn(opt, found_args, l.items, output, data);
-		string_list_clear(&l, 0);
+		cmd->fn(opt, args.nr, args.v, output, data);
+		strvec_clear(&args);
 	}
 
 	strbuf_release(&input);

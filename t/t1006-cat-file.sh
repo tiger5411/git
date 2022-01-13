@@ -969,7 +969,13 @@ F='%s\0'
 test_expect_success 'stdin-cmd not enough arguments' '
 	echo "object " >cmd &&
 	test_expect_code 128 git cat-file --batch --stdin-cmd < cmd 2>err &&
-	grep -E "^fatal:.*too few arguments for object" err
+	grep -E "^fatal:.*too few arguments" err
+'
+
+test_expect_success 'stdin-cmd too many arguments' '
+	echo "object foo bar" >cmd &&
+	test_expect_code 128 git cat-file --batch --stdin-cmd < cmd 2>err &&
+	grep -E "^fatal:.*too many arguments" err
 '
 
 test_expect_success 'stdin-cmd unknown command' '
