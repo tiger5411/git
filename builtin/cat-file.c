@@ -534,13 +534,13 @@ static void parse_cmd_fflush(struct batch_options *opt,
 	fflush(stdout);
 }
 
+typedef void (*parse_cmd_fn_t)(struct batch_options *, const int,
+			       struct string_list_item *, struct strbuf *,
+			       struct expand_data *);
+
 static const struct parse_cmd {
 	const char *prefix;
-	void (*fn)(struct batch_options *,
-		const int argc,
-		struct string_list_item *argv,
-		struct strbuf *,
-		struct expand_data *);
+	parse_cmd_fn_t fn;
 	unsigned args;
 	enum batch_state state;
 } command[] = {
