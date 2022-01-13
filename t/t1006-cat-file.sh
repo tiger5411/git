@@ -966,8 +966,8 @@ test_expect_success 'cat-file --batch-all-objects --batch-check ignores replace'
 
 F='%s\0'
 
-test_expect_sucess 'stdin-cmd not enough arguments' '
-	echo 'object ' >cmd &&
+test_expect_success 'stdin-cmd not enough arguments' '
+	echo "object " >cmd &&
 	test_expect_code 128 git cat-file --batch --stdin-cmd < cmd 2>err &&
 	grep -E "^fatal:.*too few arguments for object" err
 '
