@@ -257,7 +257,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		OPT_BOOL(0, "stale-fix", &cmd.stalefix,
 			 N_("prune any reflog entries that point to broken commits")),
 		OPT_BOOL(0, "all", &do_all, N_("process the reflogs of all references")),
-		OPT_BOOL(1, "single-worktree", &all_worktrees,
+		OPT_BOOL(0, "single-worktree", &all_worktrees,
 			 N_("limits processing to reflogs from the current worktree only")),
 		OPT_END()
 	};
