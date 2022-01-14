@@ -488,6 +488,8 @@ static void parse_options_check(const struct option *opts)
 		if (opts->short_name) {
 			if (0x7F <= opts->short_name)
 				err |= optbug(opts, "invalid short name");
+			else if (iscntrl(opts->short_name))
+				err |= optbug(opts, "invalid short name");
 			else if (short_opts[opts->short_name]++)
 				err |= optbug(opts, "short name already used");
 		}
