@@ -2,6 +2,10 @@
 #include "strbuf.h"
 #include "utf8.h"
 
+#ifndef   SIZE_MAX
+#  define SIZE_MAX	((size_t)-1)
+#  endif
+
 /* This code is originally from http://www.cl.cam.ac.uk/~mgk25/ucs/ */
 
 static const char utf16_be_bom[] = {'\xFE', '\xFF'};

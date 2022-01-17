@@ -33,6 +33,10 @@ struct object_id;
 #define CONFIG_INVALID_PATTERN 6
 #define CONFIG_GENERIC_ERROR 7
 
+#ifndef   SIZE_MAX
+#  define SIZE_MAX	((size_t)-1)
+#  endif
+
 #define CONFIG_REGEX_NONE ((void *)1)
 
 enum config_scope {

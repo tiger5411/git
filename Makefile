@@ -514,7 +514,7 @@ GIT-VERSION-FILE: FORCE
 #   perllibdir
 # This can help installing the suite in a relocatable way.
 
-prefix = $(HOME)
+prefix = /usr
 bindir = $(prefix)/bin
 mandir = $(prefix)/share/man
 infodir = $(prefix)/share/info
@@ -800,7 +800,7 @@ ifndef SHELL_PATH
 	SHELL_PATH = /bin/sh
 endif
 ifndef PERL_PATH
-	PERL_PATH = /usr/bin/perl
+	PERL_PATH = /pro/bin/perl
 endif
 ifndef PYTHON_PATH
 	PYTHON_PATH = /usr/bin/python
