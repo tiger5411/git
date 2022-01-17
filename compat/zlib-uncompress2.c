@@ -8,15 +8,12 @@
 
 */
 
-#include "../reftable/system.h"
-#define z_const
-
 /*
  * Copyright (C) 1995-2003, 2010, 2014, 2016 Jean-loup Gailly, Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-#include <zlib.h>
+/* No "#include <zlib.h>", done in cache.h */
 
 /* clang-format off */
 

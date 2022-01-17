@@ -29,6 +29,11 @@ typedef struct git_zstream {
 	unsigned char *next_out;
 } git_zstream;
 
+#if defined(NO_UNCOMPRESS2) || ZLIB_VERNUM < 0x1290
+#define GIT_NO_UNCOMPRESS2 1
+int uncompress2(Bytef *dest, uLongf *destLen, const Bytef *source,
+		uLong *sourceLen);
+#endif
 void git_inflate_init(git_zstream *);
 void git_inflate_init_gzip_only(git_zstream *);
 void git_inflate_end(git_zstream *);
