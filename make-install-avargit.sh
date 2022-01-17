@@ -429,6 +429,15 @@ do
 		;;
 	esac
 
+	# I once had a user.name=--type=bool in .git/config due to a typo
+	if test -n "$(git -P log --no-decorate --oneline --author=--type=bool $upstream..$branch)" ||
+	   test -n "$(git -P log --no-decorate --oneline --committer=--type=bool $upstream..$branch)"
+	then
+		echo "Have bad author or committer headers in $branch:"
+		git -P log --oneline $upstream..$branch
+		exit 1
+	fi
+
 	# --check sanity
 	if ! git -P log --no-decorate --oneline --check $upstream..$branch >/dev/null
 	then
