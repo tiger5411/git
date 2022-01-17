@@ -8,7 +8,6 @@
 
 */
 
-#include "../reftable/system.h"
 #define z_const
 
 /*

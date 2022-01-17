@@ -3,6 +3,9 @@
  * at init time.
  */
 #include "cache.h"
+#ifdef GIT_NO_UNCOMPRESS2
+#include "compat/zlib-uncompress2.c"
+#endif
 
 static const char *zerr_to_string(int status)
 {

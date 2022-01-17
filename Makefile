@@ -257,6 +257,8 @@ all::
 # Define NO_DEFLATE_BOUND if your zlib does not have deflateBound.
 #
 # Define NO_UNCOMPRESS2 if your zlib does not have uncompress2.
+# You should not need to define this, it will be auto-detected using
+# the ZLIB_VERNUM macro.
 #
 # Define NO_NORETURN if using buggy versions of gcc 4.6+ and profile feedback,
 # as the compiler can crash (http://gcc.gnu.org/bugzilla/show_bug.cgi?id=49299)
@@ -1728,7 +1730,6 @@ endif
 
 ifdef NO_UNCOMPRESS2
 	BASIC_CFLAGS += -DNO_UNCOMPRESS2
-	REFTABLE_OBJS += compat/zlib-uncompress2.o
 endif
 
 ifdef NO_POSIX_GOODIES

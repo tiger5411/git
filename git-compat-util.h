@@ -1386,6 +1386,13 @@ void unleak_memory(const void *ptr, size_t len);
 #define UNLEAK(var) do {} while (0)
 #endif
 
+#if defined(NO_UNCOMPRESS2) || ZLIB_VERNUM < 0x1290
+#include <zlib.h>
+#define GIT_NO_UNCOMPRESS2 1
+int uncompress2(Bytef *dest, uLongf *destLen, const Bytef *source,
+		uLong *sourceLen);
+#endif
+
 /*
  * This include must come after system headers, since it introduces macros that
  * replace system names.
