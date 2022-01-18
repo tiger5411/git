@@ -221,7 +221,7 @@ proc do_push_anywhere {} {
 	set push_url {}
 	set push_force 0
 	set push_thin 0
-	set push_tags 1
+	set push_tags 0
 
 	bind $w <Visibility> "grab $w; focus $w.buttons.create"
 	bind $w <Key-Escape> "destroy $w"
