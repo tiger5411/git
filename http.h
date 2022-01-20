@@ -24,7 +24,6 @@ struct active_request_slot {
 	int in_use;
 	CURLcode curl_result;
 	long http_code;
-	int *finished;
 	struct slot_results *results;
 	void *callback_data;
 	void (*callback_func)(void *data);
