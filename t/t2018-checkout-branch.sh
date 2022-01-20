@@ -85,6 +85,39 @@ test_expect_success 'setup' '
 	git branch -m branch1
 '
 
+test_expect_success REFFILES 'checkout a branch without refs/heads/* prefix' '
+	git clone --no-tags . repo-odd-prefix &&
+	(
+		cd repo-odd-prefix &&
+
+		cp .git/refs/remotes/origin/HEAD .git/refs/heads/a-branch &&
+
+		echo branch1 >expect.ref &&
+		git rev-parse --abbrev-ref HEAD >actual.ref &&
+		test_cmp expect.ref actual.ref &&
+
+		git checkout -f a-branch &&
+
+		echo origin/branch1 >expect.ref &&
+		git rev-parse --abbrev-ref HEAD >actual.ref &&
+		test_cmp expect.ref actual.ref &&
+
+		git checkout -f a-branch &&
+
+		cat >expect <<-EOF &&
+		$(git rev-parse HEAD) commit	refs/heads/a-branch
+		$(git rev-parse HEAD) commit	refs/heads/branch1
+		$(git rev-parse HEAD) commit	refs/remotes/origin/HEAD
+		$(git rev-parse HEAD) commit	refs/remotes/origin/branch1
+		EOF
+		git for-each-ref >actual &&
+		test_cmp expect actual &&
+
+		git rev-parse --abbrev-ref HEAD >actual &&
+		test_cmp expect.ref actual.ref
+	)
+'
+
 test_expect_success 'checkout -b to a new branch, set to HEAD' '
 	test_when_finished "
 		git checkout branch1 &&
