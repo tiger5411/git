@@ -57,7 +57,7 @@ int cmd__tee_tap(int argc, const char **argv)
 		prefix_len = strlen(prefix);
 	if (argc)
 		logfp = xfopen(argv[0], "w");
-	if (comment_level < 0)
+	if (out_only_tap && comment_level < 0)
 		comment_level = 1;
 
 	if (argc > 1 ||
@@ -65,6 +65,8 @@ int cmd__tee_tap(int argc, const char **argv)
 	    !prefix ||
 	    /* Escape output we guarantee not to emit? */
 	    (out_only_tap && out_escape) ||
+	    /* We only allow --out-comment-level under --out-only-tap */
+	    (!out_only_tap && comment_level >= 0) ||
 	    /* Or something not asked for? */
 	    (!logfp && file_escape) ||
 	    /* That's just crazy */
@@ -108,7 +110,7 @@ int cmd__tee_tap(int argc, const char **argv)
 			continue;
 		}
 
-		if (*buf == '#') {
+		if (out_only_tap && *buf == '#') {
 			size_t pos;
 			if (!comment_level)
 				continue;
