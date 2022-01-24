@@ -4,28 +4,28 @@ use strict;
 use warnings;
 use base 'TAP::Formatter::Console::ParallelSession';
 
-our %TEST;
+our %STATE;
 
 sub result {
 	my $self = shift;
 	my $result = shift;
 
 	my $res = $self->SUPER::result($result);
-
 	my $test_name = $self->name;
-	use Data::Dumper;
 
-	my $formatter = $self->formatter;
-	my $state = ($formatter->{_git_state} ||= {});
-	$state->{$test_name}->{n} ||= 0;
-	my $n = $state->{$test_name}->{n};
+	# An AoO of test numbers and their output lines
+	$STATE{$test_name} ||= [[]];
+
+	push @{$STATE{$test_name}->[-1]} => $result->raw;
+
+	# When we see a new test add a new AoA for its output. We do
+	# end up with the "plan" type as part of the last test, and
+	# might want to split it up
 	if ($result->type eq 'test') {
-		$state->{$test_name}->{n} = $result->{test_num};
+		push @{$STATE{$test_name}} => [];
 	}
-
-	push @{$state->{$test_name}->{_out}->[$n]} => $result->raw;
-
-	warn Dumper [$self, $res, $result];
+	use Data::Dumper;
+	warn Dumper $result;
 
 	return $res;
 }
@@ -48,7 +48,7 @@ sub summary {
 	my $self = shift;
 	$self->SUPER::summary(@_);
 	use Data::Dumper;
-	die Dumper \@_;
+	die Dumper [\%STATE, \@_];
 }
 
 1;
