@@ -67,7 +67,8 @@ sub summary {
 			# let's make it easily machine-readable, and
 			# parse the rest.
 			$STATE{$test}->[$i]->{source} = \@source;
-			$STATE{$test}->[$i]->{trace} =  [ grep /^\+ /, @lines ];
+			my @trace = grep /^\+ /, @lines;
+			$STATE{$test}->[$i]->{trace} =  \@trace if @trace;
 		}
 	}
 	use Data::Dumper;
