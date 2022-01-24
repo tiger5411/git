@@ -830,6 +830,7 @@ test_ok_ () {
 		write_junit_xml_testcase "$*"
 	fi
 	test_success=$(($test_success + 1))
+
 	say_color_tap "${verbose:+bpass}" "ok $test_count - $1"
 	shift
 	say_color_tap_comment_lines >&3 3 pass "$*"

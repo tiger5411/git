@@ -5,7 +5,9 @@ use warnings;
 use base 'TAP::Formatter::Console::ParallelSession';
 
 our %STATE;
-
+## TODO: This state machine needs to go past the "ok" line and grab
+## the comments emitted by e.g. "say_color_tap_comment_lines" in
+## test_ok_()
 sub result {
 	my $self = shift;
 	my $result = shift;
@@ -16,7 +18,7 @@ sub result {
 	# An AoO of test numbers and their output lines
 	$STATE{$test_name} ||= [[]];
 
-	push @{$STATE{$test_name}->[-1]} => $result->raw;
+	push @{$STATE{$test_name}->[-1]} => $result;
 
 	# When we see a new test add a new AoA for its output. We do
 	# end up with the "plan" type as part of the last test, and
@@ -24,8 +26,6 @@ sub result {
 	if ($result->type eq 'test') {
 		push @{$STATE{$test_name}} => [];
 	}
-	use Data::Dumper;
-	warn Dumper $result;
 
 	return $res;
 }
