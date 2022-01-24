@@ -56,7 +56,7 @@ sub summary {
 			my @source = splice @lines, 0, $break;
 
 			splice @lines, 0, 1; # Splice out the '' item
-			push @{$STATE{$test}->[$i - 1]->{lines}} => ('', @source);
+			push @{$STATE{$test}->[$i - 1]->{lines}} => @source;
 
 			$STATE{$test}->[$i]->{lines} = \@lines;
 
@@ -68,8 +68,17 @@ sub summary {
 			$STATE{$test}->[$i]->{trace} =  \@trace if @trace;
 		}
 	}
-	use Data::Dumper;
-	die Dumper [\%STATE, \@_];
+
+	my $aggregator = $_[0];
+	for my $failed ($aggregator->failed) {
+		my ($parser) = $aggregator->parsers($failed);
+		for my $i ($parser->failed) {
+			my $idx = $i - 1;
+			my @lines = @{$STATE{$failed}->[$idx]->{lines}};
+			say "Fail whale in $failed#$i:";
+			say join "\n", map { s/^/ ==> /gr }  @lines;
+		}
+	}
 }
 
 1;
