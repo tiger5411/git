@@ -52,14 +52,11 @@ sub summary {
 	for my $test (sort keys %STATE) {
 		for (my $i = 1; $i <= $#{$STATE{$test}}; $i++) {
 			my @lines = @{$STATE{$test}->[$i]->{lines}};
-			use Data::Dumper;
-			warn Dumper \@lines;
 			my $break = firstidx { $_ eq '' } @lines;
 			my @source = splice @lines, 0, $break;
+
 			splice @lines, 0, 1; # Splice out the '' item
-			warn Dumper \@source;
 			push @{$STATE{$test}->[$i - 1]->{lines}} => ('', @source);
-			use Data::Dumper;
 
 			$STATE{$test}->[$i]->{lines} = \@lines;
 
