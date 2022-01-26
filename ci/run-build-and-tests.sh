@@ -30,7 +30,6 @@ linux-TEST-vars)
 	export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=master
 	export GIT_TEST_WRITE_REV_INDEX=1
 	export GIT_TEST_CHECKOUT_WORKERS=2
-	export GIT_TEST_LS_TREE_FORMAT_BACKEND=true
 	;;
 linux-clang)
 	export GIT_TEST_DEFAULT_HASH=sha1
