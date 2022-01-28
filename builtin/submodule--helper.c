@@ -34,9 +34,8 @@ static char *repo_get_default_remote(struct repository *repo)
 	char *dest = NULL, *ret;
 	struct strbuf sb = STRBUF_INIT;
 	struct ref_store *store = get_main_ref_store(repo);
-	int ignore_errno;
 	const char *refname = refs_resolve_ref_unsafe(store, "HEAD", 0, NULL,
-						      NULL, &ignore_errno);
+						      NULL);
 
 	if (!refname)
 		die(_("No such ref: %s"), "HEAD");
