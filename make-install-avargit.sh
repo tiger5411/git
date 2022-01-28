@@ -4,7 +4,11 @@ set -x
 
 ## Usage:
 #
-# ./make-install-avargit.sh --only-merge --no-merge-compile --only-test
+## Are our branches etc. sane?
+# ./make-install-avargit.sh --only-check
+## Check if everything compiles when merged
+# ./make-install-avargit.sh --merge-compile 'make git-objs' --no-merge-compile-test --no-check --no-range-diff --no-install 
+# ./make-install-avargit.sh --only-merge --no-merge-compile --no-install
 ## We default to these --merge-compile-targets, a --merge-compile will override them
 # ./make-install-avargit.sh --only-merge --merge-compile-targets "sparse check-docs"
 # ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
@@ -33,7 +37,8 @@ merge_compile_targets=
 merge_compile=
 merge_compile_extra_tests=
 merge_compile_test=
-only_test=
+no_merge_compile_test=
+no_install=
 force_push=
 auto_rebase=
 verbose=
@@ -86,8 +91,11 @@ do
 	--no-merge-compile)
 		no_merge_compile=yes
 		;;
-	--only-test)
-		only_test=yes
+	--no-merge-compile-test)
+		no_merge_compile_test=yes
+		;;
+	--no-install)
+		no_install=yes
 		;;
 	--force-push)
 		force_push=yes
@@ -182,14 +190,17 @@ tests_modified_since () {
 test_compile () {
 	full=$1
 
-	if test -n "$merge_compile_test"
-	then
-		sh -c "$merge_compile_test"
-	fi
-
 	if test -n "$merge_compile"
 	then
 		sh -c "$merge_compile"
+	fi
+
+	if test -n "$no_merge_compile_test"
+	then
+		true
+	elif test -n "$merge_compile_test"
+	then
+		sh -c "$merge_compile_test"
 	else
 		T="${merge_compile_extra_tests:+$merge_compile_extra_tests }$(tests_modified_since HEAD^1)"
 		if test -n "$T"
@@ -613,7 +624,7 @@ then
 fi
 
 # Abort before installation?
-test -n "$only_test" && exit
+test -n "$no_install" && exit
 
 # Install it
 new_version=$(git rev-parse HEAD)
