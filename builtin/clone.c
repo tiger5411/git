@@ -77,6 +77,7 @@ static int option_filter_submodules = -1;    /* unspecified */
 static int config_filter_submodules = -1;    /* unspecified */
 static struct string_list server_options = STRING_LIST_INIT_NODUP;
 static int option_remote_submodules;
+static const char *bundle_uri;
 
 static int recurse_submodules_cb(const struct option *opt,
 				 const char *arg, int unset)
@@ -160,6 +161,8 @@ static struct option builtin_clone_options[] = {
 		    N_("any cloned submodules will use their remote-tracking branch")),
 	OPT_BOOL(0, "sparse", &option_sparse_checkout,
 		    N_("initialize sparse-checkout file to include only files at root")),
+	OPT_STRING(0, "bundle-uri", &bundle_uri,
+		   N_("uri"), N_("A URI for downloading bundles before fetching from origin remote")),
 	OPT_END()
 };
 
@@ -1231,6 +1234,35 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 			    "refs/tags/");
 
 	refs = transport_get_remote_refs(transport, &transport_ls_refs_options);
+
+	/*
+	 * NOTE: The bundle URI download takes place after transport_get_remote_refs()
+	 * because a later change will introduce a check for recommended features,
+	 * which might include a recommended bundle URI.
+	 */
+
+	/*
+	 * Before fetching from the remote, download and install bundle
+	 * data from the --bundle-uri option.
+	 */
+	if (bundle_uri) {
+		const char *filter = NULL;
+
+		if (filter_options.filter_spec.nr)
+			filter = expand_list_objects_filter_spec(&filter_options);
+		/*
+		 * Set the config for fetching from this bundle URI in the
+		 * future, but do it before fetch_bundle_uri() which might
+		 * un-set it (for instance, if there is no table of contents).
+		 */
+		git_config_set("fetch.bundleuri", bundle_uri);
+		if (filter)
+			git_config_set("fetch.bundlefilter", filter);
+
+		if (!fetch_bundle_uri(bundle_uri, filter))
+			warning(_("failed to fetch objects from bundle URI '%s'"),
+				bundle_uri);
+	}
 
 	if (refs)
 		mapped_refs = wanted_peer_refs(refs, &remote->fetch);
