@@ -6,9 +6,11 @@ set -x
 #
 ## Are our branches etc. sane?
 # ./make-install-avargit.sh --only-check
+## Check if everything merges without conflicts
+# ./make-install-avargit.sh --only-merge --no-merge-compile --no-install
+
 ## Check if everything compiles when merged
 # ./make-install-avargit.sh --merge-compile 'make git-objs' --no-merge-compile-test --no-check --no-range-diff --no-install 
-# ./make-install-avargit.sh --only-merge --no-merge-compile --no-install
 ## We default to these --merge-compile-targets, a --merge-compile will override them
 # ./make-install-avargit.sh --only-merge --merge-compile-targets "sparse check-docs"
 # ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
