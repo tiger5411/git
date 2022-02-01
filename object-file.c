@@ -1886,7 +1886,14 @@ void hash_object_file(const struct git_hash_algo *algo, const void *buf,
 	hash_object_file_literally(algo, buf, len, type_name(type), oid);
 }
 
-/* Finalize a file on disk, and close it. */
+/*
+ * We already did a write_buffer() to the "fd", let's fsync()
+ * and close().
+ *
+ * Finalize a file on disk, and close it. We might still die() on a
+ * subsequent sanity check, but let's not add to that confusion by not
+ * flushing any outstanding writes to disk first.
+ */
 static void close_loose_object(int fd)
 {
 	if (the_repository->objects->odb->will_destroy)
@@ -2006,11 +2013,11 @@ static int write_loose_object(const struct object_id *oid, char *hdr,
 		die(_("deflateEnd on object %s failed (%d)"), oid_to_hex(oid),
 		    ret);
 	the_hash_algo->final_oid_fn(&parano_oid, &c);
+	close_loose_object(fd);
+
 	if (!oideq(oid, &parano_oid))
 		die(_("confused by unstable object source data for %s"),
 		    oid_to_hex(oid));
-
-	close_loose_object(fd);
 
 	if (mtime) {
 		struct utimbuf utb;
