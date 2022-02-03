@@ -6377,27 +6377,31 @@ static const char rename_limit_advice[] =
 N_("you may want to set your %s variable to at least "
    "%d and retry the command.");
 
-#define warning_fp(out, ...) do { \
-	if (out == stderr) \
-		warning(__VA_ARGS__); \
-	else \
-		fprintf(out, __VA_ARGS__); \
-} while (0)
-
 void diff_warn_rename_limit(const char *varname, int needed, int degraded_cc,
 			    FILE *out)
 {
+	const char *msg;
+
 	fflush(stdout);
 	if (degraded_cc)
-		warning_fp(out, _(degrade_cc_to_c_warning));
+		msg = _(degrade_cc_to_c_warning);
 	else if (needed)
-		warning_fp(out, _(rename_limit_warning));
+		msg = _(rename_limit_warning);
 	else
 		return;
 
+	if (out == stderr)
+		warning("%s", msg);
+	else
+		fprintf(stderr, "%s", msg);
 
-	if (0 < needed)
-		warning_fp(out, _(rename_limit_advice), varname, needed);
+	if (0 >= needed)
+		return;
+
+	if (out == stderr)
+		warning(_(rename_limit_advice), varname, needed);
+	else
+		fprintf(stderr, _(rename_limit_advice), varname, needed);
 }
 
 static void create_filepairs_for_header_only_notifications(struct diff_options *o)
