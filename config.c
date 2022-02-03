@@ -2811,14 +2811,6 @@ static int store_aux(const char *key, const char *value, void *cb)
 	return 0;
 }
 
-static int write_error(const char *filename)
-{
-	error(_("failed to write new configuration file %s"), filename);
-
-	/* Same error code as "failed to rename". */
-	return 4;
-}
-
 static struct strbuf store_create_section(const char *key,
 					  const struct config_store_data *store)
 {
@@ -2844,19 +2836,32 @@ static struct strbuf store_create_section(const char *key,
 	return sb;
 }
 
-static ssize_t write_section(int fd, const char *key,
+static int write_lock_in_full(const char *lock_path, int fd, const void *buf,
+			      size_t count)
+{
+	if (write_in_full(fd, buf, count) < 0) {
+		error_errno(_("failed to write new configuration file %s"),
+			    lock_path);
+		/* Same error code as "failed to rename". */
+		return 4;
+	}
+	return 0;
+}
+
+static ssize_t write_section(const char *lock_path, int fd, const char *key,
 			     const struct config_store_data *store)
 {
 	struct strbuf sb = store_create_section(key, store);
 	ssize_t ret;
 
-	ret = write_in_full(fd, sb.buf, sb.len);
+	ret = write_lock_in_full(lock_path, fd, sb.buf, sb.len);
 	strbuf_release(&sb);
 
 	return ret;
 }
 
-static ssize_t write_pair(int fd, const char *key, const char *value,
+static ssize_t write_pair(const char *lock_path, int fd, const char *key,
+			  const char *value,
 			  const struct config_store_data *store)
 {
 	int i;
@@ -2899,7 +2904,7 @@ static ssize_t write_pair(int fd, const char *key, const char *value,
 		}
 	strbuf_addf(&sb, "%s\n", quote);
 
-	ret = write_in_full(fd, sb.buf, sb.len);
+	ret = write_lock_in_full(lock_path, fd, sb.buf, sb.len);
 	strbuf_release(&sb);
 
 	return ret;
@@ -3104,9 +3109,9 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 
 		free(store.key);
 		store.key = xstrdup(key);
-		if (write_section(fd, key, &store) < 0 ||
-		    write_pair(fd, key, value, &store) < 0)
-			goto write_err_out;
+		if (write_section(lock_path, fd, key, &store) < 0 ||
+		    write_pair(lock_path, fd, key, value, &store) < 0)
+			goto out_free;
 	} else {
 		struct stat st;
 		size_t copy_begin, copy_end;
@@ -3242,29 +3247,31 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 
 			/* write the first part of the config */
 			if (copy_end > copy_begin &&
-			    (write_in_full(fd, contents + copy_begin,
-					   copy_end - copy_begin) < 0 ||
+			    (write_lock_in_full(lock_path, fd,
+						contents + copy_begin,
+						copy_end - copy_begin) < 0 ||
 			     (new_line &&
-			      write_in_full(fd, "\n",
-					    strlen("\n")) < 0)))
-				goto write_err_out;
+			      write_lock_in_full(lock_path, fd, "\n",
+						 strlen("\n")) < 0)))
+				goto out_free;
 			copy_begin = replace_end;
 		}
 
 		/* write the pair (value == NULL means unset) */
 		if (value != NULL) {
 			if (!store.section_seen &&
-			    write_section(fd, key, &store) < 0)
-				goto write_err_out;
-			if (write_pair(fd, key, value, &store) < 0)
-				goto write_err_out;
+			    write_section(lock_path, fd, key, &store) < 0)
+				goto out_free;
+			if (write_pair(lock_path, fd, key, value, &store) < 0)
+				goto out_free;
 		}
 
 		/* write the rest of the config */
 		if (copy_begin < contents_sz &&
-		    write_in_full(fd, contents + copy_begin,
-				  contents_sz - copy_begin) < 0)
-			goto write_err_out;
+		    write_lock_in_full(lock_path, fd,
+				       contents + copy_begin,
+				       contents_sz - copy_begin) < 0)
+			goto out_free;
 
 		munmap(contents, contents_sz);
 		contents = NULL;
@@ -3290,10 +3297,6 @@ out_free:
 		close(in_fd);
 	config_store_data_clear(&store);
 	return ret;
-
-write_err_out:
-	ret = write_error(lock_path);
-	goto out_free;
 
 }
 
@@ -3463,10 +3466,10 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 			 * multiple [branch "$name"] sections.
 			 */
 			if (copystr.len > 0) {
-				if (write_in_full(out_fd, copystr.buf, copystr.len) < 0) {
-					ret = write_error(lock_path);
+				if (write_lock_in_full(lock_path, out_fd,
+						       copystr.buf,
+						       copystr.len))
 					goto out;
-				}
 				strbuf_reset(&copystr);
 			}
 
@@ -3479,10 +3482,9 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 				}
 				store.baselen = strlen(new_name);
 				if (!copy) {
-					if (write_section(out_fd, new_name, &store) < 0) {
-						ret = write_error(lock_path);
+					if (write_section(lock_path, out_fd,
+							  new_name, &store) < 0)
 						goto out;
-					}
 					/*
 					 * We wrote out the new section, with
 					 * a newline, now skip the old
@@ -3513,10 +3515,8 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 			strbuf_add(&copystr, output, length);
 		}
 
-		if (write_in_full(out_fd, output, length) < 0) {
-			ret = write_error(lock_path);
+		if (write_lock_in_full(lock_path, out_fd, output, length))
 			goto out;
-		}
 	}
 
 	/*
@@ -3525,10 +3525,9 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	 * logic in the loop above.
 	 */
 	if (copystr.len > 0) {
-		if (write_in_full(out_fd, copystr.buf, copystr.len) < 0) {
-			ret = write_error(lock_path);
+		if (write_lock_in_full(lock_path, out_fd, copystr.buf,
+				       copystr.len))
 			goto out;
-		}
 		strbuf_reset(&copystr);
 	}
 
