@@ -6328,6 +6328,13 @@ static const char rename_limit_advice[] =
 N_("you may want to set your %s variable to at least "
    "%d and retry the command.");
 
+#define warning_fp(out, ...) do { \
+	if (out == stderr) \
+		warning(__VA_ARGS__); \
+	else \
+		fprintf(out, __VA_ARGS__); \
+} while (0)
+
 void diff_warn_rename_limit(const char *varname, int needed, int degraded_cc,
 			    FILE *out)
 {
