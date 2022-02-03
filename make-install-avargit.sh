@@ -219,7 +219,7 @@ test_compile () {
 	fi
 
 	# Compile
-	make all man
+	make all sparse hdr-check man
 
 	# Test sanity
 	make -C t test-lint
