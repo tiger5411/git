@@ -92,6 +92,18 @@ test_expect_success 'Barf on too many arguments' '
 	grep "^usage: git merge-tree" expect
 '
 
+for opt in $(git merge-tree --git-completion-helper-all)
+do
+	if test $opt = "--trivial-merge" || test $opt = "--write-tree"
+	then
+		continue
+	fi
+
+	test_expect_success "usage: --trivial-merge is incompatible with $opt" '
+		test_expect_code 129 git merge-tree --trivial-merge $opt side1 side2 side3
+	'
+done
+
 test_expect_success 'test conflict notices and such' '
 	test_expect_code 1 git merge-tree --write-tree --exclude-modes-oids-stages side1 side2 >out &&
 	sed -e "s/[0-9a-f]\{40,\}/HASH/g" out >actual &&

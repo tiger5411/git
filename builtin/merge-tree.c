@@ -12,6 +12,7 @@
 #include "exec-cmd.h"
 #include "merge-blobs.h"
 #include "quote.h"
+#include "strvec.h"
 
 static int line_termination = '\n';
 
@@ -371,13 +372,66 @@ static void *get_tree_descriptor(struct repository *r,
 	return buf;
 }
 
-static int trivial_merge(const char *base,
-			 const char *branch1,
-			 const char *branch2)
+struct merge_tree_options {
+	int mode;
+	int allow_unrelated_histories;
+	int show_messages;
+	int exclude_modes_oids_stages;
+};
+
+#define BUILTIN_MERGE_TREE_USAGE_WRITE \
+		N_("git merge-tree [--write-tree] [<options>] <branch1> <branch2>")
+#define BUILTIN_MERGE_TREE_USAGE_TRIVIAL \
+		N_("git merge-tree [--trivial-merge] <base-tree> <branch1> <branch2>")
+
+#define BUILTIN_MERGE_TREE_OPT_CMDMODE_TRIVIAL \
+		OPT_CMDMODE(0, "trivial-merge", &o.mode, \
+			    N_("do a trivial merge only"), 't')
+
+#define BUILTIN_MERGE_TREE_OPT_CMDMODE_WRITE \
+		OPT_CMDMODE(0, "write-tree", &o.mode, \
+			    N_("do a real merge instead of a trivial merge"), \
+			    'w')
+
+#define BUILTIN_MERGE_TREE_OPT_WRITE \
+		BUILTIN_MERGE_TREE_OPT_CMDMODE_WRITE, \
+		OPT_BOOL(0, "messages", &o.show_messages, \
+			 N_("also show informational/conflict messages")), \
+		OPT_SET_INT('z', NULL, &line_termination, \
+			    N_("separate paths with the NUL character"), '\0'), \
+		OPT_BOOL_F('l', "exclude-modes-oids-stages", \
+			   &o.exclude_modes_oids_stages, \
+			   N_("list conflicted files without modes/oids/stages"), \
+			   PARSE_OPT_NONEG), \
+		OPT_BOOL_F(0, "allow-unrelated-histories", \
+			   &o.allow_unrelated_histories, \
+			   N_("allow merging unrelated histories"), \
+			   PARSE_OPT_NONEG)
+
+static int trivial_merge(int argc, const char **argv, const char *prefix)
 {
 	struct repository *r = the_repository;
 	struct tree_desc t[3];
 	void *buf1, *buf2, *buf3;
+	struct merge_tree_options o = { 0 };
+	const char * const usage[] = {
+		BUILTIN_MERGE_TREE_USAGE_TRIVIAL,
+		NULL,
+	};
+	struct option options[] = {
+		BUILTIN_MERGE_TREE_OPT_CMDMODE_TRIVIAL,
+		OPT_END()
+	};
+	const char *base, *branch1, *branch2;
+
+	argc = parse_options(argc, argv, prefix, options, usage,
+			     PARSE_OPT_STOP_AT_NON_OPTION);
+	if (argc != 3)
+		BUG("should have ensured remaining argc == 3 already! Got %d", argc);
+
+	base = argv[0];
+	branch1 = argv[1];
+	branch2 = argv[2];;
 
 	buf1 = get_tree_descriptor(r, t+0, base);
 	buf2 = get_tree_descriptor(r, t+1, branch1);
@@ -391,23 +445,33 @@ static int trivial_merge(const char *base,
 	return 0;
 }
 
-struct merge_tree_options {
-	int mode;
-	int allow_unrelated_histories;
-	int show_messages;
-	int exclude_modes_oids_stages;
-};
-
-static int real_merge(struct merge_tree_options *o,
-		      const char *branch1, const char *branch2,
-		      const char *prefix)
+static int real_merge(int argc, const char **argv, const char *prefix)
 {
 	struct commit *parent1, *parent2;
 	struct commit_list *common;
 	struct commit_list *merge_bases = NULL;
 	struct commit_list *j;
+	struct merge_tree_options o = { .show_messages = 1 };
 	struct merge_options opt;
 	struct merge_result result = { 0 };
+
+	const char * const usage[] = {
+		BUILTIN_MERGE_TREE_USAGE_WRITE,
+		NULL,
+	};
+	struct option options[] = {
+		BUILTIN_MERGE_TREE_OPT_CMDMODE_WRITE,
+		BUILTIN_MERGE_TREE_OPT_WRITE,
+		OPT_END()
+	};
+	const char *branch1, *branch2;
+
+	argc = parse_options(argc, argv, prefix, options, usage,
+			     PARSE_OPT_STOP_AT_NON_OPTION);
+	if (argc != 2)
+		BUG("should have ensured remaining argc == 2 already! Got %d", argc);
+	branch1 = argv[0];
+	branch2 = argv[1];
 
 	parent1 = get_merge_parent(branch1);
 	if (!parent1)
@@ -431,7 +495,7 @@ static int real_merge(struct merge_tree_options *o,
 	 * merge_incore_recursive in merge-ort.h
 	 */
 	common = get_merge_bases(parent1, parent2);
-	if (!common && !o->allow_unrelated_histories)
+	if (!common && !o.allow_unrelated_histories)
 		die(_("refusing to merge unrelated histories"));
 	for (j = common; j; j = j->next)
 		commit_list_insert(j->item, &merge_bases);
@@ -440,8 +504,8 @@ static int real_merge(struct merge_tree_options *o,
 	if (result.clean < 0)
 		die(_("failure to merge"));
 
-	if (o->show_messages == -1)
-		o->show_messages = !result.clean;
+	if (o.show_messages == -1)
+		o.show_messages = !result.clean;
 
 	puts(oid_to_hex(&result.tree->object.oid));
 	if (!result.clean) {
@@ -453,7 +517,7 @@ static int real_merge(struct merge_tree_options *o,
 		for (i = 0; i < conflicted_files.nr; i++) {
 			const char *name = conflicted_files.items[i].string;
 			struct stage_info *c = conflicted_files.items[i].util;
-			if (!o->exclude_modes_oids_stages)
+			if (!o.exclude_modes_oids_stages)
 				printf("%06o %s %d\t",
 				       c->mode, oid_to_hex(&c->oid), c->stage);
 			else if (last && !strcmp(last, name))
@@ -464,7 +528,7 @@ static int real_merge(struct merge_tree_options *o,
 		}
 		string_list_clear(&conflicted_files, 1);
 	}
-	if (o->show_messages) {
+	if (o.show_messages) {
 		putchar(line_termination);
 		merge_display_update_messages(&opt, &result, stdout);
 	}
@@ -474,40 +538,32 @@ static int real_merge(struct merge_tree_options *o,
 
 int cmd_merge_tree(int argc, const char **argv, const char *prefix)
 {
-	struct merge_tree_options o = { .show_messages = -1 };
+	struct merge_tree_options o;
 	int expected_remaining_argc;
-	int original_argc;
-
+	int original_argc = argc;
+	struct strvec original_args = STRVEC_INIT;
 	const char * const merge_tree_usage[] = {
-		N_("git merge-tree [--write-tree] [<options>] <branch1> <branch2>"),
-		N_("git merge-tree [--trivial-merge] <base-tree> <branch1> <branch2>"),
+		BUILTIN_MERGE_TREE_USAGE_WRITE,
+		BUILTIN_MERGE_TREE_USAGE_TRIVIAL,
 		NULL
 	};
 	struct option mt_options[] = {
-		OPT_CMDMODE(0, "write-tree", &o.mode,
-			    N_("do a real merge instead of a trivial merge"),
-			    'w'),
-		OPT_CMDMODE(0, "trivial-merge", &o.mode,
-			    N_("do a trivial merge only"), 't'),
-		OPT_BOOL(0, "messages", &o.show_messages,
-			 N_("also show informational/conflict messages")),
-		OPT_SET_INT('z', NULL, &line_termination,
-			    N_("separate paths with the NUL character"), '\0'),
-		OPT_BOOL_F('l', "exclude-modes-oids-stages",
-			   &o.exclude_modes_oids_stages,
-			   N_("list conflicted files without modes/oids/stages"),
-			   PARSE_OPT_NONEG),
-		OPT_BOOL_F(0, "allow-unrelated-histories",
-			   &o.allow_unrelated_histories,
-			   N_("allow merging unrelated histories"),
-			   PARSE_OPT_NONEG),
+		BUILTIN_MERGE_TREE_OPT_CMDMODE_TRIVIAL,
+		BUILTIN_MERGE_TREE_OPT_CMDMODE_WRITE,
+		BUILTIN_MERGE_TREE_OPT_WRITE,
 		OPT_END()
 	};
 
+	/* We only care about deciding "o.mode" here */
+	o.mode = 0;
+	/*
+	 * We need our original argv, and
+	 * PARSE_OPT_KEEP_{ARGV0,UNKNOWN} would do the wrong thing
+	 */
+	strvec_pushv(&original_args, argv);
 	/* Parse arguments */
-	original_argc = argc;
 	argc = parse_options(argc, argv, prefix, mt_options,
-			     merge_tree_usage, PARSE_OPT_STOP_AT_NON_OPTION);
+			     merge_tree_usage, 0);
 	if (o.mode) {
 		expected_remaining_argc = (o.mode == 'w' ? 2 : 3);
 		if (argc != expected_remaining_argc)
@@ -517,12 +573,10 @@ int cmd_merge_tree(int argc, const char **argv, const char *prefix)
 			usage_with_options(merge_tree_usage, mt_options);
 		o.mode = (argc == 2 ? 'w' : 't');
 	}
-	if (o.mode == 't' && original_argc < argc)
-		die(_("--trivial-merge is incompatible with all other options"));
 
 	/* Do the relevant type of merge */
 	if (o.mode == 'w')
-		return real_merge(&o, argv[0], argv[1], prefix);
+		return real_merge(original_argc, original_args.v, prefix);
 	else
-		return trivial_merge(argv[0], argv[1], argv[2]);
+		return trivial_merge(original_argc, original_args.v, prefix);
 }
