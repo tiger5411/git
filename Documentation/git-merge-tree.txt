@@ -44,10 +44,9 @@ OPTIONS
 	newline.  Also begin the messages section with a NUL character
 	instead of a newline.  See OUTPUT below for more information.
 
---exclude-oids-and-modes::
-	Instead of writing a list of (mode, oid, stage, path) tuples
-	to output for conflicted files, just provide a list of
-	filenames with conflicts.
+--conflict-format::
+	Override the default "%(objectmode) %(objectname)
+	%(stage)%x09%(path)" format.
 
 --[no-]messages::
 	Write any informational messages such as "Auto-merging <path>"
@@ -89,13 +88,13 @@ Conflicted file info
 
 This is a sequence of lines with the format
 
-	<mode> <object> <stage> <filename>
+	%(objectmode) %(objectname) %(stage)%x09%(path)
 
 The filename will be quoted as explained for the configuration
-variable `core.quotePath` (see linkgit:git-config[1]).  However, if
-the `--exclude-oids-and-modes` option is passed, the mode, object, and
-stage will be omitted.  If `-z` is passed, the "lines" are terminated
-by a NUL character instead of a newline character.
+variable `core.quotePath` (see linkgit:git-config[1]).
+
+If `-z` is passed, the "lines" are terminated by a NUL character
+instead of a newline character.
 
 Informational messages
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -395,8 +395,63 @@ struct merge_tree_options {
 	int mode;
 	int allow_unrelated_histories;
 	int show_messages;
-	int exclude_modes_oids_stages;
+	const char *conflict_format;
+	int unique_conflicts;
+	int abbrev;
 };
+
+struct expand_conflict_data {
+	const char *prefix;
+	struct string_list_item *item;
+	struct strbuf *scratch;
+	int abbrev;
+	struct strbuf *sb_tmp;
+};
+static size_t expand_conflict_format(struct strbuf *sb,
+				     const char *start,
+				     void *context)
+{
+	struct expand_conflict_data *data = context;
+	struct string_list_item *item = data->item;
+	struct stage_info *info = item->util;
+	const char *end;
+	const char *p;
+	size_t len;
+
+	len = strbuf_expand_literal_cb(sb, start, NULL);
+	if (len)
+		return len;
+
+	if (*start != '(')
+		die(_("bad format as of '%s'"), start);
+	end = strchr(start + 1, ')');
+	if (!end)
+		die(_("format element '%s' does not end in ')'"), start);
+	len = end - start + 1;
+
+	if (skip_prefix(start, "(objectmode)", &p)) {
+		strbuf_addf(sb, "%06o", info->mode);
+	} else if (skip_prefix(start, "(objectname)", &p)) {
+		strbuf_addstr(sb, find_unique_abbrev(&info->oid, data->abbrev));
+	} else if (skip_prefix(start, "(stage)", &p)) {
+		strbuf_addf(sb, "%d", info->stage);
+	} else if (skip_prefix(start, "(path)", &p)) {
+		const char *name = item->string;
+
+		if (data->prefix)
+			name = relative_path(name, data->prefix, data->scratch);
+		strbuf_addstr(sb, name);
+
+		strbuf_reset(data->sb_tmp);
+		/* The relative_path() function resets "scratch" */
+
+	} else {
+		unsigned int errlen = (unsigned long)len;
+		die(_("bad format specifier %%%.*s"), errlen, start);
+	}
+
+	return len;
+}
 
 static int real_merge(struct merge_tree_options *o,
 		      const char *branch1, const char *branch2,
@@ -446,23 +501,43 @@ static int real_merge(struct merge_tree_options *o,
 	puts(oid_to_hex(&result.tree->object.oid));
 	if (!result.clean) {
 		struct string_list conflicted_files = STRING_LIST_INIT_NODUP;
-		const char *last = NULL;
-		int i;
+		struct string_list_item *item;
+		char *last = NULL;
+		struct strbuf sb = STRBUF_INIT;
+		struct strbuf tmp = STRBUF_INIT;
 
 		merge_get_conflicted_files(&result, &conflicted_files);
-		for (i = 0; i < conflicted_files.nr; i++) {
-			const char *name = conflicted_files.items[i].string;
-			struct stage_info *c = conflicted_files.items[i].util;
-			if (!o->exclude_modes_oids_stages)
-				printf("%06o %s %d\t",
-				       c->mode, oid_to_hex(&c->oid), c->stage);
-			else if (last && !strcmp(last, name))
+		for_each_string_list_item(item, &conflicted_files) {
+			struct expand_conflict_data ctx = {
+				.prefix = prefix,
+				.item = item,
+				.abbrev = o->abbrev,
+				.scratch = &sb,
+				.sb_tmp = &tmp,
+			};
+
+			strbuf_expand(&sb, o->conflict_format, expand_conflict_format, &ctx);
+			strbuf_addch(&sb, line_termination);
+
+			if (o->unique_conflicts && last && !strcmp(last, sb.buf)) {
+				free(last);
+				last = strbuf_detach(&sb, NULL);
 				continue;
-			write_name_quoted_relative(
-				name, prefix, stdout, line_termination);
-			last = name;
+			}
+
+			fwrite(sb.buf, sb.len, 1, stdout);
+
+			if (o->unique_conflicts) {
+				free(last);
+				last = strbuf_detach(&sb, NULL);
+			} else {
+				strbuf_reset(&sb);
+			}
 		}
 		string_list_clear(&conflicted_files, 1);
+		strbuf_release(&sb);
+		strbuf_release(&tmp);
+		free(last);
 	}
 	if (o->show_messages) {
 		putchar(line_termination);
@@ -474,7 +549,11 @@ static int real_merge(struct merge_tree_options *o,
 
 int cmd_merge_tree(int argc, const char **argv, const char *prefix)
 {
-	struct merge_tree_options o = { .show_messages = -1 };
+	struct merge_tree_options o = {
+		.show_messages = -1,
+		.conflict_format = "%(objectmode) %(objectname) %(stage)%x09%(path)",
+		.unique_conflicts = 1,
+	};
 	int expected_remaining_argc;
 	int original_argc;
 
@@ -493,14 +572,15 @@ int cmd_merge_tree(int argc, const char **argv, const char *prefix)
 			 N_("also show informational/conflict messages")),
 		OPT_SET_INT('z', NULL, &line_termination,
 			    N_("separate paths with the NUL character"), '\0'),
-		OPT_BOOL_F('l', "exclude-modes-oids-stages",
-			   &o.exclude_modes_oids_stages,
-			   N_("list conflicted files without modes/oids/stages"),
-			   PARSE_OPT_NONEG),
+		OPT_STRING(0, "conflict-format", &o.conflict_format, N_("format"),
+			   N_("specify a custom format to use for conflicted files")),
+		OPT_BOOL(0, "unique-conflicts", &o.unique_conflicts,
+			 N_("omit duplicate --conflict-format lines")),
 		OPT_BOOL_F(0, "allow-unrelated-histories",
 			   &o.allow_unrelated_histories,
 			   N_("allow merging unrelated histories"),
 			   PARSE_OPT_NONEG),
+		OPT__ABBREV(&o.abbrev),
 		OPT_END()
 	};
 

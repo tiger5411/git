@@ -93,7 +93,7 @@ test_expect_success 'Barf on too many arguments' '
 '
 
 test_expect_success 'test conflict notices and such' '
-	test_expect_code 1 git merge-tree --write-tree --exclude-modes-oids-stages side1 side2 >out &&
+	test_expect_code 1 git merge-tree --write-tree --conflict-format="%(path)" side1 side2 >out &&
 	sed -e "s/[0-9a-f]\{40,\}/HASH/g" out >actual &&
 
 	# Expected results:
@@ -115,8 +115,35 @@ test_expect_success 'test conflict notices and such' '
 	test_cmp expect actual
 '
 
+test_expect_success 'merge-tree --unique-conflicts is the default' '
+	test_expect_code 1 git merge-tree --write-tree --conflict-format="%(path)" --no-messages side1 side2 >out &&
+	sed 1d <out >actual &&
+	cat >expect <<-\EOF &&
+	greeting
+	whatever~side1
+	EOF
+	test_cmp expect actual &&
+
+	test_expect_code 1 git merge-tree --write-tree --conflict-format="%(path)" --no-messages side1 side2 >out2 &&
+	sed 1d <out2 >actual2 &&
+	test_cmp actual actual2
+'
+
+test_expect_success 'merge-tree --no-unique-conflicts' '
+	test_expect_code 1 git merge-tree --write-tree --conflict-format="%(path)" --no-unique-conflicts --no-messages side1 side2 >out &&
+	sed 1d <out >actual &&
+	cat >expect <<-\EOF &&
+	greeting
+	greeting
+	greeting
+	whatever~side1
+	whatever~side1
+	EOF
+	test_cmp expect actual
+'
+
 test_expect_success 'Just the conflicted files without the messages' '
-	test_expect_code 1 git merge-tree --write-tree --no-messages --exclude-modes-oids-stages side1 side2 >out &&
+	test_expect_code 1 git merge-tree --write-tree --no-messages --conflict-format="%(path)" side1 side2 >out &&
 	sed -e "s/[0-9a-f]\{40,\}/HASH/g" out >actual &&
 
 	test_write_lines HASH greeting whatever~side1 >expect &&
