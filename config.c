@@ -3056,6 +3056,7 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	int fd = -1, in_fd = -1;
 	int ret;
 	struct lock_file lock = LOCK_INIT;
+	const char *lock_path;
 	char *filename_buf = NULL;
 	char *contents = NULL;
 	size_t contents_sz;
@@ -3083,6 +3084,7 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		ret = CONFIG_NO_LOCK;
 		goto out_free;
 	}
+	lock_path = get_lock_file_path(&lock);
 
 	/*
 	 * If .git/config does not exist yet, write a minimal version.
@@ -3185,8 +3187,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		close(in_fd);
 		in_fd = -1;
 
-		if (chmod(get_lock_file_path(&lock), st.st_mode & 07777) < 0) {
-			error_errno(_("chmod on %s failed"), get_lock_file_path(&lock));
+		if (chmod(lock_path, st.st_mode & 07777) < 0) {
+			error_errno(_("chmod on %s failed"), lock_path);
 			ret = CONFIG_NO_WRITE;
 			goto out_free;
 		}
@@ -3292,7 +3294,7 @@ out_free:
 	return ret;
 
 write_err_out:
-	ret = write_error(get_lock_file_path(&lock));
+	ret = write_error(lock_path);
 	goto out_free;
 
 }
@@ -3401,6 +3403,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	int ret = 0, remove = 0;
 	char *filename_buf = NULL;
 	struct lock_file lock = LOCK_INIT;
+	const char *lock_path;
 	int out_fd;
 	char buf[1024];
 	FILE *config_file = NULL;
@@ -3423,6 +3426,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 		ret = error(_("could not lock config file %s"), config_filename);
 		goto out;
 	}
+	lock_path = get_lock_file_path(&lock);
 
 	if (!(config_file = fopen(config_filename, "rb"))) {
 		ret = warn_on_fopen_errors(config_filename);
@@ -3437,9 +3441,8 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 		goto out;
 	}
 
-	if (chmod(get_lock_file_path(&lock), st.st_mode & 07777) < 0) {
-		ret = error_errno(_("chmod on %s failed"),
-				  get_lock_file_path(&lock));
+	if (chmod(lock_path, st.st_mode & 07777) < 0) {
+		ret = error_errno(_("chmod on %s failed"), lock_path);
 		goto out;
 	}
 
@@ -3463,7 +3466,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 			 */
 			if (copystr.len > 0) {
 				if (write_in_full(out_fd, copystr.buf, copystr.len) < 0) {
-					ret = write_error(get_lock_file_path(&lock));
+					ret = write_error(lock_path);
 					goto out;
 				}
 				strbuf_reset(&copystr);
@@ -3479,7 +3482,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 				store.baselen = strlen(new_name);
 				if (!copy) {
 					if (write_section(out_fd, new_name, &store) < 0) {
-						ret = write_error(get_lock_file_path(&lock));
+						ret = write_error(lock_path);
 						goto out;
 					}
 					/*
@@ -3513,7 +3516,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 		}
 
 		if (write_in_full(out_fd, output, length) < 0) {
-			ret = write_error(get_lock_file_path(&lock));
+			ret = write_error(lock_path);
 			goto out;
 		}
 	}
@@ -3525,7 +3528,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	 */
 	if (copystr.len > 0) {
 		if (write_in_full(out_fd, copystr.buf, copystr.len) < 0) {
-			ret = write_error(get_lock_file_path(&lock));
+			ret = write_error(lock_path);
 			goto out;
 		}
 		strbuf_reset(&copystr);
