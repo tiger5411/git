@@ -3241,32 +3241,30 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 				new_line = 1;
 
 			/* write the first part of the config */
-			if (copy_end > copy_begin) {
-				if (write_in_full(fd, contents + copy_begin,
-						  copy_end - copy_begin) < 0)
-					goto write_err_out;
-				if (new_line &&
-				    write_str_in_full(fd, "\n") < 0)
-					goto write_err_out;
-			}
+			if (copy_end > copy_begin &&
+			    (write_in_full(fd, contents + copy_begin,
+					   copy_end - copy_begin) < 0 ||
+			     (new_line &&
+			      write_in_full(fd, "\n",
+					    strlen("\n")) < 0)))
+				goto write_err_out;
 			copy_begin = replace_end;
 		}
 
 		/* write the pair (value == NULL means unset) */
 		if (value != NULL) {
-			if (!store.section_seen) {
-				if (write_section(fd, key, &store) < 0)
-					goto write_err_out;
-			}
+			if (!store.section_seen &&
+			    write_section(fd, key, &store) < 0)
+				goto write_err_out;
 			if (write_pair(fd, key, value, &store) < 0)
 				goto write_err_out;
 		}
 
 		/* write the rest of the config */
-		if (copy_begin < contents_sz)
-			if (write_in_full(fd, contents + copy_begin,
-					  contents_sz - copy_begin) < 0)
-				goto write_err_out;
+		if (copy_begin < contents_sz &&
+		    write_in_full(fd, contents + copy_begin,
+				  contents_sz - copy_begin) < 0)
+			goto write_err_out;
 
 		munmap(contents, contents_sz);
 		contents = NULL;
