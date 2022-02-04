@@ -2836,12 +2836,39 @@ static struct strbuf store_create_section(const char *key,
 	return sb;
 }
 
+/*
+ * TRANSLATORS: The first argument is the name of a syscall such as
+ * "write()" or "chmod()". The second is the path to the
+ * "config" file.
+ */
+static const char *config_path_fail = N_("failed '%s' call on configuration file '%s'");
+
+/*
+ * TRANSLATORS: This is the same as "config_path_fail" above, except
+ * with an added supplementary error from the OS, such as the return
+ * value of mmap_os_err().
+ */
+static const char *config_path_fail_err = N_("failed '%s' call on configuration file '%s': '%s'");
+
+/*
+ * TRANSLATORS: The first argument is the name of a syscall or
+ * function call such as "write()", "chmod()" or
+ * hold_lock_file_for_update(). The second is the path to the
+ * "config.lock" file.
+ */
+static const char *lock_path_fail = N_("failed '%s' call on new configuration file '%s'");
+
+/*
+ * TRANSLATORS: The first argument is the "config.lock" file, the
+ * second the "config" file.
+ */
+static const char *lock_path_to_config_path_fail = N_("could not update configuration file by renaming lock '%s' to '%s'");
+
 static int write_lock_in_full(const char *lock_path, int fd, const void *buf,
 			      size_t count)
 {
 	if (write_in_full(fd, buf, count) < 0) {
-		error_errno(_("failed to write new configuration file %s"),
-			    lock_path);
+		error_errno(_(lock_path_fail), "write()", lock_path);
 		/* Same error code as "failed to rename". */
 		return 4;
 	}
@@ -3085,7 +3112,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	 */
 	fd = hold_lock_file_for_update(&lock, config_filename, 0);
 	if (fd < 0) {
-		error_errno(_("could not lock config file %s"), config_filename);
+		error_errno(_(config_path_fail), "hold_lock_file_for_update()",
+			    config_filename);
 		ret = CONFIG_NO_LOCK;
 		goto out_free;
 	}
@@ -3097,7 +3125,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	in_fd = open(config_filename, O_RDONLY);
 	if ( in_fd < 0 ) {
 		if ( ENOENT != errno ) {
-			error_errno(_("opening %s"), config_filename);
+			error_errno(_(config_path_fail), "open()",
+				    config_filename);
 			ret = CONFIG_INVALID_FILE; /* same as "invalid config file" */
 			goto out_free;
 		}
@@ -3172,7 +3201,7 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		}
 
 		if (fstat(in_fd, &st) == -1) {
-			error_errno(_("fstat on %s failed"), config_filename);
+			error_errno(_(lock_path_fail), "fstat()", lock_path);
 			ret = CONFIG_INVALID_FILE;
 			goto out_free;
 		}
@@ -3183,8 +3212,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		if (contents == MAP_FAILED) {
 			if (errno == ENODEV && S_ISDIR(st.st_mode))
 				errno = EISDIR;
-			error_errno(_("unable to mmap '%s'%s"),
-					config_filename, mmap_os_err());
+			error_errno(_(config_path_fail_err), config_filename,
+				    mmap_os_err());
 			ret = CONFIG_INVALID_FILE;
 			contents = NULL;
 			goto out_free;
@@ -3193,7 +3222,7 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		in_fd = -1;
 
 		if (chmod(lock_path, st.st_mode & 07777) < 0) {
-			error_errno(_("chmod on %s failed"), lock_path);
+			error_errno(_(lock_path_fail), "chmod()", lock_path);
 			ret = CONFIG_NO_WRITE;
 			goto out_free;
 		}
@@ -3278,7 +3307,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	}
 
 	if (commit_lock_file(&lock) < 0) {
-		error_errno(_("could not write config file %s"), config_filename);
+		error_errno(_(lock_path_to_config_path_fail), lock_path,
+			    config_filename);
 		ret = CONFIG_NO_WRITE;
 		goto out_free;
 	}
@@ -3438,12 +3468,13 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	}
 
 	if (fstat(fileno(config_file), &st) == -1) {
-		ret = error_errno(_("fstat on %s failed"), config_filename);
+		ret = error_errno(_(config_path_fail), "fstat()",
+				  config_filename);
 		goto out;
 	}
 
 	if (chmod(lock_path, st.st_mode & 07777) < 0) {
-		ret = error_errno(_("chmod on %s failed"), lock_path);
+		ret = error_errno(_(lock_path_fail), "chmod()", lock_path);
 		goto out;
 	}
 
@@ -3535,7 +3566,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	config_file = NULL;
 commit_and_out:
 	if (commit_lock_file(&lock) < 0)
-		ret = error_errno(_("could not write config file %s"),
+		ret = error_errno(_(lock_path_to_config_path_fail), lock_path,
 				  config_filename);
 out:
 	if (config_file)
