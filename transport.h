@@ -300,6 +300,11 @@ int transport_fetch_refs(struct transport *transport, struct ref *refs);
  */
 void transport_unlock_pack(struct transport *transport, unsigned int flags);
 
+/**
+ * Get recommended config from remote.
+ */
+struct string_list *transport_remote_features(struct transport *transport);
+
 int transport_disconnect(struct transport *transport);
 char *transport_anonymize_url(const char *url);
 void transport_take_over(struct transport *transport,
