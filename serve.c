@@ -19,6 +19,12 @@ static int always_advertise(struct repository *r,
 	return 1;
 }
 
+static int never_advertise(struct repository *r,
+			   struct strbuf *value)
+{
+	return 0;
+}
+
 static int agent_advertise(struct repository *r,
 			   struct strbuf *value)
 {
@@ -112,6 +118,11 @@ static struct protocol_capability capabilities[] = {
 		.name = "ls-refs",
 		.advertise = ls_refs_advertise,
 		.command = ls_refs,
+	},
+	{
+		.name = "features",
+		.advertise = never_advertise,
+		.command = cap_features,
 	},
 	{
 		.name = "fetch",
