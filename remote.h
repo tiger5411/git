@@ -238,6 +238,10 @@ struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
 
 int resolve_remote_symref(struct ref *ref, struct ref *list);
 
+/* Used for protocol v2 in order to retrieve recommended features */
+int get_recommended_features(int fd_out, struct packet_reader *reader,
+			     struct string_list *list, int stateless_rpc);
+
 /*
  * Remove and free all but the first of any entries in the input list
  * that map the same remote reference to the same local reference.  If
