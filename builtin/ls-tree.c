@@ -20,6 +20,7 @@ static int line_termination = '\n';
 #define LS_SHOW_TREES (1 << 2)
 #define LS_NAME_ONLY (1 << 3)
 #define LS_SHOW_SIZE (1 << 4)
+#define LS_OBJECT_ONLY (1 << 5)
 static int abbrev;
 static int ls_options;
 static struct pathspec pathspec;
@@ -36,6 +37,7 @@ static const char *format;
 static const char *default_format = "%(objectmode) %(objecttype) %(objectname)%x09%(path)";
 static const char *long_format = "%(objectmode) %(objecttype) %(objectname) %(objectsize:padded)%x09%(path)";
 static const char *name_only_format = "%(path)";
+static const char *object_only_format = "%(objectname)";
 struct show_tree_data {
 	unsigned mode;
 	enum object_type type;
@@ -53,6 +55,7 @@ static const  char * const ls_tree_usage[] = {
 static enum mutx_option {
 	MODE_UNSPECIFIED = 0,
 	MODE_NAME_ONLY,
+	MODE_OBJECT_ONLY,
 	MODE_LONG,
 } cmdmode;
 
@@ -128,7 +131,10 @@ static int parse_shown_fields(unsigned int *shown_fields)
 		*shown_fields = FIELD_PATH_NAME;
 		return 0;
 	}
-
+	if (cmdmode == MODE_OBJECT_ONLY) {
+		*shown_fields = FIELD_OBJECT_NAME;
+		return 0;
+	}
 	if (!ls_options || (ls_options & LS_RECURSIVE)
 	    || (ls_options & LS_SHOW_TREES)
 	    || (ls_options & LS_TREE_ONLY))
@@ -257,6 +263,11 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 			return recurse;
 	}
 
+	if (shown_fields == FIELD_OBJECT_NAME) {
+		printf("%s%c", find_unique_abbrev(oid, abbrev), line_termination);
+		return recurse;
+	}
+
 	if (shown_fields == FIELD_PATH_NAME) {
 		baselen = base->len;
 		strbuf_addstr(base, pathname);
@@ -295,6 +306,8 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 			    MODE_NAME_ONLY),
 		OPT_CMDMODE(0, "name-status", &cmdmode, N_("list only filenames"),
 			    MODE_NAME_ONLY),
+		OPT_CMDMODE(0, "object-only", &cmdmode, N_("list only objects"),
+			    MODE_OBJECT_ONLY),
 		OPT_SET_INT(0, "full-name", &chomp_prefix,
 			    N_("use full path names"), 0),
 		OPT_BOOL(0, "full-tree", &full_tree,
@@ -362,6 +375,9 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		fn = show_tree;
 	} else if (format && (!strcmp(format, name_only_format))) {
 		shown_fields = FIELD_PATH_NAME;
+		fn = show_tree;
+	} else if (format && (!strcmp(format, object_only_format))) {
+		shown_fields = FIELD_OBJECT_NAME;
 		fn = show_tree;
 	} else if (format)
 		fn = show_tree_fmt;
