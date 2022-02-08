@@ -1160,6 +1160,18 @@ static int push_refs(struct transport *transport,
 	return -1;
 }
 
+static int get_features(struct transport *transport,
+		      struct string_list *list)
+{
+	get_helper(transport);
+
+	if (process_connect(transport, 0)) {
+		do_take_over(transport);
+		return transport->vtable->get_features(transport, list);
+	}
+
+	return -1;
+}
 
 static int has_attribute(const char *attrs, const char *attr)
 {
@@ -1285,6 +1297,7 @@ static struct transport_vtable vtable = {
 	.get_bundle_uri = get_bundle_uri,
 	.fetch_refs	= fetch_refs,
 	.push_refs	= push_refs,
+	.get_features	= get_features,
 	.connect	= connect_helper,
 	.disconnect	= release_helper
 };

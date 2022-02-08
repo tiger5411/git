@@ -205,6 +205,20 @@ struct git_transport_data {
 	struct oid_array shallow;
 };
 
+static int get_features(struct transport *transport,
+		      struct string_list *list)
+{
+	struct git_transport_data *data = transport->data;
+	struct packet_reader reader;
+
+	packet_reader_init(&reader, data->fd[0], NULL, 0,
+			   PACKET_READ_CHOMP_NEWLINE |
+			   PACKET_READ_GENTLE_ON_EOF);
+
+	return get_recommended_features(data->fd[1], &reader, list,
+					transport->stateless_rpc);
+}
+
 static int set_git_option(struct git_transport_options *opts,
 			  const char *name, const char *value)
 {
@@ -948,6 +962,7 @@ static struct transport_vtable taken_over_vtable = {
 	.get_bundle_uri = get_bundle_uri,
 	.fetch_refs	= fetch_refs_via_pack,
 	.push_refs	= git_transport_push,
+	.get_features	= get_features,
 	.disconnect	= disconnect_git
 };
 
@@ -1102,6 +1117,7 @@ static struct transport_vtable builtin_smart_vtable = {
 	.get_bundle_uri = get_bundle_uri,
 	.fetch_refs	= fetch_refs_via_pack,
 	.push_refs	= git_transport_push,
+	.get_features	= get_features,
 	.connect	= connect_git,
 	.disconnect	= disconnect_git
 };
@@ -1604,6 +1620,28 @@ void transport_unlock_pack(struct transport *transport, unsigned int flags)
 			unlink_or_warn(transport->pack_lockfiles.items[i].string);
 	if (!in_signal_handler)
 		string_list_clear(&transport->pack_lockfiles, 0);
+}
+
+struct string_list *transport_remote_features(struct transport *transport)
+{
+	const struct transport_vtable *vtable = transport->vtable;
+	struct string_list *list = NULL;
+
+	if (!server_supports_v2("features", 0))
+		return NULL;
+
+	if (!vtable->get_features) {
+		warning(_("'features' not supported by this remote"));
+		return NULL;
+	}
+
+	CALLOC_ARRAY(list, 1);
+	string_list_init_dup(list);
+
+	if (vtable->get_features(transport, list))
+		warning(_("failed to get recommended features from remote"));
+
+	return list;
 }
 
 int transport_connect(struct transport *transport, const char *name,
