@@ -72,16 +72,6 @@ static char *get_default_remote(void)
 	return repo_get_default_remote(the_repository);
 }
 
-static int starts_with_dot_slash(const char *str)
-{
-	return str[0] == '.' && is_dir_sep(str[1]);
-}
-
-static int starts_with_dot_dot_slash(const char *str)
-{
-	return str[0] == '.' && str[1] == '.' && is_dir_sep(str[2]);
-}
-
 /*
  * Returns 1 if it was the last chop before ':'.
  */
