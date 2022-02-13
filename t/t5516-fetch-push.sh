@@ -24,12 +24,8 @@ D=$(pwd)
 mk_empty () {
 	repo_name="$1"
 	rm -fr "$repo_name" &&
-	mkdir "$repo_name" &&
-	(
-		cd "$repo_name" &&
-		git init &&
-		git config receive.denyCurrentBranch warn
-	)
+	git init "$repo_name" &&
+	git -C "$repo_name" config receive.denyCurrentBranch warn
 }
 
 mk_test () {
@@ -58,36 +54,35 @@ mk_test () {
 mk_test_with_hooks() {
 	repo_name=$1
 	mk_test "$@" &&
-	(
-		cd "$repo_name" &&
-		mkdir .git/hooks &&
-		cd .git/hooks &&
 
-		cat >pre-receive <<-'EOF' &&
-		#!/bin/sh
-		cat - >>pre-receive.actual
-		EOF
+	cat >"$repo_name"/.git/hooks/pre-receive <<-'EOF' &&
+	#!/bin/sh
+	cat - >>pre-receive.actual
+	EOF
 
-		cat >update <<-'EOF' &&
-		#!/bin/sh
-		printf "%s %s %s\n" "$@" >>update.actual
-		EOF
+	cat >"$repo_name"/.git/hooks/update <<-'EOF' &&
+	#!/bin/sh
+	printf "%s %s %s\n" "$@" >>update.actual
+	EOF
 
-		cat >post-receive <<-'EOF' &&
-		#!/bin/sh
-		cat - >>post-receive.actual
-		EOF
+	cat >"$repo_name"/.git/hooks/post-receive <<-'EOF' &&
+	#!/bin/sh
+	cat - >>post-receive.actual
+	EOF
 
-		cat >post-update <<-'EOF' &&
-		#!/bin/sh
-		for ref in "$@"
-		do
-			printf "%s\n" "$ref" >>post-update.actual
-		done
-		EOF
+	cat >"$repo_name"/.git/hooks/post-update <<-'EOF' &&
+	#!/bin/sh
+	for ref in "$@"
+	do
+		printf "%s\n" "$ref" >>post-update.actual
+	done
+	EOF
 
-		chmod +x pre-receive update post-receive post-update
-	)
+	chmod +x \
+	      "$repo_name"/.git/hooks/pre-receive \
+	      "$repo_name"/.git/hooks/update \
+	      "$repo_name"/.git/hooks/post-receive \
+	      "$repo_name"/.git/hooks/post-update
 }
 
 mk_child() {
@@ -667,7 +662,6 @@ test_expect_success 'push does not update local refs on failure' '
 
 	mk_test testrepo heads/main &&
 	mk_child testrepo child &&
-	mkdir testrepo/.git/hooks &&
 	echo "#!/no/frobnication/today" >testrepo/.git/hooks/pre-receive &&
 	chmod +x testrepo/.git/hooks/pre-receive &&
 	(
@@ -1679,24 +1673,21 @@ test_expect_success 'receive.denyCurrentBranch = updateInstead' '
 test_expect_success 'updateInstead with push-to-checkout hook' '
 	rm -fr testrepo &&
 	git init testrepo &&
-	(
-		cd testrepo &&
-		git pull .. main &&
-		git reset --hard HEAD^^ &&
-		git tag initial &&
-		git config receive.denyCurrentBranch updateInstead &&
-		write_script .git/hooks/push-to-checkout <<-\EOF
-		echo >&2 updating from $(git rev-parse HEAD)
-		echo >&2 updating to "$1"
+	git -C testrepo pull .. main &&
+	git -C testrepo reset --hard HEAD^^ &&
+	git -C testrepo tag initial &&
+	git -C testrepo config receive.denyCurrentBranch updateInstead &&
+	write_script testrepo/.git/hooks/push-to-checkout <<-\EOF &&
+	echo >&2 updating from $(git rev-parse HEAD)
+	echo >&2 updating to "$1"
 
-		git update-index -q --refresh &&
-		git read-tree -u -m HEAD "$1" || {
-			status=$?
-			echo >&2 read-tree failed
-			exit $status
-		}
-		EOF
-	) &&
+	git update-index -q --refresh &&
+	git read-tree -u -m HEAD "$1" || {
+		status=$?
+		echo >&2 read-tree failed
+		exit $status
+	}
+	EOF
 
 	# Try pushing into a pristine
 	git push testrepo main &&
@@ -1741,33 +1732,30 @@ test_expect_success 'updateInstead with push-to-checkout hook' '
 	# push into void
 	rm -fr void &&
 	git init void &&
-	(
-		cd void &&
-		git config receive.denyCurrentBranch updateInstead &&
-		write_script .git/hooks/push-to-checkout <<-\EOF
-		if git rev-parse --quiet --verify HEAD
-		then
-			has_head=yes
-			echo >&2 updating from $(git rev-parse HEAD)
-		else
-			has_head=no
-			echo >&2 pushing into void
-		fi
-		echo >&2 updating to "$1"
+	git -C void config receive.denyCurrentBranch updateInstead &&
+	write_script void/.git/hooks/push-to-checkout <<-\EOF &&
+	if git rev-parse --quiet --verify HEAD
+	then
+		has_head=yes
+		echo >&2 updating from $(git rev-parse HEAD)
+	else
+		has_head=no
+		echo >&2 pushing into void
+	fi
+	echo >&2 updating to "$1"
 
-		git update-index -q --refresh &&
-		case "$has_head" in
-		yes)
-			git read-tree -u -m HEAD "$1" ;;
-		no)
-			git read-tree -u -m "$1" ;;
-		esac || {
-			status=$?
-			echo >&2 read-tree failed
-			exit $status
-		}
-		EOF
-	) &&
+	git update-index -q --refresh &&
+	case "$has_head" in
+	yes)
+		git read-tree -u -m HEAD "$1" ;;
+	no)
+		git read-tree -u -m "$1" ;;
+	esac || {
+		status=$?
+		echo >&2 read-tree failed
+		exit $status
+	}
+	EOF
 
 	git push void main &&
 	(
