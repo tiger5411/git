@@ -32,10 +32,10 @@ test_expect_success 'rebase --root fails with too many args' '
 
 test_expect_success 'setup pre-rebase hook' '
 	mkdir -p .git/hooks &&
-	cat >.git/hooks/pre-rebase <<EOF &&
-#!$SHELL_PATH
-echo "\$1,\$2" >.git/PRE-REBASE-INPUT
-EOF
+	cat >.git/hooks/pre-rebase <<-EOF &&
+	#!$SHELL_PATH
+	echo "\$1,\$2" >.git/PRE-REBASE-INPUT
+	EOF
 	chmod +x .git/hooks/pre-rebase
 '
 cat > expect <<EOF
@@ -142,10 +142,10 @@ EOF
 
 test_expect_success 'setup pre-rebase hook that fails' '
 	mkdir -p .git/hooks &&
-	cat >.git/hooks/pre-rebase <<EOF &&
-#!$SHELL_PATH
-false
-EOF
+	cat >.git/hooks/pre-rebase <<-EOF &&
+	#!$SHELL_PATH
+	false
+	EOF
 	chmod +x .git/hooks/pre-rebase
 '
 
