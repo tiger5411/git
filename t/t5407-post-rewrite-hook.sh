@@ -17,15 +17,15 @@ test_expect_success 'setup' '
 	git checkout A^0 &&
 	test_commit E bar E &&
 	test_commit F foo F &&
-	git checkout main
-'
+	git checkout main &&
 
-cat >.git/hooks/post-rewrite <<EOF
-#!/bin/sh
-echo \$@ > "$TRASH_DIRECTORY"/post-rewrite.args
-cat > "$TRASH_DIRECTORY"/post-rewrite.data
-EOF
-chmod u+x .git/hooks/post-rewrite
+	cat >.git/hooks/post-rewrite <<-EOF &&
+	#!/bin/sh
+	echo \$@ > "$TRASH_DIRECTORY"/post-rewrite.args
+	cat > "$TRASH_DIRECTORY"/post-rewrite.data
+	EOF
+	chmod u+x .git/hooks/post-rewrite
+'
 
 clear_hook_input () {
 	rm -f post-rewrite.args post-rewrite.data
