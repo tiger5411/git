@@ -12,7 +12,6 @@ test_description='test cherry-pick and revert with conflicts
 GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 pristine_detach () {

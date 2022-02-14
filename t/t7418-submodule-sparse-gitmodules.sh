@@ -31,7 +31,7 @@ test_expect_success 'sparse checkout setup which hides .gitmodules' '
 		test_tick &&
 		git commit -m "Add submodule"
 	) &&
-	git clone --template= upstream super &&
+	git clone upstream super &&
 	(cd super &&
 		mkdir .git/info &&
 		cat >.git/info/sparse-checkout <<-\EOF &&

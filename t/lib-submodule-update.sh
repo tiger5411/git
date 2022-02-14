@@ -207,7 +207,7 @@ prolog () {
 # should be updated to an existing commit.
 reset_work_tree_to () {
 	rm -rf submodule_update &&
-	git clone --template= submodule_update_repo submodule_update &&
+	git clone submodule_update_repo submodule_update &&
 	(
 		cd submodule_update &&
 		rm -rf sub1 &&

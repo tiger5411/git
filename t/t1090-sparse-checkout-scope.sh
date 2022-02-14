@@ -5,7 +5,6 @@ test_description='sparse checkout scope tests'
 GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 test_expect_success 'setup' '
@@ -75,7 +74,7 @@ test_expect_success 'skip-worktree on files outside sparse patterns' '
 
 test_expect_success 'in partial clone, sparse checkout only fetches needed blobs' '
 	test_create_repo server &&
-	git clone --template= "file://$(pwd)/server" client &&
+	git clone "file://$(pwd)/server" client &&
 
 	test_config -C server uploadpack.allowfilter 1 &&
 	test_config -C server uploadpack.allowanysha1inwant 1 &&

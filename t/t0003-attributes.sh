@@ -3,7 +3,6 @@
 test_description=gitattributes
 
 TEST_PASSES_SANITIZE_LEAK=true
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 attr_check_basic () {
@@ -285,7 +284,7 @@ test_expect_success 'using --git-dir and --work-tree' '
 '
 
 test_expect_success 'setup bare' '
-	git clone --template= --bare . bare.git
+	git clone --bare . bare.git
 '
 
 test_expect_success 'bare repository: check that .gitattribute is ignored' '

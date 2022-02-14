@@ -923,7 +923,7 @@ test_expect_success 'migrate a remote from named file in $GIT_DIR/remotes' '
 '
 
 test_expect_success 'migrate a remote from named file in $GIT_DIR/branches' '
-	git clone --template= one six &&
+	git clone one six &&
 	origin_url=$(pwd)/one &&
 	(
 		cd six &&
@@ -939,7 +939,7 @@ test_expect_success 'migrate a remote from named file in $GIT_DIR/branches' '
 '
 
 test_expect_success 'migrate a remote from named file in $GIT_DIR/branches (2)' '
-	git clone --template= one seven &&
+	git clone one seven &&
 	(
 		cd seven &&
 		git remote rm origin &&

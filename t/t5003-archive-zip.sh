@@ -2,7 +2,6 @@
 
 test_description='git archive --format=zip test'
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 SUBSTFORMAT=%H%n
@@ -141,7 +140,7 @@ test_expect_success 'setup export-subst and diff attributes' '
 '
 
 test_expect_success 'create bare clone' '
-	git clone --template= --bare . bare.git &&
+	git clone --bare . bare.git &&
 	mkdir bare.git/info &&
 	cp .git/info/attributes bare.git/info/attributes &&
 	# Recreate our changes to .git/config rather than just copying it, as

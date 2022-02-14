@@ -6,7 +6,6 @@ This test verifies the recurse-submodules feature correctly greps across
 submodules.
 '
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 GIT_TEST_FATAL_REGISTER_SUBMODULE_ODB=1

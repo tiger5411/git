@@ -361,7 +361,7 @@ test_expect_success 'replace-objects invalidates commit-graph' '
 test_expect_success 'commit grafts invalidate commit-graph' '
 	cd "$TRASH_DIRECTORY" &&
 	test_when_finished rm -rf graft &&
-	git clone --template= full graft &&
+	git clone full graft &&
 	(
 		cd graft &&
 		git commit-graph write --reachable &&

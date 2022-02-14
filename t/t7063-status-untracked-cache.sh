@@ -86,7 +86,7 @@ test_expect_success 'core.untrackedCache is unset' '
 '
 
 test_expect_success 'setup' '
-	git init --template= worktree &&
+	git init worktree &&
 	cd worktree &&
 	mkdir done dtwo dthree &&
 	touch one two three done/one dtwo/two dthree/three &&

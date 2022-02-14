@@ -11,7 +11,6 @@ test_description='sparse checkout tests
   A	init.t
 '
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 . "$TEST_DIRECTORY"/lib-read-tree.sh
 

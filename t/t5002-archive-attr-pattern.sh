@@ -3,7 +3,6 @@
 test_description='git archive attribute pattern tests'
 
 TEST_PASSES_SANITIZE_LEAK=true
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 test_expect_exists() {
@@ -56,7 +55,7 @@ test_expect_success 'setup' '
 
 	git commit -m. &&
 
-	git clone --template= --bare . bare &&
+	git clone --bare . bare &&
 	mkdir bare/info &&
 	cp .git/info/attributes bare/info/attributes
 '

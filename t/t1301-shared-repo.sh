@@ -48,7 +48,7 @@ done
 test_expect_success 'shared=all' '
 	mkdir sub &&
 	cd sub &&
-	git init --template= --shared=all &&
+	git init --shared=all &&
 	test 2 = $(git config core.sharedrepository)
 '
 

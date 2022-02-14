@@ -24,7 +24,6 @@ commit id embedding:
 
 '
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 SUBSTFORMAT=%H%n
@@ -159,7 +158,7 @@ test_expect_success 'setup export-subst' '
 '
 
 test_expect_success 'create bare clone' '
-	git clone --template= --bare . bare.git &&
+	git clone --bare . bare.git &&
 	mkdir bare.git/info &&
 	cp .git/info/attributes bare.git/info/attributes
 '

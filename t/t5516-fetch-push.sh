@@ -17,7 +17,6 @@ This test checks the following functionality:
 GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME=main
 export GIT_TEST_DEFAULT_INITIAL_BRANCH_NAME
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 D=$(pwd)
@@ -26,7 +25,7 @@ mk_empty () {
 	repo_name="$1"
 	test_when_finished "rm -rf \"$repo_name\"" &&
 	test_path_is_missing "$repo_name" &&
-	git init --template= "$repo_name" &&
+	git init "$repo_name" &&
 	mkdir "$repo_name"/.git/hooks &&
 	git -C "$repo_name" config receive.denyCurrentBranch warn
 }
@@ -79,7 +78,7 @@ mk_test_with_hooks() {
 
 mk_child() {
 	test_when_finished "rm -rf \"$2\"" &&
-	git clone --template= "$1" "$2"
+	git clone "$1" "$2"
 }
 
 check_push_result () {

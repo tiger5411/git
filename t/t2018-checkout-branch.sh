@@ -2,7 +2,6 @@
 
 test_description='checkout'
 
-TEST_CREATE_REPO_NO_TEMPLATE=1
 . ./test-lib.sh
 
 # Arguments: [!] <branch> <oid> [<checkout options>]

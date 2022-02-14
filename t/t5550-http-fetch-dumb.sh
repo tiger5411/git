@@ -422,7 +422,7 @@ test_expect_success 'set up evil alternates scheme' '
 	sha1=$(git -C "$victim" rev-parse HEAD) &&
 
 	evil=$HTTPD_DOCUMENT_ROOT_PATH/evil.git &&
-	git init --template= --bare "$evil" &&
+	git init --bare "$evil" &&
 	mkdir "$evil/info" &&
 	# do this by hand to avoid object existence check
 	printf "%s\\t%s\\n" $sha1 refs/heads/main >"$evil/info/refs"
