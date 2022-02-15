@@ -1471,6 +1471,13 @@ enum child_state {
 	GIT_CP_WAIT_CLEANUP,
 };
 
+struct parallel_process_child {
+	enum child_state state;
+	struct child_process process;
+	struct strbuf err;
+	void *data;
+};
+
 struct parallel_processes {
 	void *data;
 
@@ -1481,12 +1488,7 @@ struct parallel_processes {
 	start_failure_fn start_failure;
 	task_finished_fn task_finished;
 
-	struct {
-		enum child_state state;
-		struct child_process process;
-		struct strbuf err;
-		void *data;
-	} *children;
+	struct parallel_process_child *children;
 	/*
 	 * The struct pollfd is logically part of *children,
 	 * but the system call expects it as its own array.
@@ -1518,9 +1520,12 @@ static void kill_children(struct parallel_processes *pp, int signo)
 {
 	int i, n = pp->max_processes;
 
-	for (i = 0; i < n; i++)
-		if (pp->children[i].state == GIT_CP_WORKING)
-			kill(pp->children[i].process.pid, signo);
+	for (i = 0; i < n; i++) {
+		struct parallel_process_child *ppc = &pp->children[i];
+
+		if (ppc->state == GIT_CP_WORKING)
+			kill(ppc->process.pid, signo);
+	}
 }
 
 static struct parallel_processes *pp_for_signal;
@@ -1564,10 +1569,13 @@ static void pp_init(struct parallel_processes *pp,
 	strbuf_init(&pp->buffered_output, 0);
 
 	for (i = 0; i < n; i++) {
-		strbuf_init(&pp->children[i].err, 0);
-		child_process_init(&pp->children[i].process);
-		pp->pfd[i].events = POLLIN | POLLHUP;
-		pp->pfd[i].fd = -1;
+		struct parallel_process_child *ppc = &pp->children[i];
+		struct pollfd *pfd = &pp->pfd[i];
+
+		strbuf_init(&ppc->err, 0);
+		child_process_init(&ppc->process);
+		pfd->events = POLLIN | POLLHUP;
+		pfd->fd = -1;
 	}
 
 	pp_for_signal = pp;
@@ -1580,8 +1588,10 @@ static void pp_cleanup(struct parallel_processes *pp)
 
 	trace_printf("run_processes_parallel: done");
 	for (i = 0; i < pp->max_processes; i++) {
-		strbuf_release(&pp->children[i].err);
-		child_process_clear(&pp->children[i].process);
+		struct parallel_process_child *ppc = &pp->children[i];
+
+		strbuf_release(&ppc->err);
+		child_process_clear(&ppc->process);
 	}
 
 	free(pp->children);
@@ -1607,40 +1617,41 @@ static void pp_cleanup(struct parallel_processes *pp)
 static int pp_start_one(struct parallel_processes *pp)
 {
 	int i, code;
+	struct parallel_process_child *ppc;
+	struct pollfd *pfd;
 
-	for (i = 0; i < pp->max_processes; i++)
-		if (pp->children[i].state == GIT_CP_FREE)
+	for (i = 0; i < pp->max_processes; i++) {
+		ppc = &pp->children[i];
+		if (ppc->state == GIT_CP_FREE)
 			break;
+	}
 	if (i == pp->max_processes)
 		BUG("bookkeeping is hard");
+	pfd = &pp->pfd[i];
 
-	code = pp->get_next_task(&pp->children[i].process,
-				 &pp->children[i].err,
-				 pp->data,
-				 &pp->children[i].data);
+	code = pp->get_next_task(&ppc->process, &ppc->err, pp->data,
+				 &ppc->data);
 	if (!code) {
-		strbuf_addbuf(&pp->buffered_output, &pp->children[i].err);
-		strbuf_reset(&pp->children[i].err);
+		strbuf_addbuf(&pp->buffered_output, &ppc->err);
+		strbuf_reset(&ppc->err);
 		return 1;
 	}
-	pp->children[i].process.err = -1;
-	pp->children[i].process.stdout_to_stderr = 1;
-	pp->children[i].process.no_stdin = 1;
+	ppc->process.err = -1;
+	ppc->process.stdout_to_stderr = 1;
+	ppc->process.no_stdin = 1;
 
-	if (start_command(&pp->children[i].process)) {
-		code = pp->start_failure(&pp->children[i].err,
-					 pp->data,
-					 pp->children[i].data);
-		strbuf_addbuf(&pp->buffered_output, &pp->children[i].err);
-		strbuf_reset(&pp->children[i].err);
+	if (start_command(&ppc->process)) {
+		code = pp->start_failure(&ppc->err, pp->data, &ppc->data);
+		strbuf_addbuf(&pp->buffered_output, &ppc->err);
+		strbuf_reset(&ppc->err);
 		if (code)
 			pp->shutdown = 1;
 		return code;
 	}
 
 	pp->nr_processes++;
-	pp->children[i].state = GIT_CP_WORKING;
-	pp->pfd[i].fd = pp->children[i].process.err;
+	ppc->state = GIT_CP_WORKING;
+	pfd->fd = ppc->process.err;
 	return 0;
 }
 
@@ -1657,48 +1668,59 @@ static void pp_buffer_stderr(struct parallel_processes *pp, int output_timeout)
 
 	/* Buffer output from all pipes. */
 	for (i = 0; i < pp->max_processes; i++) {
-		if (pp->children[i].state == GIT_CP_WORKING &&
-		    pp->pfd[i].revents & (POLLIN | POLLHUP)) {
-			int n = strbuf_read_once(&pp->children[i].err,
-						 pp->children[i].process.err, 0);
+		struct parallel_process_child *ppc = &pp->children[i];
+		struct pollfd *pfd = &pp->pfd[i];
+
+		if (ppc->state == GIT_CP_WORKING &&
+		    pfd->revents & (POLLIN | POLLHUP)) {
+			int n = strbuf_read_once(&ppc->err, ppc->process.err,
+						 0);
 			if (n == 0) {
-				close(pp->children[i].process.err);
-				pp->children[i].state = GIT_CP_WAIT_CLEANUP;
-			} else if (n < 0)
-				if (errno != EAGAIN)
-					die_errno("read");
+				close(ppc->process.err);
+				ppc->state = GIT_CP_WAIT_CLEANUP;
+			} else if (n < 0 && errno != EAGAIN) {
+				die_errno("read");
+			}
 		}
 	}
 }
 
 static void pp_output(struct parallel_processes *pp)
 {
-	int i = pp->output_owner;
-	if (pp->children[i].state == GIT_CP_WORKING &&
-	    pp->children[i].err.len) {
-		strbuf_write(&pp->children[i].err, stderr);
-		strbuf_reset(&pp->children[i].err);
+	struct parallel_process_child *ppc = &pp->children[pp->output_owner];
+
+	if (ppc->state == GIT_CP_WORKING && ppc->err.len) {
+		strbuf_write(&ppc->err, stderr);
+		strbuf_reset(&ppc->err);
 	}
 }
 
 static int pp_collect_finished(struct parallel_processes *pp)
 {
-	int i, code;
-	int n = pp->max_processes;
+	const int n = pp->max_processes;
 	int result = 0;
 
 	while (pp->nr_processes > 0) {
-		for (i = 0; i < pp->max_processes; i++)
-			if (pp->children[i].state == GIT_CP_WAIT_CLEANUP)
+		int i, code;
+		struct parallel_process_child *ppc;
+		struct pollfd *pfd;
+
+		for (i = 0; i < n; i++) {
+			ppc = &pp->children[i];
+			pfd = &pp->pfd[i];
+
+			if (ppc->state == GIT_CP_WAIT_CLEANUP)
 				break;
+		}
+
 		if (i == pp->max_processes)
 			break;
 
-		code = finish_command(&pp->children[i].process);
+		code = finish_command(&ppc->process);
 
 		code = pp->task_finished(code,
-					 &pp->children[i].err, pp->data,
-					 pp->children[i].data);
+					 &ppc->err, pp->data,
+					 ppc->data);
 
 		if (code)
 			result = code;
@@ -1706,16 +1728,16 @@ static int pp_collect_finished(struct parallel_processes *pp)
 			break;
 
 		pp->nr_processes--;
-		pp->children[i].state = GIT_CP_FREE;
-		pp->pfd[i].fd = -1;
-		child_process_init(&pp->children[i].process);
+		ppc->state = GIT_CP_FREE;
+		pfd->fd = -1;
+		child_process_init(&ppc->process);
 
 		if (i != pp->output_owner) {
-			strbuf_addbuf(&pp->buffered_output, &pp->children[i].err);
-			strbuf_reset(&pp->children[i].err);
+			strbuf_addbuf(&pp->buffered_output, &ppc->err);
+			strbuf_reset(&ppc->err);
 		} else {
-			strbuf_write(&pp->children[i].err, stderr);
-			strbuf_reset(&pp->children[i].err);
+			strbuf_write(&ppc->err, stderr);
+			strbuf_reset(&ppc->err);
 
 			/* Output all other finished child processes */
 			strbuf_write(&pp->buffered_output, stderr);
