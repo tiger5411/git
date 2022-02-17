@@ -1036,6 +1036,31 @@ test_todo () {
 	BUG "a test_todo didn't pass with either --want ('$want') or --expect ('$expect')"
 }
 
+# todo_test_path is a test_path_* for use in conjunction with
+# "test_expect_todo".
+#
+# It takes "want_fn" and "expect_fn" arguments of e.g. "is_file" or
+# "is_dir", which will be turned into corresponding "test_file_*"
+# calls. Use it like:
+#
+#	test_expect_todo 'foo should be a directory' '
+#		>foo &&
+#		todo_test_path is_dir is_file foo
+#	'
+todo_test_path () {
+	test "$#" -ne 3 && BUG "3 param, not $#"
+	local want_fn=$1
+	local expect_fn=$2
+	local path=$3 &&
+	shift 3 &&
+
+	test_todo \
+		--want "test_path_$want_fn" \
+		--expect "test_path_$expect_fn" \
+		-- \
+		"$path"
+}
+
 # test_line_count checks that a file has the number of lines it
 # ought to. For example:
 #

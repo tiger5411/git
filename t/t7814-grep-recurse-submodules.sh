@@ -549,7 +549,7 @@ test_expect_todo 'grep --textconv correctly reads submodule .git/info/attributes
 	todo_test_cmp want expect actual
 '
 
-test_expect_failure 'grep saves textconv cache in the appropriate repository' '
+test_expect_todo 'grep saves textconv cache in the appropriate repository' '
 	reset_and_clean &&
 	test_config_global diff.d2x_cached.textconv "sed -e \"s/d/x/\"" &&
 	test_config_global diff.d2x_cached.cachetextconv true &&
@@ -562,8 +562,8 @@ test_expect_failure 'grep saves textconv cache in the appropriate repository' '
 	super_textconv_cache="$(git rev-parse --git-path refs/notes/textconv/d2x_cached)" &&
 	sub_textconv_cache="$(git -C submodule rev-parse \
 			--path-format=absolute --git-path refs/notes/textconv/d2x_cached)" &&
-	test_path_is_missing "$super_textconv_cache" &&
-	test_path_is_file "$sub_textconv_cache"
+	todo_test_path is_missing is_file "$super_textconv_cache" &&
+	todo_test_path is_file is_missing "$sub_textconv_cache"
 '
 
 test_expect_success 'grep partially-cloned submodule' '
