@@ -689,6 +689,7 @@ static void strip_extension(const char **argv)
 static void handle_builtin(int argc, const char **argv)
 {
 	struct strvec args = STRVEC_INIT;
+	struct strvec *orig_args;
 	const char *cmd;
 	struct cmd_struct *builtin;
 
@@ -713,8 +714,13 @@ static void handle_builtin(int argc, const char **argv)
 	}
 
 	builtin = get_builtin(cmd);
-	if (builtin)
-		exit(run_builtin(builtin, argc, argv));
+	if (builtin) {
+		int code =  run_builtin(builtin, argc, argv);
+
+		orig_args = &args;
+		strvec_clear(orig_args);
+		exit(code);
+	}
 	strvec_clear(&args);
 }
 
