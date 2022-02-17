@@ -959,6 +959,83 @@ test_path_is_missing () {
 	fi
 }
 
+# Usage: test_todo [<common-prefix>] <options> [-- <common-suffix>...]
+#	--want <want>
+#		The condition we'd like. Injected between
+#		<common-prefix> and <common-suffix> arguments.
+#	--expect <expect>
+#		The condition we have now. Injected in the same way as
+#		the arguments to --want.
+#
+# test_todo is a wrapper for use with "test_expect_todo". It declares
+# an outcome we want, and one we currently expect:
+#
+#	test_todo --want true --expect false
+#
+# It can also take a <common-prefix> prefix along with
+# <common-suffix>... parameters after a "--", e.g.:
+#
+#	# We want 1 line, not 2
+# 	test_todo test_line_count --want "= 1" --expect "= 2" -- actual
+#
+# Here both variants of the "test_line_count" will be run to assert
+# that the "want" variant doesn't pass yet, and that the "expect"
+# variant describes the current behavior.
+#
+# Because we run both neither of them can mutate the test
+# state. I.e. they must be read-only commands such as "wc -l", and not
+# a state-altering command such as "rm".
+test_todo () {
+	local common_fn= &&
+	local have_want= &&
+	local want= &&
+	local expect= &&
+	local have_expect= &&
+	while test $# != 0
+	do
+		case "$1" in
+		--want)
+			want="$2" &&
+			have_want=t &&
+			shift
+			;;
+		--expect)
+			expect="$2" &&
+			have_expect=t &&
+			shift
+			;;
+		--)
+			shift &&
+			break
+			;;
+		*)
+			if test -n "$common_fn"
+			then
+				BUG "the <common-fn> can only be given once" &&
+				return 1
+			fi &&
+			common_fn="$1"
+			;;
+		esac
+		shift
+	done &&
+	if test "$have_want$have_expect" != "tt"
+	then
+		BUG "test_todo must get a --want <want> and --expect <expect>"
+	fi &&
+
+	if $common_fn $want "$@"
+	then
+		BUG "a test_todo succeeded with --want ('$want').  Turn it into a test_expect_success + $@ $want?" &&
+		return 1
+	elif $common_fn $expect "$@"
+	then
+		say "a test_todo will succeed with --expect ('$expect'), we eventually want '$want' instead" >&3 &&
+		return 0
+	fi &&
+	BUG "a test_todo didn't pass with either --want ('$want') or --expect ('$expect')"
+}
+
 # test_line_count checks that a file has the number of lines it
 # ought to. For example:
 #
