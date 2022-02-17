@@ -43,15 +43,6 @@ struct strvec {
  */
 void strvec_init(struct strvec *);
 
-/**
- * Ensure that at least this amount of unused memory is available after
- * `nr`. This is used when you know a typical size for what you will add
- * and want to avoid repetitive automatic resizing of the underlying strvec.
- * This is never a needed operation, but can be useful for performance in
- * some cases.
- */
-void strvec_grow(struct strvec *array, size_t extra);
-
 /* Push a copy of a string onto the end of the array. */
 const char *strvec_push(struct strvec *, const char *);
 
@@ -72,21 +63,6 @@ void strvec_pushl(struct strvec *, ...);
 
 /* Push a null-terminated array of strings onto the end of the array. */
 void strvec_pushv(struct strvec *, const char **);
-
-/**
- * Push the contents of another "struct strvec *" onto the end of the
- * array. Like strvec_pushv(), this is a convenience wrapper that
- * calls strvec_push() in a loop.
- */
-void strvec_pushvec(struct strvec *, const struct strvec *);
-
-/**
- * Push the contents of another "struct strvec *" onto the end of the
- * array without duplicating any of the items. Useful for remembering
- * what was in another strvec, to e.g. later strvec_clear() data that
- * got handed to a parse_options() invocation that munged "v".
- */
-void strvec_pushvec_nodup(struct strvec *, const struct strvec *);
 
 /**
  * Remove the final element from the array. If there are no
