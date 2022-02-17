@@ -390,7 +390,7 @@ static int git_help_config(const char *var, const char *value, void *cb)
 	if (!strcmp(var, "help.htmlpath")) {
 		if (!value)
 			return config_error_nonbool(var);
-		html_path = xstrdup(value);
+		html_path = value;
 		return 0;
 	}
 	if (!strcmp(var, "man.viewer")) {
