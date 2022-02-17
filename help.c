@@ -671,6 +671,7 @@ const char *help_unknown_cmd(const char *cmd)
 			fprintf(stderr, "\t%s\n", main_cmds.names[i]->name);
 	}
 
+	clean_cmdnames(&main_cmds);
 	return NULL;
 }
 
