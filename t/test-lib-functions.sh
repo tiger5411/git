@@ -1006,6 +1006,35 @@ test_todo () {
 	return 1
 }
 
+# todo_test_path is a test_path_* for use in conjunction with
+# "test_expect_todo".
+#
+# It takes "want_fn" and "expect_fn" arguments of e.g. "is_file" or
+# "is_dir", which will be turned into corresponding "test_file_*"
+# calls. Use it like:
+#
+#	test_expect_todo 'foo should be a directory' '
+#		>foo &&
+#		todo_test_path is_dir is_file foo
+#	'
+#
+# This helper is a trivial convenience wrapper for doing the same with
+# the underlying "test_todo" function.
+
+todo_test_path () {
+	test "$#" -ne 3 && BUG_ARITY todo_test_path 3 $#
+	local want_fn=$1
+	local expect_fn=$2
+	local path=$3 &&
+	shift 3 &&
+
+	test_todo \
+		--want "test_path_$want_fn" \
+		--expect "test_path_$expect_fn" \
+		-- \
+		"$path"
+}
+
 # test_line_count checks that a file has the number of lines it
 # ought to. For example:
 #
