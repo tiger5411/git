@@ -10,19 +10,12 @@ void strvec_init(struct strvec *array)
 	memcpy(array, &blank, sizeof(*array));
 }
 
-void strvec_grow(struct strvec *array, size_t extra)
-{
-	int new_vec = array->v == empty_strvec;
-
-	if (new_vec)
-		array->v = NULL;
-	ALLOC_GROW(array->v, array->nr + 1, array->alloc);
-}
-
 static void strvec_push_nodup(struct strvec *array, const char *value)
 {
-	strvec_grow(array, 1);
+	if (array->v == empty_strvec)
+		array->v = NULL;
 
+	ALLOC_GROW(array->v, array->nr + 2, array->alloc);
 	array->v[array->nr++] = value;
 	array->v[array->nr] = NULL;
 }
@@ -63,24 +56,6 @@ void strvec_pushv(struct strvec *array, const char **items)
 		strvec_push(array, *items);
 }
 
-void strvec_pushvec(struct strvec *array, const struct strvec *items)
-{
-	size_t i;
-
-	strvec_grow(array, items->nr);
-	for (i = 0; i < items->nr; i++)
-		strvec_push(array, items->v[i]);
-}
-
-void strvec_pushvec_nodup(struct strvec *array, const struct strvec *items)
-{
-	size_t i;
-
-	strvec_grow(array, items->nr);
-	for (i = 0; i < items->nr; i++)
-		strvec_push_nodup(array, items->v[i]);
-}
-
 void strvec_pop(struct strvec *array)
 {
 	if (!array->nr)
@@ -114,10 +89,8 @@ void strvec_clear(struct strvec *array)
 {
 	if (array->v != empty_strvec) {
 		int i;
-		for (i = 0; i < array->nr; i++) {
-			//fprintf(stderr, "now freeing %d: %s\n", i, array->v[i]);
+		for (i = 0; i < array->nr; i++)
 			free((char *)array->v[i]);
-		}
 		free(array->v);
 	}
 	strvec_init(array);
