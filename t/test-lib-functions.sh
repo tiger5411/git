@@ -718,11 +718,13 @@ test_verify_prereq () {
 	BUG "'$test_prereq' does not look like a prereq"
 }
 
-test_expect_failure () {
+_test_expect_todo () {
+	local func=$1
+	shift
 	test_start_
 	test "$#" = 3 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 2 ||
-	BUG_ARITY test_expect_failure "2 or 3" $#
+	BUG_ARITY "$func" "2 or 3" $#
 	test_verify_prereq
 	export test_prereq
 	if ! test_skip "$@"
@@ -730,12 +732,30 @@ test_expect_failure () {
 		say >&3 "checking known breakage of $TEST_NUMBER.$test_count '$1': $2"
 		if test_run_ "$2" expecting_failure
 		then
-			test_known_broken_ok_ "$1"
+			case "$func" in
+			test_expect_todo) test_known_broken_ok_ "$func" "$1" ;;
+			test_expect_failure) test_known_broken_ok_ "$func" "$1" ;;
+			esac
 		else
-			test_known_broken_failure_ "$1"
+			case "$func" in
+			test_expect_todo)
+				test_title_=$1
+				shift
+				test_failure_ "$test_title_ (broken 'test_expect_todo'!)" "$@"
+				;;
+			test_expect_failure) test_known_broken_failure_ "$func" "$1" ;;
+			esac
 		fi
 	fi
 	test_finish_
+}
+
+test_expect_failure () {
+	_test_expect_todo test_expect_failure "$@"
+}
+
+test_expect_todo () {
+	_test_expect_todo test_expect_todo "$@"
 }
 
 test_expect_success () {
