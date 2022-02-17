@@ -28,6 +28,13 @@ void list_all_other_cmds(struct string_list *list);
 void list_cmds_by_category(struct string_list *list,
 			   const char *category);
 void list_cmds_by_config(struct string_list *list);
+
+/**
+ * Emit a message indicating that a given "cmd" is not a known command
+ * and return NULL. Or, if help.autoCorrect is set appropriately will
+ * auto-correct the given "cmd" to the non-NULL return value. The
+ * caller likely wants to immediately exit(1) on a NULL return value.
+ */
 const char *help_unknown_cmd(const char *cmd);
 void load_command_list(const char *prefix,
 		       struct cmdnames *main_cmds,

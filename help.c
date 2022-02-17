@@ -563,7 +563,7 @@ const char *help_unknown_cmd(const char *cmd)
 
 	if (autocorrect == AUTOCORRECT_NEVER) {
 		fprintf_ln(stderr, _("git: '%s' is not a git command. See 'git --help'."), cmd);
-		exit(1);
+		return NULL;
 	}
 
 	load_command_list("git-", &main_cmds, &other_cmds);
@@ -671,7 +671,7 @@ const char *help_unknown_cmd(const char *cmd)
 			fprintf(stderr, "\t%s\n", main_cmds.names[i]->name);
 	}
 
-	exit(1);
+	return NULL;
 }
 
 void get_version_info(struct strbuf *buf, int show_build_options)

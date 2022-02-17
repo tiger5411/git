@@ -526,9 +526,10 @@ static void show_html_page(const char *page)
 	open_html(page_path.buf);
 }
 
-static const char *check_git_cmd(const char* cmd)
+static const char *check_git_cmd(const char* cmd, int *showed_alias_help)
 {
 	char *alias;
+	*showed_alias_help = 0;
 
 	if (is_git_command(cmd))
 		return cmd;
@@ -549,7 +550,8 @@ static const char *check_git_cmd(const char* cmd)
 		if (!exclude_guides || alias[0] == '!') {
 			printf_ln(_("'%s' is aliased to '%s'"), cmd, alias);
 			free(alias);
-			exit(0);
+			*showed_alias_help = 1;
+			return NULL;
 		}
 		/*
 		 * Otherwise, we pretend that the command was "git
@@ -586,6 +588,7 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 	int nongit;
 	enum help_format parsed_help_format;
 	const char *page;
+	int showed_alias_help;
 
 	argc = parse_options(argc, argv, prefix, builtin_help_options,
 			builtin_help_usage, 0);
@@ -639,7 +642,12 @@ int cmd_help(int argc, const char **argv, const char *prefix)
 	if (help_format == HELP_FORMAT_NONE)
 		help_format = parse_help_format(DEFAULT_HELP_FORMAT);
 
-	argv[0] = check_git_cmd(argv[0]);
+	argv[0] = check_git_cmd(argv[0], &showed_alias_help);
+	if (!argv[0]) {
+		if (showed_alias_help)
+			return 0;
+		return 1;
+	}
 
 	page = cmd_to_page(argv[0]);
 	switch (help_format) {

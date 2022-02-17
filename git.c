@@ -923,6 +923,8 @@ int cmd_main(int argc, const char **argv)
 		}
 		if (!done_help) {
 			cmd = argv[0] = help_unknown_cmd(cmd);
+			if (!cmd)
+				return 1;
 			done_help = 1;
 		} else
 			break;
