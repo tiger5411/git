@@ -857,6 +857,7 @@ test_expect_success 'subtest: function arity' '
 	2	test_cmp
 	2	test_cmp_bin
 	3	todo_test_cmp
+	3	todo_test_path
 	1	test_must_be_empty
 	1\ or\ 2	test_seq
 	2	test_bool_env
