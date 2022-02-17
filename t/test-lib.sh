@@ -770,21 +770,45 @@ test_failure_ () {
 }
 
 test_known_broken_ok_ () {
+	local func=$1
+	shift
+
 	if test -n "$write_junit_xml"
 	then
 		write_junit_xml_testcase "$* (breakage fixed)"
 	fi
-	test_fixed=$(($test_fixed+1))
-	say_color error "ok $test_count - $@ # TODO known breakage vanished"
+
+	if test "$func" = "test_expect_todo"
+	then
+		# test_expect_todo
+		test_broken=$(($test_broken+1))
+		say_color warn "not ok $test_count - $@ # TODO known breakage"
+	else
+		# test_expect_failure
+		test_fixed=$(($test_fixed+1))
+		say_color error "ok $test_count - $@ # TODO known breakage vanished"
+	fi
 }
 
 test_known_broken_failure_ () {
+	local func=$1
+	shift
+
 	if test -n "$write_junit_xml"
 	then
 		write_junit_xml_testcase "$* (known breakage)"
 	fi
-	test_broken=$(($test_broken+1))
-	say_color warn "not ok $test_count - $@ # TODO known breakage"
+
+	if test "$func" = "test_expect_todo"
+	then
+		# test_expect_todo
+		test_fixed=$(($test_fixed+1))
+		say_color error "not ok $test_count - $@ # TODO a 'known breakage' changed behavior!"
+	else
+		# test_expect_failure
+		test_broken=$(($test_broken+1))
+		say_color warn "not ok $test_count - $@ # TODO known breakage"
+	fi
 }
 
 test_debug () {

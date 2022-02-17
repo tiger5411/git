@@ -805,10 +805,27 @@ see test-lib-functions.sh for the full list and their options.
 	test_expect_success PERL,PYTHON 'yo dawg' \
 	    ' test $(perl -E 'print eval "1 +" . qx[python -c "print 2"]') == "4" '
 
+ - test_expect_todo [<prereq>] <message> <script>
+
+   A "test_expect_success" which on "success" will mark the test as a
+   TODO test, and on failure will emit a real failure.
+
+   This should be used to mark a test whose exact bad behavior is
+   known, but whose outcome isn't preferred, to distinguish it from
+   those tests that use "test_expect_success" to indicate known and
+   preferred behavior.
+
+   Like test_expect_success this function can optionally use a three
+   argument invocation with a prerequisite as the first argument.
+
  - test_expect_failure [<prereq>] <message> <script>
 
-   This is NOT the opposite of test_expect_success, but is used
-   to mark a test that demonstrates a known breakage.  Unlike
+   This is NOT the opposite of test_expect_success, but can be used
+   to mark a test that demonstrates a known FUZZY breakage.
+
+   If the exact breakage is known the "test_expect_todo" function should be
+   used instead. This should only be used in those cases where it's
+   hard to pin down the exact nature of the failure. Unlike
    the usual test_expect_success tests, which say "ok" on
    success and "FAIL" on failure, this will say "FIXED" on
    success and "still broken" on failure.  Failures from these

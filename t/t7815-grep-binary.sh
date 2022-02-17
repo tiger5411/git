@@ -64,8 +64,8 @@ test_expect_success 'git grep ile a' '
 	git grep ile a
 '
 
-test_expect_failure 'git grep .fi a' '
-	git grep .fi a
+test_expect_todo 'git grep .fi a' '
+	test_must_fail git grep .fi a
 '
 
 test_expect_success 'grep respects binary diff attribute' '

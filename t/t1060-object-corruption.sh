@@ -112,8 +112,8 @@ test_expect_success 'clone --local detects missing objects' '
 	test_must_fail git clone --local missing missing-checkout
 '
 
-test_expect_failure 'clone --local detects misnamed objects' '
-	test_must_fail git clone --local misnamed misnamed-checkout
+test_expect_todo 'clone --local detects misnamed objects' '
+	git clone --local misnamed misnamed-checkout
 '
 
 test_expect_success 'fetch into corrupted repo with index-pack' '
