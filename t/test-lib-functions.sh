@@ -1263,6 +1263,28 @@ test_cmp () {
 	eval "$GIT_TEST_CMP" '"$@"'
 }
 
+# todo_test_cmp is a "test_cmp" for use in conjunction with
+# "test_expect_todo".
+#
+# It takes a mandatory extra first argument of "want", indicating the
+# output we'd like to have once we turn that "test_expect_todo" into a
+# "test_expect_success":
+#
+#	test_expect_todo 'foo still doesn't work' '
+#		echo yay >want &&
+#		echo error >expect &&
+#		foo >actual &&
+#		test_cmp want expect actual
+#	'
+todo_test_cmp () {
+	test "$#" -ne 3 && BUG "3 param, not $#"
+	local want=$1 &&
+	local expect=$2 &&
+	local actual=$3 &&
+
+	test_todo test_cmp --want "$want" --expect "$expect" -- "$actual"
+}
+
 # Check that the given config key has the expected value.
 #
 #    test_cmp_config [-C <dir>] <expected-value>
