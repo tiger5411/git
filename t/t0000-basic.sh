@@ -204,6 +204,43 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	EOF
 '
 
+test_expect_success 'subtest: test_expect_todo with test_todo' '
+	write_and_run_sub_test_lib_test test-expect-todo <<-\EOF &&
+	test_expect_todo "command not implemented yet" "
+		test_todo \
+			--want \"git unimplemented\" \
+			--expect \"test_must_fail git unimplemented\"
+	"
+	test_done
+	EOF
+	check_sub_test_lib_test test-expect-todo <<-\EOF
+	> not ok 1 - command not implemented yet # TODO known breakage
+	> # still have 1 known breakage(s)
+	> 1..1
+	EOF
+'
+
+test_expect_success 'subtest: test_expect_todo with test_todo: prefix + suffix arguments' '
+	write_and_run_sub_test_lib_test test-expect-todo-pfx <<-\EOF &&
+	test_expect_todo "prefix argument for test_todo" "
+		echo x >want &&
+		echo y >expect &&
+		cp expect actual &&
+		test_todo test_cmp \
+			--want want \
+			--expect expect \
+			-- \
+			actual
+	"
+	test_done
+	EOF
+	check_sub_test_lib_test test-expect-todo-pfx <<-\EOF
+	> not ok 1 - prefix argument for test_todo # TODO known breakage
+	> # still have 1 known breakage(s)
+	> 1..1
+	EOF
+'
+
 test_expect_success 'subtest: --verbose option' '
 	write_and_run_sub_test_lib_test_err t1234-verbose --verbose <<-\EOF &&
 	test_expect_success "passing test" true
