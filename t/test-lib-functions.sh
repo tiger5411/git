@@ -966,6 +966,10 @@ test_path_is_missing () {
 #	--expect <expect>
 #		The condition we have now. Injected in the same way as
 #		the arguments to --want.
+#	--reset <reset>
+#		A command to run between the <want> and <expect>
+#		conditions to reset the repository state. Used e.g. if
+#		both run a "git rm" command that might succeed.
 #
 # test_todo is a wrapper for use with "test_expect_todo". It declares
 # an outcome we want, and one we currently expect:
@@ -985,8 +989,12 @@ test_path_is_missing () {
 # Because we run both neither of them can mutate the test
 # state. I.e. they must be read-only commands such as "wc -l", and not
 # a state-altering command such as "rm".
+#
+# To run a command that mutates the repository state supply a --reset
+# option, e.g. "git reset --hard" if you need to run "git rm".
 test_todo () {
 	local common_fn= &&
+	local reset= &&
 	local have_want= &&
 	local want= &&
 	local expect= &&
@@ -1002,6 +1010,10 @@ test_todo () {
 		--expect)
 			expect="$2" &&
 			have_expect=t &&
+			shift
+			;;
+		--reset)
+			reset="$2" &&
 			shift
 			;;
 		--)
@@ -1028,10 +1040,16 @@ test_todo () {
 	then
 		BUG "a test_todo succeeded with --want ('$want').  Turn it into a test_expect_success + $@ $want?" &&
 		return 1
-	elif $common_fn $expect "$@"
-	then
-		say "a test_todo will succeed with --expect ('$expect'), we eventually want '$want' instead" >&3 &&
-		return 0
+	else
+		if test -n "$reset"
+		then
+			$reset
+		fi &&
+		if $common_fn $expect "$@"
+		then
+			say "a test_todo will succeed with --expect ('$expect'), we eventually want '$want' instead" >&3 &&
+			return 0
+		fi
 	fi &&
 	BUG "a test_todo didn't pass with either --want ('$want') or --expect ('$expect')"
 }
