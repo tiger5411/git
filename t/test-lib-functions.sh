@@ -722,7 +722,7 @@ test_expect_failure () {
 	test_start_
 	test "$#" = 3 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 2 ||
-	BUG "not 2 or 3 parameters to test-expect-failure"
+	BUG_ARITY test_expect_failure "2 or 3" $#
 	test_verify_prereq
 	export test_prereq
 	if ! test_skip "$@"
@@ -742,7 +742,7 @@ test_expect_success () {
 	test_start_
 	test "$#" = 3 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 2 ||
-	BUG "not 2 or 3 parameters to test-expect-success"
+	BUG_ARITY test_expect_success "2 or 3" $#
 	test_verify_prereq
 	export test_prereq
 	if ! test_skip "$@"
@@ -769,7 +769,7 @@ test_expect_success () {
 test_external () {
 	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 3 ||
-	BUG "not 3 or 4 parameters to test_external"
+	BUG_ARITY test_external "3 or 4" $#
 	descr="$1"
 	shift
 	test_verify_prereq
@@ -848,7 +848,7 @@ test_external_without_stderr () {
 # debugging-friendly alternatives to "test [-f|-d|-e]"
 # The commands test the existence or non-existence of $1
 test_path_is_file () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_path_is_file 1 $#
 	if ! test -f "$1"
 	then
 		echo "File $1 doesn't exist"
@@ -867,7 +867,7 @@ test_path_is_file_not_symlink () {
 }
 
 test_path_is_dir () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_path_is_dir 1 $#
 	if ! test -d "$1"
 	then
 		echo "Directory $1 doesn't exist"
@@ -886,7 +886,7 @@ test_path_is_dir_not_symlink () {
 }
 
 test_path_exists () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_path_exists 1 $#
 	if ! test -e "$1"
 	then
 		echo "Path $1 doesn't exist"
@@ -905,7 +905,7 @@ test_path_is_symlink () {
 
 # Check if the directory exists and is empty as expected, barf otherwise.
 test_dir_is_empty () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_dir_is_empty 1 $#
 	test_path_is_dir "$1" &&
 	if test -n "$(ls -a1 "$1" | egrep -v '^\.\.?$')"
 	then
@@ -917,7 +917,7 @@ test_dir_is_empty () {
 
 # Check if the file exists and has a size greater than zero
 test_file_not_empty () {
-	test "$#" = 2 && BUG "2 param"
+	test "$#" = 2 && BUG_ARITY test_file_not_empty 2 $#
 	if ! test -s "$1"
 	then
 		echo "'$1' is not a non-empty file."
@@ -926,7 +926,7 @@ test_file_not_empty () {
 }
 
 test_path_is_missing () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_path_is_missing 1 $#
 	if test -e "$1"
 	then
 		echo "Path exists:"
@@ -953,7 +953,7 @@ test_path_is_missing () {
 test_line_count () {
 	if test $# != 3
 	then
-		BUG "not 3 parameters to test_line_count"
+		BUG_ARITY test_line_count 3 $#
 	elif ! test $(wc -l <"$3") "$1" "$2"
 	then
 		echo "test_line_count: line count for $3 !$1 $2"
@@ -974,7 +974,7 @@ test_stdout_line_count () {
 	local ops val trashdir &&
 	if test "$#" -le 3
 	then
-		BUG "expect 3 or more arguments"
+		BUG_ARITY test_stdout_line_count "3 or more" $#
 	fi &&
 	ops="$1" &&
 	val="$2" &&
@@ -989,7 +989,7 @@ test_stdout_line_count () {
 
 
 test_file_size () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_file_size 1 $#
 	test-tool path-utils file-size "$1"
 }
 
@@ -1162,7 +1162,7 @@ test_expect_code () {
 # - not all diff versions understand "-u"
 
 test_cmp () {
-	test "$#" -ne 2 && BUG "2 param"
+	test "$#" -ne 2 && BUG_ARITY test_cmp 2 $#
 	eval "$GIT_TEST_CMP" '"$@"'
 }
 
@@ -1192,7 +1192,7 @@ test_cmp_config () {
 # test_cmp_bin - helper to compare binary files
 
 test_cmp_bin () {
-	test "$#" -ne 2 && BUG "2 param"
+	test "$#" -ne 2 && BUG_ARITY test_cmp_bin 2 $#
 	cmp "$@"
 }
 
@@ -1246,7 +1246,7 @@ verbose () {
 # otherwise.
 
 test_must_be_empty () {
-	test "$#" -ne 1 && BUG "1 param"
+	test "$#" -ne 1 && BUG_ARITY test_must_be_empty 1 $#
 	test_path_is_file "$1" &&
 	if test -s "$1"
 	then
@@ -1315,7 +1315,7 @@ test_seq () {
 	case $# in
 	1)	set 1 "$@" ;;
 	2)	;;
-	*)	BUG "not 1 or 2 parameters to test_seq" ;;
+	*)	BUG_ARITY test_seq "1 or 2" $# ;;
 	esac
 	test_seq_counter__=$1
 	while test "$test_seq_counter__" -le "$2"
@@ -1431,10 +1431,7 @@ perl () {
 # are not valid bool values.
 
 test_bool_env () {
-	if test $# != 2
-	then
-		BUG "test_bool_env requires two parameters (variable name and default value)"
-	fi
+	test "$#" -ne 2 && BUG_ARITY test_bool_env 2 $#
 
 	git env--helper --type=bool --default="$2" --exit-code "$1"
 	ret=$?
