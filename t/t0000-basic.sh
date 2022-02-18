@@ -803,6 +803,55 @@ test_expect_success 'test_bool_env' '
 	)
 '
 
+test_expect_success 'subtest: function arity' '
+	cat >fn-arity <<-\EOF &&
+	1	test_path_is_file
+	1	test_path_is_dir
+	1	test_path_exists
+	1	test_dir_is_empty
+	1	test_path_is_missing
+	3	test_line_count
+	1	test_file_size
+	2	test_cmp
+	2	test_cmp_bin
+	1	test_must_be_empty
+	1\ or\ 2	test_seq
+	2	test_bool_env
+	EOF
+
+	while read want fn
+	do
+		write_and_run_sub_test_lib_test_err fn-arity-$fn <<-EOF || return 1 &&
+		test_expect_success "$fn: arity" "$fn a b c d e f g h i j"
+		test_done
+		EOF
+		check_sub_test_lib_test_err fn-arity-$fn <<-\EOF_OUT 3<<-EOF_ERR || return 1
+		EOF_OUT
+		> error: bug in the test script: $fn: wants $want parameter(s), got 10 instead
+		EOF_ERR
+	done <fn-arity
+'
+
+test_expect_success 'subtest: top-level function arity' '
+	cat >top-fn-arity <<-\EOF &&
+	2\ or\ 3	test_expect_success
+	2\ or\ 3	test_expect_failure
+	3\ or\ 4	test_external
+	EOF
+
+	while read want fn
+	do
+		write_and_run_sub_test_lib_test_err top-fn-arity-$fn <<-EOF || return 1 &&
+		$fn "fn: arity" "true" c d e f g h i j
+		test_done
+		EOF
+		check_sub_test_lib_test_err top-fn-arity-$fn <<-\EOF_OUT 3<<-EOF_ERR || return 1
+		EOF_OUT
+		> error: bug in the test script: $fn: wants $want parameter(s), got 10 instead
+		EOF_ERR
+	done <top-fn-arity
+'
+
 ################################################################
 # Basics of the basics
 
