@@ -629,6 +629,14 @@ BUG () {
 	error >&7 "bug in the test script: $*"
 }
 
+BUG_ARITY () {
+	local fn=$1 &&
+	local want=$2 &&
+	local got=$3 &&
+
+	BUG "$fn: wants $want parameter(s), got $got instead"
+}
+
 BAIL_OUT () {
 	test $# -ne 1 && BUG "1 param"
 
