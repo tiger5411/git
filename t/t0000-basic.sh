@@ -881,7 +881,6 @@ test_expect_success 'subtest: top-level function arity' '
 	2\ or\ 3	test_expect_success
 	2\ or\ 3	test_expect_failure
 	2\ or\ 3	test_expect_todo
-	3\ or\ 4	test_external
 	EOF
 
 	while read want fn

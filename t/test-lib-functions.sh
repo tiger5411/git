@@ -789,7 +789,7 @@ test_expect_success () {
 test_external () {
 	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 3 ||
-	BUG_ARITY test_external "3 or 4" $#
+	BUG "not 3 or 4 parameters to test_external"
 	descr="$1"
 	shift
 	test_verify_prereq
