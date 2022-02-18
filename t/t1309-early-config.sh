@@ -81,13 +81,19 @@ test_expect_success 'ignore .git/ with incompatible repository version' '
 	test_i18ngrep "warning:.* Expected git repo version <= [1-9]" err
 '
 
-test_expect_failure 'ignore .git/ with invalid repository version' '
-	test_with_config "[core]repositoryformatversion = invalid"
+test_expect_todo 'ignore .git/ with invalid repository version' '
+	test_todo \
+		--want test_with_config \
+		--expect "test_must_fail test_with_config" \
+		-- "[core]repositoryformatversion = invalid"
 '
 
 
-test_expect_failure 'ignore .git/ with invalid config' '
-	test_with_config "["
+test_expect_todo 'ignore .git/ with invalid config' '
+	test_todo \
+		--want test_with_config \
+		--expect "test_must_fail test_with_config" \
+		-- "["
 '
 
 test_expect_success 'early config and onbranch' '

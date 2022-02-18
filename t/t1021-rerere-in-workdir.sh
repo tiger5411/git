@@ -41,7 +41,7 @@ test_expect_success SYMLINKS 'rerere in workdir' '
 # For the purpose of helping contrib/workdir/git-new-workdir users, we do not
 # have to support relative symlinks, but it might be nicer to make this work
 # with a relative symbolic link someday.
-test_expect_failure SYMLINKS 'rerere in workdir (relative)' '
+test_expect_todo SYMLINKS 'rerere in workdir (relative)' '
 	rm -rf .git/rr-cache &&
 	"$SHELL_PATH" "$TEST_DIRECTORY/../contrib/workdir/git-new-workdir" . krow &&
 	(
@@ -49,9 +49,10 @@ test_expect_failure SYMLINKS 'rerere in workdir (relative)' '
 		rm -f .git/rr-cache &&
 		ln -s ../.git/rr-cache .git/rr-cache &&
 		test_must_fail git merge side &&
-		git rerere status >actual &&
-		echo world >expect &&
-		test_cmp expect actual
+		test_todo \
+			--want "git" \
+			--expect "test_must_fail git" \
+			 -- rerere status
 	)
 '
 

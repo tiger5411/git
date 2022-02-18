@@ -1126,7 +1126,7 @@ test_must_fail_acceptable () {
 	fi
 
 	case "$1" in
-	git|__git*|test-tool|test_terminal)
+	git|__git*|test-tool|test_*)
 		return 0
 		;;
 	*)
