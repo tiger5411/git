@@ -789,7 +789,7 @@ test_expect_success () {
 test_external () {
 	test "$#" = 4 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 3 ||
-	BUG_ARITY test_external "3 or 4" $#
+	BUG "not 3 or 4 parameters to test_external"
 	descr="$1"
 	shift
 	test_verify_prereq
@@ -1102,7 +1102,7 @@ test_stdout_line_count () {
 
 
 test_file_size () {
-	test "$#" -ne 1 && BUG_ARITY test_file_size 1 $#
+	test "$#" -ne 1 && BUG "1 param"
 	test-tool path-utils file-size "$1"
 }
 

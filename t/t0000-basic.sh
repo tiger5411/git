@@ -196,7 +196,7 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	> ok 10 - pretend we have fixed a known breakage # TODO known breakage vanished
 	> not ok 11 - pretend we have a known TODO # TODO known breakage
 	> not ok 12 - pretend we have a bad TODO (broken '\''test_expect_todo'\''!)
-	> #	false
+	> #false
 	> # 1 known breakage(s) vanished; please update test(s)
 	> # still have 3 known breakage(s)
 	> # failed 4 among remaining 8 test(s)
@@ -853,7 +853,6 @@ test_expect_success 'subtest: function arity' '
 	1	test_dir_is_empty
 	1	test_path_is_missing
 	3	test_line_count
-	1	test_file_size
 	2	test_cmp
 	2	test_cmp_bin
 	3	todo_test_cmp
@@ -881,7 +880,6 @@ test_expect_success 'subtest: top-level function arity' '
 	2\ or\ 3	test_expect_success
 	2\ or\ 3	test_expect_failure
 	2\ or\ 3	test_expect_todo
-	3\ or\ 4	test_external
 	EOF
 
 	while read want fn
