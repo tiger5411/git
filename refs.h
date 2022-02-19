@@ -103,6 +103,7 @@ int read_ref(const char *refname, struct object_id *oid);
 int refs_verify_refname_available(struct ref_store *refs,
 				  const char *refname,
 				  const struct string_list *extras,
+				  const struct string_list *skip,
 				  struct strbuf *err);
 
 int refs_ref_exists(struct ref_store *refs, const char *refname);
