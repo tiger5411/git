@@ -910,7 +910,8 @@ static void update_refs_for_switch(const struct checkout_opts *opts,
 				      opts->new_branch_log,
 				      opts->quiet,
 				      opts->track,
-				      0);
+				      0,
+				      NULL);
 		free(new_branch_info->name);
 		free(new_branch_info->refname);
 		new_branch_info->name = xstrdup(opts->new_branch);

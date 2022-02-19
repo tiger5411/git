@@ -24,6 +24,7 @@
 #include "worktree.h"
 #include "help.h"
 #include "commit-reach.h"
+#include "strvec.h"
 
 static const char * const builtin_branch_usage[] = {
 	N_("git branch [<options>] [-r | -a] [--merged] [--no-merged]"),
@@ -202,7 +203,7 @@ static void delete_branch_config(const char *branchname)
 }
 
 static int delete_branches(int argc, const char **argv, int force, int kinds,
-			   int quiet)
+			   int quiet, struct ref_transaction *active_transaction)
 {
 	struct worktree **worktrees;
 	struct commit *head_rev = NULL;
@@ -524,6 +525,11 @@ static void copy_or_rename_branch(const char *oldname, const char *newname, int 
 	const char *interpreted_oldname = NULL;
 	const char *interpreted_newname = NULL;
 	int recovery = 0;
+	struct ref_transaction *transaction;
+	struct strbuf err = STRBUF_INIT;
+	int is_rename;
+	struct object_id prev;
+	struct strvec delete_vec = STRVEC_INIT;
 
 	if (!oldname) {
 		if (copy)
@@ -566,12 +572,26 @@ static void copy_or_rename_branch(const char *oldname, const char *newname, int 
 		strbuf_addf(&logmsg, "Branch: renamed %s to %s",
 			    oldref.buf, newref.buf);
 
-	if (!copy &&
-	    (!head || strcmp(oldname, head) || !is_null_oid(&head_oid)) &&
-	    rename_ref(oldref.buf, newref.buf, logmsg.buf))
-		die(_("Branch rename failed"));
-	if (copy && copy_existing_ref(oldref.buf, newref.buf, logmsg.buf))
-		die(_("Branch copy failed"));
+	if (read_ref(oldref.buf, &prev))
+		die("could not read branch '%s'", oldref.buf);
+
+	if (!strcmp(oldref.buf, newref.buf))
+		return;
+	fprintf(stderr, "%s\n", logmsg.buf);
+
+	transaction = ref_transaction_begin(&err);
+	create_branch(the_repository, newname, oid_to_hex(&prev), 1, 1, 1, 0,
+		      git_branch_track, 0, transaction);
+
+	is_rename = (!copy && (!head || strcmp(oldname, head)
+			       || !is_null_oid(&head_oid)));
+	if (is_rename && ref_transaction_delete(transaction, xstrfmt("refs/heads/%s", oldname), &prev,
+						0, "nuked it", &err))
+		die("%s", err.buf);
+	if (!transaction || ref_transaction_commit(transaction, &err))
+		die("%s", err.buf);
+	strvec_push(&delete_vec, oldname);
+
 
 	if (recovery) {
 		if (copy)
@@ -768,7 +788,7 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 	if (delete) {
 		if (!argc)
 			die(_("branch name required"));
-		return delete_branches(argc, argv, delete > 1, filter.kind, quiet);
+		return delete_branches(argc, argv, delete > 1, filter.kind, quiet, NULL);
 	} else if (show_current) {
 		print_current_branch_name();
 		return 0;
@@ -900,7 +920,7 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 			return 0;
 		}
 		create_branch(the_repository, branch_name, start_name, force, 0,
-			      reflog, quiet, track, 0);
+			      reflog, quiet, track, 0, NULL);
 	} else
 		usage_with_options(builtin_branch_usage, options);
 
