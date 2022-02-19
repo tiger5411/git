@@ -873,6 +873,25 @@ test_expect_success 'setup: rename a remote with a D/F conflict' '
 	)
 '
 
+if test -d df-conf
+then
+	test_expect_failure 'rename a remote with a D/F conflict, have buggy partially moved refs' '
+		(
+			cd df-conf &&
+			git for-each-ref >actual.refs &&
+			test_cmp expect.refs actual.refs
+		)
+	'
+
+	test_expect_failure 'rename a remote with a D/F conflict, have changed config' '
+		(
+			cd df-conf &&
+			git config -f .git/config -l >actual.config &&
+			test_cmp expect.config actual.config
+		)
+	'
+fi
+
 test_expect_success 'remove a remote removes repo remote.pushDefault' '
 	git clone one four.five.1 &&
 	(
