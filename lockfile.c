@@ -155,10 +155,10 @@ void unable_to_lock_message(const char *path, int err, struct strbuf *buf)
 		    "are terminated then try again. If it still fails, a git process\n"
 		    "may have crashed in this repository earlier:\n"
 		    "remove the file manually to continue."),
-			    path, strerror(err));
+			    absolute_path(path), strerror(err));
 	} else
 		strbuf_addf(buf, _("Unable to create '%s.lock': %s"),
-			    path, strerror(err));
+			    absolute_path(path), strerror(err));
 }
 
 NORETURN void unable_to_lock_die(const char *path, int err)

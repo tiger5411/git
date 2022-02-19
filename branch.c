@@ -431,8 +431,7 @@ static void dwim_branch_start(struct repository *r, const char *start_name,
 void create_branch(struct repository *r,
 		   const char *name, const char *start_name,
 		   int force, int clobber_head_ok, int reflog,
-		   int quiet, enum branch_track track, int dry_run,
-		   struct ref_transaction *active_transaction)
+		   int quiet, enum branch_track track, int dry_run)
 {
 	struct object_id oid;
 	char *real_ref;
@@ -464,17 +463,14 @@ void create_branch(struct repository *r,
 		msg = xstrfmt("branch: Reset to %s", start_name);
 	else
 		msg = xstrfmt("branch: Created from %s", start_name);
-	if (active_transaction)
-		transaction = active_transaction;
-	else
-		transaction = ref_transaction_begin(&err);
-	if (!transaction || ref_transaction_update(transaction, ref.buf,
+	transaction = ref_transaction_begin(&err);
+	if (!transaction ||
+		ref_transaction_update(transaction, ref.buf,
 					&oid, forcing ? NULL : null_oid(),
 					0, msg, &err) ||
-		(!active_transaction && ref_transaction_commit(transaction, &err)))
+		ref_transaction_commit(transaction, &err))
 		die("%s", err.buf);
-	if (!active_transaction)
-		ref_transaction_free(transaction);
+	ref_transaction_free(transaction);
 	strbuf_release(&err);
 	free(msg);
 
@@ -608,7 +604,7 @@ void create_branches_recursively(struct repository *r, const char *name,
 	}
 
 	create_branch(the_repository, name, start_commitish, force, 0, reflog, quiet,
-		      BRANCH_TRACK_NEVER, dry_run, NULL);
+		      BRANCH_TRACK_NEVER, dry_run);
 	if (dry_run)
 		return;
 	/*

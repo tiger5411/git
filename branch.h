@@ -65,12 +65,11 @@ void dwim_and_setup_tracking(struct repository *r, const char *new_ref,
  *   - dry_run causes the branch to be validated but not created.
  *
  */
-struct ref_transaction;
 void create_branch(struct repository *r,
 		   const char *name, const char *start_name,
 		   int force, int clobber_head_ok,
 		   int reflog, int quiet, enum branch_track track,
-		   int dry_run, struct ref_transaction *active_transaction);
+		   int dry_run);
 
 /*
  * Creates a new branch in a repository and its submodules (and its

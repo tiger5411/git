@@ -1561,6 +1561,8 @@ test_expect_success 'transaction can create and delete' '
 	cat >stdin <<-EOF &&
 	start
 	create refs/heads/create-and-delete $A
+	commit
+	start
 	delete refs/heads/create-and-delete $A
 	commit
 	EOF
