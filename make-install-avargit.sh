@@ -6,6 +6,8 @@ set -x
 #
 ## Are our branches etc. sane?
 # ./make-install-avargit.sh --only-check
+## Check if everything merges without conflicts (with sanity)
+# ./make-install-avargit.sh --no-range-diff --no-merge-compile --no-install
 ## Check if everything merges without conflicts
 # ./make-install-avargit.sh --only-merge --no-merge-compile --no-install
 
