@@ -204,6 +204,7 @@ static int ut_007bug(int argc, const char **argv)
 	 * Exercise BUG() to ensure that the message is printed to trace2.
 	 */
 	BUG("the bug message");
+	return 0;
 }
 
 /*
