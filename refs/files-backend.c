@@ -573,7 +573,7 @@ retry:
 		 * reason to expect this error to be transitory.
 		 */
 		if (refs_verify_refname_available(&refs->base, refname,
-						  extras, NULL, err)) {
+						  extras, err)) {
 			if (mustexist) {
 				/*
 				 * To the user the relevant error is
@@ -680,7 +680,7 @@ retry:
 							  REMOVE_DIR_EMPTY_ONLY)) {
 				if (refs_verify_refname_available(
 						    &refs->base, refname,
-						    extras, NULL, err)) {
+						    extras, err)) {
 					/*
 					 * The error message set by
 					 * verify_refname_available() is OK.
@@ -717,7 +717,7 @@ retry:
 		 */
 		if (refs_verify_refname_available(
 				    refs->packed_ref_store, refname,
-				    extras, NULL, err))
+				    extras, err))
 			goto error_return;
 	}
 
@@ -1021,7 +1021,7 @@ static struct ref_lock *lock_ref_oid_basic(struct files_ref_store *refs,
 	 */
 	if (is_null_oid(&lock->old_oid) &&
 	    refs_verify_refname_available(refs->packed_ref_store, refname,
-					  NULL, NULL, err))
+					  NULL, err))
 		goto error_return;
 
 	lock->ref_name = xstrdup(refname);
@@ -1363,35 +1363,6 @@ static int commit_ref_update(struct files_ref_store *refs,
 			     const struct object_id *oid, const char *logmsg,
 			     struct strbuf *err);
 
-/*
- * Emit a better error message than lockfile.c's
- * unable_to_lock_message() would in case there is a D/F conflict with
- * another existing reference. If there would be a conflict, emit an error
- * message and return false; otherwise, return true.
- *
- * Note that this function is not safe against all races with other
- * processes, and that's not its job. We'll emit a more verbose error on D/f
- * conflicts if we get past it into lock_ref_oid_basic().
- */
-static int refs_rename_ref_available(struct ref_store *refs,
-			      const char *old_refname,
-			      const char *new_refname)
-{
-	struct string_list skip = STRING_LIST_INIT_NODUP;
-	struct strbuf err = STRBUF_INIT;
-	int ok;
-
-	string_list_insert(&skip, old_refname);
-	ok = !refs_verify_refname_available(refs, new_refname,
-					    NULL, &skip, &err);
-	if (!ok)
-		error("%s", err.buf);
-
-	string_list_clear(&skip, 0);
-	strbuf_release(&err);
-	return ok;
-}
-
 static int files_copy_or_rename_ref(struct ref_store *ref_store,
 			    const char *oldrefname, const char *newrefname,
 			    const char *logmsg, int copy)
@@ -1432,10 +1403,6 @@ static int files_copy_or_rename_ref(struct ref_store *ref_store,
 		else
 			ret = error("refname %s is a symbolic ref, renaming it is not supported",
 				    oldrefname);
-		goto out;
-	}
-	if (!refs_rename_ref_available(&refs->base, oldrefname, newrefname)) {
-		ret = 1;
 		goto out;
 	}
 
@@ -3047,7 +3014,7 @@ static int files_initial_transaction_commit(struct ref_store *ref_store,
 		    !is_null_oid(&update->old_oid))
 			BUG("initial ref transaction with old_sha1 set");
 		if (refs_verify_refname_available(&refs->base, update->refname,
-						  &affected_refnames, NULL,
+						  &affected_refnames,
 						  err)) {
 			ret = TRANSACTION_NAME_CONFLICT;
 			goto cleanup;

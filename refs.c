@@ -1353,9 +1353,8 @@ int ref_is_hidden(const char *refname, const char *refname_full)
 	return 0;
 }
 
-const char *find_descendant_ref(const char *dirname,
-				const struct string_list *extras,
-				const struct string_list *skip)
+static const char *find_descendant_ref(const char *dirname,
+				       const struct string_list *extras)
 {
 	int pos;
 
@@ -1375,8 +1374,7 @@ const char *find_descendant_ref(const char *dirname,
 		if (!starts_with(extra_refname, dirname))
 			break;
 
-		if (!skip || !string_list_has_string(skip, extra_refname))
-			return extra_refname;
+		return extra_refname;
 	}
 	return NULL;
 }
@@ -2212,7 +2210,6 @@ int ref_transaction_commit(struct ref_transaction *transaction,
 int refs_verify_refname_available(struct ref_store *refs,
 				  const char *refname,
 				  const struct string_list *extras,
-				  const struct string_list *skip,
 				  struct strbuf *err)
 {
 	const char *slash;
@@ -2244,14 +2241,6 @@ int refs_verify_refname_available(struct ref_store *refs,
 		/* Expand dirname to the new prefix, not including the trailing slash: */
 		strbuf_add(&dirname, refname + dirname.len, slash - refname - dirname.len);
 
-		/*
-		 * We are still at a leading dir of the refname (e.g.,
-		 * "refs/foo"; if there is a reference with that name,
-		 * it is a conflict, *unless* it is in skip.
-		 */
-		if (skip && string_list_has_string(skip, dirname.buf))
-			continue;
-
 		if (!refs_read_raw_ref(refs, dirname.buf, &oid, &referent,
 				       &type, &ignore_errno)) {
 			strbuf_addf(err, _("'%s' exists; cannot create '%s'"),
@@ -2280,10 +2269,6 @@ int refs_verify_refname_available(struct ref_store *refs,
 	iter = refs_ref_iterator_begin(refs, dirname.buf, 0,
 				       DO_FOR_EACH_INCLUDE_BROKEN);
 	while ((ok = ref_iterator_advance(iter)) == ITER_OK) {
-		if (skip &&
-		    string_list_has_string(skip, iter->refname))
-			continue;
-
 		strbuf_addf(err, _("'%s' exists; cannot create '%s'"),
 			    iter->refname, refname);
 		ref_iterator_abort(iter);
@@ -2293,7 +2278,7 @@ int refs_verify_refname_available(struct ref_store *refs,
 	if (ok != ITER_DONE)
 		BUG("error while iterating over references");
 
-	extra_refname = find_descendant_ref(dirname.buf, extras, skip);
+	extra_refname = find_descendant_ref(dirname.buf, extras);
 	if (extra_refname)
 		strbuf_addf(err, _("cannot process '%s' and '%s' at the same time"),
 			    refname, extra_refname);
