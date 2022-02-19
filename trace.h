@@ -126,19 +126,6 @@ void trace_command_performance(const char **argv);
 void trace_verbatim(struct trace_key *key, const void *buf, unsigned len);
 uint64_t trace_performance_enter(void);
 
-/*
- * TRACE_CONTEXT may be set to __FUNCTION__ if the compiler supports it. The
- * default is __FILE__, as it is consistent with assert(), and static function
- * names are not necessarily unique.
- *
- * __FILE__ ":" __FUNCTION__ doesn't work with GNUC, as __FILE__ is supplied
- * by the preprocessor as a string literal, and __FUNCTION__ is filled in by
- * the compiler as a string constant.
- */
-#ifndef TRACE_CONTEXT
-# define TRACE_CONTEXT __FILE__
-#endif
-
 /**
  * Macros to add the file:line of the calling code, instead of that of
  * the trace function itself.
@@ -171,7 +158,7 @@ uint64_t trace_performance_enter(void);
 #define trace_printf_key(key, ...)					    \
 	do {								    \
 		if (trace_pass_fl(key))					    \
-			trace_printf_key_fl(TRACE_CONTEXT, __LINE__, key,   \
+			trace_printf_key_fl(__FILE__, __LINE__, key,	    \
 					    __VA_ARGS__);		    \
 	} while (0)
 
@@ -183,7 +170,7 @@ uint64_t trace_performance_enter(void);
 #define trace_argv_printf(argv, ...)					    \
 	do {								    \
 		if (trace_pass_fl(&trace_default_key))			    \
-			trace_argv_printf_fl(TRACE_CONTEXT, __LINE__,	    \
+			trace_argv_printf_fl(__FILE__, __LINE__,	    \
 					    argv, __VA_ARGS__);		    \
 	} while (0)
 
@@ -196,7 +183,7 @@ uint64_t trace_performance_enter(void);
 #define trace_strbuf(key, data)						    \
 	do {								    \
 		if (trace_pass_fl(key))					    \
-			trace_strbuf_fl(TRACE_CONTEXT, __LINE__, key, data);\
+			trace_strbuf_fl(__FILE__, __LINE__, key, data);	    \
 	} while (0)
 
 /**
@@ -220,7 +207,7 @@ uint64_t trace_performance_enter(void);
 #define trace_performance(nanos, ...)					    \
 	do {								    \
 		if (trace_pass_fl(&trace_perf_key))			    \
-			trace_performance_fl(TRACE_CONTEXT, __LINE__, nanos,\
+			trace_performance_fl(__FILE__, __LINE__, nanos,	    \
 					     __VA_ARGS__);		    \
 	} while (0)
 
@@ -239,7 +226,7 @@ uint64_t trace_performance_enter(void);
 #define trace_performance_since(start, ...)				    \
 	do {								    \
 		if (trace_pass_fl(&trace_perf_key))			    \
-			trace_performance_fl(TRACE_CONTEXT, __LINE__,       \
+			trace_performance_fl(__FILE__, __LINE__,	    \
 					     getnanotime() - (start),	    \
 					     __VA_ARGS__);		    \
 	} while (0)
@@ -250,7 +237,7 @@ uint64_t trace_performance_enter(void);
 #define trace_performance_leave(...)					    \
 	do {								    \
 		if (trace_pass_fl(&trace_perf_key))			    \
-			trace_performance_leave_fl(TRACE_CONTEXT, __LINE__, \
+			trace_performance_leave_fl(__FILE__, __LINE__,	    \
 						   getnanotime(),	    \
 						   __VA_ARGS__);	    \
 	} while (0)
