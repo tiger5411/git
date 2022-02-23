@@ -12,11 +12,11 @@ else
 endif
 endif
 
-all:
-
 include ../../config.mak.uname
 -include ../../config.mak.autogen
 -include ../../config.mak
+
+all:
 
 TARGETS = scalar$(X) scalar.o
 GITLIBS = ../../common-main.o ../../libgit.a ../../xdiff/lib.a
