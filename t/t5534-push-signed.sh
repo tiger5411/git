@@ -71,14 +71,14 @@ test_expect_success 'push --signed fails with a receiver without push certificat
 	prepare_dst &&
 	mkdir -p dst/.git/hooks &&
 	test_must_fail git push --signed dst noop ff +noff 2>err &&
-	test_i18ngrep "the receiving end does not support" err
+	grep "the receiving end does not support" err
 '
 
 test_expect_success 'push --signed=1 is accepted' '
 	prepare_dst &&
 	mkdir -p dst/.git/hooks &&
 	test_must_fail git push --signed=1 dst noop ff +noff 2>err &&
-	test_i18ngrep "the receiving end does not support" err
+	grep "the receiving end does not support" err
 '
 
 test_expect_success GPG 'no certificate for a signed push with no update' '
@@ -388,7 +388,7 @@ test_expect_success GPG 'failed atomic push does not execute GPG' '
 			--signed --atomic --porcelain \
 			dst noop ff noff >out 2>err &&
 
-	test_i18ngrep ! "gpg failed to sign" err &&
+	! grep "gpg failed to sign" err &&
 	cat >expect <<-EOF &&
 	To dst
 	=	refs/heads/noop:refs/heads/noop	[up to date]

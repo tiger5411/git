@@ -203,7 +203,7 @@ done
 test_expect_success 'too-short tree' '
 	echo abc >malformed-tree &&
 	test_must_fail git hash-object -t tree malformed-tree 2>err &&
-	test_i18ngrep "too-short tree object" err
+	grep "too-short tree object" err
 '
 
 test_expect_success 'malformed mode in tree' '
@@ -211,7 +211,7 @@ test_expect_success 'malformed mode in tree' '
 	bin_sha1=$(echo $hex_sha1 | hex2oct) &&
 	printf "9100644 \0$bin_sha1" >tree-with-malformed-mode &&
 	test_must_fail git hash-object -t tree tree-with-malformed-mode 2>err &&
-	test_i18ngrep "malformed mode in tree entry" err
+	grep "malformed mode in tree entry" err
 '
 
 test_expect_success 'empty filename in tree' '
@@ -219,7 +219,7 @@ test_expect_success 'empty filename in tree' '
 	bin_sha1=$(echo $hex_sha1 | hex2oct) &&
 	printf "100644 \0$bin_sha1" >tree-with-empty-filename &&
 	test_must_fail git hash-object -t tree tree-with-empty-filename 2>err &&
-	test_i18ngrep "empty filename in tree entry" err
+	grep "empty filename in tree entry" err
 '
 
 test_expect_success 'corrupt commit' '
