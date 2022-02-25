@@ -172,16 +172,16 @@ test_expect_success '--skip after failed fixup cleans commit message' '
 
 	: The first squash was skipped, therefore: &&
 	git show HEAD >out &&
-	test_i18ngrep "# This is a combination of 2 commits" out &&
-	test_i18ngrep "# This is the commit message #2:" out &&
+	grep "# This is a combination of 2 commits" out &&
+	grep "# This is the commit message #2:" out &&
 
 	(test_set_editor "$PWD/copy-editor.sh" && git rebase --skip) &&
 	git show HEAD >out &&
-	test_i18ngrep ! "# This is a combination" out &&
+	! grep "# This is a combination" out &&
 
 	: Final squash failed, but there was still a squash &&
-	test_i18ngrep "# This is a combination of 2 commits" .git/copy.txt &&
-	test_i18ngrep "# This is the commit message #2:" .git/copy.txt
+	grep "# This is a combination of 2 commits" .git/copy.txt &&
+	grep "# This is the commit message #2:" .git/copy.txt
 '
 
 test_expect_success 'setup rerere database' '
@@ -274,7 +274,7 @@ test_expect_success '--reschedule-failed-exec' '
 	test_must_fail git -c rebase.rescheduleFailedExec=true \
 		rebase -x false HEAD^ 2>err &&
 	grep "^exec false" .git/rebase-merge/git-rebase-todo &&
-	test_i18ngrep "has been rescheduled" err
+	grep "has been rescheduled" err
 '
 
 test_expect_success 'rebase.rescheduleFailedExec only affects `rebase -i`' '
