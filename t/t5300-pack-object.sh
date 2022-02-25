@@ -526,7 +526,7 @@ test_expect_success 'make sure index-pack detects the SHA1 collision' '
 	(
 		cd corrupt &&
 		test_must_fail git index-pack -o ../bad.idx ../test-3.pack 2>msg &&
-		test_i18ngrep "SHA1 COLLISION FOUND" msg
+		grep "SHA1 COLLISION FOUND" msg
 	)
 '
 
@@ -534,7 +534,7 @@ test_expect_success 'make sure index-pack detects the SHA1 collision (large blob
 	(
 		cd corrupt &&
 		test_must_fail git -c core.bigfilethreshold=1 index-pack -o ../bad.idx ../test-3.pack 2>msg &&
-		test_i18ngrep "SHA1 COLLISION FOUND" msg
+		grep "SHA1 COLLISION FOUND" msg
 	)
 '
 
@@ -626,7 +626,7 @@ test_expect_success '--stdin-packs is incompatible with --filter' '
 		cd stdin-packs &&
 		test_must_fail git pack-objects --stdin-packs --stdout \
 			--filter=blob:none </dev/null 2>err &&
-		test_i18ngrep "cannot use --filter with --stdin-packs" err
+		grep "cannot use --filter with --stdin-packs" err
 	)
 '
 
@@ -635,7 +635,7 @@ test_expect_success '--stdin-packs is incompatible with --revs' '
 		cd stdin-packs &&
 		test_must_fail git pack-objects --stdin-packs --revs out \
 			</dev/null 2>err &&
-		test_i18ngrep "cannot use internal rev list with --stdin-packs" err
+		grep "cannot use internal rev list with --stdin-packs" err
 	)
 '
 

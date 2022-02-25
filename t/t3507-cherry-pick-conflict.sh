@@ -176,7 +176,7 @@ test_expect_success 'partial commit of cherry-pick fails' '
 	git add foo &&
 	test_must_fail git commit foo 2>err &&
 
-	test_i18ngrep "cannot do a partial commit during a cherry-pick." err
+	grep "cannot do a partial commit during a cherry-pick." err
 '
 
 test_expect_success 'commit --amend of cherry-pick fails' '
@@ -187,7 +187,7 @@ test_expect_success 'commit --amend of cherry-pick fails' '
 	git add foo &&
 	test_must_fail git commit --amend 2>err &&
 
-	test_i18ngrep "in the middle of a cherry-pick -- cannot amend." err
+	grep "in the middle of a cherry-pick -- cannot amend." err
 '
 
 test_expect_success 'successful final commit clears cherry-pick state' '
@@ -497,7 +497,7 @@ test_expect_success \
 test_expect_success 'failed cherry-pick does not forget -s' '
 	pristine_detach initial &&
 	test_must_fail git cherry-pick -s picked &&
-	test_i18ngrep -e "Signed-off-by" .git/MERGE_MSG
+	grep -e "Signed-off-by" .git/MERGE_MSG
 '
 
 test_expect_success 'commit after failed cherry-pick does not add duplicated -s' '
@@ -561,7 +561,7 @@ test_expect_success 'cherry-pick preserves sparse-checkout' '
 	echo /unrelated >.git/info/sparse-checkout &&
 	git read-tree --reset -u HEAD &&
 	test_must_fail git cherry-pick -Xours picked>actual &&
-	test_i18ngrep ! "Changes not staged for commit:" actual
+	! grep "Changes not staged for commit:" actual
 '
 
 test_expect_success 'cherry-pick --continue remembers --keep-redundant-commits' '

@@ -49,7 +49,7 @@ test_expect_success 'request invalid capability' '
 	0000
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "unknown capability" err
+	grep "unknown capability" err
 '
 
 test_expect_success 'request with no command' '
@@ -59,7 +59,7 @@ test_expect_success 'request with no command' '
 	0000
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "no command requested" err
+	grep "no command requested" err
 '
 
 test_expect_success 'request invalid command' '
@@ -70,7 +70,7 @@ test_expect_success 'request invalid command' '
 	0000
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "invalid command" err
+	grep "invalid command" err
 '
 
 test_expect_success 'request capability as command' '
@@ -112,7 +112,7 @@ test_expect_success 'wrong object-format' '
 	0000
 	EOF
 	test_must_fail test-tool serve-v2 --stateless-rpc 2>err <in &&
-	test_i18ngrep "mismatched object format" err
+	grep "mismatched object format" err
 '
 
 # Test the basics of ls-refs
