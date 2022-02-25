@@ -127,7 +127,7 @@ test_expect_success 'setup a submodule with multiple worktrees' '
 
 test_expect_success 'absorbing fails for a submodule with multiple worktrees' '
 	test_must_fail git submodule absorbgitdirs sub3 2>error &&
-	test_i18ngrep "not supported" error
+	grep "not supported" error
 '
 
 test_done
