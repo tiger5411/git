@@ -27,7 +27,7 @@ test_update_rejected () {
 	fi &&
 	printf "create $prefix/%s $C\n" $create >input &&
 	test_must_fail git update-ref --stdin <input 2>output.err &&
-	test_i18ngrep -F "$error" output.err &&
+	grep -F "$error" output.err &&
 	git for-each-ref $prefix >actual &&
 	test_cmp unchanged actual
 }
@@ -612,7 +612,7 @@ test_expect_success REFFILES 'delete fails cleanly if packed-refs file is locked
 	test_when_finished "rm -f .git/packed-refs.lock" &&
 	test_must_fail git update-ref -d $prefix/foo >out 2>err &&
 	git for-each-ref $prefix >actual &&
-	test_i18ngrep "Unable to create $SQ.*packed-refs.lock$SQ: " err &&
+	grep "Unable to create $SQ.*packed-refs.lock$SQ: " err &&
 	test_cmp unchanged actual
 '
 
