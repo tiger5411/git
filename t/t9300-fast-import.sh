@@ -2884,7 +2884,7 @@ test_expect_success 'S: filemodify with garbage after mark must fail' '
 	COMMIT
 	M 100644 :403x hello.c
 	EOF
-	test_i18ngrep "space after mark" err
+	grep "space after mark" err
 '
 
 # inline is misspelled; fast-import thinks it is some unknown dataref
@@ -2900,7 +2900,7 @@ test_expect_success 'S: filemodify with garbage after inline must fail' '
 	inline
 	BLOB
 	EOF
-	test_i18ngrep "nvalid dataref" err
+	grep "nvalid dataref" err
 '
 
 test_expect_success 'S: filemodify with garbage after sha1 must fail' '
@@ -2913,7 +2913,7 @@ test_expect_success 'S: filemodify with garbage after sha1 must fail' '
 	COMMIT
 	M 100644 ${sha1}x hello.c
 	EOF
-	test_i18ngrep "space after SHA1" err
+	grep "space after SHA1" err
 '
 
 #
@@ -2928,7 +2928,7 @@ test_expect_success 'S: notemodify with garbage after mark dataref must fail' '
 	COMMIT
 	N :202x :302
 	EOF
-	test_i18ngrep "space after mark" err
+	grep "space after mark" err
 '
 
 test_expect_success 'S: notemodify with garbage after inline dataref must fail' '
@@ -2943,7 +2943,7 @@ test_expect_success 'S: notemodify with garbage after inline dataref must fail' 
 	note blob
 	BLOB
 	EOF
-	test_i18ngrep "nvalid dataref" err
+	grep "nvalid dataref" err
 '
 
 test_expect_success 'S: notemodify with garbage after sha1 dataref must fail' '
@@ -2956,7 +2956,7 @@ test_expect_success 'S: notemodify with garbage after sha1 dataref must fail' '
 	COMMIT
 	N ${sha1}x :302
 	EOF
-	test_i18ngrep "space after SHA1" err
+	grep "space after SHA1" err
 '
 
 #
@@ -2971,7 +2971,7 @@ test_expect_success 'S: notemodify with garbage after mark commit-ish must fail'
 	COMMIT
 	N :202 :302x
 	EOF
-	test_i18ngrep "after mark" err
+	grep "after mark" err
 '
 
 #
@@ -3004,7 +3004,7 @@ test_expect_success 'S: from with garbage after mark must fail' '
 	EOF
 
 	# now evaluate the error
-	test_i18ngrep "after mark" err
+	grep "after mark" err
 '
 
 
@@ -3023,7 +3023,7 @@ test_expect_success 'S: merge with garbage after mark must fail' '
 	merge :303x
 	M 100644 :403 hello.c
 	EOF
-	test_i18ngrep "after mark" err
+	grep "after mark" err
 '
 
 #
@@ -3038,7 +3038,7 @@ test_expect_success 'S: tag with garbage after mark must fail' '
 	tag S
 	TAG
 	EOF
-	test_i18ngrep "after mark" err
+	grep "after mark" err
 '
 
 #
@@ -3048,7 +3048,7 @@ test_expect_success 'S: cat-blob with garbage after mark must fail' '
 	test_must_fail git fast-import --import-marks=marks <<-EOF 2>err &&
 	cat-blob :403x
 	EOF
-	test_i18ngrep "after mark" err
+	grep "after mark" err
 '
 
 #
@@ -3058,7 +3058,7 @@ test_expect_success 'S: ls with garbage after mark must fail' '
 	test_must_fail git fast-import --import-marks=marks <<-EOF 2>err &&
 	ls :302x hello.c
 	EOF
-	test_i18ngrep "space after mark" err
+	grep "space after mark" err
 '
 
 test_expect_success 'S: ls with garbage after sha1 must fail' '
@@ -3066,7 +3066,7 @@ test_expect_success 'S: ls with garbage after sha1 must fail' '
 	test_must_fail git fast-import --import-marks=marks <<-EOF 2>err &&
 	ls ${sha1}x hello.c
 	EOF
-	test_i18ngrep "space after tree-ish" err
+	grep "space after tree-ish" err
 '
 
 ###
