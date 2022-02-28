@@ -779,7 +779,7 @@ static void status_submodule(const char *path, const struct object_id *ce_oid,
 
 	if ((CE_STAGEMASK & ce_flags) >> CE_STAGESHIFT) {
 		print_status(flags, 'U', path, null_oid(), displaypath);
-		goto cleanup;
+		goto cleanup_no_rev;
 	}
 
 	strbuf_addf(&buf, "%s/.git", path);
@@ -791,7 +791,7 @@ static void status_submodule(const char *path, const struct object_id *ce_oid,
 	    !is_git_directory(git_dir)) {
 		print_status(flags, '-', path, ce_oid, displaypath);
 		strbuf_release(&buf);
-		goto cleanup;
+		goto cleanup_no_rev;
 	}
 	strbuf_release(&buf);
 
@@ -851,6 +851,8 @@ static void status_submodule(const char *path, const struct object_id *ce_oid,
 	}
 
 cleanup:
+	release_revisions(&rev);
+cleanup_no_rev:
 	strvec_clear(&diff_files_args);
 	free(displaypath);
 }
