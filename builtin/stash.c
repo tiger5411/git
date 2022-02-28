@@ -874,8 +874,10 @@ static int show_stash(int argc, const char **argv, const char *prefix)
 
 	ret = get_stash_info(&info, stash_args.nr, stash_args.v);
 	strvec_clear(&stash_args);
-	if (ret)
-		return -1;
+	if (ret) {
+		ret = -1;
+		goto cleanup;
+	}
 
 	/*
 	 * The config settings are applied only if there are not passed
@@ -890,7 +892,8 @@ static int show_stash(int argc, const char **argv, const char *prefix)
 
 		if (!show_stat && !show_patch) {
 			free_stash_info(&info);
-			return 0;
+			ret = 0;
+			goto cleanup;
 		}
 	}
 
@@ -924,7 +927,10 @@ static int show_stash(int argc, const char **argv, const char *prefix)
 	log_tree_diff_flush(&rev);
 
 	free_stash_info(&info);
-	return diff_result_code(&rev.diffopt, 0);
+	ret = diff_result_code(&rev.diffopt, 0);
+cleanup:
+	release_revisions(&rev);
+	return ret;
 }
 
 static int do_store_stash(const struct object_id *w_commit, const char *stash_msg,
