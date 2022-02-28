@@ -916,6 +916,7 @@ static int show_stash(int argc, const char **argv, const char *prefix)
 cleanup:
 	strvec_clear(&stash_args);
 	free_stash_info(&info);
+	release_revisions(&rev);
 	return ret;
 }
 
