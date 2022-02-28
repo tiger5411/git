@@ -330,6 +330,17 @@ struct rev_info {
 };
 
 /**
+ * Initialize the "struct rev_info" structure with a macro.
+ *
+ * This is not sufficient (yet!) to initialize a "struct rev_info",
+ * but it's OK (but redundant) to use it before a call to
+ * repo_init_revisions(), which does the real initialization. By using
+ * this it's safe to call release_revisions() on the "struct rev_info"
+ * without having called repo_init_revisions().
+ */
+#define REV_INFO_INIT { 0 }
+
+/**
  * Initialize a rev_info structure with default values. The third parameter may
  * be NULL or can be prefix path, and then the `.prefix` variable will be set
  * to it. This is typically the first function you want to call when you want
@@ -363,7 +374,7 @@ int setup_revisions(int argc, const char **argv, struct rev_info *revs,
 
 /**
  * Free data allocated in a "struct rev_info" after it's been
- * initialized with repo_init_revisions().
+ * initialized with repo_init_revisions() or REV_INFO_INIT.
  */
 void release_revisions(struct rev_info *revs);
 
