@@ -442,6 +442,7 @@ static int module_list(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	clear_pathspec(&pathspec);
+	free(list.entries);
 	return ret;
 }
 
@@ -598,6 +599,7 @@ static int module_foreach(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	clear_pathspec(&pathspec);
+	free(list.entries);
 	return ret;
 }
 
@@ -735,6 +737,7 @@ static int module_init(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	clear_pathspec(&pathspec);
+	free(list.entries);
 	return ret;
 }
 
@@ -912,6 +915,7 @@ static int module_status(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	clear_pathspec(&pathspec);
+	free(list.entries);
 	return ret;
 }
 
@@ -1506,6 +1510,7 @@ static int module_sync(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	clear_pathspec(&pathspec);
+	free(list.entries);
 	return ret;
 }
 
@@ -1658,6 +1663,7 @@ static int module_deinit(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	clear_pathspec(&pathspec);
+	free(list.entries);
 	return ret;
 }
 
@@ -2948,7 +2954,7 @@ static int absorb_git_dirs(int argc, const char **argv, const char *prefix)
 		absorb_git_dir_into_superproject(list.entries[i]->name, flags);
 
 	clear_pathspec(&pathspec);
-
+	free(list.entries);
 	return 0;
 }
 
