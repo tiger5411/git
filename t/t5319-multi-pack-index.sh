@@ -1,6 +1,8 @@
 #!/bin/sh
 
 test_description='multi-pack-indexes'
+
+TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
 
 GIT_TEST_MULTI_PACK_INDEX=0

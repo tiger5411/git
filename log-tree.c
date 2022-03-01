@@ -1090,13 +1090,10 @@ int log_tree_commit(struct rev_info *opt, struct commit *commit)
 {
 	struct log_info log;
 	int shown;
-	/* maybe called by e.g. cmd_log_walk(), maybe stand-alone */
-	int no_free = opt->diffopt.no_free;
 
 	log.commit = commit;
 	log.parent = NULL;
 	opt->loginfo = &log;
-	opt->diffopt.no_free = 1;
 
 	if (opt->line_level_traverse)
 		return line_log_print(opt, commit);
@@ -1113,7 +1110,5 @@ int log_tree_commit(struct rev_info *opt, struct commit *commit)
 		fprintf(opt->diffopt.file, "\n%s\n", opt->break_bar);
 	opt->loginfo = NULL;
 	maybe_flush_or_die(opt->diffopt.file, "stdout");
-	opt->diffopt.no_free = no_free;
-	diff_free(&opt->diffopt);
 	return shown;
 }
