@@ -478,7 +478,6 @@ static void output(struct string_list *a, struct string_list *b,
 	else
 		diff_setup(&opts);
 
-	opts.no_free = 1;
 	if (!opts.output_format)
 		opts.output_format = DIFF_FORMAT_PATCH;
 	opts.flags.suppress_diff_headers = 1;
@@ -539,7 +538,6 @@ static void output(struct string_list *a, struct string_list *b,
 	strbuf_release(&buf);
 	strbuf_release(&dashes);
 	strbuf_release(&indent);
-	opts.no_free = 0;
 	diff_free(&opts);
 }
 
