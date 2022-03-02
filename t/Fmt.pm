@@ -15,7 +15,7 @@ sub result {
 	# An AoO of test numbers and their output lines
 	$STATE{$test_name} ||= [{lines => []}];
 
-	push @{$STATE{$test_name}->[-1]->{lines}} => $result->raw;
+	push @{$STATE{$test_name}->[-1]->{lines}} => $result;
 
 	# When we see a new test add a new AoA for its output. We do
 	# end up with the "plan" type as part of the last test, and
@@ -52,7 +52,7 @@ sub summary {
 	for my $test (sort keys %STATE) {
 		for (my $i = 1; $i <= $#{$STATE{$test}}; $i++) {
 			my @lines = @{$STATE{$test}->[$i]->{lines}};
-			my $break = firstidx { $_ eq '' } @lines;
+			my $break = firstidx { $_->raw eq '' } @lines;
 			my @source = splice @lines, 0, $break;
 
 			splice @lines, 0, 1; # Splice out the '' item
@@ -64,8 +64,8 @@ sub summary {
 			# let's make it easily machine-readable, and
 			# parse the rest.
 			$STATE{$test}->[$i]->{source} = \@source;
-			my @trace = grep /^\+ /, @lines;
-			$STATE{$test}->[$i]->{trace} =  \@trace if @trace;
+			my @trace = map { $_->{is_trace} = 1 } grep { $_->raw =~ /^\+ / } @lines;
+			$STATE{$test}->[$i]->{trace} = \@trace if @trace;
 		}
 	}
 
@@ -75,8 +75,29 @@ sub summary {
 		for my $i ($parser->failed) {
 			my $idx = $i - 1;
 			my @lines = @{$STATE{$failed}->[$idx]->{lines}};
-			say "Fail whale in $failed#$i:";
-			say join "\n", map { s/^/ ==> /gr }  @lines;
+			my ($test) = grep { $_->is_test } @lines;
+
+			say "Failed in $failed#$i:";
+			say join "\n", map {
+				s/^/ ==> /gr;
+			} map {
+				sprintf("%-6s => %s",
+				     $_->{is_trace} ? "trace" :
+				     $_->is_unknown ? "output" :
+				     $_->is_comment ? "source" :
+				     $_->type,
+				     $_->raw,
+			     );
+			} sort {
+				# the "is_trace" may be undef
+				no warnings qw(uninitialized);
+				# The "[not ]ok" line first...
+				$b->is_test <=> $a->is_test ||
+				# Then "comment" (i.e. test source)
+				$b->is_comment <=> $a->is_comment ||
+				# Then the "+ " trace of execution
+				$b->{is_trace} <=> $a->{is_trace}
+			} @lines;
 		}
 	}
 }
