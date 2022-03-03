@@ -2279,9 +2279,8 @@ static void get_object_details(void)
 		sorted_by_offset[i] = to_pack.objects + i;
 	QSORT(sorted_by_offset, to_pack.nr_objects, pack_offset_sort);
 
-	for (i = 0; i < to_pack.nr_objects; i++) {
+	for_progress_var (progress_state, i = 0, i < to_pack.nr_objects, i++) {
 		struct object_entry *entry = sorted_by_offset[i];
-		increment_progress(progress_state);
 
 		check_object(entry, i);
 		if (entry->type_valid &&

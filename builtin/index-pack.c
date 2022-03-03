@@ -260,10 +260,8 @@ static unsigned check_objects(void)
 	if (verbose)
 		progress = start_delayed_progress(_("Checking objects"), max);
 
-	for (i = 0; i < max; i++) {
-		increment_progress(progress);
+	for_progress (i = 0, i < max, i++)
 		foreign_nr += check_object(get_indexed_object(i));
-	}
 
 	stop_progress(&progress);
 	return foreign_nr;
@@ -1160,11 +1158,9 @@ static void parse_pack_objects(unsigned char *hash)
 				progress_title ? progress_title :
 				from_stdin ? _("Receiving objects") : _("Indexing objects"),
 				nr_objects);
-	for (i = 0; i < nr_objects; i++) {
+	for_progress (i = 0, i < nr_objects, i++) {
 		struct object_entry *obj = &objects[i];
 		void *data;
-
-		increment_progress(progress);
 
 		data = unpack_raw_entry(obj, &ofs_delta->offset,
 					      &ref_delta_oid,

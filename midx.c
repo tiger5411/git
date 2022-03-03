@@ -1613,12 +1613,9 @@ int verify_midx_file(struct repository *r, const char *object_dir, unsigned flag
 	if (flags & MIDX_PROGRESS)
 		progress = start_delayed_progress(_("Looking for referenced packfiles"),
 					  m->num_packs);
-	for (i = 0; i < m->num_packs; i++) {
-		increment_progress(progress);
-
+	for_progress (i = 0, i < m->num_packs, i++)
 		if (prepare_midx_pack(r, m, i))
 			midx_report("failed to load pack in position %d", i);
-	}
 	stop_progress(&progress);
 
 	for (i = 0; i < 255; i++) {
@@ -1642,10 +1639,8 @@ int verify_midx_file(struct repository *r, const char *object_dir, unsigned flag
 	if (flags & MIDX_PROGRESS)
 		progress = start_progress(_("Verifying OID order in multi-pack-index"),
 					  m->num_objects - 1);
-	for (i = 0; i < m->num_objects - 1; i++) {
+	for_progress (i = 0, i < m->num_objects - 1, i++) {
 		struct object_id oid1, oid2;
-
-		increment_progress(progress);
 
 		nth_midxed_object_oid(&oid1, m, i);
 		nth_midxed_object_oid(&oid2, m, i + 1);
@@ -1677,12 +1672,10 @@ int verify_midx_file(struct repository *r, const char *object_dir, unsigned flag
 
 	if (flags & MIDX_PROGRESS)
 		progress = start_progress(_("Verifying object offsets"), m->num_objects);
-	for (i = 0; i < m->num_objects; i++) {
+	for_progress (i = 0, i < m->num_objects, i++) {
 		struct object_id oid;
 		struct pack_entry e;
 		off_t m_offset, p_offset;
-
-		increment_progress(progress);
 
 		if (i > 0 && pairs[i-1].pack_int_id != pairs[i].pack_int_id &&
 		    m->packs[pairs[i-1].pack_int_id])
@@ -1736,10 +1729,8 @@ int expire_midx_packs(struct repository *r, const char *object_dir, unsigned fla
 	if (flags & MIDX_PROGRESS)
 		progress = start_delayed_progress(_("Counting referenced objects"),
 					  m->num_objects);
-	for (i = 0; i < m->num_objects; i++) {
+	for_progress (i = 0, i < m->num_objects, i++) {
 		int pack_int_id;
-
-		increment_progress(progress);
 
 		pack_int_id = nth_midxed_pack_int_id(m, i);
 		count[pack_int_id]++;
@@ -1749,9 +1740,8 @@ int expire_midx_packs(struct repository *r, const char *object_dir, unsigned fla
 	if (flags & MIDX_PROGRESS)
 		progress = start_delayed_progress(_("Finding and deleting unreferenced packfiles"),
 					  m->num_packs);
-	for (i = 0; i < m->num_packs; i++) {
+	for_progress (i = 0, i < m->num_packs, i++) {
 		char *pack_name;
-		increment_progress(progress);
 
 		if (count[i])
 			continue;

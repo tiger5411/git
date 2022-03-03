@@ -63,4 +63,9 @@ static inline void stop_progress(struct progress **p_progress)
 }
 void stop_progress_early(struct progress **p_progress);
 
+#define for_progress(exp1,exp2,exp3) \
+	for (exp1; increment_progress(progress), exp2; exp3)
+#define for_progress_var(progress,exp1,exp2,exp3) \
+	for (exp1; increment_progress(progress), exp2; exp3)
+
 #endif

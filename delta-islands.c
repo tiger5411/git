@@ -271,15 +271,13 @@ void resolve_tree_islands(struct repository *r,
 	if (progress)
 		progress_state = start_progress(_("Propagating island marks"), nr);
 
-	for (i = 0; i < nr; i++) {
+	for_progress_var (progress_state, i = 0, i < nr, i++) {
 		struct object_entry *ent = todo[i].entry;
 		struct island_bitmap *root_marks;
 		struct tree *tree;
 		struct tree_desc desc;
 		struct name_entry entry;
 		khiter_t pos;
-
-		increment_progress(progress_state);
 
 		pos = kh_get_oid_map(island_marks, ent->idx.oid);
 		if (pos >= kh_end(island_marks))

@@ -1404,8 +1404,7 @@ static void close_reachable(struct write_commit_graph_context *ctx)
 		progress = start_delayed_progress(
 			_("Loading known commits in commit graph"),
 			ctx->oids.nr);
-	for (i = 0; i < ctx->oids.nr; i++) {
-		increment_progress(progress);
+	for_progress (i = 0, i < ctx->oids.nr, i++) {
 		commit = lookup_commit(ctx->r, &ctx->oids.oid[i]);
 		if (commit)
 			commit->object.flags |= REACHABLE;
@@ -1441,8 +1440,7 @@ static void close_reachable(struct write_commit_graph_context *ctx)
 		progress = start_delayed_progress(
 			_("Clearing commit marks in commit graph"),
 			ctx->oids.nr);
-	for (i = 0; i < ctx->oids.nr; i++) {
-		increment_progress(progress);
+	for_progress (i = 0, i < ctx->oids.nr, i++) {
 		commit = lookup_commit(ctx->r, &ctx->oids.oid[i]);
 
 		if (commit)
@@ -1461,11 +1459,9 @@ static void compute_topological_levels(struct write_commit_graph_context *ctx)
 		progress = start_delayed_progress(
 			_("Computing commit graph topological levels"),
 			ctx->commits.nr);
-	for (i = 0; i < ctx->commits.nr; i++) {
+	for_progress (i = 0, i < ctx->commits.nr, i++) {
 		struct commit *c = ctx->commits.list[i];
 		uint32_t level;
-
-		increment_progress(progress);
 
 		repo_parse_commit(ctx->r, c);
 		level = *topo_level_slab_at(ctx->topo_levels, c);
@@ -1525,11 +1521,9 @@ static void compute_generation_numbers(struct write_commit_graph_context *ctx)
 		}
 	}
 
-	for (i = 0; i < ctx->commits.nr; i++) {
+	for_progress (i = 0, i < ctx->commits.nr, i++) {
 		struct commit *c = ctx->commits.list[i];
 		timestamp_t corrected_commit_date;
-
-		increment_progress(progress);
 
 		repo_parse_commit(ctx->r, c);
 		corrected_commit_date = commit_graph_data_at(c)->generation;
@@ -1614,7 +1608,7 @@ static void compute_bloom_filters(struct write_commit_graph_context *ctx)
 	max_new_filters = ctx->opts && ctx->opts->max_new_filters >= 0 ?
 		ctx->opts->max_new_filters : ctx->commits.nr;
 
-	for (i = 0; i < ctx->commits.nr; i++) {
+	for_progress (i = 0, i < ctx->commits.nr, i++) {
 		enum bloom_filter_computed computed = 0;
 		struct commit *c = sorted_commits[i];
 		struct bloom_filter *filter = get_or_compute_bloom_filter(
@@ -1633,7 +1627,6 @@ static void compute_bloom_filters(struct write_commit_graph_context *ctx)
 			ctx->count_bloom_filter_not_computed++;
 		ctx->total_bloom_filter_data_size += filter
 			? sizeof(unsigned char) * filter->len : 0;
-		increment_progress(progress);
 	}
 
 	if (trace2_is_enabled())
@@ -1780,10 +1773,8 @@ static void copy_oids_to_commits(struct write_commit_graph_context *ctx)
 			_("Finding extra edges in commit graph"),
 			ctx->oids.nr);
 	oid_array_sort(&ctx->oids);
-	for (i = 0; i < ctx->oids.nr; i = oid_array_next_unique(&ctx->oids, i)) {
+	for_progress (i = 0, i < ctx->oids.nr, i = oid_array_next_unique(&ctx->oids, i)) {
 		unsigned int num_parents;
-
-		increment_progress(progress);
 
 		ALLOC_GROW(ctx->commits.list, ctx->commits.nr + 1, ctx->commits.alloc);
 		ctx->commits.list[ctx->commits.nr] = lookup_commit(ctx->r, &ctx->oids.oid[i]);
@@ -2146,9 +2137,7 @@ static void sort_and_scan_merged_commits(struct write_commit_graph_context *ctx)
 	QSORT(ctx->commits.list, ctx->commits.nr, commit_compare);
 
 	ctx->num_extra_edges = 0;
-	for (i = 0; i < ctx->commits.nr; i++) {
-		increment_progress(progress);
-
+	for_progress (i = 0, i < ctx->commits.nr, i++) {
 		if (i && oideq(&ctx->commits.list[i - 1]->object.oid,
 			  &ctx->commits.list[i]->object.oid)) {
 			/*
@@ -2545,13 +2534,12 @@ int verify_commit_graph(struct repository *r, struct commit_graph *g, int flags)
 		progress = start_progress(_("Verifying commits in commit graph"),
 					g->num_commits);
 
-	for (i = 0; i < g->num_commits; i++) {
+	for_progress (i = 0, i < g->num_commits, i++) {
 		struct commit *graph_commit, *odb_commit;
 		struct commit_list *graph_parents, *odb_parents;
 		timestamp_t max_generation = 0;
 		timestamp_t generation;
 
-		increment_progress(progress);
 		oidread(&cur_oid, g->chunk_oid_lookup + g->hash_len * i);
 
 		graph_commit = lookup_commit(r, &cur_oid);
