@@ -215,8 +215,8 @@ test_expect_success 'should not set up unnecessary tracking of local branches' '
 		cd super &&
 		git branch --recurse-submodules branch-a main &&
 		git -C sub rev-parse main &&
-		test_cmp_config -C sub "" --default "" branch.branch-a.remote &&
-		test_cmp_config -C sub "" --default "" branch.branch-a.merge
+		test_expect_code 1 git -C sub config branch.branch-a.remote &&
+		test_expect_code 1 git -C sub config branch.branch-a.merge
 	)
 '
 
@@ -284,8 +284,8 @@ test_expect_success 'should not fail when unable to set up tracking in submodule
 		git branch --recurse-submodules branch-a ex-origin/branch-a &&
 		test_cmp_config ex-origin branch.branch-a.remote &&
 		test_cmp_config refs/heads/branch-a branch.branch-a.merge &&
-		test_cmp_config -C sub "" --default "" branch.branch-a.remote &&
-		test_cmp_config -C sub "" --default "" branch.branch-a.merge
+		test_expect_code 1 git -C sub config branch.branch-a.remote &&
+		test_expect_code 1 git -C sub config branch.branch-a.merge
 	)
 '
 
@@ -316,12 +316,12 @@ test_expect_success '--no-track should not set up tracking' '
 	(
 		cd super-clone &&
 		git branch --recurse-submodules --no-track branch-a origin/branch-a &&
-		test_cmp_config "" --default "" branch.branch-a.remote &&
-		test_cmp_config "" --default "" branch.branch-a.merge &&
-		test_cmp_config -C sub "" --default "" branch.branch-a.remote &&
-		test_cmp_config -C sub "" --default "" branch.branch-a.merge &&
-		test_cmp_config -C sub/sub-sub "" --default "" branch.branch-a.remote &&
-		test_cmp_config -C sub/sub-sub "" --default "" branch.branch-a.merge
+		test_expect_code 1 git config branch.branch-a.remote &&
+		test_expect_code 1 git config branch.branch-a.merge &&
+		test_expect_code 1 git -C sub config branch.branch-a.remote &&
+		test_expect_code 1 git -C sub config branch.branch-a.merge &&
+		test_expect_code 1 git -C sub/sub-sub config branch.branch-a.remote &&
+		test_expect_code 1 git -C sub/sub-sub config branch.branch-a.merge
 	)
 '
 

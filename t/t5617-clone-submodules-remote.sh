@@ -103,7 +103,7 @@ test_expect_success '--no-also-filter-submodules overrides clone.filterSubmodule
 		"file://$pwd/srv.bare" super_clone3 &&
 	test_cmp_config -C super_clone3 true remote.origin.promisor &&
 	test_cmp_config -C super_clone3 blob:none remote.origin.partialclonefilter &&
-	test_cmp_config -C super_clone3/sub false --default false remote.origin.promisor
+	test_expect_code 1 git -C super_clone3/sub config remote.origin.promisor
 '
 
 test_done

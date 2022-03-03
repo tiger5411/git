@@ -63,14 +63,14 @@ test_expect_success '--orphan ignores branch.autosetupmerge' '
 	git checkout main &&
 	git config branch.autosetupmerge always &&
 	git checkout --orphan gamma &&
-	test_cmp_config "" --default "" branch.gamma.merge &&
+	test_expect_code 1 git config branch.gamma.merge &&
 	test refs/heads/gamma = "$(git symbolic-ref HEAD)" &&
 	test_must_fail git rev-parse --verify HEAD^ &&
 	git checkout main &&
 	git config branch.autosetupmerge inherit &&
 	git checkout --orphan eta &&
-	test_cmp_config "" --default "" branch.eta.merge &&
-	test_cmp_config "" --default "" branch.eta.remote &&
+	test_expect_code 1 git config branch.eta.merge &&
+	test_expect_code 1 git config branch.eta.remote &&
 	echo refs/heads/eta >expected &&
 	git symbolic-ref HEAD >actual &&
 	test_cmp expected actual &&
