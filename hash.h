@@ -86,14 +86,18 @@ static inline void git_SHA256_Clone(git_SHA256_CTX *dst, const git_SHA256_CTX *s
  * field for being non-zero.  Use the name field for user-visible situations and
  * the format_id field for fixed-length fields on disk.
  */
-/* An unknown hash function. */
-#define GIT_HASH_UNKNOWN 0
-/* SHA-1 */
-#define GIT_HASH_SHA1 1
-/* SHA-256  */
-#define GIT_HASH_SHA256 2
-/* Number of algorithms supported (including unknown). */
-#define GIT_HASH_NALGOS (GIT_HASH_SHA256 + 1)
+enum git_hash_algo_name {
+	/* An unknown hash function. */
+	GIT_HASH_UNKNOWN,
+	/* SHA-1 */
+	GIT_HASH_SHA1,
+	GIT_HASH_SHA256,
+	/*
+	 * Number of algorithms supported (including unknown). This
+	 * must be kept last!
+	 */
+	GIT_HASH_NALGOS,
+};
 
 /* "sha1", big-endian */
 #define GIT_SHA1_FORMAT_ID 0x73686131

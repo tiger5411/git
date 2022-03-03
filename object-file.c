@@ -166,7 +166,7 @@ static void git_hash_unknown_final_oid(struct object_id *oid, git_hash_ctx *ctx)
 }
 
 const struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
-	{
+	[GIT_HASH_UNKNOWN] = {
 		.name = NULL,
 		.format_id = 0x00000000,
 		.rawsz = 0,
@@ -181,7 +181,7 @@ const struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
 		.empty_blob = NULL,
 		.null_oid = NULL,
 	},
-	{
+	[GIT_HASH_SHA1] = {
 		.name = "sha1",
 		.format_id = GIT_SHA1_FORMAT_ID,
 		.rawsz = GIT_SHA1_RAWSZ,
@@ -196,7 +196,7 @@ const struct git_hash_algo hash_algos[GIT_HASH_NALGOS] = {
 		.empty_blob = &empty_blob_oid,
 		.null_oid = &null_oid_sha1,
 	},
-	{
+	[GIT_HASH_SHA256] = {
 		.name = "sha256",
 		.format_id = GIT_SHA256_FORMAT_ID,
 		.rawsz = GIT_SHA256_RAWSZ,
