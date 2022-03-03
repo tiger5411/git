@@ -45,8 +45,10 @@ test_expect_success 'initialize old-style (v0) git svn layout' '
 
 test_expect_success 'initialize a multi-repository repo' '
 	git svn init "$svnrepo" -T trunk -t tags -b branches &&
-	git config --get-all svn-remote.svn.fetch > fetch.out &&
-	grep "^trunk:refs/remotes/origin/trunk$" fetch.out &&
+	test_cmp_config svn-remote.svn.fetch <<-\EOF &&
+	:refs/remotes/git-svn
+	trunk:refs/remotes/origin/trunk
+	EOF
 	test -n "$(git config --get svn-remote.svn.branches \
 		    "^branches/\*:refs/remotes/origin/\*$")" &&
 	test -n "$(git config --get svn-remote.svn.tags \

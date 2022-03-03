@@ -46,15 +46,26 @@ test_expect_success 'config is shared (set from another worktree)' '
 
 test_expect_success 'config private to main worktree' '
 	git config --worktree this.is for-main &&
-	test_cmp_config for-main this.is &&
+	test_cmp_config this.is <<-\EOF &&
+	shared
+	for-main
+	EOF
 	test_cmp_config -C wt1 shared this.is &&
 	test_cmp_config -C wt2 shared this.is
 '
 
 test_expect_success 'config private to linked worktree' '
 	git -C wt1 config --worktree this.is for-wt1 &&
-	test_cmp_config for-main this.is &&
-	test_cmp_config -C wt1 for-wt1 this.is &&
+
+	test_cmp_config this.is <<-\EOF &&
+	shared
+	for-main
+	EOF
+
+	test_cmp_config -C wt1 this.is <<-\EOF &&
+	shared
+	for-wt1
+	EOF
 	test_cmp_config -C wt2 shared this.is
 '
 

@@ -1242,26 +1242,55 @@ test_cmp () {
 	eval "$GIT_TEST_CMP" '"$@"'
 }
 
-# Check that the given config key has the expected value.
+# Check that the given config key has the expected values with
+# "--get-all".
 #
-#    test_cmp_config [-C <dir>] <expected-value>
-#                    [<git-config-options>...] <config-key>
+#    test_cmp_config [-C <dir>] <expected-value> <config-key>
+#    test_cmp_config [-C <dir>] <config-key> <<-\EOF
+#    expected
+#    values
+#    EOF
 #
-# for example to check that the value of core.bar is foo
+# To check that the value of core.bar is foo (and only "foo"):
 #
 #    test_cmp_config foo core.bar
 #
+# To check all of the values in a multi-value config key:
+#
+#    test_cmp_config core.bar <<-\EOF
+#    bar
+#    foo
+#    EOF
 test_cmp_config () {
-	local GD &&
-	if test "$1" = "-C"
-	then
-		shift &&
-		GD="-C $1" &&
+	indir= &&
+	while test $# != 0
+	do
+		case "$1" in
+		-C)
+			indir="$2"
+			shift
+			;;
+		-*)
+			BUG "invalid test_cmp_config option: $1"
+			;;
+		*)
+			break
+			;;
+		esac
 		shift
+	done &&
+	indir=${indir:+"$indir"/} &&
+	if test $# -eq 2
+	then
+		printf "%s\n" "$1" >expect.config &&
+		shift
+	elif test $# -eq 1
+	then
+		cat >expect.config
+	else
+		BUG "test_cmp_config: expected 1 or 2 arguments, not $#"
 	fi &&
-	printf "%s\n" "$1" >expect.config &&
-	shift &&
-	git $GD config "$@" >actual.config &&
+	git ${indir:+ -C "$indir"} config --get-all "$1" >actual.config &&
 	test_cmp expect.config actual.config
 }
 

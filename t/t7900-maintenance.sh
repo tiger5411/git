@@ -178,9 +178,10 @@ test_expect_success 'prefetch and existing log.excludeDecoration values' '
 	git config log.excludeDecoration refs/remotes/remote1/ &&
 	git maintenance run --task=prefetch &&
 
-	git config --get-all log.excludeDecoration >out &&
-	grep refs/remotes/remote1/ out &&
-	grep refs/prefetch/ out &&
+	test_cmp_config log.excludeDecoration <<-\EOF &&
+	refs/remotes/remote1/
+	refs/prefetch/
+	EOF
 
 	git log --oneline --decorate --all >log &&
 	! grep "prefetch" log &&
@@ -511,8 +512,10 @@ test_expect_success 'register and unregister' '
 	test_cmp expect between &&
 
 	git maintenance unregister &&
-	git config --global --get-all maintenance.repo >actual &&
-	test_cmp before actual
+	test_cmp_config maintenance.repo <<-\EOF
+	/existing1
+	/existing2
+	EOF
 '
 
 test_expect_success !MINGW 'register and unregister with regex metacharacters' '
