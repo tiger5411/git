@@ -278,6 +278,12 @@ void increment_progress(struct progress *progress)
 	display(progress, n, NULL, 0);
 }
 
+int increment_progress_expr(struct progress *progress)
+{
+	increment_progress(progress);
+	return 1;
+}
+
 static void progress_interval(int signum)
 {
 	progress_update = 1;
