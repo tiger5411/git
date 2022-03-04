@@ -68,5 +68,14 @@ void stop_progress_early(struct progress **p_progress);
 	for (exp1; (exp2) && increment_progress_expr(progress); exp3)
 #define for_progress_var(progress,exp1,exp2,exp3) \
 	for (exp1; (exp2) && increment_progress_expr(progress); exp3)
+#define for_progress_range(start,end,progress_if,title) \
+	uint64_t i; \
+	const uint64_t progress_end = (end); \
+	struct progress *progress = NULL; \
+	if (progress_if) \
+		 progress = start_delayed_progress((title),(end)); \
+	for (i = (start); \
+	     (start) < (progress_end) && increment_progress_expr(progress); \
+	     i++)
 
 #endif
