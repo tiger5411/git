@@ -23,25 +23,13 @@ static int ls_options;
 static struct pathspec pathspec;
 static int chomp_prefix;
 static const char *ls_tree_prefix;
-#define FIELD_PATH_NAME 1
-#define FIELD_SIZE (1 << 1)
-#define FIELD_OBJECT_NAME (1 << 2)
-#define FIELD_TYPE (1 << 3)
-#define FIELD_MODE (1 << 4)
-#define FIELD_DEFAULT 29 /* 11101 size is not shown to output by default */
-#define FIELD_LONG_DEFAULT  (FIELD_DEFAULT | FIELD_SIZE)
 static const char *format;
-static const char *default_format = "%(objectmode) %(objecttype) %(objectname)%x09%(path)";
-static const char *long_format = "%(objectmode) %(objecttype) %(objectname) %(objectsize:padded)%x09%(path)";
-static const char *name_only_format = "%(path)";
-static const char *object_only_format = "%(objectname)";
 struct show_tree_data {
 	unsigned mode;
 	enum object_type type;
 	const struct object_id *oid;
 	const char *pathname;
 	struct strbuf *base;
-	unsigned int shown_fields;
 };
 
 static const  char * const ls_tree_usage[] = {
@@ -50,7 +38,8 @@ static const  char * const ls_tree_usage[] = {
 };
 
 static enum ls_tree_cmdmode {
-	MODE_LONG = 1,
+	MODE_DEFAULT = 0,
+	MODE_LONG,
 	MODE_NAME_ONLY,
 	MODE_NAME_STATUS,
 	MODE_OBJECT_ONLY,
@@ -122,25 +111,6 @@ static size_t expand_show_tree(struct strbuf *sb, const char *start,
 	return len;
 }
 
-static int parse_shown_fields(unsigned int *shown_fields)
-{
-	if (cmdmode == MODE_NAME_ONLY) {
-		*shown_fields = FIELD_PATH_NAME;
-		return 0;
-	}
-	if (cmdmode == MODE_OBJECT_ONLY) {
-		*shown_fields = FIELD_OBJECT_NAME;
-		return 0;
-	}
-	if (!ls_options || (ls_options & LS_RECURSIVE)
-	    || (ls_options & LS_SHOW_TREES)
-	    || (ls_options & LS_TREE_ONLY))
-		*shown_fields = FIELD_DEFAULT;
-	if (cmdmode == MODE_LONG)
-		*shown_fields = FIELD_LONG_DEFAULT;
-	return 1;
-}
-
 static int show_recursive(const char *base, size_t baselen, const char *pathname)
 {
 	int i;
@@ -207,7 +177,7 @@ static int show_default(struct show_tree_data *data)
 {
 	size_t baselen = data->base->len;
 
-	if (data->shown_fields & FIELD_SIZE) {
+	if (cmdmode == MODE_LONG) {
 		char size_text[24];
 		if (data->type == OBJ_BLOB) {
 			unsigned long size;
@@ -240,14 +210,12 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 	int recurse = 0;
 	size_t baselen;
 	enum object_type type = object_type(mode);
-	unsigned int shown_fields = *(unsigned int *)context;
 	struct show_tree_data data = {
 		.mode = mode,
 		.type = type,
 		.oid = oid,
 		.pathname = pathname,
 		.base = base,
-		.shown_fields = shown_fields,
 	};
 
 	if (type == OBJ_BLOB) {
@@ -260,12 +228,12 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 			return recurse;
 	}
 
-	if (shown_fields == FIELD_OBJECT_NAME) {
+	if (cmdmode == MODE_OBJECT_ONLY) {
 		printf("%s%c", find_unique_abbrev(oid, abbrev), line_termination);
 		return recurse;
 	}
 
-	if (shown_fields == FIELD_PATH_NAME) {
+	if (cmdmode == MODE_NAME_ONLY) {
 		baselen = base->len;
 		strbuf_addstr(base, pathname);
 		write_name_quoted_relative(base->buf,
@@ -275,11 +243,39 @@ static int show_tree(const struct object_id *oid, struct strbuf *base,
 		return recurse;
 	}
 
-	if (shown_fields>= FIELD_DEFAULT)
+	if (cmdmode == MODE_LONG ||
+	    (!ls_options || (ls_options & LS_RECURSIVE)
+	     || (ls_options & LS_SHOW_TREES)
+	     || (ls_options & LS_TREE_ONLY)))
 		show_default(&data);
 
 	return recurse;
 }
+
+struct ls_tree_cmdmode_to_fmt {
+	enum ls_tree_cmdmode mode;
+	const char *const fmt;
+};
+
+static struct ls_tree_cmdmode_to_fmt ls_tree_cmdmode_format[] = {
+	{
+		.mode = MODE_DEFAULT,
+		.fmt = "%(objectmode) %(objecttype) %(objectname)%x09%(path)",
+	},
+	{
+		.mode = MODE_LONG,
+		.fmt = "%(objectmode) %(objecttype) %(objectname) %(objectsize:padded)%x09%(path)",
+	},
+	{
+		.mode = MODE_NAME_ONLY, /* And MODE_NAME_STATUS */
+		.fmt = "%(path)",
+	},
+	{
+		.mode = MODE_OBJECT_ONLY,
+		.fmt = "%(objectname)",
+	},
+	{ 0 },
+};
 
 int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 {
@@ -367,25 +363,23 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	if (!tree)
 		die("not a tree object");
 
-	parse_shown_fields(&shown_fields);
-
 	/*
 	 * The generic show_tree_fmt() is slower than show_tree(), so
 	 * take the fast path if possible.
 	 */
-	if (format && (!strcmp(format, default_format))) {
-		fn = show_tree;
-	} else if (format && (!strcmp(format, long_format))) {
-		shown_fields = shown_fields | FIELD_SIZE;
-		fn = show_tree;
-	} else if (format && (!strcmp(format, name_only_format))) {
-		shown_fields = FIELD_PATH_NAME;
-		fn = show_tree;
-	} else if (format && (!strcmp(format, object_only_format))) {
-		shown_fields = FIELD_OBJECT_NAME;
-		fn = show_tree;
-	} else if (format)
+	if (format) {
+		struct ls_tree_cmdmode_to_fmt *m2f;
+
 		fn = show_tree_fmt;
+		for (m2f = ls_tree_cmdmode_format; m2f->fmt; m2f++) {
+			if (strcmp(format, m2f->fmt))
+				continue;
+
+			cmdmode = m2f->mode;
+			fn = show_tree;
+			break;
+		}
+	}
 
 	return !!read_tree(the_repository, tree, &pathspec, fn, &shown_fields);
 }
