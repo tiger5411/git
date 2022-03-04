@@ -49,11 +49,10 @@ static const  char * const ls_tree_usage[] = {
 	NULL
 };
 
-static enum mutx_option {
-	MODE_UNSPECIFIED = 0,
+static enum ls_tree_cmdmode {
+	MODE_LONG = 1,
 	MODE_NAME_ONLY,
 	MODE_OBJECT_ONLY,
-	MODE_LONG,
 } cmdmode;
 
 static void expand_objectsize(struct strbuf *line, const struct object_id *oid,
