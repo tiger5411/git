@@ -253,9 +253,14 @@ static unsigned check_object(struct object *obj)
 
 static unsigned check_objects(void)
 {
-	unsigned foreign_nr = 0;
+	unsigned i, max, foreign_nr = 0;
 
-	for_progress_range (0, get_max_object_index(), verbose, _("Checking objects"))
+	max = get_max_object_index();
+
+	if (verbose)
+		progress = start_delayed_progress(_("Checking objects"), max);
+
+	for_progress (i = 0, i < max, i++)
 		foreign_nr += check_object(get_indexed_object(i));
 
 	stop_progress(&progress);
