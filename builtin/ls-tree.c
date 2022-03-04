@@ -18,9 +18,6 @@ static int line_termination = '\n';
 #define LS_RECURSIVE 1
 #define LS_TREE_ONLY (1 << 1)
 #define LS_SHOW_TREES (1 << 2)
-#define LS_NAME_ONLY (1 << 3)
-#define LS_SHOW_SIZE (1 << 4)
-#define LS_OBJECT_ONLY (1 << 5)
 static int abbrev;
 static int ls_options;
 static struct pathspec pathspec;
