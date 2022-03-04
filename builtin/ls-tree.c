@@ -52,6 +52,7 @@ static const  char * const ls_tree_usage[] = {
 static enum ls_tree_cmdmode {
 	MODE_LONG = 1,
 	MODE_NAME_ONLY,
+	MODE_NAME_STATUS,
 	MODE_OBJECT_ONLY,
 } cmdmode;
 
@@ -301,7 +302,7 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		OPT_CMDMODE(0, "name-only", &cmdmode, N_("list only filenames"),
 			    MODE_NAME_ONLY),
 		OPT_CMDMODE(0, "name-status", &cmdmode, N_("list only filenames"),
-			    MODE_NAME_ONLY),
+			    MODE_NAME_STATUS),
 		OPT_CMDMODE(0, "object-only", &cmdmode, N_("list only objects"),
 			    MODE_OBJECT_ONLY),
 		OPT_SET_INT(0, "full-name", &chomp_prefix,
@@ -327,6 +328,14 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 		ls_tree_prefix = prefix = NULL;
 		chomp_prefix = 0;
 	}
+	/*
+	 * We wanted to detect conflicts between --name-only and
+	 * --name-status, but once we're done with that subsequent
+	 * code should only need to check the primary name.
+	 */
+	if (cmdmode == MODE_NAME_STATUS)
+		cmdmode = MODE_NAME_ONLY;
+
 	/* -d -r should imply -t, but -d by itself should not have to. */
 	if ( (LS_TREE_ONLY|LS_RECURSIVE) ==
 	    ((LS_TREE_ONLY|LS_RECURSIVE) & ls_options))
