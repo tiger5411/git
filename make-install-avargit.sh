@@ -467,7 +467,7 @@ do
 		avar/range-diff-int-overflow-segfault)
 			# Adds intprops.h from gnulib
 			;;
-		avar-hanwen/reftable*)
+		tl/ls-tree-hash-only)
 			;;
 		*)
 			echo "Have bad --check output for $branch:"
