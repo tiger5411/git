@@ -707,8 +707,9 @@ static int run_update(struct add_i_state *s, const struct pathspec *ps,
 		res = error(_("could not write index"));
 
 	if (!res)
-		printf(Q_("updated %d path\n",
-			  "updated %d paths\n", count), (int)count);
+		printf(Q_("updated %"PRIuMAX" path\n",
+			  "updated %"PRIuMAX" paths\n", (unsigned long)count),
+		       (uintmax_t)count);
 
 	putchar('\n');
 	return res;
@@ -814,8 +815,9 @@ static int run_revert(struct add_i_state *s, const struct pathspec *ps,
 						   NULL, NULL, NULL);
 
 	if (!res)
-		printf(Q_("reverted %d path\n",
-			  "reverted %d paths\n", count), (int)count);
+		printf(Q_("reverted %"PRIuMAX" path\n",
+			  "reverted %"PRIuMAX" paths\n", (unsigned long)count),
+		       (uintmax_t)count);
 
 finish_revert:
 	putchar('\n');
@@ -896,8 +898,9 @@ static int run_add_untracked(struct add_i_state *s, const struct pathspec *ps,
 		res = error(_("could not write index"));
 
 	if (!res)
-		printf(Q_("added %d path\n",
-			  "added %d paths\n", count), (int)count);
+		printf(Q_("added %"PRIuMAX" path\n",
+			  "added %"PRIuMAX" paths\n", (unsigned long)count),
+		       (uintmax_t)count);
 
 finish_add_untracked:
 	putchar('\n');

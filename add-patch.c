@@ -1569,10 +1569,10 @@ soft_increment:
 			else if (0 < response && response <= file_diff->hunk_nr)
 				hunk_index = response - 1;
 			else
-				err(s, Q_("Sorry, only %d hunk available.",
-					  "Sorry, only %d hunks available.",
-					  file_diff->hunk_nr),
-				    (int)file_diff->hunk_nr);
+				err(s, Q_("Sorry, only %"PRIuMAX" hunk available.",
+					  "Sorry, only %"PRIuMAX" hunks available.",
+					  (unsigned long)file_diff->hunk_nr),
+				    (uintmax_t)file_diff->hunk_nr);
 		} else if (s->answer.buf[0] == '/') {
 			regex_t regex;
 			int ret;
