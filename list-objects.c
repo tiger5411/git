@@ -21,6 +21,22 @@ struct traversal_context {
 	struct filter *filter;
 };
 
+static void show_commit(struct traversal_context *ctx, struct commit *commit,
+			void *data)
+{
+	if (!ctx->show_commit)
+		return;
+	ctx->show_commit(commit, data);
+}
+
+static void show_object(struct traversal_context *ctx, struct object *object,
+			const char *path, void *data)
+{
+	if (!ctx->show_object)
+		return;
+	ctx->show_object(object, path, data);
+}
+
 static void process_blob(struct traversal_context *ctx,
 			 struct blob *blob,
 			 struct strbuf *path,
@@ -60,7 +76,7 @@ static void process_blob(struct traversal_context *ctx,
 	if (r & LOFR_MARK_SEEN)
 		obj->flags |= SEEN;
 	if (r & LOFR_DO_SHOW)
-		ctx->show_object(obj, path->buf, ctx->show_data);
+		show_object(ctx, obj, path->buf, ctx->show_data);
 	strbuf_setlen(path, pathlen);
 }
 
@@ -194,7 +210,7 @@ static void process_tree(struct traversal_context *ctx,
 	if (r & LOFR_MARK_SEEN)
 		obj->flags |= SEEN;
 	if (r & LOFR_DO_SHOW)
-		ctx->show_object(obj, base->buf, ctx->show_data);
+		show_object(ctx, obj, base->buf, ctx->show_data);
 	if (base->len)
 		strbuf_addch(base, '/');
 
@@ -210,7 +226,7 @@ static void process_tree(struct traversal_context *ctx,
 	if (r & LOFR_MARK_SEEN)
 		obj->flags |= SEEN;
 	if (r & LOFR_DO_SHOW)
-		ctx->show_object(obj, base->buf, ctx->show_data);
+		show_object(ctx, obj, base->buf, ctx->show_data);
 
 	strbuf_setlen(base, baselen);
 	free_tree_buffer(tree);
@@ -228,7 +244,7 @@ static void process_tag(struct traversal_context *ctx,
 	if (r & LOFR_MARK_SEEN)
 		tag->object.flags |= SEEN;
 	if (r & LOFR_DO_SHOW)
-		ctx->show_object(&tag->object, name, ctx->show_data);
+		show_object(ctx, &tag->object, name, ctx->show_data);
 }
 
 static void mark_edge_parents_uninteresting(struct commit *commit,
@@ -402,7 +418,7 @@ static void do_traverse(struct traversal_context *ctx)
 		if (r & LOFR_MARK_SEEN)
 			commit->object.flags |= SEEN;
 		if (r & LOFR_DO_SHOW)
-			ctx->show_commit(commit, ctx->show_data);
+			show_commit(ctx, commit, ctx->show_data);
 
 		if (ctx->revs->tree_blobs_in_commit_order)
 			/*

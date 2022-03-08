@@ -468,11 +468,6 @@ struct bundle_prerequisites_info {
 };
 
 
-static void ignore_object(struct object *obj, const char *v, void *data)
-{
-	/* Do nothing. */
-}
-
 static void write_bundle_prerequisites(struct commit *commit, void *data)
 {
 	struct bundle_prerequisites_info *bpi = data;
@@ -598,7 +593,7 @@ int create_bundle(struct repository *r, const char *path,
 	 */
 	revs.filter = NULL;
 	revs.blob_objects = revs.tree_objects = 0;
-	traverse_commit_list(&revs, write_bundle_prerequisites, ignore_object, &bpi);
+	traverse_commit_list(&revs, write_bundle_prerequisites, NULL, &bpi);
 	object_array_remove_duplicates(&revs_copy.pending);
 
 	/* write bundle refs */
