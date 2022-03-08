@@ -1172,9 +1172,9 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 	transport->cloning = 1;
 
 	if (is_bundle) {
-		struct bundle_header header = { 0 };
+		struct bundle_header header = BUNDLE_HEADER_INIT;
 		int fd = read_bundle_header(path, &header);
-		int has_filter = !!header.filter;
+		int has_filter = header.filter.choice != LOFC_DISABLED;
 
 		if (fd > 0)
 			close(fd);

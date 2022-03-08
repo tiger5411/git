@@ -33,8 +33,7 @@ void bundle_header_release(struct bundle_header *header)
 {
 	string_list_clear(&header->prerequisites, 1);
 	string_list_clear(&header->references, 1);
-	list_objects_filter_release(header->filter);
-	free(header->filter);
+	list_objects_filter_release(&header->filter);
 }
 
 static int parse_capability(struct bundle_header *header, const char *capability)
@@ -48,8 +47,7 @@ static int parse_capability(struct bundle_header *header, const char *capability
 		return 0;
 	}
 	if (skip_prefix(capability, "filter=", &arg)) {
-		CALLOC_ARRAY(header->filter, 1);
-		parse_list_objects_filter(header->filter, arg);
+		parse_list_objects_filter(&header->filter, arg);
 		return 0;
 	}
 	return error(_("unknown capability '%s'"), capability);
@@ -227,7 +225,7 @@ int verify_bundle(struct repository *r,
 	req_nr = revs.pending.nr;
 	setup_revisions(2, argv, &revs, NULL);
 
-	revs.filter = header->filter;
+	revs.filter = &header->filter;
 
 	if (prepare_revision_walk(&revs))
 		die(_("revision walk setup failed"));
@@ -269,9 +267,9 @@ int verify_bundle(struct repository *r,
 			  r->nr);
 		list_refs(r, 0, NULL);
 
-		if (header->filter) {
+		if (header->filter.choice != LOFC_DISABLED) {
 			printf_ln("The bundle uses this filter: %s",
-				  list_objects_filter_spec(header->filter));
+				  list_objects_filter_spec(&header->filter));
 		}
 
 		r = &header->prerequisites;
@@ -631,7 +629,7 @@ int unbundle(struct repository *r, struct bundle_header *header,
 	strvec_pushl(&ip.args, "index-pack", "--fix-thin", "--stdin", NULL);
 
 	/* If there is a filter, then we need to create the promisor pack. */
-	if (header->filter)
+	if (header->filter.choice != LOFC_DISABLED)
 		strvec_push(&ip.args, "--promisor=from-bundle");
 
 	if (extra_index_pack_args) {
