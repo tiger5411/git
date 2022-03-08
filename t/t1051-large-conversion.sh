@@ -88,13 +88,13 @@ test_expect_success 'ident converts on output' '
 test_expect_success EXPENSIVE,SIZE_T_IS_64BIT,!LONG_IS_64BIT \
 		'files over 4GB convert on output' '
 	test_commit test small "a small file" &&
-	small_size=$(test_file_size small) &&
+	small_size=$(test-tool path-utils file-size small) &&
 	test_config filter.makelarge.smudge \
 		"test-tool genzeros $((5*1024*1024*1024)) && cat" &&
 	echo "small filter=makelarge" >.gitattributes &&
 	rm small &&
 	git checkout -- small &&
-	size=$(test_file_size small) &&
+	size=$(test-tool path-utils file-size small) &&
 	test "$size" -eq $((5 * 1024 * 1024 * 1024 + $small_size))
 '
 
@@ -106,7 +106,7 @@ test_expect_success EXPENSIVE,SIZE_T_IS_64BIT,!LONG_IS_64BIT \
 	test_config filter.checklarge.clean "wc -c >big.size" &&
 	echo "big filter=checklarge" >.gitattributes &&
 	git add big &&
-	test $(test_file_size big) -eq $(cat big.size)
+	test $(test-tool path-utils file-size big) -eq $(cat big.size)
 '
 
 test_done
