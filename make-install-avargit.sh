@@ -240,7 +240,7 @@ test_compile () {
 	then
 		(
 			cd t
-			if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+			if ! GIT_SKIP_TESTS=t5730.15 GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 			then
 				suggest_bisect "$(git rev-parse HEAD)"
 			fi
@@ -254,7 +254,7 @@ test_compile () {
 		make clean-except-prove-cache
 		cut -d '-' -f1 </tmp/git.build-tests >/tmp/git.build-tests.cut
 		tr '\n' ' ' </tmp/git.build-tests.cut >/tmp/git.build-tests.cut.tr
-		if ! GIT_SKIP_TESTS="$(cat /tmp/git.build-tests.cut.tr)" GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+		if ! GIT_SKIP_TESTS="t5730.15 $(cat /tmp/git.build-tests.cut.tr)" GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 		then
 			suggest_bisect "$(git rev-parse HEAD)"
 		fi
@@ -271,7 +271,7 @@ test_compile () {
 		# TODO: The t3408 fail is on master, but I was too
 		# lazy to rebase out the commit that marked it as
 		# passing...
-		if ! GIT_SKIP_TESTS="t1300 t3408" GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
+		if ! GIT_SKIP_TESTS="t5730.15 t1300 t3408" GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
 		then
 			suggest_bisect "$(git rev-parse HEAD)"
 		fi
