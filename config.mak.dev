@@ -1,11 +1,23 @@
+include .build/probe/compiler.mak
 include .build/probe/config-mak-dev.mak
 
+ifeq ($(PROBE_COMPILER_name),xlc)
+COMPILER_name_IS_xlc = 1
+endif
+
 ifeq ($(filter no-error,$(DEVOPTS)),)
+ifdef COMPILER_name_IS_xlc
+DEVELOPER_CFLAGS += -qhalt=i
+else
 DEVELOPER_CFLAGS += -Werror
+endif
 SPARSE_FLAGS += -Wsparse-error
 endif
 
+ifndef COMPILER_name_IS_xlc
 DEVELOPER_CFLAGS += -Wall
+endif
+
 ifeq ($(filter no-pedantic,$(DEVOPTS)),)
 DEVELOPER_CFLAGS += -pedantic
 ifdef PROBE_COMPILER_HAS_Wpedantic
@@ -15,6 +27,9 @@ ifeq ($(uname_S),MINGW)
 DEVELOPER_CFLAGS += -Wno-pedantic-ms-format
 endif
 endif
+endif
+ifdef COMPILER_name_IS_xlc
+$(error under xlc DEVELOPER=1 must use DEVOPTS=no-pedantic)
 endif
 endif
 
@@ -27,6 +42,7 @@ else
 # rely on C11 features.
 endif
 
+ifndef COMPILER_name_IS_xlc
 DEVELOPER_CFLAGS += -Wdeclaration-after-statement
 DEVELOPER_CFLAGS += -Wformat-security
 DEVELOPER_CFLAGS += -Wold-style-definition
@@ -36,6 +52,7 @@ DEVELOPER_CFLAGS += -Wstrict-prototypes
 DEVELOPER_CFLAGS += -Wunused
 DEVELOPER_CFLAGS += -Wvla
 DEVELOPER_CFLAGS += -fno-common
+endif
 
 ifdef PROBE_COMPILER_HAS_Wtautological-constant-out-of-range-compare
 DEVELOPER_CFLAGS += -Wtautological-constant-out-of-range-compare
