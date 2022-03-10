@@ -2,10 +2,39 @@
 #include "parse-options.h"
 #include "strbuf.h"
 #include "help.h"
-#include "compat/compiler.h"
+#include "probe/compiler.h"
+#include "probe/info.h"
+#include "probe/libc.h"
 #include "hook.h"
 #include "hook-list.h"
 
+static void info_to_strbuf(void *util, const char *const key, const char *fmt,
+			   ...)
+{
+	struct strbuf *buf = util;
+	va_list ap;
+
+	va_start(ap, fmt);
+	strbuf_vaddf(buf, fmt, ap);
+	va_end(ap);
+
+	if (!strcmp(key, "name"))
+		strbuf_addstr(buf, ": ");
+	else
+		strbuf_addch(buf, '\n');
+}
+
+static inline void get_compiler_info(struct strbuf *info)
+{
+	if (probe_compiler(info_to_strbuf, info) < 0)
+		strbuf_addstr(info, _("no compiler information available\n"));
+}
+
+static inline void get_libc_info(struct strbuf *info)
+{
+	if (probe_libc(info_to_strbuf, info) < 0)
+		strbuf_addstr(info, _("no libc information available\n"));
+}
 
 static void get_system_info(struct strbuf *sys_info)
 {
