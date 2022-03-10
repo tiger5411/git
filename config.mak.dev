@@ -1,6 +1,4 @@
-ifndef COMPILER_FEATURES
-COMPILER_FEATURES := $(shell ./detect-compiler $(CC))
-endif
+include .build/probe/config-mak-dev.mak
 
 ifeq ($(filter no-error,$(DEVOPTS)),)
 DEVELOPER_CFLAGS += -Werror
@@ -10,9 +8,9 @@ endif
 DEVELOPER_CFLAGS += -Wall
 ifeq ($(filter no-pedantic,$(DEVOPTS)),)
 DEVELOPER_CFLAGS += -pedantic
-ifneq (($or $(filter gcc5,$(COMPILER_FEATURES)),$(filter clang4,$(COMPILER_FEATURES))),)
+ifdef PROBE_COMPILER_HAS_Wpedantic
 DEVELOPER_CFLAGS += -Wpedantic
-ifneq ($(filter gcc10,$(COMPILER_FEATURES)),)
+ifdef PROBE_COMPILER_HAS_Wno-pedantic-ms-format
 ifeq ($(uname_S),MINGW)
 DEVELOPER_CFLAGS += -Wno-pedantic-ms-format
 endif
@@ -21,7 +19,7 @@ endif
 endif
 
 ifneq ($(uname_S),FreeBSD)
-ifneq ($(or $(filter gcc6,$(COMPILER_FEATURES)),$(filter clang7,$(COMPILER_FEATURES))),)
+ifdef PROBE_COMPILER_NEEDS_std-eq-gnu99
 DEVELOPER_CFLAGS += -std=gnu99
 endif
 else
@@ -39,11 +37,11 @@ DEVELOPER_CFLAGS += -Wunused
 DEVELOPER_CFLAGS += -Wvla
 DEVELOPER_CFLAGS += -fno-common
 
-ifneq ($(filter clang4,$(COMPILER_FEATURES)),)
+ifdef PROBE_COMPILER_HAS_Wtautological-constant-out-of-range-compare
 DEVELOPER_CFLAGS += -Wtautological-constant-out-of-range-compare
 endif
 
-ifneq ($(or $(filter gcc6,$(COMPILER_FEATURES)),$(filter clang4,$(COMPILER_FEATURES))),)
+ifdef PROBE_COMPILER_HAS_Wextra
 DEVELOPER_CFLAGS += -Wextra
 # if a function is public, there should be a prototype and the right
 # header file should be included. If not, it should be static.
@@ -59,10 +57,8 @@ endif
 
 # uninitialized warnings on gcc 4.9.2 in xdiff/xdiffi.c and config.c
 # not worth fixing since newer compilers correctly stop complaining
-ifneq ($(filter gcc4,$(COMPILER_FEATURES)),)
-ifeq ($(filter gcc5,$(COMPILER_FEATURES)),)
+ifdef PROBE_COMPILER_NEEDS_Wno-uninitialized
 DEVELOPER_CFLAGS += -Wno-uninitialized
-endif
 endif
 
 GIT_TEST_PERL_FATAL_WARNINGS = YesPlease

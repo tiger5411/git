@@ -8,9 +8,11 @@
 int probe_compiler(probe_info_fn_t fn, void *util)
 {
 #ifdef __clang__
+	/* See 'clang -dM -E - </dev/null' for available macros */
 	fn(util, "name", "clang");
 	fn(util, "version", __clang_version__);
 #elif defined(__GNUC__)
+	/* See 'gcc -dM -E - </dev/null' for available macros */
 	fn(util, "name", "gcc");
 	fn(util, "version", "%d.%d", __GNUC__, __GNUC_MINOR__);
 #elif defined(_MSC_VER)
