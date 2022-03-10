@@ -500,8 +500,7 @@ include shared.mak
 # created at the root of the repository.
 #
 # Define DEVELOPER to enable more compiler warnings. Compiler version
-# and family are auto detected, but could be overridden by defining
-# COMPILER_FEATURES (see config.mak.dev). You can still set
+# and family are auto detected. You can still set
 # CFLAGS="..." in combination with DEVELOPER enables, whether that's
 # for tweaking something unrelated (e.g. optimization level), or for
 # selectively overriding something DEVELOPER or one of the DEVOPTS
@@ -1304,6 +1303,21 @@ endif
 
 -include config.mak
 
+COMMON_CFLAGS = $(CPPFLAGS) $(CFLAGS)
+PROBE_CFLAGS = $(BASIC_CFLAGS) $(COMMON_CFLAGS) -DPROBE_STANDALONE
+
+# Rules to build basic "configure" probes in probe/*
+PROBES_SRC = $(wildcard probe/*.c)
+PROBES = $(PROBES_SRC:%.c=%)
+PROBES_BIN = $(PROBES:%=.build/%)
+PROBES_MAK = $(PROBES:%=.build/%.mak)
+$(PROBES_BIN): .build/probe/%: probe/%.c GIT-CFLAGS probe/print.h
+	$(call mkdir_p_parent_template)
+	$(QUIET_CC)$(CC) $(PROBE_CFLAGS) -o $@ $<
+$(PROBES_MAK): %.mak: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)./$< >$@
+
 ifndef GOAL_STANDALONE
 ifdef DEVELOPER
 include config.mak.dev
@@ -1324,7 +1338,7 @@ ALL_COMMANDS_TO_INSTALL += git-upload-archive$(X)
 ALL_COMMANDS_TO_INSTALL += git-upload-pack$(X)
 endif
 
-ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(COMMON_CFLAGS)
 ALL_LDFLAGS = $(LDFLAGS)
 
 ifdef SANITIZE
@@ -3315,6 +3329,7 @@ cocciclean:
 	$(RM) contrib/coccinelle/*.cocci.patch*
 
 clean: profile-clean coverage-clean cocciclean
+	$(RM) -r .build
 	$(RM) *.res
 	$(RM) $(OBJECTS)
 	$(RM) $(LIB_FILE) $(XDIFF_LIB) $(REFTABLE_LIB) $(REFTABLE_TEST_LIB)
