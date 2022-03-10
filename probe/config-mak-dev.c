@@ -43,6 +43,8 @@ int probe_config_mak_dev(probe_info_fn_t fn, void *util)
 #endif /* >= 6 */
 #endif /* >= 5 */
 
+#elif defined(__IBMC__)
+
 #else
 	return -1;
 #endif
