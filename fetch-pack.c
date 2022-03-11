@@ -1048,21 +1048,24 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 
 	ret = read_bundle_header_fd(in_fd, &header, bundle_uri);
 	if (ret < 0) {
-		ret = error("could not read_bundle_header(%s)", bundle_uri);
+		ret = error("bundle (%d/%d): could not read_bundle_header(%s)",
+			    nth, total_nr, bundle_uri);
 		goto cleanup;
 	}
 	if (verify_bundle_extended(the_repository, &header, &missing) < 0) {
-		ret = error("could not verify_bundle_extended(%s)", bundle_uri);
+		ret = error("bundle (%d/%d): could not verify_bundle_extended(%s)",
+			    nth, total_nr, bundle_uri);
 		goto cleanup;
 	}
+
 	verify_bundle_missing_commits(&missing);
 	for_each_string_list_item(item, &missing) {
 		const char *sha = item->string;
 		struct object_id oid;
 
 		if (get_oid_hex(sha, &oid)) {
-			ret = error("invalid OID from verify_bundle_extended(%s): '%s'",
-				    bundle_uri, sha);
+			ret = error("bundle (%d/%d): invalid OID from verify_bundle_extended(%s): '%s'",
+				    nth, total_nr, bundle_uri, sha);
 			goto cleanup;
 		}
 		oid_array_append(&want_bundle_oids, &oid);
@@ -1085,11 +1088,22 @@ static int unbundle_bundle_uri(const char *bundle_uri, unsigned int nth,
 		 * bundle fetching as soon as we get the headers.
 		 */
 		struct object_id *oid = item->util;
-
+		struct object *o;
 		oid_array_append(bundle_oids, oid);
-		if (!parse_object(the_repository, oid))
+
+		o = parse_object(the_repository, oid);
+		if (!o || o->type != OBJ_COMMIT) {
+			warning("do not have %s", oid_to_hex(oid));
 			oid_array_append(&want_bundle_oids, oid);
+		} else {
+			warning("have in store %s", oid_to_hex(oid));
+		}
 	}
+
+	warning("bundle (%d/%d): have %lu missing",
+		nth, total_nr, want_bundle_oids.nr);
+
+
 
 	if (git_env_bool("GIT_TEST_BUNDLE_URI_FAIL_UNBUNDLE", 0))
 		lseek(in_fd, 0, SEEK_SET);
@@ -1915,8 +1929,6 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	negotiator = &negotiator_alloc;
 	fetch_negotiator_init(r, negotiator);
 
-	do_fetch_pack_v2_bundle_uri(args, bundle_uri, negotiator);
-
 	packet_reader_init(&reader, fd[0], NULL, 0,
 			   PACKET_READ_CHOMP_NEWLINE |
 			   PACKET_READ_DIE_ON_ERR_PACKET);
@@ -1945,6 +1957,8 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				state = FETCH_DONE;
 			else
 				state = FETCH_SEND_REQUEST;
+
+			do_fetch_pack_v2_bundle_uri(args, bundle_uri, negotiator);
 
 			mark_tips(negotiator, args->negotiation_tips);
 			for_each_cached_alternate(negotiator,
