@@ -738,13 +738,14 @@ static int add_commit_to_bitmap(struct bitmap_index *bitmap_git,
 
 static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 				   struct rev_info *revs,
-				   struct object_list *roots,
+				   struct object_queue *roots,
 				   struct bitmap *seen)
+
 {
 	struct bitmap *base = NULL;
 	int needs_walk = 0;
 
-	struct object_list *not_mapped = NULL;
+	struct object_queue *not_mapped = NULL;
 
 	/*
 	 * Go through all the roots for the walk. The ones that have bitmaps
@@ -764,7 +765,7 @@ static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 			continue;
 		}
 
-		object_list_insert(object, &not_mapped);
+		object_queue_insert(object, &not_mapped);
 	}
 
 	/*
@@ -946,7 +947,7 @@ static void show_objects_for_type(
 }
 
 static int in_bitmapped_pack(struct bitmap_index *bitmap_git,
-			     struct object_list *roots)
+			     struct object_queue *roots)
 {
 	while (roots) {
 		struct object *object = roots->item;
@@ -965,11 +966,11 @@ static int in_bitmapped_pack(struct bitmap_index *bitmap_git,
 }
 
 static struct bitmap *find_tip_objects(struct bitmap_index *bitmap_git,
-				       struct object_list *tip_objects,
+				       struct object_queue *tip_objects,
 				       enum object_type type)
 {
 	struct bitmap *result = bitmap_new();
-	struct object_list *p;
+	struct object_queue *p;
 
 	for (p = tip_objects; p; p = p->next) {
 		int pos;
@@ -988,7 +989,7 @@ static struct bitmap *find_tip_objects(struct bitmap_index *bitmap_git,
 }
 
 static void filter_bitmap_exclude_type(struct bitmap_index *bitmap_git,
-				       struct object_list *tip_objects,
+				       struct object_queue *tip_objects,
 				       struct bitmap *to_filter,
 				       enum object_type type)
 {
@@ -1035,7 +1036,7 @@ static void filter_bitmap_exclude_type(struct bitmap_index *bitmap_git,
 }
 
 static void filter_bitmap_blob_none(struct bitmap_index *bitmap_git,
-				    struct object_list *tip_objects,
+				    struct object_queue *tip_objects,
 				    struct bitmap *to_filter)
 {
 	filter_bitmap_exclude_type(bitmap_git, tip_objects, to_filter,
@@ -1082,7 +1083,7 @@ static unsigned long get_size_by_pos(struct bitmap_index *bitmap_git,
 }
 
 static void filter_bitmap_blob_limit(struct bitmap_index *bitmap_git,
-				     struct object_list *tip_objects,
+				     struct object_queue *tip_objects,
 				     struct bitmap *to_filter,
 				     unsigned long limit)
 {
@@ -1127,7 +1128,7 @@ static void filter_bitmap_blob_limit(struct bitmap_index *bitmap_git,
 }
 
 static void filter_bitmap_tree_depth(struct bitmap_index *bitmap_git,
-				     struct object_list *tip_objects,
+				     struct object_queue *tip_objects,
 				     struct bitmap *to_filter,
 				     unsigned long limit)
 {
@@ -1141,7 +1142,7 @@ static void filter_bitmap_tree_depth(struct bitmap_index *bitmap_git,
 }
 
 static void filter_bitmap_object_type(struct bitmap_index *bitmap_git,
-				      struct object_list *tip_objects,
+				      struct object_queue *tip_objects,
 				      struct bitmap *to_filter,
 				      enum object_type object_type)
 {
@@ -1159,7 +1160,7 @@ static void filter_bitmap_object_type(struct bitmap_index *bitmap_git,
 }
 
 static int filter_bitmap(struct bitmap_index *bitmap_git,
-			 struct object_list *tip_objects,
+			 struct object_queue *tip_objects,
 			 struct bitmap *to_filter,
 			 struct list_objects_filter_options *filter)
 {
@@ -1222,8 +1223,8 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 {
 	unsigned int i;
 
-	struct object_list *wants = NULL;
-	struct object_list *haves = NULL;
+	struct object_queue *wants = NULL;
+	struct object_queue *haves = NULL;
 
 	struct bitmap *wants_bitmap = NULL;
 	struct bitmap *haves_bitmap = NULL;
@@ -1257,18 +1258,18 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 			struct tag *tag = (struct tag *) object;
 
 			if (object->flags & UNINTERESTING)
-				object_list_insert(object, &haves);
+				object_queue_insert(object, &haves);
 			else
-				object_list_insert(object, &wants);
+				object_queue_insert(object, &wants);
 
 			object = parse_object_or_die(get_tagged_oid(tag), NULL);
 			object->flags |= (tag->object.flags & UNINTERESTING);
 		}
 
 		if (object->flags & UNINTERESTING)
-			object_list_insert(object, &haves);
+			object_queue_insert(object, &haves);
 		else
-			object_list_insert(object, &wants);
+			object_queue_insert(object, &wants);
 	}
 
 	/*
@@ -1319,15 +1320,15 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 	bitmap_git->result = wants_bitmap;
 	bitmap_git->haves = haves_bitmap;
 
-	object_list_free(&wants);
-	object_list_free(&haves);
+	object_queue_free(&wants);
+	object_queue_free(&haves);
 
 	return bitmap_git;
 
 cleanup:
 	free_bitmap_index(bitmap_git);
-	object_list_free(&wants);
-	object_list_free(&haves);
+	object_queue_free(&wants);
+	object_queue_free(&haves);
 	return NULL;
 }
 

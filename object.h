@@ -33,9 +33,9 @@ struct parsed_object_pool {
 struct parsed_object_pool *parsed_object_pool_new(void);
 void parsed_object_pool_clear(struct parsed_object_pool *o);
 
-struct object_list {
+struct object_queue {
 	struct object *item;
-	struct object_list *next;
+	struct object_queue *next;
 };
 
 struct object_array {
@@ -164,12 +164,12 @@ struct object *lookup_unknown_object(struct repository *r, const struct object_i
 struct object *lookup_object_by_type(struct repository *r, const struct object_id *oid,
 				     enum object_type type);
 
-struct object_list *object_list_insert(struct object *item,
-				       struct object_list **list_p);
+struct object_queue *object_queue_insert(struct object *item,
+				       struct object_queue **list_p);
 
-int object_list_contains(struct object_list *list, struct object *obj);
+int object_queue_contains(struct object_queue *list, struct object *obj);
 
-void object_list_free(struct object_list **list);
+void object_queue_free(struct object_queue **list);
 
 /* Object array handling .. */
 void add_object_array(struct object *obj, const char *name, struct object_array *array);

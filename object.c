@@ -304,17 +304,17 @@ struct object *parse_object(struct repository *r, const struct object_id *oid)
 	return NULL;
 }
 
-struct object_list *object_list_insert(struct object *item,
-				       struct object_list **list_p)
+struct object_queue *object_queue_insert(struct object *item,
+					 struct object_queue **list_p)
 {
-	struct object_list *new_list = xmalloc(sizeof(struct object_list));
+	struct object_queue *new_list = xmalloc(sizeof(struct object_queue));
 	new_list->item = item;
 	new_list->next = *list_p;
 	*list_p = new_list;
 	return new_list;
 }
 
-int object_list_contains(struct object_list *list, struct object *obj)
+int object_queue_contains(struct object_queue *list, struct object *obj)
 {
 	while (list) {
 		if (list->item == obj)
@@ -324,10 +324,10 @@ int object_list_contains(struct object_list *list, struct object *obj)
 	return 0;
 }
 
-void object_list_free(struct object_list **list)
+void object_queue_free(struct object_queue **list)
 {
 	while (*list) {
-		struct object_list *p = *list;
+		struct object_queue *p = *list;
 		*list = p->next;
 		free(p);
 	}
