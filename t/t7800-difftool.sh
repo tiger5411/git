@@ -582,6 +582,11 @@ test_expect_success SYMLINKS 'difftool --dir-diff --symlinks without unstaged ch
 	EOF
 	git difftool --dir-diff --symlinks \
 		--extcmd "./.git/CHECK_SYMLINKS" branch HEAD &&
+	test_cmp expect actual &&
+
+	GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS=false \
+	git difftool --dir-diff --symlink \
+		--extcmd "./.git/CHECK_SYMLINKS" branch HEAD &&
 	test_cmp expect actual
 '
 

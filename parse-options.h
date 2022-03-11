@@ -53,6 +53,20 @@ enum parse_opt_flags {
  *   PARSE_OPT_LITERAL_ARGHELP: says that argh shouldn't be enclosed in brackets
  *				(i.e. '<argh>') in the help message.
  *				Useful for options with multiple parameters.
+ * PARSE_OPT_NO_ABBREV:
+ *
+ *	When using the `PARSE_OPT_KEEP_UNKNOWN` flag to
+ *	parse_options(), stop a given option from participating in
+ *	abbreviation.
+ *
+ *	E.g. for an "--output-file" option set this flag so that it
+ *	will not be confused with a yet-to-be-parsed "--output" flag.
+ *
+ *	The parse_options() machinery will detect if an abbreviation
+ *	is ambiguous, so this is only useful for cases which do
+ *	two-pass parsing of the options, e.g. when we're about to hand
+ *	the rest of "argv" off to setup_revisions().
+ *
  *   PARSE_OPT_NOCOMPLETE: by default all visible options are completable
  *			   by git-completion.bash. This option suppresses that.
  *   PARSE_OPT_COMP_ARG: this option forces to git-completion.bash to
@@ -78,6 +92,7 @@ enum parse_opt_option_flags {
 	PARSE_OPT_NODASH = 1 << 5,
 	PARSE_OPT_LITERAL_ARGHELP = 1 << 6,
 	PARSE_OPT_FROM_ALIAS = 1 << 7,
+	PARSE_OPT_NO_ABBREV = 1 << 8,
 	PARSE_OPT_NOCOMPLETE = 1 << 9,
 	PARSE_OPT_COMP_ARG = 1 << 10,
 	PARSE_OPT_CMDMODE = 1 << 11,

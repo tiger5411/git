@@ -332,7 +332,7 @@ again:
 			rest = NULL;
 		if (!rest) {
 			/* abbreviated? */
-			if (!(p->flags & PARSE_OPT_KEEP_UNKNOWN) &&
+			if (!(options->flags & PARSE_OPT_NO_ABBREV) &&
 			    !strncmp(long_name, arg, arg_end - arg)) {
 is_abbreviated:
 				if (abbrev_option &&
@@ -442,6 +442,8 @@ static void check_typos(const char *arg, const struct option *options)
 static void parse_options_check_flags(const struct option *opts,
 				      const enum parse_opt_flags flags)
 {
+	int err = 0;
+
 	if ((flags & PARSE_OPT_KEEP_UNKNOWN) &&
 	    (flags & PARSE_OPT_STOP_AT_NON_OPTION) &&
 	    !(flags & PARSE_OPT_ONE_SHOT))
@@ -449,6 +451,17 @@ static void parse_options_check_flags(const struct option *opts,
 	if ((flags & PARSE_OPT_ONE_SHOT) &&
 	    (flags & PARSE_OPT_KEEP_ARGV0))
 		BUG("Can't keep argv0 if you don't have it");
+
+	for (; opts->type != OPTION_END; opts++) {
+		if (!(flags & PARSE_OPT_KEEP_UNKNOWN) &&
+		    (opts->flags & PARSE_OPT_NO_ABBREV))
+			err |= optbug(opts, "parse_options() KEEP_UNKNOWN "
+				      "flag and option NO_ABBREV flag are "
+				      "are incompatible");
+	}
+
+	if (err)
+		exit(128);
 }
 
 static void parse_options_check(const struct option *opts)
