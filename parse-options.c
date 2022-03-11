@@ -6,8 +6,6 @@
 #include "color.h"
 #include "utf8.h"
 
-static int disallow_abbreviated_options;
-
 enum opt_parsed {
 	OPT_LONG  = 0,
 	OPT_SHORT = 1<<0,
@@ -319,6 +317,11 @@ static enum parse_opt_result parse_long_opt(
 	const char *arg_end = strchrnul(arg, '=');
 	const struct option *abbrev_option = NULL, *ambiguous_option = NULL;
 	enum opt_parsed abbrev_flags = OPT_LONG, ambiguous_flags = OPT_LONG;
+	const char *test_var = "GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS";
+	static int no_abbrev = -1;
+
+	if (no_abbrev < 0)
+		no_abbrev = git_env_bool(test_var, 0);
 
 	for (; options->type != OPTION_END; options++) {
 		const char *rest, *long_name = options->long_name;
@@ -384,12 +387,7 @@ is_abbreviated:
 		}
 		return get_value(p, options, all_opts, flags ^ opt_flags);
 	}
-
-	if (disallow_abbreviated_options && (ambiguous_option || abbrev_option))
-		die("disallowed abbreviated or ambiguous option '%.*s'",
-		    (int)(arg_end - arg), arg);
-
-	if (ambiguous_option) {
+	if (ambiguous_option)
 		error(_("ambiguous option: %s "
 			"(could be --%s%s or --%s%s)"),
 			arg,
@@ -397,8 +395,20 @@ is_abbreviated:
 			ambiguous_option->long_name,
 			(abbrev_flags & OPT_UNSET) ?  "no-" : "",
 			abbrev_option->long_name);
+
+	if (no_abbrev && abbrev_option)
+		BUG("disallowed abbreviated option '%.*s'. "
+		    "To test abbreviated options use %s=false",
+		    (int)(arg_end - arg), arg, test_var);
+
+	if (no_abbrev && ambiguous_option)
+		BUG("dying on ambiguous option per 'error' above. "
+		    "To test abbreviated options use %s=false",
+		    test_var);
+
+	if (ambiguous_option)
 		return PARSE_OPT_HELP;
-	}
+
 	if (abbrev_option)
 		return get_value(p, abbrev_option, all_opts, abbrev_flags);
 	return PARSE_OPT_UNKNOWN;
@@ -869,9 +879,6 @@ int parse_options(int argc, const char **argv,
 {
 	struct parse_opt_ctx_t ctx;
 	struct option *real_options;
-
-	disallow_abbreviated_options =
-		git_env_bool("GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS", 0);
 
 	memset(&ctx, 0, sizeof(ctx));
 	real_options = preprocess_options(&ctx, options);
