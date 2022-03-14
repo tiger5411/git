@@ -20,6 +20,10 @@ advice.*::
 		Advice shown when fetch refspec for multiple remotes map to
 		the same remote-tracking branch namespace and causes branch
 		tracking set-up to fail.
+	branchSetUpstreamFailure::
+		Advice shown when linkgit:git-branch[1] is asked to
+		`--set-upstream-to` a remote branch that doesn't
+		exist.
 	checkoutAmbiguousRemoteBranchName::
 		Advice shown when the argument to
 		linkgit:git-checkout[1] and linkgit:git-switch[1]

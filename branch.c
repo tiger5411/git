@@ -438,7 +438,7 @@ static void dwim_branch_start(struct repository *r, const char *start_name,
 	if (get_oid_mb(start_name, &oid)) {
 		if (explicit_tracking) {
 			int code = die_message(_(upstream_missing), start_name);
-			advise_if_enabled(ADVICE_SET_UPSTREAM_FAILURE,
+			advise_if_enabled(ADVICE_BRANCH_SET_UPSTREAM_FAILURE,
 					  _(upstream_advice));
 			exit(code);
 		}
