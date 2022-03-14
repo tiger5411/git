@@ -796,7 +796,7 @@ static void wt_status_collect_untracked(struct wt_status *s)
 
 	dir_clear(&dir);
 
-	if (advice_enabled(ADVICE_STATUS_U_OPTION))
+	if (advice_enabled(ADVICE_STATUS_UOPTION))
 		s->untracked_in_ms = (getnanotime() - t_begin) / 1000000;
 }
 
@@ -1866,7 +1866,7 @@ static void wt_longstatus_print(struct wt_status *s)
 		wt_longstatus_print_other(s, &s->untracked, _("Untracked files"), "add");
 		if (s->show_ignored_mode)
 			wt_longstatus_print_other(s, &s->ignored, _("Ignored files"), "add -f");
-		if (advice_enabled(ADVICE_STATUS_U_OPTION) && 2000 < s->untracked_in_ms) {
+		if (advice_enabled(ADVICE_STATUS_UOPTION) && 2000 < s->untracked_in_ms) {
 			status_printf_ln(s, GIT_COLOR_NORMAL, "%s", "");
 			status_printf_ln(s, GIT_COLOR_NORMAL,
 					 _("It took %.2f seconds to enumerate untracked files. 'status -uno'\n"
