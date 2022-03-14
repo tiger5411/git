@@ -1173,7 +1173,7 @@ static void wt_longstatus_print_tracking(struct wt_status *s)
 	if (!format_tracking_info(branch, &sb, s->ahead_behind_flags))
 		return;
 
-	if (advice_enabled(ADVICE_STATUS_AHEAD_BEHIND_WARNING) &&
+	if (advice_enabled(ADVICE_STATUS_AHEAD_BEHIND) &&
 	    s->ahead_behind_flags == AHEAD_BEHIND_FULL) {
 		uint64_t t_delta_in_ms = (getnanotime() - t_begin) / 1000000;
 		if (t_delta_in_ms > AB_DELAY_WARNING_IN_MS) {
