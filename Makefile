@@ -580,9 +580,11 @@ PTHREAD_LIBS = -lpthread
 # Guard against environment variables
 BUILTIN_OBJS =
 BUILT_INS =
+COMMON_GENERATED_H =
 COMPAT_CFLAGS =
 COMPAT_OBJS =
 XDIFF_OBJS =
+GENERATED_ADVICE_H =
 GENERATED_H =
 EXTRA_CPPFLAGS =
 FUZZ_OBJS =
@@ -831,6 +833,14 @@ XDIFF_LIB = xdiff/lib.a
 REFTABLE_LIB = reftable/libreftable.a
 REFTABLE_TEST_LIB = reftable/libreftable_test.a
 
+# Generated headers. The "COMMON_GENERATED_H" will be added as
+# implicit dependencies on fresh builds (without existing dep/*.mak
+# files)
+GENERATED_ADVICE_H += advice-type.h
+
+COMMON_GENERATED_H += $(GENERATED_ADVICE_H)
+
+GENERATED_H += $(COMMON_GENERATED_H)
 GENERATED_H += command-list.h
 GENERATED_H += config-list.h
 GENERATED_H += hook-list.h
@@ -2248,6 +2258,9 @@ $(BUILT_INS): git$X
 	ln -s $< $@ 2>/dev/null || \
 	cp $< $@
 
+$(GENERATED_ADVICE_H): generate-advice.sh Documentation/config/advice.txt
+	$(QUIET_GEN)$(SHELL_PATH) ./generate-advice.sh $@ >$@
+
 config-list.h: generate-configlist.sh
 
 config-list.h: Documentation/*config.txt Documentation/config/*.txt
@@ -2529,6 +2542,43 @@ dep_file = .build/dep/$(basename $@).mak
 dep_args = -MF $(dep_file) $(foreach s,$(dep_exts),-MQ $(basename $@)$(s)) -MMD -MP
 asm_deps =
 asm_dep_args = -c $(dep_args)
+
+# Generate different dependencies for objects that have corresponding
+# dep/*.mak files, and those that don't.
+OBJECTS_DEP_PRESENT = $(wildcard $(OBJECTS_DEP))
+OBJECTS_DEP_PRESENT_BASENAME = $(OBJECTS_DEP_PRESENT:.build/dep/%.mak=%)
+OBJECTS_DEP_MISSING_BASENAME = $(filter-out $(OBJECTS_DEP_PRESENT_BASENAME),$(OBJECTS_BASENAME))
+
+# The generated $$(COMMON_GENERATED_H) are widespread enough that
+# exhaustively listing their dependencies would be painful, so let's
+# fall back on having all *.$(dep_exts) depend on them IFF there is no
+# corresponding dep/*.mak file listing the actual dependencies.
+define dep-line
+
+$(1): $(2)
+endef
+define dep-lines
+$(foreach e,$(dep_exits),$(call dep-line,$(1)$(e),$(2)))
+endef
+
+define dep-missing
+$(call dep-lines,$(1),$$(COMMON_GENERATED_H))
+endef
+
+define dep-present
+# Dependencies for $(1) provided by generated *.mak
+
+endef
+
+# The "dep-present" isn't strictly needed (it only makes comments),
+# but makes ad-hoc debugging & inspection easier.
+define computed-deps
+$(foreach f,$(OBJECTS_DEP_PRESENT_BASENAME),$(call dep-present,$(f)))
+$(foreach f,$(OBJECTS_DEP_MISSING_BASENAME),$(call dep-missing,$(f)))
+endef
+
+$(eval $(call computed-deps))
+
 else
 $(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
@@ -2973,6 +3023,7 @@ HCC = $(HCO:hco=hcc)
 	@echo '#include "git-compat-util.h"' >$@
 	@echo '#include "$<"' >>$@
 
+$(HCO): $(COMMON_GENERATED_H)
 $(HCO): %.hco: %.hcc FORCE
 	$(QUIET_HDR)$(CC) $(ALL_CFLAGS) -o /dev/null -c -xc $<
 
