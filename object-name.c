@@ -1,4 +1,5 @@
 #include "cache.h"
+#include "advice.h"
 #include "config.h"
 #include "tag.h"
 #include "commit.h"

@@ -1,4 +1,5 @@
 #include "cache.h"
+#include "advice.h"
 #include "add-interactive.h"
 #include "strbuf.h"
 #include "run-command.h"

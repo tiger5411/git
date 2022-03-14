@@ -1,4 +1,5 @@
 #include "cache.h"
+#include "advice.h"
 #include "hook.h"
 #include "run-command.h"
 #include "config.h"

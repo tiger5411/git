@@ -6,6 +6,7 @@
  *
  */
 #include "cache.h"
+#include "advice.h"
 #include "date.h"
 #include "branch.h"
 #include "config.h"

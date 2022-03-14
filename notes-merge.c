@@ -1,4 +1,5 @@
 #include "cache.h"
+#include "advice.h"
 #include "commit.h"
 #include "refs.h"
 #include "object-store.h"
