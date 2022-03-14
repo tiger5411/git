@@ -836,6 +836,7 @@ REFTABLE_TEST_LIB = reftable/libreftable_test.a
 # Generated headers. The "COMMON_GENERATED_H" will be added as
 # implicit dependencies on fresh builds (without existing dep/*.mak
 # files)
+GENERATED_ADVICE_H += advice-config.h
 GENERATED_ADVICE_H += advice-type.h
 
 COMMON_GENERATED_H += $(GENERATED_ADVICE_H)

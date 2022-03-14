@@ -1,4 +1,6 @@
 #include "cache.h"
+#include "advice.h"
+#include "advice-config.h"
 #include "config.h"
 #include "color.h"
 #include "help.h"
@@ -30,48 +32,6 @@ static const char *advise_get_color(enum color_advice ix)
 		return advice_colors[ix];
 	return "";
 }
-
-static struct {
-	const char *key;
-	int enabled;
-} advice_setting[] = {
-	[ADVICE_ADD_EMBEDDED_REPO]			= { "addEmbeddedRepo", 1 },
-	[ADVICE_ADD_EMPTY_PATHSPEC]			= { "addEmptyPathspec", 1 },
-	[ADVICE_ADD_IGNORED_FILE]			= { "addIgnoredFile", 1 },
-	[ADVICE_AM_WORK_DIR] 				= { "amWorkDir", 1 },
-	[ADVICE_AMBIGUOUS_FETCH_REFSPEC]		= { "ambiguousFetchRefspec", 1 },
-	[ADVICE_BRANCH_SET_UPSTREAM_FAILURE]		= { "branchSetUpstreamFailure", 1 },
-	[ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME] 	= { "checkoutAmbiguousRemoteBranchName", 1 },
-	[ADVICE_COMMIT_BEFORE_MERGE]			= { "commitBeforeMerge", 1 },
-	[ADVICE_DETACHED_HEAD]				= { "detachedHead", 1 },
-	[ADVICE_SUGGEST_DETACHING_HEAD]			= { "suggestDetachingHead", 1 },
-	[ADVICE_FETCH_SHOW_FORCED_UPDATES]		= { "fetchShowForcedUpdates", 1 },
-	[ADVICE_GRAFT_FILE_DEPRECATED]			= { "graftFileDeprecated", 1 },
-	[ADVICE_IGNORED_HOOK]				= { "ignoredHook", 1 },
-	[ADVICE_IMPLICIT_IDENTITY]			= { "implicitIdentity", 1 },
-	[ADVICE_NESTED_TAG]				= { "nestedTag", 1 },
-	[ADVICE_OBJECT_NAME_WARNING]			= { "objectNameWarning", 1 },
-	[ADVICE_PUSH_ALREADY_EXISTS]			= { "pushAlreadyExists", 1 },
-	[ADVICE_PUSH_FETCH_FIRST]			= { "pushFetchFirst", 1 },
-	[ADVICE_PUSH_NEEDS_FORCE]			= { "pushNeedsForce", 1 },
-	[ADVICE_PUSH_REF_NEEDS_UPDATE]			= { "pushRefNeedsUpdate", 1 },
-	[ADVICE_PUSH_NON_FF_CURRENT]			= { "pushNonFFCurrent", 1 },
-	[ADVICE_PUSH_NON_FF_MATCHING]			= { "pushNonFFMatching", 1 },
-	[ADVICE_PUSH_UNQUALIFIED_REFNAME]		= { "pushUnqualifiedRefName", 1 },
-	[ADVICE_PUSH_UPDATE_REJECTED]			= { "pushUpdateRejected", 1 },
-	[ADVICE_RESET_NO_REFRESH]			= { "resetNoRefresh", 1 },
-	[ADVICE_RESOLVE_CONFLICT]			= { "resolveConflict", 1 },
-	[ADVICE_RM_HINTS]				= { "rmHints", 1 },
-	[ADVICE_SEQUENCER_IN_USE]			= { "sequencerInUse", 1 },
-	[ADVICE_SKIPPED_CHERRY_PICKS]			= { "skippedCherryPicks", 1 },
-	[ADVICE_STATUS_AHEAD_BEHIND]			= { "statusAheadBehind", 1 },
-	[ADVICE_STATUS_HINTS]				= { "statusHints", 1 },
-	[ADVICE_STATUS_UOPTION]				= { "statusUoption", 1 },
-	[ADVICE_SUBMODULE_ALTERNATE_ERROR_STRATEGY_DIE] = { "submoduleAlternateErrorStrategyDie", 1 },
-	[ADVICE_SUBMODULES_NOT_UPDATED] 		= { "submodulesNotUpdated", 1 },
-	[ADVICE_UPDATE_SPARSE_PATH]			= { "updateSparsePath", 1 },
-	[ADVICE_WAITING_FOR_EDITOR]			= { "waitingForEditor", 1 },
-};
 
 static const char turn_off_instructions[] =
 N_("\n"
