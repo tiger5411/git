@@ -59,6 +59,9 @@ advice.*::
 		domain name.
 	nestedTag::
 		Advice shown if a user attempts to recursively tag a tag object.
+	objectNameWarning::
+		Advice shown when resolving a reference that looks
+		like an object ID, which was likely created by.
 	pushAlreadyExists::
 		Shown when linkgit:git-push[1] rejects an update that
 		does not qualify for fast-forwarding (e.g., a tag.)
