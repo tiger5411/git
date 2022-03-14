@@ -2503,23 +2503,32 @@ OBJECTS += $(SCALAR_OBJECTS)
 .PHONY: objects
 objects: $(OBJECTS)
 
+# Derived from $(OBJECTS)
+OBJECTS_S = $(OBJECTS:%.o=%.s)
+
+# Our USE_COMPUTED_HEADER_DEPENDENCIES targets
+OBJECTS_BASENAME = $(OBJECTS:%.o=%)
+OBJECTS_DEP = $(OBJECTS:%.o=.build/dep/%.mak)
+
+.PHONY: asm-objs
+asm-objs: $(OBJECTS_S)
+
 # Take advantage of gcc's on-the-fly dependency generation
 # See <http://gcc.gnu.org/gcc-3.0/features.html>.
 dep_file =
 dep_args =
-missing_dep_dirs =
+asm_deps = FORCE
+asm_dep_args =
+dep_exts =
 
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+# The extensions we compute header dependecies for
+dep_exits = .o .s
 # Will be part of the $(CC) command-line
-dep_file = $(dir $@).depend/$(notdir $@).d
-dep_args = -MF $(dep_file) -MQ $@ -MMD -MP
-# Our USE_COMPUTED_HEADER_DEPENDENCIES targets
-dep_files := $(foreach f,$(OBJECTS),$(dir $f).depend/$(notdir $f).d)
-dep_dirs := $(addsuffix .depend,$(sort $(dir $(OBJECTS))))
-missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
-
-$(dep_dirs):
-	$(QUIET_MKDIR)mkdir $@
+dep_file = .build/dep/$(basename $@).mak
+dep_args = -MF $(dep_file) $(foreach s,$(dep_exts),-MQ $(basename $@)$(s)) -MMD -MP
+asm_deps =
+asm_dep_args = -c $(dep_args)
 else
 $(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
@@ -2540,14 +2549,23 @@ $(compdb_dir):
 	$(QUIET_MKDIR)mkdir $@
 endif
 
-$(OBJECTS): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(compdb_dir)
+## "Object" creation rules, making optional use of the dep/*.mak files
+## created with COMPUTE_HEADER_DEPENDENCIES
+# *.o
+$(OBJECTS): %.o: %.c GIT-CFLAGS $(compdb_dir)
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+	$(call mkdir_p_prefix_parent_template,.build/dep/)
+endif
 	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
-
-%.s: %.c GIT-CFLAGS FORCE
-	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+# *.s
+%.s: %.c $(asm_deps)
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+	$(call mkdir_p_prefix_parent_template,.build/dep/)
+endif
+	$(QUIET_CC_ASM)$(CC) -o $@ $(asm_dep_args) -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
-dep_files_present := $(wildcard $(dep_files))
+dep_files_present := $(wildcard $(OBJECTS_DEP))
 ifneq ($(dep_files_present),)
 include $(dep_files_present)
 endif
@@ -3259,15 +3277,17 @@ cocciclean:
 	$(RM) contrib/coccinelle/*.cocci.patch*
 
 clean: profile-clean coverage-clean cocciclean
+	$(RM) -rf .build
 	$(RM) *.res
 	$(RM) $(OBJECTS)
+	$(RM) $(OBJECTS_S)
 	$(RM) $(LIB_FILE) $(XDIFF_LIB) $(REFTABLE_LIB) $(REFTABLE_TEST_LIB)
 	$(RM) $(ALL_PROGRAMS) $(SCRIPT_LIB) $(BUILT_INS) git$X
 	$(RM) $(TEST_PROGRAMS)
 	$(RM) $(FUZZ_PROGRAMS)
 	$(RM) $(SP_OBJ)
 	$(RM) $(HCC)
-	$(RM) -r bin-wrappers $(dep_dirs) $(compdb_dir) compile_commands.json
+	$(RM) -r bin-wrappers $(compdb_dir) compile_commands.json
 	$(RM) -r po/build/
 	$(RM) *.pyc *.pyo */*.pyc */*.pyo $(GENERATED_H) $(ETAGS_TARGET) tags cscope*
 	$(RM) -r .dist-tmp-dir .doc-tmp-dir

@@ -54,10 +54,11 @@ ifndef V
 	QUIET_GEN      = @echo '   ' GEN $@;
 
 	QUIET_MKDIR = @echo '   ' MKDIR $@;
-	QUIET_MKDIR_P_PARENT  = @echo '   ' MKDIR -p $(@D);
+	QUIET_MKDIR_P_PARENT  = @echo '   ' MKDIR -p $(patsubst %/.,%,$(1)$(@D))
 
 ## Used in "Makefile"
 	QUIET_CC       = @echo '   ' CC $@;
+	QUIET_CC_ASM   = @echo '   ' CC \(ASM\) $@;
 	QUIET_AR       = @echo '   ' AR $@;
 	QUIET_LINK     = @echo '   ' LINK $@;
 	QUIET_BUILT_IN = @echo '   ' BUILTIN $@;
@@ -90,6 +91,14 @@ endif
 
 ### Templates
 
+## mkdir_p_prefix_parent: See "mkdir_p_parent" below. This adds an
+## optional prefix to the $(@D) parent, to e.g. create a derived file
+## in .build/. A $(patsubst) in the $(QUIET_MKDIR_P_PARENT) turns ugly
+## paths like "dep/." into "dep".
+define mkdir_p_prefix_parent_template
+$(if $(wildcard $(1)$(@D)),,$(QUIET_MKDIR_P_PARENT)$(shell mkdir -p $(1)$(@D)))
+endef
+
 ## mkdir_p_parent: lazily "mkdir -p" the path needed for a $@
 ## file. Uses $(wildcard) to avoid the "mkdir -p" if it's not
 ## needed.
@@ -100,5 +109,5 @@ endif
 ## "a/prefix/dir/file". This can instead be inserted at the start of
 ## the "a/prefix/dir/file" rule.
 define mkdir_p_parent_template
-$(if $(wildcard $(@D)),,$(QUIET_MKDIR_P_PARENT)$(shell mkdir -p $(@D)))
+$(call mkdir_p_prefix_parent_template)
 endef

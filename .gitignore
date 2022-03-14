@@ -216,6 +216,7 @@
 /config.mak.autogen
 /config.mak.append
 /configure
+/.build/
 /.vscode/
 /tags
 /TAGS
