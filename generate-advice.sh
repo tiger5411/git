@@ -33,7 +33,6 @@ listify () {
 
 advice_labels_manual () {
 	cat <<-\EOF
-	ADVICE_GRAFT_FILE_DEPRECATED
 	ADVICE_OBJECT_NAME_WARNING
 	ADVICE_SET_UPSTREAM_FAILURE
 	EOF
