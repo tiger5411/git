@@ -3386,8 +3386,17 @@ ALL_COMMANDS += git-gui
 ALL_COMMANDS += gitk
 ALL_COMMANDS += gitweb
 
+### Check if files are sorted
+CHECK_SORTED_CMP = $(GIT_TEST_CMP)
+ifndef GIT_TEST_CMP
+CHECK_SORTED_CMP = diff -u
+endif
+
+ADVICE_TXT = Documentation/config/advice.txt
+$(eval $(call check-sorted-file-rule,check-advice-docs,grep '^[^a-z].*::',$(ADVICE_TXT),$(CHECK_SORTED_CMP)))
+
 .PHONY: check-docs
-check-docs::
+check-docs:: check-advice-docs
 	$(MAKE) -C Documentation lint-docs
 	@(for v in $(patsubst %$X,%,$(ALL_COMMANDS)); \
 	do \

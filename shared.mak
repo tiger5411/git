@@ -70,6 +70,7 @@ ifndef V
 	QUIET_HDR      = @echo '   ' HDR $(<:hcc=h);
 	QUIET_RC       = @echo '   ' RC $@;
 	QUIET_SPATCH   = @echo '   ' SPATCH $<;
+	QUIET_CMP      = @echo '   ' CMP $^;
 
 ## Used in "Documentation/Makefile"
 	QUIET_ASCIIDOC	= @echo '   ' ASCIIDOC $@;
@@ -110,4 +111,33 @@ endef
 ## the "a/prefix/dir/file" rule.
 define mkdir_p_parent_template
 $(call mkdir_p_prefix_parent_template)
+endef
+
+## check-sorted-file-rule: make a "check" rule to see if a given file
+## is sorted. The $(2) is run at most twice, with "sorted" being
+## determined by "LC_ALL=C sort". Scratch files are created under
+## .build/$(1)/
+##
+##	$(1) = The rule name, e.g. 'check-sorted-stuff'
+##	$(2) = A filtering command to run on the file, e.g. "cat" or "grep ::"
+##	$(3) = The filename, e.g. stuff.txt
+##	$(4) = A command taking sorted/unsorted versions, to check if
+##	       they're the same, use e.g. "cmp" or "diff -u"
+define check-sorted-file-rule
+.build/$(1)/expect: $(3)
+	$$(call mkdir_p_parent_template)
+	$$(QUIET_GEN)$(2) $(3) | LC_ALL=C sort >$$@
+
+.build/$(1)/actual: $(3)
+	$$(call mkdir_p_parent_template)
+	$$(QUIET_GEN)$(2) $(3) >$$@
+
+.build/$(1)/ok: .build/$(1)/expect
+.build/$(1)/ok: .build/$(1)/actual
+.build/$(1)/ok:
+	$$(QUIET_CMP)$(4) $$^ && \
+	>$$@
+
+$(1): .build/$(1)/ok
+.PHONY: $(1)
 endef
