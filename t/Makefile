@@ -72,29 +72,26 @@ CHAINLINT_TESTS = $(wildcard chainlint/*.test)
 
 CHAINLINT_GEN = $(CHAINLINT_TESTS:%.test=.build/%)
 
-.PRECIOUS: $(CHAINLINT_GEN:%=%/test)
-.build/chainlint/%/test: chainlint/%.test
-	$(call mkdir_p_parent_template)
-	$(QUIET_CHAINLINT_DEP)sed -e '/^# LINT: /d' $< >$@
-
-.PRECIOUS: $(CHAINLINT_GEN:%=%/chainlint)
-.build/chainlint/%/chainlint: .build/chainlint/%/test
-	$(call mkdir_p_parent_template)
-	$(QUIET_CHAINLINT_DEP)$(CHAINLINT) <$< >$@
-
-.PRECIOUS: $(CHAINLINT_GEN:%=%/expect)
-.build/chainlint/%/expect: chainlint/%.expect
-	$(call mkdir_p_parent_template)
-	$(QUIET_CHAINLINT_DEP)sed -e '/^[ 	]*$$/d' $< >$@
-
-.PRECIOUS: $(CHAINLINT_GEN:%=%/actual)
-.build/chainlint/%/actual: .build/chainlint/%/chainlint
-	$(call mkdir_p_parent_template)
-	$(QUIET_CHAINLINT_DEP)grep -v '^[   ]*$$' $< >$@
-
-.build/chainlint/%/ok: .build/chainlint/%/actual .build/chainlint/%/expect
-	$(call mkdir_p_parent_template)
-	$(QUIET_CHAINLINT)diff -u $(@D)/expect $(@D)/actual >$@
+define CHAINLINT_rule
+.PRECIOUS: $$(CHAINLINT_GEN:%=%/$(1))
+.build/chainlint/%/$(1): $(2)
+	$$(call mkdir_p_parent_template)
+	$(3) <$$< >$$@
+endef
+define CHAINLINT_dep
+$(call CHAINLINT_rule,$(1),$(2),$$(QUIET_CHAINLINT_DEP)$(3))
+endef
+$(eval $(call CHAINLINT_dep,test,chainlint/%.test,\
+	sed -e '/^# LINT: /d'))
+$(eval $(call CHAINLINT_dep,chainlint,.build/chainlint/%/test,\
+	$$(CHAINLINT)))
+$(eval $(call CHAINLINT_dep,expect,chainlint/%.expect,\
+	sed -e '/^[ 	]*$$$$/d'))
+$(eval $(call CHAINLINT_dep,actual,.build/chainlint/%/chainlint,\
+	grep -v '^[   ]*$$$$'))
+$(eval $(call CHAINLINT_rule,ok,\
+	.build/chainlint/%/actual .build/chainlint/%/expect,\
+	$$(QUIET_CHAINLINT)diff -u $$(@D)/expect $$(@D)/actual))
 
 check-chainlint: $(CHAINLINT_GEN:%=%/ok)
 
