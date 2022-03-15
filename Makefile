@@ -2503,54 +2503,54 @@ OBJECTS += $(SCALAR_OBJECTS)
 .PHONY: objects
 objects: $(OBJECTS)
 
-dep_files := $(foreach f,$(OBJECTS),$(dir $f).depend/$(notdir $f).d)
-dep_dirs := $(addsuffix .depend,$(sort $(dir $(OBJECTS))))
+# Take advantage of gcc's on-the-fly dependency generation
+# See <http://gcc.gnu.org/gcc-3.0/features.html>.
+dep_file =
+dep_args =
+missing_dep_dirs =
 
-ifeq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
-$(dep_dirs):
-	@mkdir -p $@
-
-missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+# Will be part of the $(CC) command-line
 dep_file = $(dir $@).depend/$(notdir $@).d
 dep_args = -MF $(dep_file) -MQ $@ -MMD -MP
+# Our USE_COMPUTED_HEADER_DEPENDENCIES targets
+dep_files := $(foreach f,$(OBJECTS),$(dir $f).depend/$(notdir $f).d)
+dep_dirs := $(addsuffix .depend,$(sort $(dir $(OBJECTS))))
+missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
+
+$(dep_dirs):
+	$(QUIET_MKDIR)mkdir $@
+else
+$(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
 
-ifneq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
-missing_dep_dirs =
-dep_args =
-endif
-
-compdb_dir = compile_commands
+# Generate a "JSON Compilation Database" under Clang:
+# https://clang.llvm.org/docs/JSONCompilationDatabase.html
+compdb_file =
+compdb_args =
+compdb_dir =
 
 ifdef GENERATE_COMPILATION_DATABASE
-missing_compdb_dir = $(compdb_dir)
-$(missing_compdb_dir):
-	@mkdir -p $@
-
+# Will be part of the $(CC) command-line
+compdb_dir = compile_commands
 compdb_file = $(compdb_dir)/$(subst /,-,$@.json)
 compdb_args = -MJ $(compdb_file)
-else
-missing_compdb_dir =
-compdb_args =
+
+$(compdb_dir):
+	$(QUIET_MKDIR)mkdir $@
 endif
 
-C_OBJ = $(OBJECTS)
-
-$(C_OBJ): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
+$(OBJECTS): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(compdb_dir)
 	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 
 %.s: %.c GIT-CFLAGS FORCE
 	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
-# Take advantage of gcc's on-the-fly dependency generation
-# See <http://gcc.gnu.org/gcc-3.0/features.html>.
 dep_files_present := $(wildcard $(dep_files))
 ifneq ($(dep_files_present),)
 include $(dep_files_present)
 endif
-else
-$(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
 
 ifdef GENERATE_COMPILATION_DATABASE
