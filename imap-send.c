@@ -39,7 +39,7 @@ static const char * const imap_send_usage[] = { "git imap-send [-v] [-q] [--[no-
 
 static struct option imap_send_options[] = {
 	OPT__VERBOSITY(&verbosity),
-	OPT_HIDDEN_BOOL(0, "curl", &use_curl, "use libcurl to communicate with the IMAP server"),
+	OPT_HIDDEN_BOOL(0, "curl", &use_curl),
 	OPT_END()
 };
 
