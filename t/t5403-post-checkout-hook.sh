@@ -105,7 +105,7 @@ test_rebase --merge
 
 test_expect_success 'post-checkout hook is triggered by clone' '
 	mkdir -p templates/hooks &&
-	write_script templates/hooks/post-checkout <<-\EOF &&
+	write_script --no-sanity templates/hooks/post-checkout <<-\EOF &&
 	echo "$@" >"$GIT_DIR/post-checkout.args"
 	EOF
 	git clone --template=templates . clone3 &&

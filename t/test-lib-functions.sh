@@ -544,6 +544,32 @@ test_config_global () {
 }
 
 write_script () {
+	sanity=t &&
+	while test $# != 0
+	do
+		case "$1" in
+		--no-sanity)
+			sanity=
+			;;
+		-*)
+			BUG "invalid argument: $1"
+			;;
+		*)
+			break
+			;;
+		esac &&
+		shift
+	done &&
+
+	case "$1" in
+	hooks/*|*/hooks/*)
+		if test -n "$sanity"
+		then
+			say "using write_script to create a hook? use test_hook" &&
+			return 1
+		fi
+		;;
+	esac
 	{
 		echo "#!${2-"$SHELL_PATH"}" &&
 		cat
@@ -624,7 +650,7 @@ test_hook () {
 	then
 		test_when_finished "rm \"$hook_file\""
 	fi &&
-	write_script "$hook_file"
+	write_script --no-sanity "$hook_file"
 }
 
 # Use test_set_prereq to tell that a particular prerequisite is available.
