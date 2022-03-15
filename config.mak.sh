@@ -84,6 +84,10 @@ cat >$tmp <<EOF
 # CC
 CC = ccache $cc
 
+# I use GCC and/or clang, so save myself the auto-probing invocation
+# of \$(CC) on "make" invocation
+COMPUTE_HEADER_DEPENDENCIES = yes
+
 # Core flags
 CFLAGS = $cflags
 DEVELOPER=1
