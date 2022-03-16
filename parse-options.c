@@ -439,6 +439,18 @@ static void check_typos(const char *arg, const struct option *options)
 	}
 }
 
+static void parse_options_check_flags(const struct option *opts,
+				      const enum parse_opt_flags flags)
+{
+	if ((flags & PARSE_OPT_KEEP_UNKNOWN) &&
+	    (flags & PARSE_OPT_STOP_AT_NON_OPTION) &&
+	    !(flags & PARSE_OPT_ONE_SHOT))
+		BUG("STOP_AT_NON_OPTION and KEEP_UNKNOWN don't go together");
+	if ((flags & PARSE_OPT_ONE_SHOT) &&
+	    (flags & PARSE_OPT_KEEP_ARGV0))
+		BUG("Can't keep argv0 if you don't have it");
+}
+
 static void parse_options_check(const struct option *opts)
 {
 	int err = 0;
@@ -516,13 +528,7 @@ static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
 	ctx->prefix = prefix;
 	ctx->cpidx = ((flags & PARSE_OPT_KEEP_ARGV0) != 0);
 	ctx->flags = flags;
-	if ((flags & PARSE_OPT_KEEP_UNKNOWN) &&
-	    (flags & PARSE_OPT_STOP_AT_NON_OPTION) &&
-	    !(flags & PARSE_OPT_ONE_SHOT))
-		BUG("STOP_AT_NON_OPTION and KEEP_UNKNOWN don't go together");
-	if ((flags & PARSE_OPT_ONE_SHOT) &&
-	    (flags & PARSE_OPT_KEEP_ARGV0))
-		BUG("Can't keep argv0 if you don't have it");
+	parse_options_check_flags(options, flags);
 	parse_options_check(options);
 }
 
