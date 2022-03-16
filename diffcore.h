@@ -228,6 +228,7 @@ int diffcore_count_changes(struct repository *r,
  * If filespec contains an OID and if that object is missing from the given
  * repository, add that OID to to_fetch.
  */
+struct oid_array;
 void diff_add_if_missing(struct repository *r,
 			 struct oid_array *to_fetch,
 			 const struct diff_filespec *filespec);
