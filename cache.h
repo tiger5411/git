@@ -9,7 +9,6 @@
 #include "convert.h"
 #include "trace.h"
 #include "trace2.h"
-#include "string-list.h"
 #include "pack-revindex.h"
 #include "hash.h"
 #include "path.h"
