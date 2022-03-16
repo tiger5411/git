@@ -11,6 +11,7 @@
 #include "revision.h"
 #include "reachable.h"
 #include "worktree.h"
+#include "wildmatch.h"
 
 static const char reflog_exists_usage[] =
 N_("git reflog exists <ref>");

@@ -4,6 +4,7 @@
 #include "cache.h"
 #include "diff.h"
 #include "diffcore.h"
+#include "wildmatch.h"
 
 static char **order;
 static int order_cnt;

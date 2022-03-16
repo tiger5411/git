@@ -32,6 +32,7 @@
 #include "utf8.h"
 #include "bloom.h"
 #include "json-writer.h"
+#include "wildmatch.h"
 
 volatile show_early_output_fn_t show_early_output;
 

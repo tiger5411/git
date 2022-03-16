@@ -20,6 +20,7 @@
 #include "help.h"
 #include "range-diff.h"
 #include "strmap.h"
+#include "wildmatch.h"
 
 static struct decoration name_decoration = { "object names" };
 static int decoration_loaded;

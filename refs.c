@@ -21,6 +21,7 @@
 #include "repository.h"
 #include "sigchain.h"
 #include "date.h"
+#include "wildmatch.h"
 
 /*
  * List of all available backends
