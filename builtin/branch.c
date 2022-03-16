@@ -669,7 +669,7 @@ int cmd_branch(int argc, const char **argv, const char *prefix)
 		OPT_WITHOUT(&filter.no_commit, N_("print only branches that don't contain the commit")),
 		OPT__ABBREV(&filter.abbrev),
 
-		OPT_GROUP(N_("Specific git-branch actions:")),
+		OPT_GROUP(N_("Specific git-branch actions")),
 		OPT_SET_INT('a', "all", &filter.kind, N_("list both remote-tracking and local branches"),
 			FILTER_REFS_REMOTES | FILTER_REFS_BRANCHES),
 		OPT_BIT('d', "delete", &delete, N_("delete fully merged branch"), 1),

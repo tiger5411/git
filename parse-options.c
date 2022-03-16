@@ -19,6 +19,9 @@ static int optbug(const struct option *opt, const char *reason)
 			return error("BUG: switch '%c' (--%s) %s",
 				     opt->short_name, opt->long_name, reason);
 		return error("BUG: option '%s' %s", opt->long_name, reason);
+	} else if (opt->type == OPTION_GROUP) {
+		return error("BUG: option group has bad help '%s': %s", opt->help,
+			     reason);
 	}
 	return error("BUG: switch '%c' %s", opt->short_name, reason);
 }
@@ -534,6 +537,21 @@ static void parse_options_check(const struct option *opts)
 			    "That case is not supported yet.");
 		default:
 			; /* ok. (usually accepts an argument) */
+		}
+		switch (opts->type) {
+		case OPTION_GROUP:
+			if (!opts->help)
+				BUG("OPTION_GROUP must have a non-NULL 'help'");
+			if (!*opts->help)
+				break;
+			if (!isupper(opts->help[0]))
+				err |= optbug(opts, "must start with upper-case");
+			if (ends_with(opts->help, ".") ||
+			    ends_with(opts->help, ":"))
+				err |= optbug(opts, "should not end with a period ('.') or colon (':')");
+			break;
+		default:
+			break;
 		}
 		if (opts->argh &&
 		    strcspn(opts->argh, " _") != strlen(opts->argh))
