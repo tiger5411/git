@@ -191,6 +191,7 @@
 /gitweb/static/gitweb.min.*
 /advice-config.h
 /advice-type.h
+/builtin-list.h
 /config-list.h
 /command-list.h
 /hook-list.h

@@ -839,6 +839,7 @@ REFTABLE_TEST_LIB = reftable/libreftable_test.a
 GENERATED_ADVICE_H += advice-config.h
 GENERATED_ADVICE_H += advice-type.h
 
+COMMON_GENERATED_H += builtin-list.h
 COMMON_GENERATED_H += $(GENERATED_ADVICE_H)
 
 GENERATED_H += $(COMMON_GENERATED_H)
@@ -2261,6 +2262,9 @@ $(BUILT_INS): git$X
 
 $(GENERATED_ADVICE_H): generate-advice.sh Documentation/config/advice.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-advice.sh $@ >$@
+
+builtin-list.h: generate-builtin-list.sh git.c
+	$(QUIET_GEN)$(SHELL_PATH) ./generate-builtin-list.sh $@ >$@
 
 config-list.h: generate-configlist.sh
 
