@@ -2,7 +2,6 @@
 #define CACHE_H
 
 #include "git-compat-util.h"
-#include "strbuf.h"
 #include "hashmap.h"
 #include "list.h"
 #include "gettext.h"
