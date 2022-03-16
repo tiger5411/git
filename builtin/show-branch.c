@@ -10,6 +10,7 @@
 #include "commit-slab.h"
 #include "date.h"
 #include "wildmatch.h"
+#include "commit.h"
 
 static const char* show_branch_usage[] = {
     N_("git show-branch [-a | --all] [-r | --remotes] [--topo-order | --date-order]\n"

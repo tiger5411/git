@@ -2,9 +2,10 @@
 #define SHALLOW_H
 
 #include "lockfile.h"
-#include "object.h"
-#include "repository.h"
-#include "strbuf.h"
+
+struct object_array;
+struct strbuf;
+struct oid_array;
 
 void set_alternate_shallow_file(struct repository *r, const char *path, int override);
 int register_shallow(struct repository *r, const struct object_id *oid);

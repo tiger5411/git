@@ -14,6 +14,7 @@
 #include "utf8.h"
 #include "worktree.h"
 #include "quote.h"
+#include "commit.h"
 
 static const char * const worktree_usage[] = {
 	N_("git worktree add [<options>] <path> [<commit-ish>]"),

@@ -15,6 +15,7 @@
 #include "submodule-config.h"
 #include "send-pack.h"
 #include "color.h"
+#include "commit.h"
 
 static const char * const push_usage[] = {
 	N_("git push [<options>] [<repository> [<refspec>...]]"),

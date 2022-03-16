@@ -8,6 +8,7 @@
 #include "object-store.h"
 #include "progress.h"
 #include "tag.h"
+#include "commit.h"
 
 #define BUILTIN_COMMIT_GRAPH_VERIFY_USAGE \
 	N_("git commit-graph verify [--object-dir <objdir>] [--shallow] [--[no-]progress]")

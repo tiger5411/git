@@ -9,6 +9,7 @@
  */
 
 #define USE_THE_INDEX_COMPATIBILITY_MACROS
+#include "cache.h"
 #include "builtin.h"
 #include "advice.h"
 #include "config.h"
@@ -34,6 +35,7 @@
 #include "packfile.h"
 #include "list-objects-filter-options.h"
 #include "hook.h"
+#include "commit.h"
 
 /*
  * Overall FIXMEs:
