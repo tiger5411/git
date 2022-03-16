@@ -1612,7 +1612,16 @@ static int git_commit_config(const char *k, const char *v, void *cb)
 int cmd_commit(int argc, const char **argv, const char *prefix)
 {
 	static struct wt_status s;
+
+	static struct option incompatible[] = {
+		OPT_INCOMPATIBLE_SHORT('c'),
+		OPT_INCOMPATIBLE_SHORT('C'),
+		OPT_INCOMPATIBLE_SHORT('F'),
+		OPT_INCOMPATIBLE_LONG("fixup"),
+		OPT_END(),
+	};
 	static struct option builtin_commit_options[] = {
+		OPT_INCOMPATIBLE(&incompatible),
 		OPT__QUIET(&quiet, N_("suppress summary after successful commit")),
 		OPT__VERBOSE(&verbose, N_("show diff in commit message template")),
 

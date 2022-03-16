@@ -459,6 +459,8 @@ static void parse_options_check(const struct option *opts)
 
 	memset(short_opts, '\0', sizeof(short_opts));
 	for (; opts->type != OPTION_END; opts++) {
+		if (opts->type == OPTION_INCOMPATIBLE)
+			BUG("hi");
 		if ((opts->flags & PARSE_OPT_NO_ABBREV) &&
 		    (opts->flags & PARSE_OPT_NO_AMBIG))
 			err |= optbug(opts, "uses incompatible flags "

@@ -8,6 +8,7 @@
 enum parse_opt_type {
 	/* special types */
 	OPTION_END,
+	OPTION_INCOMPATIBLE,
 	OPTION_GROUP,
 	OPTION_NUMBER,
 	/* options with no arguments */
@@ -402,5 +403,7 @@ int parse_opt_tracking_mode(const struct option *, const char *, int);
 #define OPT_PATHSPEC_FROM_FILE(v) OPT_FILENAME(0, "pathspec-from-file", v, N_("read pathspec from file"))
 #define OPT_PATHSPEC_FILE_NUL(v)  OPT_BOOL(0, "pathspec-file-nul", v, N_("with --pathspec-from-file, pathspec elements are separated with NUL character"))
 #define OPT_AUTOSTASH(v) OPT_BOOL(0, "autostash", v, N_("automatically stash/stash pop before and after"))
-
+#define OPT_INCOMPATIBLE(list) { OPTION_INCOMPATIBLE, .defval = (intptr_t)list }
+#define OPT_INCOMPATIBLE_SHORT(s) { OPTION_INCOMPATIBLE, (s) }
+#define OPT_INCOMPATIBLE_LONG(l) { OPTION_INCOMPATIBLE, 0, (l) }
 #endif
