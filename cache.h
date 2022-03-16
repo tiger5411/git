@@ -3,7 +3,6 @@
 
 #include "git-compat-util.h"
 #include "hashmap.h"
-#include "list.h"
 #include "gettext.h"
 #include "convert.h"
 #include "trace.h"
