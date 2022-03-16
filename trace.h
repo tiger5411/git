@@ -2,7 +2,7 @@
 #define TRACE_H
 
 #include "git-compat-util.h"
-#include "strbuf.h"
+struct strbuf;
 
 /**
  * The trace API can be used to print debug messages to stderr or a file. Trace

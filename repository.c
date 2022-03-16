@@ -13,6 +13,7 @@
 #include "submodule-config.h"
 #include "sparse-index.h"
 #include "promisor-remote.h"
+#include "path.h"
 
 /* The main repository */
 static struct repository the_repo;

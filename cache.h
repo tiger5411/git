@@ -3,11 +3,13 @@
 
 #include "git-compat-util.h"
 #include "hashmap.h"
+#include "string-list.h"
+#include "strbuf.h"
 #include "gettext.h"
 #include "convert.h"
 #include "trace.h"
 #include "trace2.h"
-#include "repository.h"
+#include "path.h"
 
 typedef struct git_zstream {
 	z_stream z;
