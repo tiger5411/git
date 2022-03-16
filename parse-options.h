@@ -36,6 +36,39 @@ enum parse_opt_flags {
 	PARSE_OPT_SHELL_EVAL = 1 << 6,
 };
 
+/**
+ * The `enum parse_opt_option_flags`
+ *
+ *   PARSE_OPT_OPTARG: says that the argument is optional (not for BOOLEANs)
+ *   PARSE_OPT_NOARG: says that this option does not take an argument
+ *   PARSE_OPT_NONEG: says that this option cannot be negated
+ *   PARSE_OPT_HIDDEN: this option is skipped in the default usage, and
+ *                     shown only in the full usage.
+ *   PARSE_OPT_LASTARG_DEFAULT: says that this option will take the default
+ *				value if no argument is given when the option
+ *				is last on the command line. If the option is
+ *				not last it will require an argument.
+ *				Should not be used with PARSE_OPT_OPTARG.
+ *   PARSE_OPT_NODASH: this option doesn't start with a dash.
+ *   PARSE_OPT_LITERAL_ARGHELP: says that argh shouldn't be enclosed in brackets
+ *				(i.e. '<argh>') in the help message.
+ *				Useful for options with multiple parameters.
+ *   PARSE_OPT_NOCOMPLETE: by default all visible options are completable
+ *			   by git-completion.bash. This option suppresses that.
+ *   PARSE_OPT_COMP_ARG: this option forces to git-completion.bash to
+ *			 complete an option as --name= not --name even if
+ *			 the option takes optional argument.
+ *
+ * PARSE_OPT_CMDMODE:
+ *	This option is mutually exclusive with other options using the
+ *	PARSE_OPT_CMDMODE flag. See OPT_CMDMODE().
+ *
+ *	While originally intended for mutually exclusive command
+ *	"modes" such as "git tag (-l|-d|-v)", it is also just as valid
+ *	to use it to mark an arbitrary set of mutually exclusive
+ *	flags. E.g. "cat-file" uses it for (among others) "-p" and
+ *	"--textconv", which can never be combined.
+ */
 enum parse_opt_option_flags {
 	PARSE_OPT_OPTARG  = 1 << 0,
 	PARSE_OPT_NOARG   = 1 << 1,
@@ -67,7 +100,7 @@ typedef enum parse_opt_result parse_opt_ll_cb(struct parse_opt_ctx_t *ctx,
 					      const struct option *opt,
 					      const char *arg, int unset);
 
-/*
+/**
  * `type`::
  *   holds the type of the option, you must have an OPTION_END last in your
  *   array.
@@ -98,26 +131,7 @@ typedef enum parse_opt_result parse_opt_ll_cb(struct parse_opt_ctx_t *ctx,
  *   Should be wrapped by N_() for translation.
  *
  * `flags`::
- *   mask of parse_opt_option_flags.
- *   PARSE_OPT_OPTARG: says that the argument is optional (not for BOOLEANs)
- *   PARSE_OPT_NOARG: says that this option does not take an argument
- *   PARSE_OPT_NONEG: says that this option cannot be negated
- *   PARSE_OPT_HIDDEN: this option is skipped in the default usage, and
- *                     shown only in the full usage.
- *   PARSE_OPT_LASTARG_DEFAULT: says that this option will take the default
- *				value if no argument is given when the option
- *				is last on the command line. If the option is
- *				not last it will require an argument.
- *				Should not be used with PARSE_OPT_OPTARG.
- *   PARSE_OPT_NODASH: this option doesn't start with a dash.
- *   PARSE_OPT_LITERAL_ARGHELP: says that argh shouldn't be enclosed in brackets
- *				(i.e. '<argh>') in the help message.
- *				Useful for options with multiple parameters.
- *   PARSE_OPT_NOCOMPLETE: by default all visible options are completable
- *			   by git-completion.bash. This option suppresses that.
- *   PARSE_OPT_COMP_ARG: this option forces to git-completion.bash to
- *			 complete an option as --name= not --name even if
- *			 the option takes optional argument.
+ *   mask of parse_opt_option_flags. See `enum parse_opt_option_flags` above.
  *
  * `callback`::
  *   pointer to the callback to use for OPTION_CALLBACK
