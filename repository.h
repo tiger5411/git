@@ -1,8 +1,6 @@
 #ifndef REPOSITORY_H
 #define REPOSITORY_H
 
-
-
 struct config_set;
 struct git_hash_algo;
 struct index_state;
