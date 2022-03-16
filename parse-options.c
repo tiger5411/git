@@ -551,7 +551,25 @@ static void parse_options_check(const struct option *opts)
 				err |= optbug(opts, "should not end with a period ('.') or colon (':')");
 			break;
 		default:
+		{
+			const char *const help = opts->help;
+			const char *const fmt = "help should not %s: '%s'";
+			const char *why;
+
+			if (!help)
+				break;
+			if (*help && isupper(*help) &&
+			    !(help[1] && isupper(help[1]))) {
+				why = "start with a capital letter";
+				err |= optbug(opts, xstrfmt(fmt, why, help));
+			}
+			if (!ends_with(help, "...") &&
+			    ends_with(help, ".")) {
+				why = "end with a dot";
+				err |= optbug(opts, xstrfmt(fmt, why, help));
+			}
 			break;
+		}
 		}
 		if (opts->argh &&
 		    strcspn(opts->argh, " _") != strlen(opts->argh))
