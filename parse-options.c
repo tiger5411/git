@@ -14,15 +14,15 @@ enum opt_parsed {
 	OPT_UNSET = 1<<1,
 };
 
-static void optbug(const struct option *opt, const char *reason)
+static int optbug(const struct option *opt, const char *reason)
 {
-	if (opt->long_name && opt->short_name)
-		bug("switch '%c' (--%s) %s", opt->short_name,
-		    opt->long_name, reason);
-	else if (opt->long_name)
-		bug("option '%s' %s", opt->long_name, reason);
-	else
-		bug("switch '%c' %s", opt->short_name, reason);
+	if (opt->long_name) {
+		if (opt->short_name)
+			return error("BUG: switch '%c' (--%s) %s",
+				     opt->short_name, opt->long_name, reason);
+		return error("BUG: option '%s' %s", opt->long_name, reason);
+	}
+	return error("BUG: switch '%c' %s", opt->short_name, reason);
 }
 
 static const char *optname(const struct option *opt, enum opt_parsed flags)
@@ -441,27 +441,28 @@ static void check_typos(const char *arg, const struct option *options)
 
 static void parse_options_check(const struct option *opts)
 {
+	int err = 0;
 	char short_opts[128];
 
 	memset(short_opts, '\0', sizeof(short_opts));
 	for (; opts->type != OPTION_END; opts++) {
 		if ((opts->flags & PARSE_OPT_LASTARG_DEFAULT) &&
 		    (opts->flags & PARSE_OPT_OPTARG))
-			optbug(opts, "uses incompatible flags "
-			       "LASTARG_DEFAULT and OPTARG");
+			err |= optbug(opts, "uses incompatible flags "
+					"LASTARG_DEFAULT and OPTARG");
 		if (opts->short_name) {
 			if (0x7F <= opts->short_name)
-				optbug(opts, "invalid short name");
+				err |= optbug(opts, "invalid short name");
 			else if (short_opts[opts->short_name]++)
-				optbug(opts, "short name already used");
+				err |= optbug(opts, "short name already used");
 		}
 		if (opts->flags & PARSE_OPT_NODASH &&
 		    ((opts->flags & PARSE_OPT_OPTARG) ||
 		     !(opts->flags & PARSE_OPT_NOARG) ||
 		     !(opts->flags & PARSE_OPT_NONEG) ||
 		     opts->long_name))
-			optbug(opts, "uses feature "
-			       "not supported for dashless options");
+			err |= optbug(opts, "uses feature "
+					"not supported for dashless options");
 		switch (opts->type) {
 		case OPTION_COUNTUP:
 		case OPTION_BIT:
@@ -470,22 +471,22 @@ static void parse_options_check(const struct option *opts)
 		case OPTION_NUMBER:
 			if ((opts->flags & PARSE_OPT_OPTARG) ||
 			    !(opts->flags & PARSE_OPT_NOARG))
-				optbug(opts, "should not accept an argument");
+				err |= optbug(opts, "should not accept an argument");
 			break;
 		case OPTION_CALLBACK:
 			if (!opts->callback && !opts->ll_callback)
-				bug("OPTION_CALLBACK needs one callback");
+				BUG("OPTION_CALLBACK needs one callback");
 			if (opts->callback && opts->ll_callback)
-				bug("OPTION_CALLBACK can't have two callbacks");
+				BUG("OPTION_CALLBACK can't have two callbacks");
 			break;
 		case OPTION_LOWLEVEL_CALLBACK:
 			if (!opts->ll_callback)
-				bug("OPTION_LOWLEVEL_CALLBACK needs a callback");
+				BUG("OPTION_LOWLEVEL_CALLBACK needs a callback");
 			if (opts->callback)
-				bug("OPTION_LOWLEVEL_CALLBACK needs no high level callback");
+				BUG("OPTION_LOWLEVEL_CALLBACK needs no high level callback");
 			break;
 		case OPTION_ALIAS:
-			bug("OPT_ALIAS() should not remain at this point. "
+			BUG("OPT_ALIAS() should not remain at this point. "
 			    "Are you using parse_options_step() directly?\n"
 			    "That case is not supported yet.");
 		default:
@@ -493,8 +494,10 @@ static void parse_options_check(const struct option *opts)
 		}
 		if (opts->argh &&
 		    strcspn(opts->argh, " _") != strlen(opts->argh))
-			optbug(opts, "multi-word argh should use dash to separate words");
+			err |= optbug(opts, "multi-word argh should use dash to separate words");
 	}
+	if (err)
+		exit(128);
 }
 
 static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
@@ -516,12 +519,11 @@ static void parse_options_start_1(struct parse_opt_ctx_t *ctx,
 	if ((flags & PARSE_OPT_KEEP_UNKNOWN) &&
 	    (flags & PARSE_OPT_STOP_AT_NON_OPTION) &&
 	    !(flags & PARSE_OPT_ONE_SHOT))
-		bug("STOP_AT_NON_OPTION and KEEP_UNKNOWN don't go together");
+		BUG("STOP_AT_NON_OPTION and KEEP_UNKNOWN don't go together");
 	if ((flags & PARSE_OPT_ONE_SHOT) &&
 	    (flags & PARSE_OPT_KEEP_ARGV0))
-		bug("Can't keep argv0 if you don't have it");
+		BUG("Can't keep argv0 if you don't have it");
 	parse_options_check(options);
-	BUG_if_bug();
 }
 
 void parse_options_start(struct parse_opt_ctx_t *ctx,
@@ -672,7 +674,7 @@ static struct option *preprocess_options(struct parse_opt_ctx_t *ctx,
 		source = newopt[i].value;
 
 		if (!long_name)
-			bug("An alias must have long option name");
+			BUG("An alias must have long option name");
 		strbuf_addf(&help, _("alias of --%s"), source);
 
 		for (j = 0; j < nr; j++) {
@@ -693,7 +695,7 @@ static struct option *preprocess_options(struct parse_opt_ctx_t *ctx,
 		}
 
 		if (j == nr)
-			bug("could not find source option '%s' of alias '%s'",
+			BUG("could not find source option '%s' of alias '%s'",
 			    source, newopt[i].long_name);
 		ctx->alias_groups[alias * 3 + 0] = newopt[i].long_name;
 		ctx->alias_groups[alias * 3 + 1] = options[j].long_name;
