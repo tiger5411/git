@@ -17,6 +17,7 @@
 #include "midx.h"
 #include "commit-graph.h"
 #include "promisor-remote.h"
+#include "pack-revindex.h"
 
 char *odb_pack_name(struct strbuf *buf,
 		    const unsigned char *hash,

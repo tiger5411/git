@@ -7,7 +7,6 @@
 #include "convert.h"
 #include "trace.h"
 #include "trace2.h"
-#include "pack-revindex.h"
 #include "repository.h"
 
 typedef struct git_zstream {
