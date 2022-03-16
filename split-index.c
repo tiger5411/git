@@ -1,6 +1,7 @@
 #include "cache.h"
 #include "split-index.h"
 #include "ewah/ewok.h"
+#include "mem-pool.h"
 
 struct split_index *init_split_index(struct index_state *istate)
 {

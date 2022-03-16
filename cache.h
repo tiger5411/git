@@ -9,7 +9,6 @@
 #include "trace2.h"
 #include "pack-revindex.h"
 #include "repository.h"
-#include "mem-pool.h"
 
 typedef struct git_zstream {
 	z_stream z;
