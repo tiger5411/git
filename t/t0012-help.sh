@@ -239,12 +239,20 @@ test_expect_success 'generate builtin list' '
 
 while read builtin
 do
-	test_expect_success "$builtin can handle -h" '
+	test_expect_success "$builtin returns code 129 on -h" '
+		test_expect_code 129 git -C sub $builtin -h
+	'
+
+	test_expect_success "$builtin -h without gitdir" '
 		(
 			GIT_CEILING_DIRECTORIES=$(pwd) &&
 			export GIT_CEILING_DIRECTORIES &&
-			test_expect_code 129 git -C sub $builtin -h >output 2>&1
-		) &&
+			test_expect_code 129 git -C sub $builtin -h
+		)
+	'
+
+	test_expect_success "$builtin -h output" '
+		test_expect_code 129 git -C sub $builtin -h >output 2>&1 &&
 		test_i18ngrep usage output
 	'
 done <builtins
