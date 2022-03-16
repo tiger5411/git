@@ -1068,6 +1068,7 @@ static enum parse_opt_result usage_with_options_internal(struct parse_opt_ctx_t 
 void NORETURN usage_with_options(const char * const *usagestr,
 			const struct option *opts)
 {
+	parse_options_check(opts);
 	usage_with_options_internal(NULL, usagestr, opts, 0, 1);
 	exit(129);
 }
