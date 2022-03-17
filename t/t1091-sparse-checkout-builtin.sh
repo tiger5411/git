@@ -467,7 +467,7 @@ test_expect_success 'sparse-checkout (init|set|disable) warns with unmerged stat
 	git -C unmerged sparse-checkout disable
 '
 
-test_expect_failure 'sparse-checkout reapply' '
+test_expect_todo 'sparse-checkout reapply' '
 	git clone repo tweak &&
 
 	echo dirty >tweak/deep/deeper2/a &&
@@ -501,11 +501,18 @@ test_expect_failure 'sparse-checkout reapply' '
 
 	# NEEDSWORK: We are asking to update a file outside of the
 	# sparse-checkout cone, but this is no longer allowed.
-	git -C tweak add folder1/a &&
+	test_todo test_expect_code \
+		--want 0 \
+		--expect 1 \
+		-- \
+		git -C tweak add folder1/a &&
 	git -C tweak sparse-checkout reapply 2>err &&
-	test_must_be_empty err &&
-	test_path_is_missing tweak/deep/deeper2/a &&
-	test_path_is_missing tweak/folder1/a &&
+	test_todo \
+		--want test_must_be_empty \
+		--expect "grep warning:.*paths.*unmerged" \
+		-- err &&
+	todo_test_path is_file is_missing tweak/deep/deeper2/a &&
+	todo_test_path is_missing is_file tweak/folder1/a &&
 
 	git -C tweak sparse-checkout disable
 '
