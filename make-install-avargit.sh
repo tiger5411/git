@@ -18,6 +18,14 @@ set -x
 # ./make-install-avargit.sh --only-merge --merge-compile "make all SANITIZE=leak" --merge-compile-test "make -C t T=t0001-init.sh"
 # ./make-install-avargit.sh --only-merge --merge-compile "make" --merge-compile-test '(cd t && pwd && ./t0040-parse-options.sh)'
 #
+## Check what topic introduced a regression, in a way that won't
+## fail-whale due to the various fix-up topics. I.e. use a compilation
+## and/or a basic test as a canary. Here the actual failure is in
+## t0040-parse-options.sh and t5300-pack-object.sh. The
+## --no-merge-compile-test turns off our default tests (see below):
+##
+# ./make-install-avargit.sh --no-merge-compile-test --merge-compile "if make test T=t0070-fundamental.sh; then make test T='t0040-parse-options.sh t5300-pack-object.sh'; fi"
+#
 ## Unless --merge-compile is given we find what tests were changed in
 ## the merge and run those "make test" (along with our default
 ## "--merge-compile-targets". This unconditionally adds to that list:
