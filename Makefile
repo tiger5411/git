@@ -3435,6 +3435,11 @@ check-docs:: check-advice-docs
 		esac; \
 	done ) | sort
 
+## Check that the built-ins list is sorted
+#
+$(eval $(call check-sorted-file-rule,check-sorted-builtins,grep '^int cmd',builtin.h,$(CHECK_SORTED_CMP)))
+$(BUILTIN_OBJS): .build/check-sorted-builtins/ok
+
 ### Make sure built-ins do not have dups and listed in git.c
 #
 check-builtins::
