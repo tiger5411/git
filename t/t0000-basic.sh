@@ -196,7 +196,7 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	> ok 10 - pretend we have fixed a known breakage # TODO known breakage vanished
 	> not ok 11 - pretend we have a known TODO # TODO known breakage
 	> not ok 12 - pretend we have a bad TODO (broken '\''test_expect_todo'\''!)
-	> #	false
+	> #false
 	> # 1 known breakage(s) vanished; please update test(s)
 	> # still have 3 known breakage(s)
 	> # failed 4 among remaining 8 test(s)
