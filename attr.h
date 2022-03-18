@@ -164,10 +164,10 @@ struct attr_check_item {
  * receives their values.
  */
 struct attr_check {
-	int nr;
-	int alloc;
+	size_t nr;
+	size_t alloc;
 	struct attr_check_item *items;
-	int all_attrs_nr;
+	size_t all_attrs_nr;
 	struct all_attrs_item *all_attrs;
 	struct attr_stack *stack;
 };

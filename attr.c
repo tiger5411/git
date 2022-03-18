@@ -135,7 +135,7 @@ struct all_attrs_item {
  */
 static void all_attrs_init(struct attr_hashmap *map, struct attr_check *check)
 {
-	int i;
+	size_t i;
 	unsigned int size;
 
 	hashmap_lock(map);
@@ -562,7 +562,7 @@ struct attr_check *attr_check_alloc(void)
 struct attr_check *attr_check_initl(const char *one, ...)
 {
 	struct attr_check *check;
-	int cnt;
+	size_t cnt;
 	va_list params;
 	const char *param;
 
@@ -582,7 +582,7 @@ struct attr_check *attr_check_initl(const char *one, ...)
 		const struct git_attr *attr;
 		param = va_arg(params, const char *);
 		if (!param)
-			BUG("counted %d != ended at %d",
+			BUG("counted %"PRIuMAX" != ended at %"PRIuMAX,
 			    check->nr, cnt);
 		attr = git_attr(param);
 		if (!attr)
@@ -1142,7 +1142,7 @@ void git_check_attr(struct index_state *istate,
 		    const char *path,
 		    struct attr_check *check)
 {
-	int i;
+	size_t i;
 
 	collect_some_attrs(istate, path, check);
 
@@ -1158,7 +1158,7 @@ void git_check_attr(struct index_state *istate,
 void git_all_attrs(struct index_state *istate,
 		   const char *path, struct attr_check *check)
 {
-	int i;
+	size_t i;
 
 	attr_check_reset(check);
 	collect_some_attrs(istate, path, check);
