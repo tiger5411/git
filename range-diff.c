@@ -304,7 +304,8 @@ static int diffsize(const char *a, const char *b)
 static void get_correspondences(struct string_list *a, struct string_list *b,
 				int creation_factor)
 {
-	int n = a->nr + b->nr;
+	const int n = a->nr + b->nr;
+	const int column_count = n; /* n for COST() macro below */
 	int *cost, c, *a2b, *b2a;
 	int i, j;
 
@@ -324,13 +325,13 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 				c = diffsize(a_util->diff, b_util->diff);
 			else
 				c = COST_MAX;
-			cost[i + n * j] = c;
+			COST(i, j) = c;
 		}
 
 		c = a_util->matching < 0 ?
 			a_util->diffsize * creation_factor / 100 : COST_MAX;
 		for (j = b->nr; j < n; j++)
-			cost[i + n * j] = c;
+			COST(i, j) = c;
 	}
 
 	for (j = 0; j < b->nr; j++) {
@@ -339,12 +340,12 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 		c = util->matching < 0 ?
 			util->diffsize * creation_factor / 100 : COST_MAX;
 		for (i = a->nr; i < n; i++)
-			cost[i + n * j] = c;
+			COST(i, j) = c;
 	}
 
 	for (i = a->nr; i < n; i++)
 		for (j = b->nr; j < n; j++)
-			cost[i + n * j] = 0;
+			COST(i, j) = 0;
 
 	compute_assignment(n, n, cost, a2b, b2a);
 
