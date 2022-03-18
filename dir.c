@@ -921,7 +921,7 @@ static int read_skip_worktree_file_from_index(struct index_state *istate,
  */
 void clear_pattern_list(struct pattern_list *pl)
 {
-	int i;
+	size_t i;
 
 	for (i = 0; i < pl->nr; i++)
 		free(pl->patterns[i]);
@@ -1315,13 +1315,13 @@ static struct path_pattern *last_matching_pattern_from_list(const char *pathname
 						       struct index_state *istate)
 {
 	struct path_pattern *res = NULL; /* undecided */
-	int i;
+	size_t n;
 
 	if (!pl->nr)
 		return NULL;	/* undefined */
 
-	for (i = pl->nr - 1; 0 <= i; i--) {
-		struct path_pattern *pattern = pl->patterns[i];
+	for (n = pl->nr; n >= 1; n--) {
+		struct path_pattern *pattern = pl->patterns[n - 1];
 		const char *exclude = pattern->pattern;
 		int prefix = pattern->nowildcardlen;
 

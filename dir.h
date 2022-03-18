@@ -85,8 +85,8 @@ struct pattern_entry {
  * via CLI args.
  */
 struct pattern_list {
-	int nr;
-	int alloc;
+	size_t nr;
+	size_t alloc;
 
 	/* remember pointer to exclude file contents so we can free() */
 	char *filebuf;
@@ -131,7 +131,8 @@ struct exclude_stack {
 };
 
 struct exclude_list_group {
-	int nr, alloc;
+	size_t nr;
+	size_t alloc;
 	struct pattern_list *pl;
 };
 
