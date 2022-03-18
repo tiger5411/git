@@ -91,7 +91,7 @@ static int range_cmp(const void *_r, const void *_s)
  */
 static void range_set_check_invariants(struct range_set *rs)
 {
-	unsigned int i;
+	size_t i;
 
 	if (!rs)
 		return;
@@ -111,8 +111,8 @@ static void range_set_check_invariants(struct range_set *rs)
  */
 void sort_and_merge_range_set(struct range_set *rs)
 {
-	unsigned int i;
-	unsigned int o = 0; /* output cursor */
+	size_t i;
+	size_t o = 0; /* output cursor */
 
 	QSORT(rs->ranges, rs->nr, range_cmp);
 
@@ -145,7 +145,7 @@ void sort_and_merge_range_set(struct range_set *rs)
 static void range_set_union(struct range_set *out,
 			     struct range_set *a, struct range_set *b)
 {
-	unsigned int i = 0, j = 0;
+	size_t i = 0, j = 0;
 	struct range *ra = a->ranges;
 	struct range *rb = b->ranges;
 	/* cannot make an alias of out->ranges: it may change during grow */
@@ -398,7 +398,7 @@ static void diff_ranges_filter_touched(struct diff_ranges *out,
 				       struct diff_ranges *diff,
 				       struct range_set *rs)
 {
-	unsigned int i, j = 0;
+	size_t i, j = 0;
 
 	assert(out->target.nr == 0);
 
@@ -427,7 +427,7 @@ static void range_set_shift_diff(struct range_set *out,
 				 struct range_set *rs,
 				 struct diff_ranges *diff)
 {
-	unsigned int i, j = 0;
+	size_t i, j = 0;
 	long offset = 0;
 	struct range *src = rs->ranges;
 	struct range *target = diff->target.ranges;
@@ -910,7 +910,7 @@ static char *output_prefix(struct diff_options *opt)
 
 static void dump_diff_hacky_one(struct rev_info *rev, struct line_log_data *range)
 {
-	unsigned int i, j = 0;
+	size_t i, j = 0;
 	long p_lines, t_lines;
 	unsigned long *p_ends = NULL, *t_ends = NULL;
 	struct diff_filepair *pair = range->pair;
@@ -943,7 +943,7 @@ static void dump_diff_hacky_one(struct rev_info *rev, struct line_log_data *rang
 		long t_start = range->ranges.ranges[i].start;
 		long t_end = range->ranges.ranges[i].end;
 		long t_cur = t_start;
-		unsigned int j_last;
+		size_t j_last;
 
 		while (j < diff->target.nr && diff->target.ranges[j].end < t_start)
 			j++;
