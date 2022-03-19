@@ -272,5 +272,7 @@ int cmd_fetch_pack(int argc, const char **argv, const char *prefix)
 		ref = ref->next;
 	}
 
+	UNLEAK(sought);
+	free_refs(ref);
 	return ret;
 }
