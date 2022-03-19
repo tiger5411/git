@@ -63,7 +63,7 @@ static inline int stop_progress_msg_1(struct progress **p_progress)
 
 #define FOR_PROGRESS(v, start, end) \
 	struct progress *_p = &progress; \
-	size_t _e = (end); \
+	size_t _e = progress.total = (end); \
 	for (v = (start); (increment_progress(_p) && v < _e) ? 1 : stop_progress_msg_1(&_p); v++)
 
 #ifdef GIT_TEST_PROGRESS_ONLY

@@ -258,13 +258,11 @@ static unsigned check_objects(void)
 		.verbose = verbose,
 		.delayed = 1,
 	);
-	struct progress *progressp = &progress;
 	unsigned i, foreign_nr = 0;
 
 	FOR_PROGRESS(i, 0, get_max_object_index())
 		foreign_nr += check_object(get_indexed_object(i));
 
-	stop_progress(&progressp);
 	return foreign_nr;
 }
 
