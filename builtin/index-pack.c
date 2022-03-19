@@ -259,15 +259,10 @@ static unsigned check_objects(void)
 		.delayed = 1,
 	);
 	struct progress *progressp = &progress;
-	unsigned i, max, foreign_nr = 0;
+	unsigned i, foreign_nr = 0;
 
-	max = get_max_object_index();
-	progress.total = max;
-
-	for (i = 0; i < max; i++) {
+	FOR_PROGRESS(i, 0, get_max_object_index())
 		foreign_nr += check_object(get_indexed_object(i));
-		display_progress(&progress, i + 1);
-	}
 
 	stop_progress(&progressp);
 	return foreign_nr;
