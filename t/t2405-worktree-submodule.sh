@@ -33,9 +33,9 @@ test_expect_success 'add superproject worktree' '
 	git -C main worktree add "$base_path/worktree" "$rev1_hash_main"
 '
 
-test_expect_failure 'submodule is checked out just after worktree add' '
+test_expect_todo 'submodule is checked out just after worktree add' '
 	git -C worktree diff --submodule main"^!" >out &&
-	grep "file1 updated" out
+	todo grep "file1 updated" out
 '
 
 test_expect_success 'add superproject worktree and initialize submodules' '

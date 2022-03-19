@@ -959,6 +959,18 @@ test_path_is_missing () {
 	fi
 }
 
+todo () {
+	local negate= &&
+	if test "$1" = "!"
+	then
+		negate=t &&
+		shift
+	fi
+	local cmd="$1" &&
+	shift &&
+	test_todo ${negate:+--negate} --want "$cmd" -- "$@"
+}
+
 # Usage: test_todo [<common-prefix>] <options> [-- <common-suffix>...]
 #	--want <want>
 #		The condition we'd like. Injected between
@@ -993,6 +1005,7 @@ test_path_is_missing () {
 # To run a command that mutates the repository state supply a --reset
 # option, e.g. "git reset --hard" if you need to run "git rm".
 test_todo () {
+	local negate= &&
 	local common_fn= &&
 	local reset= &&
 	local have_want= &&
@@ -1002,6 +1015,9 @@ test_todo () {
 	while test $# != 0
 	do
 		case "$1" in
+		--negate)
+			negate=t
+			;;
 		--want)
 			want="$2" &&
 			have_want=t &&
@@ -1031,16 +1047,33 @@ test_todo () {
 		esac
 		shift
 	done &&
-	if test "$have_want$have_expect" != "tt"
+	if test -z "$have_want"
 	then
-		BUG "test_todo must get a --want <want> and --expect <expect>"
+		BUG "test_todo needs a --want <want>"
 	fi &&
 
 	if $common_fn $want "$@"
 	then
-		BUG "a test_todo succeeded with --want ('$want').  Turn it into a test_expect_success + $@ $want?" &&
-		return 1
-	else
+		if test -n "$negate"
+		then
+			BUG "a test_todo failed negated --want ('$want').  Turn it into a test_expect_success with '! $want $@?'" &&
+			return 0
+		else
+			BUG "a test_todo succeeded with --want ('$want').  Turn it into a test_expect_success with '$want $@'?" &&
+			return 1
+		fi
+	elif test -z "$expect"
+	then
+		if test -n "$negate"
+		then
+			say "a test_todo should succeed with --want ('$want'), and has no declared --expect. Marking it as a generic TODO" >&3 &&
+			return 1
+		else
+			say "a negated test_todo should fail --want ('$want $@'), and has no declared --expect. Marking it as a generic TODO" >&3 &&
+			return 0
+		fi
+	elif test -n "$expect"
+	     then
 		if test -n "$reset"
 		then
 			$reset
@@ -1051,7 +1084,7 @@ test_todo () {
 			return 0
 		fi
 	fi &&
-	BUG "a test_todo didn't pass with either --want ('$want') or --expect ('$expect')"
+	BUG "a test_todo didn't pass with either --want ('$want $@') or --expect ('$expect $@')"
 }
 
 # todo_test_path is a test_path_* for use in conjunction with
