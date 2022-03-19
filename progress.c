@@ -17,34 +17,6 @@
 #include "utf8.h"
 #include "config.h"
 
-#define TP_IDX_MAX      8
-
-struct throughput {
-	off_t curr_total;
-	off_t prev_total;
-	uint64_t prev_ns;
-	unsigned int avg_bytes;
-	unsigned int avg_misecs;
-	unsigned int last_bytes[TP_IDX_MAX];
-	unsigned int last_misecs[TP_IDX_MAX];
-	unsigned int idx;
-	struct strbuf display;
-};
-
-struct progress {
-	const char *title;
-	uint64_t last_value;
-	uint64_t total;
-	unsigned last_percent;
-	unsigned delay;
-	unsigned sparse;
-	struct throughput *throughput;
-	uint64_t start_ns;
-	struct strbuf counters_sb;
-	int title_len;
-	int split;
-};
-
 static volatile sig_atomic_t progress_update;
 
 /*
@@ -104,12 +76,60 @@ static int is_foreground_fd(int fd)
 	return tpgrp < 0 || tpgrp == getpgid(0);
 }
 
+static int get_default_delay(void)
+{
+	static int delay_in_secs = -1;
+
+	if (delay_in_secs < 0)
+		delay_in_secs = git_env_ulong("GIT_PROGRESS_DELAY", 2);
+
+	return delay_in_secs;
+}
+
+static void progress_lazy_init(struct progress *progress)
+{
+	const char *title = progress->title;
+
+	if (progress->delayed)
+		progress->delay = get_default_delay();
+	progress->last_value = -1;
+	progress->last_percent = -1;
+	progress->throughput = NULL;
+	progress->start_ns = getnanotime();
+
+	progress->title_len = utf8_strwidth(title);
+	progress->split = 0;
+	set_progress_signal();
+	trace2_region_enter("progress", title, the_repository);
+	progress->todo_lazy_init = 0; /* done! */
+	progress->used_lazy_init = 1;
+}
+
+static struct progress *start_progress_delay(const char *title, uint64_t total,
+					     unsigned delay, unsigned sparse)
+{
+	struct progress *progress = xmalloc(sizeof(*progress));
+	progress->title = title;
+	progress->total = total;
+	progress->delay = delay;
+	progress->sparse = sparse;
+	progress_lazy_init(progress);
+	progress->used_lazy_init = 0;
+	progress->todo_lazy_init = 0;
+	strbuf_init(&progress->counters_sb, 0);
+
+	return progress;
+}
+
 static void display(struct progress *progress, uint64_t n, const char *done)
 {
 	const char *tp;
 	struct strbuf *counters_sb = &progress->counters_sb;
 	int show_update = 0;
 	int last_count_len = counters_sb->len;
+
+	if (progress->todo_lazy_init)
+		progress_lazy_init(progress);
 
 	if (progress->delay && (!progress_update || --progress->delay))
 		return;
@@ -249,36 +269,6 @@ void display_progress(struct progress *progress, uint64_t n)
 		display(progress, n, NULL);
 }
 
-static struct progress *start_progress_delay(const char *title, uint64_t total,
-					     unsigned delay, unsigned sparse)
-{
-	struct progress *progress = xmalloc(sizeof(*progress));
-	progress->title = title;
-	progress->total = total;
-	progress->last_value = -1;
-	progress->last_percent = -1;
-	progress->delay = delay;
-	progress->sparse = sparse;
-	progress->throughput = NULL;
-	progress->start_ns = getnanotime();
-	strbuf_init(&progress->counters_sb, 0);
-	progress->title_len = utf8_strwidth(title);
-	progress->split = 0;
-	set_progress_signal();
-	trace2_region_enter("progress", title, the_repository);
-	return progress;
-}
-
-static int get_default_delay(void)
-{
-	static int delay_in_secs = -1;
-
-	if (delay_in_secs < 0)
-		delay_in_secs = git_env_ulong("GIT_PROGRESS_DELAY", 2);
-
-	return delay_in_secs;
-}
-
 struct progress *start_delayed_progress(const char *title, uint64_t total)
 {
 	return start_progress_delay(title, total, get_default_delay(), 0);
@@ -368,5 +358,6 @@ void stop_progress_msg(struct progress **p_progress, const char *msg)
 	if (progress->throughput)
 		strbuf_release(&progress->throughput->display);
 	free(progress->throughput);
-	free(progress);
+	if (!progress->used_lazy_init)
+		free(progress);
 }

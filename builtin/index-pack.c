@@ -253,19 +253,23 @@ static unsigned check_object(struct object *obj)
 
 static unsigned check_objects(void)
 {
+	struct progress progress = PROGRESS_INIT(
+		N_("Checking objects"),
+		.verbose = verbose,
+		.delayed = 1,
+	);
+	struct progress *progressp = &progress;
 	unsigned i, max, foreign_nr = 0;
 
 	max = get_max_object_index();
-
-	if (verbose)
-		progress = start_delayed_progress(_("Checking objects"), max);
+	progress.total = max;
 
 	for (i = 0; i < max; i++) {
 		foreign_nr += check_object(get_indexed_object(i));
-		display_progress(progress, i + 1);
+		display_progress(&progress, i + 1);
 	}
 
-	stop_progress(&progress);
+	stop_progress(&progressp);
 	return foreign_nr;
 }
 
@@ -862,7 +866,7 @@ static void sha1_object(const void *data, struct object_entry *obj_entry,
 				die(_("invalid %s"), type_name(type));
 			if (do_fsck_object &&
 			    fsck_object(obj, buf, size, &fsck_options))
-				die(_("fsck error in packed object"));
+				warning(_("fsck error in packed object"));
 			if (strict && fsck_walk(obj, NULL, &fsck_options))
 				die(_("Not all child objects of %s are reachable"), oid_to_hex(&obj->oid));
 
