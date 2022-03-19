@@ -204,8 +204,28 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	EOF
 '
 
-test_expect_success 'subtest: test_expect_todo with test_todo' '
+test_expect_todo "combined with todo helper" '
+	todo false &&
+	todo ! true hi
+'
+
+test_expect_success 'subtest: test_expect_todo with todo helper' '
 	write_and_run_sub_test_lib_test test-expect-todo <<-\EOF &&
+	test_expect_todo "combined with todo helper" "
+		todo false &&
+		todo ! true
+	"
+	test_done
+	EOF
+	check_sub_test_lib_test test-expect-todo <<-\EOF
+	> not ok 1 - combined with todo helper # TODO known breakage
+	> # still have 1 known breakage(s)
+	> 1..1
+	EOF
+'
+
+test_expect_success 'subtest: test_expect_todo with test_todo' '
+	write_and_run_sub_test_lib_test test-expect-test_todo <<-\EOF &&
 	test_expect_todo "command not implemented yet" "
 		test_todo \
 			--want \"git unimplemented\" \
@@ -213,7 +233,7 @@ test_expect_success 'subtest: test_expect_todo with test_todo' '
 	"
 	test_done
 	EOF
-	check_sub_test_lib_test test-expect-todo <<-\EOF
+	check_sub_test_lib_test test-expect-test_todo <<-\EOF
 	> not ok 1 - command not implemented yet # TODO known breakage
 	> # still have 1 known breakage(s)
 	> 1..1

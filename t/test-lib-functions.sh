@@ -1056,7 +1056,7 @@ test_todo () {
 	then
 		if test -n "$negate"
 		then
-			BUG "a test_todo failed negated --want ('$want').  Turn it into a test_expect_success with '! $want $@?'" &&
+			say "$?: a test_todo failed negated --want ('$want').  Turn it into a test_expect_success with '! $want $@?'" &&
 			return 0
 		else
 			BUG "a test_todo succeeded with --want ('$want').  Turn it into a test_expect_success with '$want $@'?" &&
