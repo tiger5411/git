@@ -111,10 +111,13 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	struct progress *progress = xmalloc(sizeof(*progress));
 	progress->title = title;
 	progress->total = total;
-	progress->delay = delay;
-	progress->sparse = sparse;
+
 	progress_lazy_init(progress);
 	progress->todo_lazy_init = 0;
+
+	progress->delay = delay;
+	progress->sparse = sparse;
+
 	strbuf_init(&progress->counters_sb, 0);
 	progress->used_lazy_init = 0;
 
