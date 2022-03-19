@@ -490,6 +490,11 @@ static void unpack_all(void)
 {
 	int i;
 	struct pack_header *hdr = fill(sizeof(struct pack_header));
+	struct progress progress = PROGRESS_INIT(
+		N_("Unpacking objects"),
+		.verbose = !quiet,
+		.delayed = 1,
+	);
 
 	nr_objects = ntohl(hdr->hdr_entries);
 
@@ -500,14 +505,8 @@ static void unpack_all(void)
 			ntohl(hdr->hdr_version));
 	use(sizeof(struct pack_header));
 
-	if (!quiet)
-		progress = start_progress(_("Unpacking objects"), nr_objects);
-	CALLOC_ARRAY(obj_list, nr_objects);
-	for (i = 0; i < nr_objects; i++) {
+	FOR_PROGRESS(i, 0, nr_objects)
 		unpack_one(i);
-		display_progress(progress, i + 1);
-	}
-	stop_progress(&progress);
 
 	if (delta_list)
 		die("unresolved deltas left after unpacking");
