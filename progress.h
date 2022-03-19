@@ -1,5 +1,6 @@
 #ifndef PROGRESS_H
 #define PROGRESS_H
+#include "gettext.h"
 #include "strbuf.h"
 
 #define TP_IDX_MAX      8
