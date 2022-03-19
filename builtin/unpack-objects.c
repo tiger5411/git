@@ -505,6 +505,7 @@ static void unpack_all(void)
 			ntohl(hdr->hdr_version));
 	use(sizeof(struct pack_header));
 
+	CALLOC_ARRAY(obj_list, nr_objects);
 	FOR_PROGRESS(i, 0, nr_objects)
 		unpack_one(i);
 
