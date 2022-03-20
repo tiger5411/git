@@ -31,11 +31,15 @@ TEST_SHELL_PATH_SQ = $(subst ','\'',$(TEST_SHELL_PATH))
 PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
 TEST_RESULTS_DIRECTORY_SQ = $(subst ','\'',$(TEST_RESULTS_DIRECTORY))
 
-T = $(sort $(wildcard t[0-9][0-9][0-9][0-9]-*.sh))
-TGITWEB = $(sort $(wildcard t95[0-9][0-9]-*.sh))
-THELPERS = $(sort $(filter-out $(T),$(wildcard *.sh)))
+T_SH = $(sort $(wildcard *.sh))
+T_ALL = $(sort $(wildcard t[0-9][0-9][0-9][0-9]-*.sh))
+TGITWEB = $(filter t95%.sh,$(T_ALL))
+THELPERS = $(filter-out $(T_ALL),$(T_SH))
 TPERF = $(sort $(wildcard perf/p[0-9][0-9][0-9][0-9]-*.sh))
 CHAINLINT = sed -f chainlint.sed
+
+T = $(T_ALL)
+T_CHECK_TESTS = $(sort $(T_SH) $(T_ALL) $(TPERF))
 
 all: $(DEFAULT_TEST_TARGET)
 
@@ -93,23 +97,54 @@ $(eval $(call CHAINLINT_rule,ok,\
 	.build/chainlint/%/actual .build/chainlint/%/expect,\
 	$$(QUIET_CHAINLINT)diff -u $$(@D)/expect $$(@D)/actual))
 
+.PHONY: test-lint
+.PHONY: check-chainlint
 check-chainlint: $(CHAINLINT_GEN:%=%/ok)
 
-test-lint: test-lint-duplicates test-lint-executable test-lint-shell-syntax \
-	test-lint-filenames
+LINT_SHELL_SYNTAX_OK = $(T_CHECK_TESTS:%=.build/lint-shell-syntax/%.ok)
+$(LINT_SHELL_SYNTAX_OK): .build/lint-shell-syntax/%.ok: %
+	$(call mkdir_p_parent_template)
+	'$(PERL_PATH_SQ)' check-non-portable-shell.pl $< && \
+	>$@
 
-test-lint-duplicates:
-	@dups=`echo $(T) $(TPERF) | tr ' ' '\n' | sed 's/-.*//' | sort | uniq -d` && \
-		test -z "$$dups" || { \
-		echo >&2 "duplicate test numbers:" $$dups; exit 1; }
+LINT_DUPLICATES_OK = $(T_CHECK_TESTS:%=.build/lint-duplicates/%.ok)
+$(LINT_DUPLICATES_OK): .build/lint-duplicates/%.ok: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_LINT_DUP_DEPS) >$@
 
-test-lint-executable:
-	@bad=`for i in $(T) $(TPERF); do test -x "$$i" || echo $$i; done` && \
+.build/lint-duplicates.ok: $(LINT_DUPLICATES_OK)
+	$(call mkdir_p_parent_template)
+	$(QUIET_LINT_DUP)dups=`echo $$? | tr ' ' '\n' | sed 's/-.*//' | sort | uniq -d` && \
+	test -z "$$dups" || { \
+		echo >&2 "duplicate test numbers:" $$dups; exit 1; } && \
+	>$@
+
+.PHONY: test-lint-duplicates
+test-lint-duplicates: .build/lint-duplicates.ok
+test-lint: test-lint-duplicates
+
+test-lint-executable:test-lint-filenames
+	@bad=`for i in $(T_ALL) $(TPERF); do test -x "$$i" || echo $$i; done` && \
 		test -z "$$bad" || { \
 		echo >&2 "non-executable tests:" $$bad; exit 1; }
+test-lint: test-lint-executable
 
-test-lint-shell-syntax:
-	@'$(PERL_PATH_SQ)' check-non-portable-shell.pl $(T) $(THELPERS) $(TPERF)
+LINT_EXECUTABLE_OK = $(T_ALL:%=.build/lint-executable/%.ok)
+$(LINT_EXECUTABLE_OK): .build/lint-executable/%.ok: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_LINT_EXE_DEPS)test -x $< && \
+	>$@
+
+.build/lint-executable.ok: $(LINT_EXECUTABLE_OK)
+	$(call mkdir_p_parent_template)
+	$(QUIET_LINT_EXE)>$@
+
+.PHONY: test-lint-executable
+test-lint-executable: .build/lint-executable.ok
+test-lint: test-lint-executable
+
+.PHONY: test-lint-shell-syntax
+test-lint-shell-syntax: $(LINT_SHELL_SYNTAX_OK)
 
 test-lint-filenames:
 	@# We do *not* pass a glob to ls-files but use grep instead, to catch
@@ -118,6 +153,8 @@ test-lint-filenames:
 			grep '["*:<>?\\|]')"; \
 		test -z "$$bad" || { \
 		echo >&2 "non-portable file name(s): $$bad"; exit 1; }
+test-lint: test-lint-filenames
+
 
 aggregate-results-and-cleanup: $(T)
 	$(MAKE) aggregate-results
@@ -137,4 +174,4 @@ valgrind:
 perf:
 	$(MAKE) -C perf/ all
 
-.PHONY: pre-clean $(T) aggregate-results clean valgrind perf check-chainlint clean-chainlint
+.PHONY: pre-clean aggregate-results clean valgrind perf check-chainlint clean-chainlint

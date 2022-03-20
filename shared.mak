@@ -84,8 +84,14 @@ ifndef V
 	QUIET_LINT_MANEND	= @echo '   ' LINT MAN END $<;
 
 ## Used in "t/Makefile"
-	QUIET_CHAINLINT		= @echo '   ' CHAINLINT $@;
-	QUIET_CHAINLINT_DEP	= @echo '   ' CHAINLINT DEP $@;
+	QUIET_CHAINLINT		= @echo '   ' LINT: CHAINLINT TESTS $@;
+	QUIET_CHAINLINT_DEP	= @echo '   ' DEP: CHAINLINT TESTS $@;
+
+	QUIET_LINT_DUP		= @echo '   ' LINT: DUPLICATES TEST NAMES $@;
+	QUIET_LINT_DUP_DEPS	= @echo '   ' DEP: DUPLICATES TEST NAMES $@;
+
+	QUIET_LINT_EXE		= @echo '   ' LINT: EXECUTABLE TESTS $@;
+	QUIET_LINT_EXE_DEPS	= @echo '   ' DEP: EXECUTABLE TESTS $@;
 
 	export V
 endif
