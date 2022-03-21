@@ -76,6 +76,9 @@ linux-gcc-default)
 	sudo apt-get -q update
 	sudo apt-get -q -y install $UBUNTU_COMMON_PKGS
 	;;
+linux-valgrind)
+	sudo apt-get -q -y install valgrind
+	;;
 esac
 
 if type p4d >/dev/null && type p4 >/dev/null
