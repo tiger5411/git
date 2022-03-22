@@ -233,7 +233,8 @@ static void write_rest(void)
 }
 
 static void added_object(unsigned nr, enum object_type type,
-			 void *data, unsigned long size);
+			 void *data, unsigned long size,
+			 unsigned oflags);
 
 /*
  * Write out nr-th object from the list, now we know the contents
@@ -241,21 +242,21 @@ static void added_object(unsigned nr, enum object_type type,
  * to be checked at the end.
  */
 static void write_object(unsigned nr, enum object_type type,
-			 void *buf, unsigned long size)
+			 void *buf, unsigned long size, unsigned oflags)
 {
 	if (!strict) {
-		if (write_object_file(buf, size, type,
-				      &obj_list[nr].oid) < 0)
+		if (write_object_file_flags(buf, size, type,
+				      &obj_list[nr].oid, oflags) < 0)
 			die("failed to write object");
-		added_object(nr, type, buf, size);
+		added_object(nr, type, buf, size, oflags);
 		free(buf);
 		obj_list[nr].obj = NULL;
 	} else if (type == OBJ_BLOB) {
 		struct blob *blob;
-		if (write_object_file(buf, size, type,
-				      &obj_list[nr].oid) < 0)
+		if (write_object_file_flags(buf, size, type,
+					    &obj_list[nr].oid, oflags) < 0)
 			die("failed to write object");
-		added_object(nr, type, buf, size);
+		added_object(nr, type, buf, size, oflags);
 		free(buf);
 
 		blob = lookup_blob(the_repository, &obj_list[nr].oid);
@@ -269,7 +270,7 @@ static void write_object(unsigned nr, enum object_type type,
 		int eaten;
 		hash_object_file(the_hash_algo, buf, size, type,
 				 &obj_list[nr].oid);
-		added_object(nr, type, buf, size);
+		added_object(nr, type, buf, size, oflags);
 		obj = parse_object_buffer(the_repository, &obj_list[nr].oid,
 					  type, size, buf,
 					  &eaten);
@@ -283,7 +284,7 @@ static void write_object(unsigned nr, enum object_type type,
 
 static void resolve_delta(unsigned nr, enum object_type type,
 			  void *base, unsigned long base_size,
-			  void *delta, unsigned long delta_size)
+			  void *delta, unsigned long delta_size, unsigned oflags)
 {
 	void *result;
 	unsigned long result_size;
@@ -294,7 +295,7 @@ static void resolve_delta(unsigned nr, enum object_type type,
 	if (!result)
 		die("failed to apply delta");
 	free(delta);
-	write_object(nr, type, result, result_size);
+	write_object(nr, type, result, result_size, oflags);
 }
 
 /*
@@ -302,7 +303,7 @@ static void resolve_delta(unsigned nr, enum object_type type,
  * resolve all the deltified objects that are based on it.
  */
 static void added_object(unsigned nr, enum object_type type,
-			 void *data, unsigned long size)
+			 void *data, unsigned long size, unsigned oflags)
 {
 	struct delta_info **p = &delta_list;
 	struct delta_info *info;
@@ -313,7 +314,7 @@ static void added_object(unsigned nr, enum object_type type,
 			*p = info->next;
 			p = &delta_list;
 			resolve_delta(info->nr, type, data, size,
-				      info->delta, info->size);
+				      info->delta, info->size, oflags);
 			free(info);
 			continue;
 		}
@@ -322,18 +323,19 @@ static void added_object(unsigned nr, enum object_type type,
 }
 
 static void unpack_non_delta_entry(enum object_type type, unsigned long size,
-				   unsigned nr)
+				   unsigned nr, unsigned oflags)
 {
 	void *buf = get_data(size);
 
 	if (!dry_run && buf)
-		write_object(nr, type, buf, size);
+		write_object(nr, type, buf, size, oflags);
 	else
 		free(buf);
 }
 
 static int resolve_against_held(unsigned nr, const struct object_id *base,
-				void *delta_data, unsigned long delta_size)
+				void *delta_data, unsigned long delta_size,
+				unsigned oflags)
 {
 	struct object *obj;
 	struct obj_buffer *obj_buffer;
@@ -344,12 +346,12 @@ static int resolve_against_held(unsigned nr, const struct object_id *base,
 	if (!obj_buffer)
 		return 0;
 	resolve_delta(nr, obj->type, obj_buffer->buffer,
-		      obj_buffer->size, delta_data, delta_size);
+		      obj_buffer->size, delta_data, delta_size, oflags);
 	return 1;
 }
 
 static void unpack_delta_entry(enum object_type type, unsigned long delta_size,
-			       unsigned nr)
+			       unsigned nr, unsigned oflags)
 {
 	void *delta_data, *base;
 	unsigned long base_size;
@@ -366,7 +368,7 @@ static void unpack_delta_entry(enum object_type type, unsigned long delta_size,
 		if (has_object_file(&base_oid))
 			; /* Ok we have this one */
 		else if (resolve_against_held(nr, &base_oid,
-					      delta_data, delta_size))
+					      delta_data, delta_size, oflags))
 			return; /* we are done */
 		else {
 			/* cannot resolve yet --- queue it */
@@ -428,7 +430,7 @@ static void unpack_delta_entry(enum object_type type, unsigned long delta_size,
 		}
 	}
 
-	if (resolve_against_held(nr, &base_oid, delta_data, delta_size))
+	if (resolve_against_held(nr, &base_oid, delta_data, delta_size, oflags))
 		return;
 
 	base = read_object_file(&base_oid, &type, &base_size);
@@ -440,11 +442,11 @@ static void unpack_delta_entry(enum object_type type, unsigned long delta_size,
 		has_errors = 1;
 		return;
 	}
-	resolve_delta(nr, type, base, base_size, delta_data, delta_size);
+	resolve_delta(nr, type, base, base_size, delta_data, delta_size, oflags);
 	free(base);
 }
 
-static void unpack_one(unsigned nr)
+static void unpack_one(unsigned nr, unsigned oflags)
 {
 	unsigned shift;
 	unsigned char *pack;
@@ -472,11 +474,11 @@ static void unpack_one(unsigned nr)
 	case OBJ_TREE:
 	case OBJ_BLOB:
 	case OBJ_TAG:
-		unpack_non_delta_entry(type, size, nr);
+		unpack_non_delta_entry(type, size, nr, oflags);
 		return;
 	case OBJ_REF_DELTA:
 	case OBJ_OFS_DELTA:
-		unpack_delta_entry(type, size, nr);
+		unpack_delta_entry(type, size, nr, oflags);
 		return;
 	default:
 		error("bad object type %d", type);
@@ -491,6 +493,7 @@ static void unpack_all(void)
 {
 	int i;
 	struct pack_header *hdr = fill(sizeof(struct pack_header));
+	unsigned oflags;
 
 	nr_objects = ntohl(hdr->hdr_entries);
 
@@ -505,9 +508,14 @@ static void unpack_all(void)
 		progress = start_progress(_("Unpacking objects"), nr_objects);
 	CALLOC_ARRAY(obj_list, nr_objects);
 	plug_bulk_checkin();
+	oflags = nr_objects > 1 ? HASH_N_OBJECTS : 0;
 	for (i = 0; i < nr_objects; i++) {
-		unpack_one(i);
-		display_progress(progress, i + 1);
+		int nth = i + 1;
+		unsigned f = i == 0 ? HASH_N_OBJECTS_FIRST :
+			nr_objects == nth ? HASH_N_OBJECTS_LAST : 0;
+
+		unpack_one(i, oflags | f);
+		display_progress(progress, nth);
 	}
 	unplug_bulk_checkin();
 	stop_progress(&progress);
