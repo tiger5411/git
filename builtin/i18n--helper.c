@@ -3,7 +3,7 @@
 #include "parse-options.h"
 
 static char const * const env__helper_usage[] = {
-	N_("git i18n--helper <message-id> [<arguments>]"),
+	N_("git i18n--helper <command-mode> [<arguments>]"),
 	NULL
 };
 
@@ -21,5 +21,14 @@ int cmd_i18n__helper(int argc, const char **argv, const char *prefix)
 
 	argc = parse_options(argc, argv, prefix, options, env__helper_usage,
 			     0);
+	if (!cmdmode)
+		usage_msg_opt(_("need a command-mode argument"),
+			      env__helper_usage, options);
+
+	switch (cmdmode) {
+	case I18N_CD_TO_TOPLEVEL:
+		printf(_("Cannot chdir to %s, the toplevel of the working tree"), argv[0]);
+		break;
+	}
 	return 0;
 }

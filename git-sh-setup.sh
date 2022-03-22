@@ -179,7 +179,7 @@ is_bare_repository () {
 cd_to_toplevel () {
 	cdup=$(git rev-parse --show-toplevel) &&
 	cd "$cdup" || {
-		gettextln "Cannot chdir to \$cdup, the toplevel of the working tree" >&2
+		git i18n--helper --cd-to-toplevel "$cdup" >&2
 		exit 1
 	}
 }
