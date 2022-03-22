@@ -383,11 +383,21 @@ be used e.g. with "git rebase --exec" to ensure that there's a 1=1
 mapping between "TEST_PASSES_SANITIZE_LEAK=true" and those tests that
 pass under "SANITIZE=leak".
 
+The "check" mode is especially useful if combined with
+GIT_TEST_SANITIZE_LEAK_LOG=true.
+
 GIT_TEST_SANITIZE_LEAK_LOG=true will log memory leaks to
 "test-results/$TEST_NAME.leak/trace.*" files. Useful in combination
 with "GIT_TEST_PASSING_SANITIZE_LEAK" to check if we're falsely
 reporting a test as "passing" with SANITIZE=leak due to ignored exit
 codes.
+
+When GIT_TEST_SANITIZE_LEAK_LOG=true is set we'll look at the
+"test-results/$TEST_NAME.leak/trace.*" files at the end of the test
+run in combination with the "TEST_PASSES_SANITIZE_LEAK" and
+GIT_TEST_PASSING_SANITIZE_LEAK=check setting to see if we'll fail a
+test leaked, but which the test run itself didn't catch due to ignored
+or missed exit codes.
 
 GIT_TEST_PROTOCOL_VERSION=<n>, when set, makes 'protocol.version'
 default to n.

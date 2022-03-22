@@ -300,12 +300,23 @@ TEST_RESULTS_SAN_FILE_PFX=trace
 TEST_RESULTS_SAN_DIR_SFX=leak
 TEST_RESULTS_SAN_FILE=
 TEST_RESULTS_SAN_DIR="$TEST_RESULTS_DIR/$TEST_NAME.$TEST_RESULTS_SAN_DIR_SFX"
+TEST_RESULTS_SAN_DIR_NR_LEAKS_STARTUP=
 TRASH_DIRECTORY="trash directory.$TEST_NAME$TEST_STRESS_JOB_SFX"
 test -n "$root" && TRASH_DIRECTORY="$root/$TRASH_DIRECTORY"
 case "$TRASH_DIRECTORY" in
 /*) ;; # absolute path is good
  *) TRASH_DIRECTORY="$TEST_OUTPUT_DIRECTORY/$TRASH_DIRECTORY" ;;
 esac
+
+# Utility functions using $TEST_RESULTS_* variables
+nr_san_dir_leaks_ () {
+	# stderr piped to /dev/null because the directory may have
+	# been "rmdir"'d already.
+	find "$TEST_RESULTS_SAN_DIR" \
+		-type f \
+		-name "$TEST_RESULTS_SAN_FILE_PFX.*" 2>/dev/null |
+	wc -l
+}
 
 # If --stress was passed, run this test repeatedly in several parallel loops.
 if test "$GIT_TEST_STRESS_STARTED" = "done"
@@ -1335,6 +1346,42 @@ test_done () {
 			error "Tests passed but test cleanup failed; aborting"
 		fi
 
+		if test -n "$TEST_RESULTS_SAN_FILE"
+		then
+			old_=$TEST_RESULTS_SAN_DIR_NR_LEAKS_STARTUP
+			new_=$(nr_san_dir_leaks_)
+
+			if test $new_ -gt $old_
+			then
+				local msg=$(cat <<-\EOF
+				With SANITIZE=leak at exit we have %d leak logs, but started with %d
+
+				This means that we have a blindspot where git is leaking but we're
+				losing the exit code somewhere, or not propagating it appropriately
+				upwards!
+
+				See the logs at "%s"
+				EOF
+				) &&
+
+				local out=$(printf "$msg\n" "$new_" "$old_" "$TEST_RESULTS_SAN_FILE") &&
+				say_color error "$out"
+
+				if test -n "$passes_sanitize_leak"
+				then
+					say "As TEST_PASSES_SANITIZE_LEAK=true and our logs show we're leaking, exit non-zero!"
+					invert_exit_code=t
+				elif test -n "$sanitize_leak_check"
+				then
+					say "As TEST_PASSES_SANITIZE_LEAK=true isn't set the above leak is 'ok' with GIT_TEST_PASSING_SANITIZE_LEAK=check"
+					invert_exit_code=
+				else
+					say "With GIT_TEST_SANITIZE_LEAK_LOG=true our logs revealed a memory leak, exit non-zero!"
+					invert_exit_code=t
+				fi
+			fi
+		fi
+
 		if test -z "$skip_all" && test -n "$invert_exit_code"
 		then
 			say_color warn "# faking up non-zero exit with --invert-exit-code"
@@ -1526,13 +1573,17 @@ then
 
 	if test "$GIT_TEST_PASSING_SANITIZE_LEAK" = "check"
 	then
+		sanitize_leak_check=t
 		if test -n "$invert_exit_code"
 		then
 			BAIL_OUT "cannot use --invert-exit-code under GIT_TEST_PASSING_SANITIZE_LEAK=check"
 		fi
 
-		say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, using --immediate"
-		immediate=t
+		if test -z "$immediate"
+		then
+			say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, using --immediate"
+			immediate=t
+		fi
 		if test -z "$passes_sanitize_leak"
 		then
 			say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, setting --invert-exit-code for TEST_PASSES_SANITIZE_LEAK != true"
@@ -1552,6 +1603,10 @@ then
 			BAIL_OUT "cannot create $TEST_RESULTS_SAN_DIR"
 		fi &&
 		TEST_RESULTS_SAN_FILE="$TEST_RESULTS_SAN_DIR/$TEST_RESULTS_SAN_FILE_PFX"
+
+		# In case "test-results" is left over from a previous
+		# run: Only report if new leaks show up.
+		TEST_RESULTS_SAN_DIR_NR_LEAKS_STARTUP=$(nr_san_dir_leaks_)
 
 		# Don't litter *.leak dirs if there was nothing to report
 		test_atexit "rmdir \"$TEST_RESULTS_SAN_DIR\" 2>/dev/null || :"
