@@ -209,10 +209,10 @@ require_clean_work_tree () {
 		action=$1
 		case "$action" in
 		"rewrite branches")
-			gettextln "Cannot rewrite branches: You have unstaged changes." >&2
+			git i18n--helper --cannot-rewrite-branches >&2
 			;;
 		*)
-			eval_gettextln "Cannot \$action: You have unstaged changes." >&2
+			git i18n--helper --cannot-x-you-have-unstaged-changes "$action" >&2
 			;;
 		esac
 		err=1
@@ -345,6 +345,7 @@ git_dir_init () {
 	then
 		test -z "$(git rev-parse --show-cdup)" || {
 			exit=$?
+			git sh-i18n--helper --run-command-from-toplevel
 			gettextln "You need to run this command from the toplevel of the working tree." >&2
 			exit $exit
 		}
