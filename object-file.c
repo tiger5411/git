@@ -2211,7 +2211,7 @@ static int index_mem(struct index_state *istate,
 	}
 
 	if (write_object)
-		ret = write_object_file(buf, size, type, oid);
+		ret = write_object_file_flags(buf, size, type, oid, flags);
 	else
 		hash_object_file(the_hash_algo, buf, size, type, oid);
 	if (re_allocated)
