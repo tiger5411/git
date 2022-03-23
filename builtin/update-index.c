@@ -971,6 +971,25 @@ static enum parse_opt_result reupdate_callback(
 	return 0;
 }
 
+static void line_from_stdin(struct strbuf *buf, struct strbuf *unquoted,
+			    const char *prefix, int prefix_length,
+			    const int nul_term_line, const int set_executable_bit)
+{
+	char *p;
+
+	if (!nul_term_line && buf->buf[0] == '"') {
+		strbuf_reset(unquoted);
+		if (unquote_c_style(unquoted, buf->buf, NULL))
+			die("line is badly quoted");
+		strbuf_swap(buf, unquoted);
+	}
+	p = prefix_path(prefix, prefix_length, buf->buf);
+	update_one(p);
+	if (set_executable_bit)
+		chmod_path(set_executable_bit, p);
+	free(p);
+}
+
 int cmd_update_index(int argc, const char **argv, const char *prefix)
 {
 	int newfd, entries, has_errors = 0, nul_term_line = 0;
@@ -1174,20 +1193,9 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 		struct strbuf unquoted = STRBUF_INIT;
 
 		setup_work_tree();
-		while (getline_fn(&buf, stdin) != EOF) {
-			char *p;
-			if (!nul_term_line && buf.buf[0] == '"') {
-				strbuf_reset(&unquoted);
-				if (unquote_c_style(&unquoted, buf.buf, NULL))
-					die("line is badly quoted");
-				strbuf_swap(&buf, &unquoted);
-			}
-			p = prefix_path(prefix, prefix_length, buf.buf);
-			update_one(p);
-			if (set_executable_bit)
-				chmod_path(set_executable_bit, p);
-			free(p);
-		}
+		while (getline_fn(&buf, stdin) != EOF)
+			line_from_stdin(&buf, &unquoted, prefix, prefix_length,
+					nul_term_line, set_executable_bit);
 		strbuf_release(&unquoted);
 		strbuf_release(&buf);
 	}
