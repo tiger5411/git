@@ -1142,7 +1142,7 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 
 			setup_work_tree();
 			p = prefix_path(prefix, prefix_length, path);
-			update_one(p, 0);
+			update_one(p, HASH_N_OBJECTS);
 			if (set_executable_bit)
 				chmod_path(set_executable_bit, p);
 			free(p);
@@ -1187,7 +1187,7 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 				strbuf_swap(&buf, &unquoted);
 			}
 			p = prefix_path(prefix, prefix_length, buf.buf);
-			update_one(p, 0);
+			update_one(p, HASH_N_OBJECTS);
 			if (set_executable_bit)
 				chmod_path(set_executable_bit, p);
 			free(p);
@@ -1263,7 +1263,8 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 				exit(128);
 			unable_to_lock_die(get_index_file(), lock_error);
 		}
-		if (write_locked_index(&the_index, &lock_file, COMMIT_LOCK))
+		if (write_locked_index(&the_index, &lock_file,
+				       COMMIT_LOCK | WLI_NEED_LOOSE_FSYNC))
 			die("Unable to write new index file");
 	}
 
