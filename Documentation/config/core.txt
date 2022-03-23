@@ -607,21 +607,85 @@ stored on NTFS or ReFS filesystems.
 +
 The `batch` is currently only applies to loose-object files and will
 kick in when using the linkgit:git-unpack-objects[1] and
-linkgit:update-index[1] commands. Note that the "last" file to be
+linkgit:git-update-index[1] commands. Note that the "last" file to be
 synced may be the last object, as in the case of
 linkgit:git-unpack-objects[1], or relevant "index" (or in the future,
 "ref") update, as in the case of linkgit:git-update-index[1]. I.e. the
 batch syncing of the loose objects may be deferred until a subsequent
 fsync() to a file that makes them "active".
 
-core.fsyncObjectFiles::
-	This boolean will enable 'fsync()' when writing object files.
-	This setting is deprecated. Use core.fsync instead.
+fsyncMethod.batch.quarantine::
+	A boolean which if set to `true` will cause "batched" writes
+	to objects to be "quarantined" if
+	`core.fsyncMethod=batch`. This is `false` by default.
 +
-This setting affects data added to the Git repository in loose-object
-form. When set to true, Git will issue an fsync or similar system call
-to flush caches so that loose-objects remain consistent in the face
-of a unclean system shutdown.
+The primary object of these fsync() settings is to protect against
+repository corruption of things which are reachable, i.e. "reachable",
+via references, the index etc. Not merely objects that were present in
+the object store.
++
+Historically setting `core.fsyncObjectFiles=false` assumed that on a
+filesystem with where an fsync() would flush all preceding outstanding
+I/O that we might end up with a corrupt loose object, but that was OK
+as long as no reference referred to it. We'd eventually the corrupt
+object with linkgit:git-gc[1], and linkgit:git-fsck[1] would only
+report it as a minor annoyance
++
+Setting `fsyncMethod.batch.quarantine=true` takes the view that
+something like a corrupt *unreferenced* loose object in the object
+store is something we'd like to avoid, at the cost of reduced
+performance when using `core.fsyncMethod=batch`.
++
+Currently this uses the same mechanism described in the "QUARANTINE
+ENVIRONMENT" in the linkgit:git-receive-pack[1] documentation, but
+that's subject to change. The performance loss is because we need to
+"stage" the objects in that quarantine environment, fsync() it, and
+once that's done rename() or link() it in-place into the main object
+store, possibly with an fsync() of the index or ref at the end
++
+With `fsyncMethod.batch.quarantine=false` we'll "stage" things in the
+main object store, and then do one fsync() at the very end, either on
+the last object we write, or file (index or ref) that'll make it
+"reachable".
++
+The bad thing about setting this to `true` is lost performance, as
+well as not being able to access the objects as they're written (which
+e.g. consumers of linkgit:git-update-index[1]'s `--verbose` mode might
+want to do).
++
+The good thing is that you should be guaranteed not to get e.g. short
+or otherwise corrupt loose objects if you pull your power cord, in
+practice various git commands deal quite badly with discovering such a
+stray corrupt object (including perhaps assuming it's valid based on
+its existence, or hard dying on an error rather than replacing
+it). Repairing such "unreachable corruption" can require manual
+intervention.
+
+core.fsyncObjectFiles::
+	This boolean will enable 'fsync()' when writing loose object
+	files.
++
+This setting is the historical fsync configuration setting. It's now
+*deprecated*, you should use `core.fsync` instead, perhaps in
+combination with `core.fsyncMethod=batch`.
++
+The `core.fsyncObjectFiles` was initially added based on integrity
+assumptions that early (pre-ext-4) versions of Linux's "ext"
+filesystems provided.
++
+I.e. that a write of file A without an `fsync()` followed by a write
+of file `B` with `fsync()` would implicitly guarantee that `A' would
+be `fsync()`'d by calling `fsync()` on `B`. This asssumption is *not*
+backed up by any standard (e.g. POSIX), but worked in practice on some
+Linux setups.
++
+Nowadays you should almost certainly want to use
+`core.fsync=loose-object` instead in combination with
+`core.fsyncMethod=bulk`, and possibly with
+`fsyncMethod.batch.quarantine=true`, see above. On modern OS's (Linux,
+OSX, Windows) that gives you most of the performance benefit of
+`core.fsyncObjectFiles=false` with all of the safety of the old
+`core.fsyncObjectFiles=true`.
 
 core.preloadIndex::
 	Enable parallel index preload for operations like 'git diff'
