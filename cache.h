@@ -1772,11 +1772,6 @@ void fsync_or_die(int fd, const char *);
 int fsync_component(enum fsync_component component, int fd);
 void fsync_component_or_die(enum fsync_component component, int fd, const char *msg);
 
-static inline int batch_fsync_enabled(enum fsync_component component)
-{
-	return (fsync_components & component) && (fsync_method == FSYNC_METHOD_BATCH);
-}
-
 ssize_t read_in_full(int fd, void *buf, size_t count);
 ssize_t write_in_full(int fd, const void *buf, size_t count);
 ssize_t pread_in_full(int fd, void *buf, size_t count, off_t offset);

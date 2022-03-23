@@ -507,7 +507,6 @@ static void unpack_all(void)
 	if (!quiet)
 		progress = start_progress(_("Unpacking objects"), nr_objects);
 	CALLOC_ARRAY(obj_list, nr_objects);
-	plug_bulk_checkin();
 	oflags = nr_objects > 1 ? HASH_N_OBJECTS : 0;
 	for (i = 0; i < nr_objects; i++) {
 		int nth = i + 1;
@@ -517,7 +516,6 @@ static void unpack_all(void)
 		unpack_one(i, oflags | f);
 		display_progress(progress, nth);
 	}
-	unplug_bulk_checkin();
 	stop_progress(&progress);
 
 	if (delta_list)
