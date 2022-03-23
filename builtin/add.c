@@ -580,7 +580,8 @@ int cmd_add(int argc, const char **argv, const char *prefix)
 		 (intent_to_add ? ADD_CACHE_INTENT : 0) |
 		 (ignore_add_errors ? ADD_CACHE_IGNORE_ERRORS : 0) |
 		 (!(addremove || take_worktree_changes)
-		  ? ADD_CACHE_IGNORE_REMOVAL : 0));
+		  ? ADD_CACHE_IGNORE_REMOVAL : 0)) |
+		ADD_CACHE_HASH_N_OBJECTS;
 
 	if (read_cache_preload(&pathspec) < 0)
 		die(_("index file corrupt"));
@@ -686,7 +687,8 @@ int cmd_add(int argc, const char **argv, const char *prefix)
 
 finish:
 	if (write_locked_index(&the_index, &lock_file,
-			       COMMIT_LOCK | SKIP_IF_UNCHANGED))
+			       COMMIT_LOCK | SKIP_IF_UNCHANGED |
+			       WLI_NEED_LOOSE_FSYNC))
 		die(_("Unable to write new index file"));
 
 	dir_clear(&dir);
