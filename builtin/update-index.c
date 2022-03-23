@@ -1194,15 +1194,15 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 	}
 
 	if (read_from_stdin) {
-		struct strbuf buf = STRBUF_INIT;
+		struct strbuf line = STRBUF_INIT;
 		struct strbuf unquoted = STRBUF_INIT;
 
 		setup_work_tree();
-		while (getline_fn(&buf, stdin) != EOF)
-			line_from_stdin(&buf, &unquoted, prefix, prefix_length,
+		while (getline_fn(&line, stdin) != EOF)
+			line_from_stdin(&line, &unquoted, prefix, prefix_length,
 					nul_term_line, set_executable_bit, 0);
 		strbuf_release(&unquoted);
-		strbuf_release(&buf);
+		strbuf_release(&line);
 	}
 
 	if (split_index > 0) {
