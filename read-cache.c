@@ -755,6 +755,14 @@ int add_to_index(struct index_state *istate, const char *path, struct stat *st, 
 	unsigned hash_flags = pretend ? 0 : HASH_WRITE_OBJECT;
 	struct object_id oid;
 
+	/*
+	 * TODO: Can't we also set HASH_N_OBJECTS_FIRST as a function
+	 * of !(ce->ce_flags & CE_ADDED) or something? I'm not too
+	 * familiar with the cache API...
+	 */
+	if (flags & ADD_CACHE_HASH_N_OBJECTS)
+		hash_flags |= HASH_N_OBJECTS;
+
 	if (flags & ADD_CACHE_RENORMALIZE)
 		hash_flags |= HASH_RENORMALIZE;
 
