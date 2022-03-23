@@ -548,48 +548,34 @@ core.whitespace::
   errors. The default tab width is 8. Allowed values are 1 to 63.
 
 core.fsync::
-	A comma-separated list of components of the repository that
-	should be hardened via the core.fsyncMethod when created or
-	modified.  You can disable hardening of any component by
-	prefixing it with a '-'.  Items that are not hardened may be
-	lost in the event of an unclean	system shutdown. Unless you
-	have special requirements, it is recommended that you leave
-	this option empty or pick one of `committed`, `added`,
-	or `all`.
+	A boolen defaulting to `true`. To ensure data integrity git
+	will fsync() its objects, index and refu updates etc. This can
+	be set to `false` to disable `fsync()`-ing.
 +
-When this configuration is encountered, the set of components starts with
-the platform default value, disabled components are removed, and additional
-components are added. `none` resets the state so that the platform default
-is ignored.
+Only set this to `false` if you know what you're doing, and are
+prepared to deal with data corruption. Valid use-cases include
+throwaway uses of repositories on ramdisks, one-off mass-imports
+followed by calling `sync(1)` etc.
 +
-The empty string resets the fsync configuration to the platform
-default. The default on most platforms is equivalent to
-`core.fsync=committed,-loose-object`, which has good performance,
-but risks losing recent work in the event of an unclean system shutdown.
+Note that the syncing of loose objects is currently excluded from
+`core.fsync=true`. To turn on all fsync-ing you'll need
+`core.fsync=true` and `core.fsyncObjectFiles=true`, but see
+`core.fsyncMethod=batch` below for a much faster alternative that's
+just as safe on various modern OS's.
 +
-* `none` clears the set of fsynced components.
-* `loose-object` hardens objects added to the repo in loose-object form.
-* `pack` hardens objects added to the repo in packfile form.
-* `pack-metadata` hardens packfile bitmaps and indexes.
-* `commit-graph` hardens the commit graph file.
-* `index` hardens the index when it is modified.
-* `objects` is an aggregate option that is equivalent to
-  `loose-object,pack`.
-* `derived-metadata` is an aggregate option that is equivalent to
-  `pack-metadata,commit-graph`.
-* `committed` is an aggregate option that is currently equivalent to
-  `objects`. This mode sacrifices some performance to ensure that work
-  that is committed to the repository with `git commit` or similar commands
-  is hardened.
-* `added` is an aggregate option that is currently equivalent to
-  `committed,index`. This mode sacrifices additional performance to
-  ensure that the results of commands like `git add` and similar operations
-  are hardened.
-* `all` is an aggregate option that syncs all individual components above.
+The default is in flux and may change in the future, in particular the
+equivalent of the already-deprecated `core.fsyncObjectFiles` setting
+might soon default to `true`, and `core.fsyncMethod`'s default of
+`fsync` might default to a setting deemed to be safe on the local OS,
+suc has `batch` or `writeout-only`
 
 core.fsyncMethod::
 	A value indicating the strategy Git will use to harden repository data
 	using fsync and related primitives.
++
+Defaults to `fsync`, but as discussed for `core.fsync` above might
+change to use one of the values below taking advantage of
+platform-specific "faster `fsync()`".
 +
 * `fsync` uses the fsync() system call or platform equivalents.
 * `writeout-only` issues pagecache writeback requests, but depending on the
@@ -680,8 +666,8 @@ backed up by any standard (e.g. POSIX), but worked in practice on some
 Linux setups.
 +
 Nowadays you should almost certainly want to use
-`core.fsync=loose-object` instead in combination with
-`core.fsyncMethod=bulk`, and possibly with
+`core.fsync=true` instead in combination with
+`core.fsyncMethod=batch`, and possibly with
 `fsyncMethod.batch.quarantine=true`, see above. On modern OS's (Linux,
 OSX, Windows) that gives you most of the performance benefit of
 `core.fsyncObjectFiles=false` with all of the safety of the old
