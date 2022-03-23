@@ -1766,7 +1766,6 @@ int copy_file_with_time(const char *dst, const char *src, int mode);
 
 void write_or_die(int fd, const void *buf, size_t count);
 void fsync_or_die(int fd, const char *);
-int fsync_component(enum fsync_component component, int fd);
 void fsync_component_or_die(enum fsync_component component, int fd, const char *msg);
 
 static inline int batch_fsync_enabled(enum fsync_component component)

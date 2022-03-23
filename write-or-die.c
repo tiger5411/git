@@ -76,13 +76,6 @@ void fsync_or_die(int fd, const char *msg)
 		die_errno("fsync error on '%s'", msg);
 }
 
-int fsync_component(enum fsync_component component, int fd)
-{
-	if (fsync_components & component)
-		return maybe_fsync(fd);
-	return 0;
-}
-
 void fsync_component_or_die(enum fsync_component component, int fd, const char *msg)
 {
 	if (fsync_components & component)
