@@ -1194,15 +1194,38 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 	}
 
 	if (read_from_stdin) {
+		struct string_list list = STRING_LIST_INIT_NODUP;
 		struct strbuf line = STRBUF_INIT;
 		struct strbuf unquoted = STRBUF_INIT;
+		size_t i, nr;
+		unsigned oflags;
 
 		setup_work_tree();
-		while (getline_fn(&line, stdin) != EOF)
-			line_from_stdin(&line, &unquoted, prefix, prefix_length,
-					nul_term_line, set_executable_bit, 0);
+		while (getline_fn(&line, stdin) != EOF) {
+			size_t len = line.len;
+			char *str = strbuf_detach(&line, NULL);
+
+			string_list_append_nodup(&list, str)->util = (void *)len;
+		}
+
+		nr = list.nr;
+		oflags = nr > 1 ? HASH_N_OBJECTS : 0;
+		for (i = 0; i < nr; i++) {
+			size_t nth = i + 1;
+			unsigned f = i == 0 ? HASH_N_OBJECTS_FIRST :
+				  nr == nth ? HASH_N_OBJECTS_LAST : 0;
+			struct strbuf buf = STRBUF_INIT;
+			struct string_list_item *item = list.items + i;
+			const size_t len = (size_t)item->util;
+
+			strbuf_attach(&buf, item->string, len, len);
+			line_from_stdin(&buf, &unquoted, prefix, prefix_length,
+					nul_term_line, set_executable_bit,
+					oflags | f);
+			strbuf_release(&buf);
+		}
 		strbuf_release(&unquoted);
-		strbuf_release(&line);
+		string_list_clear(&list, 0);
 	}
 
 	if (split_index > 0) {
