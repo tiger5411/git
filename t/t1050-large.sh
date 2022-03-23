@@ -5,6 +5,9 @@ test_description='adding and checking out large blobs'
 
 . ./test-lib.sh
 
+skip_all='TODO: migrate the builtin/add.c code'
+test_done
+
 test_expect_success setup '
 	# clone does not allow us to pass core.bigfilethreshold to
 	# new repos, so set core.bigfilethreshold globally
