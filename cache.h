@@ -751,6 +751,7 @@ void ensure_full_index(struct index_state *istate);
 /* For use with `write_locked_index()`. */
 #define COMMIT_LOCK		(1 << 0)
 #define SKIP_IF_UNCHANGED	(1 << 1)
+#define WLI_NEED_LOOSE_FSYNC	(1 << 2)
 
 /*
  * Write the index while holding an already-taken lock. Close the lock,

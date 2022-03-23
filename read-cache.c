@@ -2860,6 +2860,32 @@ static int do_write_index(struct index_state *istate, struct tempfile *tempfile,
 	int ieot_entries = 1;
 	struct index_entry_offset_table *ieot = NULL;
 	int nr, nr_threads;
+	unsigned int wflags = FSYNC_COMPONENT_INDEX;
+
+	/*
+	 * TODO: This is abuse of the API recently modified
+	 * finalize_hashfile() which reveals a shortcoming of its
+	 * "fsync" design.
+	 *
+	 * I.e. It expects a "enum fsync_component component" label,
+	 * but here we're passing it an OR of the two, knowing that
+	 * it'll call fsync_component_or_die() which (in
+	 * write-or-die.c) will do "(fsync_components & wflags)" (to
+	 * our "wflags" here).
+	 *
+	 * But the API really should be changed to explicitly take
+	 * such flags, because in this case we'd like to fsync() the
+	 * index if we're in the bulk mode, *even if* our
+	 * "core.fsync=index" isn't configured.
+	 *
+	 * That's because at this point we've been queuing up object
+	 * writes that we didn't fsync(), and are going to use this
+	 * fsync() to "flush" the whole thing. Doing it this way
+	 * avoids redundantly calling fsync() twice when once will do.
+	 */
+	if (fsync_method == FSYNC_METHOD_BATCH &&
+	    flags & WLI_NEED_LOOSE_FSYNC)
+		wflags |= FSYNC_COMPONENT_LOOSE_OBJECT;
 
 	f = hashfd(tempfile->fd, tempfile->filename.buf);
 
@@ -3094,7 +3120,7 @@ static int do_write_index(struct index_state *istate, struct tempfile *tempfile,
 	if (!alternate_index_output && (flags & COMMIT_LOCK))
 		csum_fsync_flag = CSUM_FSYNC;
 
-	finalize_hashfile(f, istate->oid.hash, FSYNC_COMPONENT_INDEX,
+	finalize_hashfile(f, istate->oid.hash, wflags,
 			  CSUM_HASH_IN_STREAM | csum_fsync_flag);
 
 	if (close_tempfile_gently(tempfile)) {
