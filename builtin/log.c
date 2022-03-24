@@ -656,7 +656,8 @@ int cmd_show(int argc, const char **argv, const char *prefix)
 	struct object_array_entry *objects;
 	struct setup_revision_opt opt;
 	struct pathspec match_all;
-	int i, count, ret = 0;
+	int ret = 0;
+	size_t i, count;
 
 	init_log_defaults();
 	git_config(git_log_config, NULL);

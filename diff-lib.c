@@ -552,7 +552,7 @@ static int diff_cache(struct rev_info *revs,
 void diff_get_merge_base(const struct rev_info *revs, struct object_id *mb)
 {
 	struct object_array_entry *entry;
-	int i;
+	size_t i;
 	struct commit *mb_child[2] = {0};
 	struct commit_list *merge_bases;
 
@@ -570,7 +570,7 @@ void diff_get_merge_base(const struct rev_info *revs, struct object_id *mb)
 	 * misleading error message.
 	 */
 	if (revs->pending.nr < 1 || revs->pending.nr > 2)
-		BUG("unexpected revs->pending.nr: %d", revs->pending.nr);
+		BUG("unexpected revs->pending.nr: %lu", revs->pending.nr);
 
 	for (i = 0; i < revs->pending.nr; i++)
 		mb_child[i] = lookup_commit_reference(the_repository, &revs->pending.objects[i].item->oid);

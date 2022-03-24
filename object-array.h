@@ -12,8 +12,8 @@
  * the "name", "path" and "mode" members provided by this API.
  */
 struct object_array {
-	unsigned int nr;
-	unsigned int alloc;
+	size_t nr;
+	size_t alloc;
 	struct object_array_entry {
 		struct object *item;
 		/*

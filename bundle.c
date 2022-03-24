@@ -200,7 +200,8 @@ int verify_bundle(struct repository *r,
 	struct rev_info revs;
 	const char *argv[] = {NULL, "--all", NULL};
 	struct commit *commit;
-	int i, ret = 0, req_nr;
+	int ret = 0;
+	size_t i, req_nr;
 	const char *message = _("Repository lacks these prerequisite commits:");
 
 	if (!r || !r->objects || !r->objects->odb)

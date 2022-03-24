@@ -12,7 +12,7 @@ void add_object_array_with_path(struct object *obj, const char *name,
 				struct object_array *array,
 				unsigned mode, const char *path)
 {
-	unsigned nr = array->nr;
+	size_t nr = array->nr;
 	struct object_array_entry *entry;
 
 	ALLOC_GROW(array->objects, array->nr + 1, array->alloc);
@@ -73,7 +73,7 @@ static int contains_object(struct object_array *array,
 
 void object_array_remove_duplicates(struct object_array *array)
 {
-	unsigned nr = array->nr, src;
+	size_t nr = array->nr, src;
 	struct object_array_entry *objects = array->objects;
 
 	array->nr = 0;
