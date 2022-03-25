@@ -3805,6 +3805,7 @@ static void get_object_list(struct rev_info *revs, int ac, const char **av)
 	if (unpack_unreachable)
 		loosen_unused_packed_objects();
 
+	/* HOTFIX: NO release_revisions(&revs); */
 	oid_array_clear(&recent_objects);
 }
 
@@ -4182,6 +4183,7 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
 
 		repo_init_revisions(the_repository, &revs, NULL);
 		get_object_list(&revs, rp.nr, rp.v);
+		release_revisions(&revs);
 	}
 	cleanup_preferred_base();
 	if (include_tag && nr_result)
@@ -4215,6 +4217,8 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
 
 cleanup:
 	strvec_clear(&rp);
+	if (pfd.have_revs)
+		release_revisions(&pfd.revs);
 
 	return 0;
 }
