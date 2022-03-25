@@ -6455,9 +6455,6 @@ static void diff_free_ignore_regex(struct diff_options *options)
 
 void diff_free(struct diff_options *options)
 {
-	if (options->no_free)
-		return;
-
 	diff_free_file(options);
 	diff_free_ignore_regex(options);
 	clear_pathspec(&options->pathspec);
