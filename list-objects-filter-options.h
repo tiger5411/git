@@ -107,10 +107,12 @@ void parse_list_objects_filter(
 int opt_parse_list_objects_filter(const struct option *opt,
 				  const char *arg, int unset);
 
+#define OPT_PARSE_LIST_OBJECTS_FILTER_CB(fo, cb) \
+	OPT_CALLBACK(0, "filter", (fo), N_("args"), \
+		     N_("object filtering"), (cb))
+
 #define OPT_PARSE_LIST_OBJECTS_FILTER(fo) \
-	OPT_CALLBACK(0, "filter", fo, N_("args"), \
-	  N_("object filtering"), \
-	  opt_parse_list_objects_filter)
+	OPT_PARSE_LIST_OBJECTS_FILTER_CB((fo), opt_parse_list_objects_filter)
 
 /*
  * Translates abbreviated numbers in the filter's filter_spec into their
