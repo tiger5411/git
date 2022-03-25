@@ -1389,7 +1389,7 @@ test_atexit () {
 # Deprecated wrapper for "git init", use "git init" directly instead
 # Usage: test_create_repo <directory>
 test_create_repo () {
-	git init "$@"
+	git init --bare "$@"
 }
 
 # This function helps on symlink challenged file systems when it is not
