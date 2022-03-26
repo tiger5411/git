@@ -96,10 +96,11 @@ static pthread_cond_t cond_result;
 
 static int skip_first_line;
 
-static void add_work(struct grep_opt *opt, struct grep_source *gs)
+static void add_work(struct repository *repo, struct grep_opt *opt,
+		     struct grep_source *gs)
 {
 	if (opt->binary != GREP_BINARY_TEXT)
-		grep_source_load_driver(gs, opt->repo->index);
+		grep_source_load_driver(gs, repo->index);
 
 	grep_lock();
 
@@ -343,7 +344,8 @@ static void grep_source_name(struct grep_opt *opt, const char *filename,
 		strbuf_insert(out, 0, filename, tree_name_len);
 }
 
-static int grep_oid(struct grep_opt *opt, const struct object_id *oid,
+static int grep_oid(struct repository *repo, struct grep_opt *opt,
+		    const struct object_id *oid,
 		    const char *filename, int tree_name_len,
 		    const char *path)
 {
@@ -351,7 +353,7 @@ static int grep_oid(struct grep_opt *opt, const struct object_id *oid,
 	struct grep_source gs;
 
 	grep_source_name(opt, filename, tree_name_len, &pathbuf);
-	grep_source_init_oid(&gs, pathbuf.buf, path, oid, opt->repo);
+	grep_source_init_oid(&gs, pathbuf.buf, path, oid, repo);
 	strbuf_release(&pathbuf);
 
 	if (num_threads > 1) {
@@ -359,7 +361,7 @@ static int grep_oid(struct grep_opt *opt, const struct object_id *oid,
 		 * add_work() copies gs and thus assumes ownership of
 		 * its fields, so do not call grep_source_clear()
 		 */
-		add_work(opt, &gs);
+		add_work(repo, opt, &gs);
 		return 0;
 	} else {
 		int hit;
@@ -371,13 +373,14 @@ static int grep_oid(struct grep_opt *opt, const struct object_id *oid,
 	}
 }
 
-static int grep_file(struct grep_opt *opt, const char *filename)
+static int grep_file(struct repository *repo, struct grep_opt *opt,
+		     const char *filename)
 {
 	struct strbuf buf = STRBUF_INIT;
 	struct grep_source gs;
 
 	grep_source_name(opt, filename, 0, &buf);
-	grep_source_init_file(&gs, buf.buf, filename);
+	grep_source_init_file(&gs, buf.buf, filename, repo);
 	strbuf_release(&buf);
 
 	if (num_threads > 1) {
@@ -385,7 +388,7 @@ static int grep_file(struct grep_opt *opt, const char *filename)
 		 * add_work() copies gs and thus assumes ownership of
 		 * its fields, so do not call grep_source_clear()
 		 */
-		add_work(opt, &gs);
+		add_work(repo, opt, &gs);
 		return 0;
 	} else {
 		int hit;
@@ -422,15 +425,15 @@ static void run_pager(struct grep_opt *opt, const char *prefix)
 		exit(status);
 }
 
-static int grep_submodule(struct grep_opt *opt,
+static int grep_submodule(struct repository *superproject,
+			  struct grep_opt *opt,
 			  const struct pathspec *pathspec,
 			  const struct object_id *oid,
 			  const char *filename, const char *path, int cached);
 
-static int grep_cache(struct grep_opt *opt,
+static int grep_cache(struct repository *repo, struct grep_opt *opt,
 		      const struct pathspec *pathspec, int cached)
 {
-	struct repository *repo = opt->repo;
 	int hit = 0;
 	int nr;
 	struct strbuf name = STRBUF_INIT;
@@ -466,15 +469,15 @@ static int grep_cache(struct grep_opt *opt,
 			if (cached || (ce->ce_flags & CE_VALID)) {
 				if (ce_stage(ce) || ce_intent_to_add(ce))
 					continue;
-				hit |= grep_oid(opt, &ce->oid, name.buf,
+				hit |= grep_oid(repo, opt, &ce->oid, name.buf,
 						0, name.buf);
 			} else {
-				hit |= grep_file(opt, name.buf);
+				hit |= grep_file(repo, opt, name.buf);
 			}
 		} else if (recurse_submodules && S_ISGITLINK(ce->ce_mode) &&
 			   submodule_path_match(repo->index, pathspec, name.buf, NULL)) {
-			hit |= grep_submodule(opt, pathspec, NULL, ce->name,
-					      ce->name, cached);
+			hit |= grep_submodule(repo, opt, pathspec, NULL,
+					      ce->name, ce->name, cached);
 		} else {
 			continue;
 		}
@@ -494,11 +497,10 @@ static int grep_cache(struct grep_opt *opt,
 	return hit;
 }
 
-static int grep_tree(struct grep_opt *opt, const struct pathspec *pathspec,
-		     struct tree_desc *tree, struct strbuf *base, int tn_len,
-		     int check_attr)
+static int grep_tree(struct repository *repo, struct grep_opt *opt,
+		     const struct pathspec *pathspec, struct tree_desc *tree,
+		     struct strbuf *base, int tn_len, int check_attr)
 {
-	struct repository *repo = opt->repo;
 	int hit = 0;
 	enum interesting match = entry_not_interesting;
 	struct name_entry entry;
@@ -529,8 +531,9 @@ static int grep_tree(struct grep_opt *opt, const struct pathspec *pathspec,
 		strbuf_add(base, entry.path, te_len);
 
 		if (S_ISREG(entry.mode)) {
-			hit |= grep_oid(opt, &entry.oid, base->buf, tn_len,
-					 check_attr ? base->buf + tn_len : NULL);
+			hit |= grep_oid(repo, opt, &entry.oid, base->buf,
+					tn_len, check_attr ? base->buf + tn_len
+					: NULL);
 		} else if (S_ISDIR(entry.mode)) {
 			enum object_type type;
 			struct tree_desc sub;
@@ -544,11 +547,11 @@ static int grep_tree(struct grep_opt *opt, const struct pathspec *pathspec,
 
 			strbuf_addch(base, '/');
 			init_tree_desc(&sub, data, size);
-			hit |= grep_tree(opt, pathspec, &sub, base, tn_len,
-					 check_attr);
+			hit |= grep_tree(repo, opt, pathspec, &sub, base,
+					 tn_len, check_attr);
 			free(data);
 		} else if (recurse_submodules && S_ISGITLINK(entry.mode)) {
-			hit |= grep_submodule(opt, pathspec, &entry.oid,
+			hit |= grep_submodule(repo, opt, pathspec, &entry.oid,
 					      base->buf, base->buf + tn_len,
 					      1); /* ignored */
 		}
@@ -563,14 +566,13 @@ static int grep_tree(struct grep_opt *opt, const struct pathspec *pathspec,
 	return hit;
 }
 
-static int grep_submodule(struct grep_opt *opt,
+static int grep_submodule(struct repository *superproject,
+			  struct grep_opt *opt,
 			  const struct pathspec *pathspec,
 			  const struct object_id *oid,
 			  const char *filename, const char *path, int cached)
 {
 	struct repository *subrepo;
-	struct repository *superproject = opt->repo;
-	struct grep_opt subopt;
 	int hit = 0;
 
 	if (!is_submodule_active(superproject, path))
@@ -605,9 +607,6 @@ static int grep_submodule(struct grep_opt *opt,
 	add_submodule_odb_by_path(subrepo->objects->odb->path);
 	obj_read_unlock();
 
-	memcpy(&subopt, opt, sizeof(subopt));
-	subopt.repo = subrepo;
-
 	if (oid) {
 		enum object_type object_type;
 		struct tree_desc tree;
@@ -628,22 +627,23 @@ static int grep_submodule(struct grep_opt *opt,
 		strbuf_addch(&base, '/');
 
 		init_tree_desc(&tree, data, size);
-		hit = grep_tree(&subopt, pathspec, &tree, &base, base.len,
+		hit = grep_tree(subrepo, opt, pathspec, &tree, &base, base.len,
 				object_type == OBJ_COMMIT);
 		strbuf_release(&base);
 		free(data);
 	} else {
-		hit = grep_cache(&subopt, pathspec, cached);
+		hit = grep_cache(subrepo, opt, pathspec, cached);
 	}
 
 	return hit;
 }
 
-static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
+static int grep_object(struct repository *repo, struct grep_opt *opt,
+		       const struct pathspec *pathspec,
 		       struct object *obj, const char *name, const char *path)
 {
 	if (obj->type == OBJ_BLOB)
-		return grep_oid(opt, &obj->oid, name, 0, path);
+		return grep_oid(repo, opt, &obj->oid, name, 0, path);
 	if (obj->type == OBJ_COMMIT || obj->type == OBJ_TREE) {
 		struct tree_desc tree;
 		void *data;
@@ -651,7 +651,7 @@ static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
 		struct strbuf base;
 		int hit, len;
 
-		data = read_object_with_reference(opt->repo, &obj->oid, OBJ_TREE,
+		data = read_object_with_reference(repo, &obj->oid, OBJ_TREE,
 						  &size, NULL);
 		if (!data)
 			die(_("unable to read tree (%s)"), oid_to_hex(&obj->oid));
@@ -663,7 +663,7 @@ static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
 			strbuf_addch(&base, ':');
 		}
 		init_tree_desc(&tree, data, size);
-		hit = grep_tree(opt, pathspec, &tree, &base, base.len,
+		hit = grep_tree(repo, opt, pathspec, &tree, &base, base.len,
 				obj->type == OBJ_COMMIT);
 		strbuf_release(&base);
 		free(data);
@@ -672,7 +672,8 @@ static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
 	die(_("unable to grep from object of type %s"), type_name(obj->type));
 }
 
-static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
+static int grep_objects(struct repository *repo, struct grep_opt *opt,
+			const struct pathspec *pathspec,
 			const struct object_array *list)
 {
 	unsigned int i;
@@ -683,7 +684,7 @@ static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
 		struct object *real_obj;
 
 		obj_read_lock();
-		real_obj = deref_tag(opt->repo, list->objects[i].item,
+		real_obj = deref_tag(repo, list->objects[i].item,
 				     NULL, 0);
 		obj_read_unlock();
 
@@ -700,12 +701,13 @@ static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
 
 		/* load the gitmodules file for this rev */
 		if (recurse_submodules) {
-			submodule_free(opt->repo);
+			submodule_free(repo);
 			obj_read_lock();
 			gitmodules_config_oid(&real_obj->oid);
 			obj_read_unlock();
 		}
-		if (grep_object(opt, pathspec, real_obj, list->objects[i].name,
+		if (grep_object(repo, opt, pathspec, real_obj,
+				list->objects[i].name,
 				list->objects[i].path)) {
 			hit = 1;
 			if (opt->status_only)
@@ -715,8 +717,9 @@ static int grep_objects(struct grep_opt *opt, const struct pathspec *pathspec,
 	return hit;
 }
 
-static int grep_directory(struct grep_opt *opt, const struct pathspec *pathspec,
-			  int exc_std, int use_index)
+static int grep_directory(struct repository *repo, struct grep_opt *opt,
+			  const struct pathspec *pathspec, int exc_std,
+			  int use_index)
 {
 	struct dir_struct dir = DIR_INIT;
 	int i, hit = 0;
@@ -726,9 +729,9 @@ static int grep_directory(struct grep_opt *opt, const struct pathspec *pathspec,
 	if (exc_std)
 		setup_standard_excludes(&dir);
 
-	fill_directory(&dir, opt->repo->index, pathspec);
+	fill_directory(&dir, repo->index, pathspec);
 	for (i = 0; i < dir.nr; i++) {
-		hit |= grep_file(opt, dir.entries[i]->name);
+		hit |= grep_file(repo, opt, dir.entries[i]->name);
 		if (hit && opt->status_only)
 			break;
 	}
@@ -963,7 +966,7 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 	};
 	grep_prefix = prefix;
 
-	grep_init(&opt, the_repository);
+	grep_init(&opt);
 	git_config(grep_cmd_config, &opt);
 
 	/*
@@ -1172,19 +1175,20 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 
 	if (!use_index || untracked) {
 		int use_exclude = (opt_exclude < 0) ? use_index : !!opt_exclude;
-		hit = grep_directory(&opt, &pathspec, use_exclude, use_index);
+		hit = grep_directory(the_repository, &opt, &pathspec,
+				     use_exclude, use_index);
 	} else if (0 <= opt_exclude) {
 		die(_("--[no-]exclude-standard cannot be used for tracked contents"));
 	} else if (!list.nr) {
 		if (!cached)
 			setup_work_tree();
 
-		hit = grep_cache(&opt, &pathspec, cached);
+		hit = grep_cache(the_repository,&opt, &pathspec, cached);
 	} else {
 		if (cached)
 			die(_("both --cached and trees are given"));
 
-		hit = grep_objects(&opt, &pathspec, &list);
+		hit = grep_objects(the_repository, &opt, &pathspec, &list);
 	}
 
 	if (num_threads > 1)

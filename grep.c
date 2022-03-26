@@ -105,12 +105,11 @@ int grep_config(const char *var, const char *value, void *cb)
 	return 0;
 }
 
-void grep_init(struct grep_opt *opt, struct repository *repo)
+void grep_init(struct grep_opt *opt)
 {
 	struct grep_opt blank = GREP_OPT_INIT;
 	memcpy(opt, &blank, sizeof(*opt));
 
-	opt->repo = repo;
 	opt->pattern_tail = &opt->pattern_list;
 	opt->header_tail = &opt->header_list;
 }
@@ -1286,7 +1285,7 @@ static int match_funcname(struct grep_opt *opt, struct grep_source *gs,
 {
 	xdemitconf_t *xecfg = opt->priv;
 	if (xecfg && !xecfg->find_func) {
-		grep_source_load_driver(gs, opt->repo->index);
+		grep_source_load_driver(gs, gs->repo->index);
 		if (gs->driver->funcname.pattern) {
 			const struct userdiff_funcname *pe = &gs->driver->funcname;
 			xdiff_set_find_func(xecfg, pe->pattern, pe->cflags);
@@ -1554,7 +1553,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 	opt->last_shown = 0;
 
 	if (opt->allow_textconv) {
-		grep_source_load_driver(gs, opt->repo->index);
+		grep_source_load_driver(gs, gs->repo->index);
 		/*
 		 * We might set up the shared textconv cache data here, which
 		 * is not thread-safe. Also, get_oid_with_context() and
@@ -1564,7 +1563,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 		 */
 		grep_attr_lock();
 		obj_read_lock();
-		textconv = userdiff_get_textconv(opt->repo, gs->driver);
+		textconv = userdiff_get_textconv(gs->repo, gs->driver);
 		obj_read_unlock();
 		grep_attr_unlock();
 	}
@@ -1576,11 +1575,11 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 	if (!textconv) {
 		switch (opt->binary) {
 		case GREP_BINARY_DEFAULT:
-			if (grep_source_is_binary(gs, opt->repo->index))
+			if (grep_source_is_binary(gs, gs->repo->index))
 				binary_match_only = 1;
 			break;
 		case GREP_BINARY_NOMATCH:
-			if (grep_source_is_binary(gs, opt->repo->index))
+			if (grep_source_is_binary(gs, gs->repo->index))
 				return 0; /* Assume unmatch */
 			break;
 		case GREP_BINARY_TEXT:
@@ -1595,7 +1594,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 
 	try_lookahead = should_lookahead(opt);
 
-	if (fill_textconv_grep(opt->repo, textconv, gs) < 0)
+	if (fill_textconv_grep(gs->repo, textconv, gs) < 0)
 		return 0;
 
 	bol = gs->buf;
@@ -1802,7 +1801,7 @@ int grep_source(struct grep_opt *opt, struct grep_source *gs)
 
 static void grep_source_init_buf(struct grep_source *gs,
 				 const char *buf,
-				 unsigned long size)
+				 unsigned long size, struct repository *repo)
 {
 	gs->type = GREP_SOURCE_BUF;
 	gs->name = NULL;
@@ -1811,14 +1810,16 @@ static void grep_source_init_buf(struct grep_source *gs,
 	gs->size = size;
 	gs->driver = NULL;
 	gs->identifier = NULL;
+	gs->repo = repo;
 }
 
-int grep_buffer(struct grep_opt *opt, const char *buf, unsigned long size)
+int grep_buffer(struct repository *repo, struct grep_opt *opt,
+		const char *buf, unsigned long size)
 {
 	struct grep_source gs;
 	int r;
 
-	grep_source_init_buf(&gs, buf, size);
+	grep_source_init_buf(&gs, buf, size, repo);
 
 	r = grep_source(opt, &gs);
 
@@ -1827,7 +1828,7 @@ int grep_buffer(struct grep_opt *opt, const char *buf, unsigned long size)
 }
 
 void grep_source_init_file(struct grep_source *gs, const char *name,
-			   const char *path)
+			   const char *path, struct repository *repo)
 {
 	gs->type = GREP_SOURCE_FILE;
 	gs->name = xstrdup_or_null(name);
@@ -1836,6 +1837,7 @@ void grep_source_init_file(struct grep_source *gs, const char *name,
 	gs->size = 0;
 	gs->driver = NULL;
 	gs->identifier = xstrdup(path);
+	gs->repo = repo;
 }
 
 void grep_source_init_oid(struct grep_source *gs, const char *name,

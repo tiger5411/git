@@ -1847,7 +1847,7 @@ void repo_init_revisions(struct repository *r,
 	revs->commit_format = CMIT_FMT_DEFAULT;
 	revs->expand_tabs_in_log_default = 8;
 
-	grep_init(&revs->grep_filter, revs->repo);
+	grep_init(&revs->grep_filter);
 	revs->grep_filter.status_only = 1;
 
 	repo_diff_setup(revs->repo, &revs->diffopt);
@@ -3804,9 +3804,10 @@ static int commit_match(struct commit *commit, struct rev_info *opt)
 	 * changes before returning.
 	 */
 	if (buf.len)
-		retval = grep_buffer(&opt->grep_filter, buf.buf, buf.len);
+		retval = grep_buffer(opt->repo, &opt->grep_filter, buf.buf,
+				     buf.len);
 	else
-		retval = grep_buffer(&opt->grep_filter,
+		retval = grep_buffer(opt->repo, &opt->grep_filter,
 				     (char *)message, strlen(message));
 	strbuf_release(&buf);
 	unuse_commit_buffer(commit, message);
