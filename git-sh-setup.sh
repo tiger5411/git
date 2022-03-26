@@ -187,8 +187,7 @@ cd_to_toplevel () {
 require_work_tree_exists () {
 	if test "z$(git rev-parse --is-bare-repository)" != zfalse
 	then
-		program_name=$0
-		die "$(eval_gettext "fatal: \$program_name cannot be used without a working tree.")"
+		die "fatal: $0 cannot be used without a working tree."
 	fi
 }
 
