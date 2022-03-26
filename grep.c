@@ -115,12 +115,20 @@ void grep_init(struct grep_opt *opt, struct repository *repo)
 	opt->header_tail = &opt->header_list;
 }
 
+static void grep_pat_init(struct grep_pat *pat)
+{
+	struct grep_pat blank = GREP_PAT_INIT;
+	memcpy(pat, &blank, sizeof(*pat));
+}
+
 static struct grep_pat *create_grep_pat(const char *pat, size_t patlen,
 					const char *origin, int no,
 					enum grep_pat_token t,
 					enum grep_header_field field)
 {
-	struct grep_pat *p = xcalloc(1, sizeof(*p));
+	struct grep_pat *p = xmalloc(sizeof(*p));
+
+	grep_pat_init(p);
 	p->pattern = xmemdupz(pat, patlen);
 	p->patternlen = patlen;
 	p->origin = origin;

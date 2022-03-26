@@ -82,6 +82,7 @@ struct grep_pat {
 	unsigned fixed:1;
 	unsigned is_fixed:1;
 };
+#define GREP_PAT_INIT { 0 }
 
 enum grep_expr_node {
 	GREP_NODE_ATOM,
