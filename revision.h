@@ -359,6 +359,7 @@ struct rev_info {
 	.expand_tabs_in_log_default = 8, \
 	.grep_filter = GREP_OPT_INIT, \
 	.grep_filter.status_only = 1, \
+	.notes_opt = DISPLAY_NOTES_OPT_INIT, \
 }
 
 int ref_excluded(struct string_list *, const char *path);

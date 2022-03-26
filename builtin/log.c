@@ -862,7 +862,7 @@ static enum cover_setting config_cover_letter;
 static const char *config_output_directory;
 static enum cover_from_description cover_from_description_mode = COVER_FROM_MESSAGE;
 static int show_notes;
-static struct display_notes_opt notes_opt;
+static struct display_notes_opt notes_opt = DISPLAY_NOTES_OPT_INIT;
 
 static enum cover_from_description parse_cover_from_description(const char *arg)
 {
@@ -1869,7 +1869,6 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 	extra_cc.strdup_strings = 1;
 
 	init_log_defaults();
-	init_display_notes(&notes_opt);
 	git_config(git_format_config, NULL);
 	repo_init_revisions(the_repository, &rev, prefix);
 	git_config(grep_config, &rev.grep_filter);

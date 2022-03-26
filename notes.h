@@ -260,6 +260,11 @@ struct display_notes_opt {
 	struct string_list extra_notes_refs;
 };
 
+#define DISPLAY_NOTES_OPT_INIT { \
+	.use_default_notes = -1, \
+	.extra_notes_refs = STRING_LIST_INIT_NODUP, \
+}
+
 /*
  * Initialize a display_notes_opt to its default value.
  */

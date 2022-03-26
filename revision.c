@@ -1842,8 +1842,6 @@ void repo_init_revisions(struct repository *r,
 		revs->diffopt.prefix = prefix;
 		revs->diffopt.prefix_length = strlen(prefix);
 	}
-
-	init_display_notes(&revs->notes_opt);
 }
 
 static void add_pending_commit_list(struct rev_info *revs,
