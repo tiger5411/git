@@ -206,13 +206,13 @@ require_clean_work_tree () {
 
 	if ! git diff-files --quiet --ignore-submodules
 	then
-		action=$1
-		case "$action" in
+		case "$1" in
 		"rewrite branches")
 			gettextln "Cannot rewrite branches: You have unstaged changes." >&2
 			;;
 		*)
-			eval_gettextln "Cannot \$action: You have unstaged changes." >&2
+			# Some out-of-tree user of require_clean_work_tree()
+			echo "Cannot $1: You have unstaged changes." >&2
 			;;
 		esac
 		err=1
@@ -222,8 +222,15 @@ require_clean_work_tree () {
 	then
 		if test $err = 0
 		then
-			action=$1
-			eval_gettextln "Cannot \$action: Your index contains uncommitted changes." >&2
+			case "$1" in
+			"rewrite branches")
+				gettextln "Cannot rewrite branches: You have unstaged changes." >&2
+				;;
+			*)
+				# Some out-of-tree user of require_clean_work_tree()
+				echo "Cannot $1: Your index contains uncommitted changes." >&2
+				;;
+			esac
 		else
 		    gettextln "Additionally, your index contains uncommitted changes." >&2
 		fi
