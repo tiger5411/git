@@ -14,11 +14,6 @@ static int grep_source_load(struct grep_source *gs);
 static int grep_source_is_binary(struct grep_source *gs,
 				 struct index_state *istate);
 
-static void std_output(struct grep_opt *opt, const void *buf, size_t size)
-{
-	fwrite(buf, size, 1, stdout);
-}
-
 static const char *color_grep_slots[] = {
 	[GREP_COLOR_CONTEXT]	    = "context",
 	[GREP_COLOR_FILENAME]	    = "filename",
@@ -831,21 +826,30 @@ static int word_char(char ch)
 	return isalnum(ch) || ch == '_';
 }
 
+static void grep_output(struct grep_opt *opt, const void *buf, size_t size)
+{
+	if (!opt->output) {
+		fwrite(buf, size, 1, stdout);
+		return;
+	}
+	opt->output(opt, buf, size);
+}
+
 static void output_color(struct grep_opt *opt, const void *data, size_t size,
 			 const char *color)
 {
 	if (want_color(opt->color) && color && color[0]) {
-		opt->output(opt, color, strlen(color));
-		opt->output(opt, data, size);
-		opt->output(opt, GIT_COLOR_RESET, strlen(GIT_COLOR_RESET));
+		grep_output(opt, color, strlen(color));
+		grep_output(opt, data, size);
+		grep_output(opt, GIT_COLOR_RESET, strlen(GIT_COLOR_RESET));
 	} else
-		opt->output(opt, data, size);
+		grep_output(opt, data, size);
 }
 
 static void output_sep(struct grep_opt *opt, char sign)
 {
 	if (opt->null_following_name)
-		opt->output(opt, "\0", 1);
+		grep_output(opt, "\0", 1);
 	else
 		output_color(opt, &sign, 1, opt->colors[GREP_COLOR_SEP]);
 }
@@ -853,7 +857,7 @@ static void output_sep(struct grep_opt *opt, char sign)
 static void show_name(struct grep_opt *opt, const char *name)
 {
 	output_color(opt, name, strlen(name), opt->colors[GREP_COLOR_FILENAME]);
-	opt->output(opt, opt->null_following_name ? "\0" : "\n", 1);
+	grep_output(opt, opt->null_following_name ? "\0" : "\n", 1);
 }
 
 static int patmatch(struct grep_pat *p,
@@ -1162,7 +1166,7 @@ static void show_line_header(struct grep_opt *opt, const char *name,
 {
 	if (opt->heading && opt->last_shown == 0) {
 		output_color(opt, name, strlen(name), opt->colors[GREP_COLOR_FILENAME]);
-		opt->output(opt, "\n", 1);
+		grep_output(opt, "\n", 1);
 	}
 	opt->last_shown = lno;
 
@@ -1199,16 +1203,16 @@ static void show_line(struct grep_opt *opt,
 
 	if (opt->file_break && opt->last_shown == 0) {
 		if (opt->show_hunk_mark)
-			opt->output(opt, "\n", 1);
+			grep_output(opt, "\n", 1);
 	} else if (opt->pre_context || opt->post_context || opt->funcbody) {
 		if (opt->last_shown == 0) {
 			if (opt->show_hunk_mark) {
 				output_color(opt, "--", 2, opt->colors[GREP_COLOR_SEP]);
-				opt->output(opt, "\n", 1);
+				grep_output(opt, "\n", 1);
 			}
 		} else if (lno > opt->last_shown + 1) {
 			output_color(opt, "--", 2, opt->colors[GREP_COLOR_SEP]);
-			opt->output(opt, "\n", 1);
+			grep_output(opt, "\n", 1);
 		}
 	}
 	if (!opt->only_matching) {
@@ -1247,7 +1251,7 @@ static void show_line(struct grep_opt *opt,
 			output_color(opt, bol + match.rm_so,
 				     match.rm_eo - match.rm_so, match_color);
 			if (opt->only_matching)
-				opt->output(opt, "\n", 1);
+				grep_output(opt, "\n", 1);
 			bol += match.rm_eo;
 			cno += match.rm_eo;
 			rest -= match.rm_eo;
@@ -1256,7 +1260,7 @@ static void show_line(struct grep_opt *opt,
 	}
 	if (!opt->only_matching) {
 		output_color(opt, bol, rest, line_color);
-		opt->output(opt, "\n", 1);
+		grep_output(opt, "\n", 1);
 	}
 }
 
@@ -1534,9 +1538,6 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 		BUG("grep call which could print a name requires "
 		    "grep_source.name be non-NULL");
 
-	if (!opt->output)
-		opt->output = std_output;
-
 	if (opt->pre_context || opt->post_context || opt->file_break ||
 	    opt->funcbody) {
 		/* Show hunk marks, except for the first file. */
@@ -1547,7 +1548,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 		 * the first file.  Always put hunk marks in that case
 		 * and skip the very first one later in work_done().
 		 */
-		if (opt->output != std_output)
+		if (opt->output)
 			opt->show_hunk_mark = 1;
 	}
 	opt->last_shown = 0;
@@ -1652,10 +1653,10 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 			if (opt->count)
 				goto next_line;
 			if (binary_match_only) {
-				opt->output(opt, "Binary file ", 12);
+				grep_output(opt, "Binary file ", 12);
 				output_color(opt, gs->name, strlen(gs->name),
 					     opt->colors[GREP_COLOR_FILENAME]);
-				opt->output(opt, " matches\n", 9);
+				grep_output(opt, " matches\n", 9);
 				return 1;
 			}
 			/* Hit at this line.  If we haven't shown the
@@ -1743,7 +1744,7 @@ static int grep_source_1(struct grep_opt *opt, struct grep_source *gs, int colle
 			output_sep(opt, ':');
 		}
 		xsnprintf(buf, sizeof(buf), "%u\n", count);
-		opt->output(opt, buf, strlen(buf));
+		grep_output(opt, buf, strlen(buf));
 		return 1;
 	}
 	return !!last_hit;

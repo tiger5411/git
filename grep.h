@@ -181,7 +181,6 @@ struct grep_opt {
 	}, \
 	.only_matching = 0, \
 	.color = -1, \
-	.output = std_output, \
 }
 
 int grep_config(const char *var, const char *value, void *);
