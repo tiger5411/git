@@ -422,87 +422,10 @@ static void run_pager(struct grep_opt *opt, const char *prefix)
 		exit(status);
 }
 
-static int grep_cache(struct grep_opt *opt,
-		      const struct pathspec *pathspec, int cached);
-static int grep_tree(struct grep_opt *opt, const struct pathspec *pathspec,
-		     struct tree_desc *tree, struct strbuf *base, int tn_len,
-		     int check_attr);
-
 static int grep_submodule(struct grep_opt *opt,
 			  const struct pathspec *pathspec,
 			  const struct object_id *oid,
-			  const char *filename, const char *path, int cached)
-{
-	struct repository *subrepo;
-	struct repository *superproject = opt->repo;
-	struct grep_opt subopt;
-	int hit = 0;
-
-	if (!is_submodule_active(superproject, path))
-		return 0;
-
-	subrepo = xmalloc(sizeof(*subrepo));
-	if (repo_submodule_init(subrepo, superproject, path, null_oid())) {
-		free(subrepo);
-		return 0;
-	}
-	ALLOC_GROW(repos_to_free, repos_to_free_nr + 1, repos_to_free_alloc);
-	repos_to_free[repos_to_free_nr++] = subrepo;
-
-	/*
-	 * NEEDSWORK: repo_read_gitmodules() might call
-	 * add_to_alternates_memory() via config_from_gitmodules(). This
-	 * operation causes a race condition with concurrent object readings
-	 * performed by the worker threads. That's why we need obj_read_lock()
-	 * here. It should be removed once it's no longer necessary to add the
-	 * subrepo's odbs to the in-memory alternates list.
-	 */
-	obj_read_lock();
-	repo_read_gitmodules(subrepo, 0);
-
-	/*
-	 * All code paths tested by test code no longer need submodule ODBs to
-	 * be added as alternates, but add it to the list just in case.
-	 * Submodule ODBs added through add_submodule_odb_by_path() will be
-	 * lazily registered as alternates when needed (and except in an
-	 * unexpected code interaction, it won't be needed).
-	 */
-	add_submodule_odb_by_path(subrepo->objects->odb->path);
-	obj_read_unlock();
-
-	memcpy(&subopt, opt, sizeof(subopt));
-	subopt.repo = subrepo;
-
-	if (oid) {
-		enum object_type object_type;
-		struct tree_desc tree;
-		void *data;
-		unsigned long size;
-		struct strbuf base = STRBUF_INIT;
-
-		obj_read_lock();
-		object_type = oid_object_info(subrepo, oid, NULL);
-		obj_read_unlock();
-		data = read_object_with_reference(subrepo,
-						  oid, OBJ_TREE,
-						  &size, NULL);
-		if (!data)
-			die(_("unable to read tree (%s)"), oid_to_hex(oid));
-
-		strbuf_addstr(&base, filename);
-		strbuf_addch(&base, '/');
-
-		init_tree_desc(&tree, data, size);
-		hit = grep_tree(&subopt, pathspec, &tree, &base, base.len,
-				object_type == OBJ_COMMIT);
-		strbuf_release(&base);
-		free(data);
-	} else {
-		hit = grep_cache(&subopt, pathspec, cached);
-	}
-
-	return hit;
-}
+			  const char *filename, const char *path, int cached);
 
 static int grep_cache(struct grep_opt *opt,
 		      const struct pathspec *pathspec, int cached)
@@ -637,6 +560,82 @@ static int grep_tree(struct grep_opt *opt, const struct pathspec *pathspec,
 	}
 
 	strbuf_release(&name);
+	return hit;
+}
+
+static int grep_submodule(struct grep_opt *opt,
+			  const struct pathspec *pathspec,
+			  const struct object_id *oid,
+			  const char *filename, const char *path, int cached)
+{
+	struct repository *subrepo;
+	struct repository *superproject = opt->repo;
+	struct grep_opt subopt;
+	int hit = 0;
+
+	if (!is_submodule_active(superproject, path))
+		return 0;
+
+	subrepo = xmalloc(sizeof(*subrepo));
+	if (repo_submodule_init(subrepo, superproject, path, null_oid())) {
+		free(subrepo);
+		return 0;
+	}
+	ALLOC_GROW(repos_to_free, repos_to_free_nr + 1, repos_to_free_alloc);
+	repos_to_free[repos_to_free_nr++] = subrepo;
+
+	/*
+	 * NEEDSWORK: repo_read_gitmodules() might call
+	 * add_to_alternates_memory() via config_from_gitmodules(). This
+	 * operation causes a race condition with concurrent object readings
+	 * performed by the worker threads. That's why we need obj_read_lock()
+	 * here. It should be removed once it's no longer necessary to add the
+	 * subrepo's odbs to the in-memory alternates list.
+	 */
+	obj_read_lock();
+	repo_read_gitmodules(subrepo, 0);
+
+	/*
+	 * All code paths tested by test code no longer need submodule ODBs to
+	 * be added as alternates, but add it to the list just in case.
+	 * Submodule ODBs added through add_submodule_odb_by_path() will be
+	 * lazily registered as alternates when needed (and except in an
+	 * unexpected code interaction, it won't be needed).
+	 */
+	add_submodule_odb_by_path(subrepo->objects->odb->path);
+	obj_read_unlock();
+
+	memcpy(&subopt, opt, sizeof(subopt));
+	subopt.repo = subrepo;
+
+	if (oid) {
+		enum object_type object_type;
+		struct tree_desc tree;
+		void *data;
+		unsigned long size;
+		struct strbuf base = STRBUF_INIT;
+
+		obj_read_lock();
+		object_type = oid_object_info(subrepo, oid, NULL);
+		obj_read_unlock();
+		data = read_object_with_reference(subrepo,
+						  oid, OBJ_TREE,
+						  &size, NULL);
+		if (!data)
+			die(_("unable to read tree (%s)"), oid_to_hex(oid));
+
+		strbuf_addstr(&base, filename);
+		strbuf_addch(&base, '/');
+
+		init_tree_desc(&tree, data, size);
+		hit = grep_tree(&subopt, pathspec, &tree, &base, base.len,
+				object_type == OBJ_COMMIT);
+		strbuf_release(&base);
+		free(data);
+	} else {
+		hit = grep_cache(&subopt, pathspec, cached);
+	}
+
 	return hit;
 }
 
