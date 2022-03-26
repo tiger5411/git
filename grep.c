@@ -100,15 +100,6 @@ int grep_config(const char *var, const char *value, void *cb)
 	return 0;
 }
 
-void grep_init(struct grep_opt *opt)
-{
-	struct grep_opt blank = GREP_OPT_INIT;
-	memcpy(opt, &blank, sizeof(*opt));
-
-	opt->pattern_tail = &opt->pattern_list;
-	opt->header_tail = &opt->header_list;
-}
-
 static void grep_pat_init(struct grep_pat *pat)
 {
 	struct grep_pat blank = GREP_PAT_INIT;
@@ -132,7 +123,7 @@ static struct grep_pat *create_grep_pat(const char *pat, size_t patlen,
 	return p;
 }
 
-static void do_append_grep_pat(struct grep_pat ***tail, struct grep_pat *p)
+static void do_append_grep_list(struct grep_pat ***tail, struct grep_pat *p)
 {
 	**tail = p;
 	*tail = &p->next;
@@ -169,6 +160,20 @@ static void do_append_grep_pat(struct grep_pat ***tail, struct grep_pat *p)
 	}
 }
 
+static void do_append_grep_pattern(struct grep_opt *opt, struct grep_pat *p)
+{
+	if (!opt->pattern_tail)
+		opt->pattern_tail = &opt->pattern_list;
+	do_append_grep_list(&opt->pattern_tail, p);
+}
+
+static void do_append_grep_header(struct grep_opt *opt, struct grep_pat *p)
+{
+	if (!opt->header_tail)
+		opt->header_tail = &opt->header_list;
+	do_append_grep_list(&opt->header_tail, p);
+}
+
 void append_header_grep_pattern(struct grep_opt *opt,
 				enum grep_header_field field, const char *pat)
 {
@@ -176,7 +181,7 @@ void append_header_grep_pattern(struct grep_opt *opt,
 					     GREP_PATTERN_HEAD, field);
 	if (field == GREP_HEADER_REFLOG)
 		opt->use_reflog_filter = 1;
-	do_append_grep_pat(&opt->header_tail, p);
+	do_append_grep_header(opt, p);
 }
 
 void append_grep_pattern(struct grep_opt *opt, const char *pat,
@@ -189,7 +194,7 @@ void append_grep_pat(struct grep_opt *opt, const char *pat, size_t patlen,
 		     const char *origin, int no, enum grep_pat_token t)
 {
 	struct grep_pat *p = create_grep_pat(pat, patlen, origin, no, t, 0);
-	do_append_grep_pat(&opt->pattern_tail, p);
+	do_append_grep_pattern(opt, p);
 }
 
 struct grep_opt *grep_opt_dup(const struct grep_opt *opt)
@@ -199,7 +204,7 @@ struct grep_opt *grep_opt_dup(const struct grep_opt *opt)
 	*ret = *opt;
 
 	ret->pattern_list = NULL;
-	ret->pattern_tail = &ret->pattern_list;
+	ret->pattern_tail = NULL;
 
 	for(pat = opt->pattern_list; pat != NULL; pat = pat->next)
 	{
