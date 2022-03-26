@@ -329,6 +329,38 @@ struct rev_info {
 	struct tmp_objdir *remerge_objdir;
 };
 
+/**
+ * Initialize the "struct rev_info" structure with a macro.
+ *
+ * This is not sufficient (yet!) to initialize a "struct rev_info",
+ * but it's OK (but redundant) to use it before a call to
+ * repo_init_revisions(), which does the real initialization. By using
+ * this it's safe to call release_revisions() on the "struct rev_info"
+ * without having called repo_init_revisions().
+ *
+ * In the future this might be sufficient to fully initialize a
+ * "struct rev_info", but right now it's a central place to declare
+ * those things that we can statically initialize.
+ */
+#define REV_INFO_INIT { \
+	.abbrev = DEFAULT_ABBREV, \
+	.simplify_history = 1, \
+	.pruning.flags.recursive = 1, \
+	.pruning.flags.quick = 1, \
+	.sort_order = REV_SORT_IN_GRAPH_ORDER, \
+	.dense = 1, \
+	.max_age = -1, \
+	.min_age = -1, \
+	.skip_count = -1, \
+	.max_count = -1, \
+	.max_parents = -1, \
+	.expand_tabs_in_log = -1, \
+	.commit_format = CMIT_FMT_DEFAULT, \
+	.expand_tabs_in_log_default = 8, \
+	.grep_filter = GREP_OPT_INIT, \
+	.grep_filter.status_only = 1, \
+}
+
 int ref_excluded(struct string_list *, const char *path);
 void clear_ref_exclusion(struct string_list **);
 void add_ref_exclusion(struct string_list **, const char *exclude);
