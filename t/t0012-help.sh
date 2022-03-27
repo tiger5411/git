@@ -234,7 +234,9 @@ test_expect_success "'git help -g' section spacing" '
 
 test_expect_success 'generate builtin list' '
 	mkdir -p sub &&
-	git --list-cmds=builtins >builtins
+	git --list-cmds=builtins >builtins &&
+	uniq builtins >builtins.uniq &&
+	test_cmp builtins builtins.uniq
 '
 
 while read builtin
@@ -248,5 +250,87 @@ do
 		test_i18ngrep usage output
 	'
 done <builtins
+
+
+symlink_test_manpath () {
+	local doc="$GIT_BUILD_DIR"/Documentation &&
+	test_path_exists "$doc"/git-add.1 &&
+	test_when_finished "rm -f man1" &&
+	ln -s "$doc" man1
+}
+
+# Use "git-add" as a guinea pig, and check the basic sanity of the
+# output.
+test_lazy_prereq HAVE_BUILT_DOCS '
+	symlink_test_manpath &&
+	test_when_finished "rm -f man.txt" &&
+	GIT_TEST_MANPATH="$PWD" git add --help >man.txt &&
+	grep GIT-ADD man.txt &&
+	grep ^SYNOPSIS man.txt
+'
+
+is_documented () {
+	cat >undocumented <<-\EOF
+	add--interactive
+	bisect--helper
+	checkout--worker
+	difftool--helper
+	env--helper
+	merge-octopus
+	merge-ours
+	merge-recursive
+	merge-recursive-ours
+	merge-recursive-theirs
+	merge-resolve
+	merge-subtree
+	pickaxe
+	remote-ftp
+	remote-ftps
+	remote-http
+	remote-https
+	submodule--helper
+	upload-archive--writer
+	EOF
+	! grep -q "^$1$" undocumented
+}
+
+test_undocumented () {
+	cmd=$1 &&
+	test_expect_success HAVE_BUILT_DOCS "$cmd does not have --help documentation" '
+		symlink_test_manpath &&
+		test_when_finished "rm -f man.txt" &&
+		test_must_fail env GIT_TEST_MANPATH="$PWD" git $cmd --help >man.txt
+	'
+}
+
+test_documented () {
+	cmd=$1 &&
+	test_expect_success HAVE_BUILT_DOCS "$cmd can handle --help" '
+		symlink_test_manpath &&
+		test_when_finished "rm -f man.txt" &&
+		GIT_TEST_MANPATH="$PWD" git $cmd --help >man.txt &&
+		grep "git-$cmd" man.txt
+	'
+}
+
+test_expect_success 'generate main list' '
+	mkdir -p sub &&
+	git --list-cmds=main >main
+'
+
+while read cmd
+do
+	case "$cmd" in
+	*.sh|*.perl|*.py)
+		    continue
+		    ;;
+	esac &&
+	if is_documented "$cmd"
+	then
+		test_documented "$cmd"
+	else
+		test_undocumented "$cmd"
+	fi
+done <main
 
 test_done
