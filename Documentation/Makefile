@@ -431,9 +431,6 @@ require-htmlrepo::
 quick-install-html: require-htmlrepo
 	'$(SHELL_PATH_SQ)' ./install-doc-quick.sh $(HTML_REPO) $(DESTDIR)$(htmldir) $(GIT_MAN_REF)
 
-print-man1:
-	@for i in $(MAN1_TXT); do echo $$i; done
-
 ## Lint: gitlink
 LINT_DOCS_GITLINK = $(patsubst %.txt,.build/lint-docs/gitlink/%.ok,$(HOWTO_TXT) $(DOC_DEP_TXT))
 $(LINT_DOCS_GITLINK): lint-gitlink.perl

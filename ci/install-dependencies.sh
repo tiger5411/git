@@ -71,6 +71,9 @@ Documentation)
 
 	test -n "$ALREADY_HAVE_ASCIIDOCTOR" ||
 	sudo gem install --version 1.5.8 asciidoctor
+
+	sudo apt-get -q -y install libcurl4-openssl-dev libssl-dev \
+		libexpat-dev gettext make
 	;;
 linux-gcc-default)
 	sudo apt-get -q update
