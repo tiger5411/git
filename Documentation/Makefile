@@ -1,3 +1,6 @@
+# Stand-alone targets, used by shared.mak to define $(GOAL_{NOT_,}STANDALONE)
+STANDALONE_TARGETS = lint-docs
+
 # Import tree-wide shared Makefile behavior and libraries
 include ../shared.mak
 
@@ -261,7 +264,7 @@ install-html: html
 ../GIT-VERSION-FILE: FORCE
 	$(QUIET_SUBDIR0)../ $(QUIET_SUBDIR1) GIT-VERSION-FILE
 
-ifneq ($(filter-out lint-docs clean,$(MAKECMDGOALS)),)
+ifndef GOAL_STANDALONE
 -include ../GIT-VERSION-FILE
 endif
 
@@ -275,7 +278,7 @@ docdep_prereqs = \
 doc.dep : $(docdep_prereqs) $(DOC_DEP_TXT) build-docdep.perl
 	$(QUIET_GEN)$(PERL_PATH) ./build-docdep.perl >$@ $(QUIET_STDERR)
 
-ifneq ($(MAKECMDGOALS),clean)
+ifndef GOAL_STANDALONE
 -include doc.dep
 endif
 
