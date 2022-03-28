@@ -173,7 +173,7 @@ jobs:
         VCPKG_ROOT: ${{github.workspace}}\compat\vcbuild\vcpkg
       run: |
         mkdir -p artifacts &&
-        make -n artifacts-tar INCLUDE_DLLS_IN_ARTIFACTS=YesPlease ARTIFACTS_DIRECTORY=artifacts NO_GETTEXT=YesPlease >artifacts.mak 2>&1
+        make -n artifacts-tar X=.exe INCLUDE_DLLS_IN_ARTIFACTS=YesPlease ARTIFACTS_DIRECTORY=artifacts NO_GETTEXT=YesPlease >artifacts.mak 2>&1
         cat artifacts.mak &&
         eval "$(grep ^tar artifacts.mak) &&
         rm -f artifacts.mak"
