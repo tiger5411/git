@@ -173,7 +173,10 @@ jobs:
         VCPKG_ROOT: ${{github.workspace}}\compat\vcbuild\vcpkg
       run: |
         mkdir -p artifacts &&
-        eval "$(make -n artifacts-tar INCLUDE_DLLS_IN_ARTIFACTS=YesPlease ARTIFACTS_DIRECTORY=artifacts NO_GETTEXT=YesPlease 2>&1 | grep ^tar)"
+        make -n artifacts-tar INCLUDE_DLLS_IN_ARTIFACTS=YesPlease ARTIFACTS_DIRECTORY=artifacts NO_GETTEXT=YesPlease >artifacts.mak 2>&1
+        cat artifacts.mak &&
+        eval "$(grep ^tar artifacts.mak) &&
+        rm -f artifacts.mak"
     - name: zip up tracked files
       run: git archive -o artifacts/tracked.tar.gz HEAD
     - name: upload tracked files and build artifacts
