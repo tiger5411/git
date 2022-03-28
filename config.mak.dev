@@ -36,6 +36,10 @@ endif
 ifneq ($(uname_S),FreeBSD)
 ifdef PROBE_COMPILER_NEEDS_std-eq-gnu99
 DEVELOPER_CFLAGS += -std=gnu99
+else
+ifdef COMPILER_name_IS_xlc
+DEVELOPER_CFLAGS += -qlanglvl=stdc99
+endif
 endif
 else
 # FreeBSD cannot limit to C99 because its system headers unconditionally
