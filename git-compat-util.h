@@ -286,9 +286,9 @@
 typedef long intptr_t;
 typedef unsigned long uintptr_t;
 #endif
-#undef _ALL_SOURCE /* AIX 5.3L defines a struct list with _ALL_SOURCE. */
+
 #include <grp.h>
-#define _ALL_SOURCE 1
+
 #endif
 
 /* used on Mac OS X */
