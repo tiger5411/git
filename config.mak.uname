@@ -305,7 +305,6 @@ ifeq ($(uname_S),NetBSD)
 	PROCFS_EXECUTABLE_PATH = /proc/curproc/exe
 endif
 ifeq ($(uname_S),AIX)
-	NO_INITGROUPS = YesPlease
 	DEFAULT_PAGER = more
 	NO_STRCASESTR = YesPlease
 	NO_MEMMEM = YesPlease
