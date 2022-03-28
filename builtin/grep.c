@@ -344,8 +344,8 @@ static void grep_source_name(struct grep_opt *opt, const char *filename,
 }
 
 static int grep_oid(struct grep_opt *opt, const struct object_id *oid,
-		     const char *filename, int tree_name_len,
-		     const char *path)
+		    const char *filename, int tree_name_len,
+		    const char *path)
 {
 	struct strbuf pathbuf = STRBUF_INIT;
 	struct grep_source gs;
@@ -467,7 +467,7 @@ static int grep_cache(struct grep_opt *opt,
 				if (ce_stage(ce) || ce_intent_to_add(ce))
 					continue;
 				hit |= grep_oid(opt, &ce->oid, name.buf,
-						 0, name.buf);
+						0, name.buf);
 			} else {
 				hit |= grep_file(opt, name.buf);
 			}
@@ -651,8 +651,7 @@ static int grep_object(struct grep_opt *opt, const struct pathspec *pathspec,
 		struct strbuf base;
 		int hit, len;
 
-		data = read_object_with_reference(opt->repo,
-						  &obj->oid, OBJ_TREE,
+		data = read_object_with_reference(opt->repo, &obj->oid, OBJ_TREE,
 						  &size, NULL);
 		if (!data)
 			die(_("unable to read tree (%s)"), oid_to_hex(&obj->oid));
