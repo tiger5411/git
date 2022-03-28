@@ -587,8 +587,10 @@ test -n "$only_range_diff" && exit
 # Checkout work area
 reset_it
 
-# Configure with prefix & cflags, fake "version" still
-~/g/git.meta/config.mak.sh --prefix "$prefix"
+# Configure, fake "version" still, and not the real --prefix to help
+# ccache along. TODO: Is that even true, or does it cache on the path
+# somehow anyway?
+~/g/git.meta/config.mak.sh
 
 # Test master first, for basic sanity
 if test -z "$no_merge_compile"
