@@ -3,9 +3,10 @@
 # Define NO_SAFESEH if you need MSVC/Visual Studio to ignore the lack of
 # Microsoft's Safe Exception Handling in libraries (such as zlib).
 # Typically required for VS2013+/32-bit compilation on Vista+ versions.
+include .build/probe/uname.mak
 
-uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
-uname_M := $(shell sh -c 'uname -m 2>/dev/null || echo not')
+uname_S = $(PROBE_UNAME_sysname)
+uname_M = $(PROBE_UNAME_machine)
 uname_O := $(shell sh -c 'uname -o 2>/dev/null || echo not')
 uname_R := $(shell sh -c 'uname -r 2>/dev/null || echo not')
 uname_P := $(shell sh -c 'uname -p 2>/dev/null || echo not')
@@ -401,7 +402,7 @@ ifeq ($(uname_S),HP-UX)
 endif
 ifeq ($(uname_S),Windows)
 	GIT_VERSION := $(GIT_VERSION).MSVC
-	pathsep = ;
+	pathsep = ; 
 	# Assume that this is built in Git for Windows' SDK
 	ifeq (MINGW32,$(MSYSTEM))
 		prefix = /mingw32
