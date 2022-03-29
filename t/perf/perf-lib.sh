@@ -195,6 +195,7 @@ test_wrapper_ () {
 	test_start_
 	test_prereq=
 	test_perf_setup_=
+	test_perf_cleanup_=
 	while test $# != 0
 	do
 		case $1 in
@@ -206,6 +207,10 @@ test_wrapper_ () {
 			test_perf_setup_=$2
 			shift
 			;;
+		--cleanup)
+			test_perf_cleanup_=$2
+			shift
+			;;
 		*)
 			break
 			;;
@@ -215,7 +220,7 @@ test_wrapper_ () {
 	test "$#" = 1 || BUG "test_wrapper_ needs 2 positional parameters"
 	export test_prereq
 	export test_perf_setup_
-
+	export test_perf_cleanup_
 	if ! test_skip "$test_title_" "$@"
 	then
 		base=$(basename "$0" .sh)
@@ -257,6 +262,16 @@ test_perf_ () {
 			test -z "$verbose" && echo
 			test_failure_ "$@"
 			break
+		fi
+		if test -n "$test_perf_cleanup_"
+		then
+			say >&3 "cleanup: $test_perf_cleanup_"
+			if ! test_eval_ $test_perf_cleanup_
+			then
+				test_failure_ "$test_perf_cleanup_"
+				break
+			fi
+
 		fi
 	done
 	if test -z "$verbose"; then
