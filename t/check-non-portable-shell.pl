@@ -23,6 +23,7 @@ for my $i (@ARGV) {
 	open(my $f, '<', $i) or die "$0: $i: $!\n";
 	while (<$f>) {
 		$func{$1} = 1 if /^\s*(\w+)\s*\(\)\s*{\s*$/;
+		delete $func{$1} if $1 and $1 eq 'gettext';
 	}
 	close $f;
 }
