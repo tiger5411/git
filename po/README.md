@@ -308,7 +308,7 @@ gettext.sh. Import it right after git-sh-setup like this:
 . git-sh-i18n
 ```
 
-And then use the `gettext` or `eval_gettext` functions:
+And then use the `gettext` or `eval_gettext_unsafe` functions:
 
 ```shell
 # For constant interface messages:
@@ -316,7 +316,7 @@ gettext "A message for the user"; echo
 
 # To interpolate variables:
 details="oh noes"
-eval_gettext "An error occurred: \$details"; echo
+eval_gettext_unsafe "An error occurred: \$details"; echo
 ```
 
 In addition we have wrappers for messages that end with a trailing
@@ -328,15 +328,19 @@ gettextln "A message for the user"
 
 # To interpolate variables:
 details="oh noes"
-eval_gettextln "An error occurred: \$details"
+eval_gettext_unsafeln "An error occurred: \$details"
 ```
 
 More documentation about the interface is available in the GNU info
-page: `info '(gettext)sh'`. Looking at git-am.sh (the first shell
-command to be translated) for examples is also useful:
+page: `info '(gettext)sh'`. Note that we do not use the `eval_gettext`
+function provided by that library. That function must not handle any
+input containing `"` characters that aren't escaped.
+
+Looking at existing examples of translated shell commands can also be
+helpful:
 
 ```shell
-git log --reverse -p --grep=i18n git-am.sh
+git grep -w -e '(eval_)?gettext(_unsafe)?(ln)?'  -- '*.sh' ':!*/**'
 ```
 
 

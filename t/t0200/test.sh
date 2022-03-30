@@ -7,8 +7,11 @@ echo
 # TRANSLATORS: This is a test. You don't need to translate it.
 gettext "TEST: A Shell test string"
 
-# TRANSLATORS: This is a test. You don't need to translate it.
+# TRANSLATORS: This line should not be marked for translation!
 eval_gettext "TEST: A Shell test \$variable"
+
+# TRANSLATORS: This is a test. You don't need to translate it.
+eval_gettext_unsafe "TEST: A Shell test \$variable"
 
 # TRANSLATORS: If you see this, Git has a bug
 _("TEST: A Shell string xgettext won't get")

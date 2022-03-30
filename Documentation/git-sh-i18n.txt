@@ -24,20 +24,6 @@ script. It provides wrappers for the GNU `gettext` and
 script, and provides pass-through fallbacks on systems
 without GNU gettext.
 
-FUNCTIONS
----------
-
-gettext::
-	Currently a dummy fall-through function implemented as a wrapper
-	around `printf(1)`. Will be replaced by a real gettext
-	implementation in a later version.
-
-eval_gettext::
-	Currently a dummy fall-through function implemented as a wrapper
-	around `printf(1)` with variables expanded by the
-	linkgit:git-sh-i18n{litdd}envsubst[1] helper. Will be replaced by a
-	real gettext implementation in a later version.
-
 GIT
 ---
 Part of the linkgit:git[1] suite

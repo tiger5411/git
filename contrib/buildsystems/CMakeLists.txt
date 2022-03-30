@@ -591,7 +591,7 @@ unset(CMAKE_REQUIRED_INCLUDES)
 
 #programs
 set(PROGRAMS_BUILT
-	git git-daemon git-http-backend git-sh-i18n--envsubst
+	git git-daemon git-http-backend
 	git-shell)
 
 if(NOT CURL_FOUND)
@@ -728,9 +728,6 @@ target_link_libraries(git-daemon common-main)
 
 add_executable(git-http-backend ${CMAKE_SOURCE_DIR}/http-backend.c)
 target_link_libraries(git-http-backend common-main)
-
-add_executable(git-sh-i18n--envsubst ${CMAKE_SOURCE_DIR}/sh-i18n--envsubst.c)
-target_link_libraries(git-sh-i18n--envsubst common-main)
 
 add_executable(git-shell ${CMAKE_SOURCE_DIR}/shell.c)
 target_link_libraries(git-shell common-main)

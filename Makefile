@@ -693,7 +693,6 @@ PROGRAMS += $(EXTRA_PROGRAMS)
 PROGRAM_OBJS += daemon.o
 PROGRAM_OBJS += http-backend.o
 PROGRAM_OBJS += imap-send.o
-PROGRAM_OBJS += sh-i18n--envsubst.o
 PROGRAM_OBJS += shell.o
 .PHONY: program-objs
 program-objs: $(PROGRAM_OBJS)
@@ -2709,7 +2708,9 @@ XGETTEXT_FLAGS = \
 XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --language=C \
 	--keyword=_ --keyword=N_ --keyword="Q_:1,2"
 XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell \
-	--keyword=gettextln --keyword=eval_gettextln
+	--keyword \
+	--keyword=gettext --keyword=gettextln \
+	--keyword=eval_gettext_unsafe --keyword=eval_gettext_unsafeln
 XGETTEXT_FLAGS_PERL = $(XGETTEXT_FLAGS) --language=Perl \
 	--keyword=__ --keyword=N__ --keyword="__n:1,2"
 LOCALIZED_C = $(C_OBJ:o=c) $(LIB_H) $(GENERATED_H)

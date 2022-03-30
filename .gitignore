@@ -149,7 +149,6 @@
 /git-send-email
 /git-send-pack
 /git-sh-i18n
-/git-sh-i18n--envsubst
 /git-sh-setup
 /git-shell
 /git-shortlog

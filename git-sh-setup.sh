@@ -194,7 +194,7 @@ require_work_tree_exists () {
 require_work_tree () {
 	test "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = true || {
 		program_name=$0
-		die "$(eval_gettext "fatal: \$program_name cannot be used without a working tree.")"
+		die "$(eval_gettext_unsafe "fatal: \$program_name cannot be used without a working tree.")"
 	}
 }
 

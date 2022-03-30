@@ -70,11 +70,11 @@ do
 		eval pretty_name=\${GITHEAD_$SHA1_UP:-$pretty_name}
 	fi
 	common=$(git merge-base --all $SHA1 $MRC) ||
-		die "$(eval_gettext "Unable to find common commit with \$pretty_name")"
+		die "$(eval_gettext_unsafe "Unable to find common commit with \$pretty_name")"
 
 	case "$LF$common$LF" in
 	*"$LF$SHA1$LF"*)
-		eval_gettextln "Already up to date with \$pretty_name"
+		eval_gettext_unsafeln "Already up to date with \$pretty_name"
 		continue
 		;;
 	esac
@@ -86,7 +86,7 @@ do
 		# tree as the intermediate result of the merge.
 		# We still need to count this as part of the parent set.
 
-		eval_gettextln "Fast-forwarding to: \$pretty_name"
+		eval_gettext_unsafeln "Fast-forwarding to: \$pretty_name"
 		git read-tree -u -m $head $SHA1 || exit
 		MRC=$SHA1 MRT=$(git write-tree)
 		continue
@@ -94,7 +94,7 @@ do
 
 	NON_FF_MERGE=1
 
-	eval_gettextln "Trying simple merge with \$pretty_name"
+	eval_gettext_unsafeln "Trying simple merge with \$pretty_name"
 	git read-tree -u -m --aggressive  $common $MRT $SHA1 || exit 2
 	next=$(git write-tree 2>/dev/null)
 	if test $? -ne 0
