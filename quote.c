@@ -455,23 +455,7 @@ int unquote_c_style(struct strbuf *sb, const char *quoted, const char **endp)
 }
 
 /* quoting as a string literal for other languages */
-
-void perl_quote_buf(struct strbuf *sb, const char *src)
-{
-	const char sq = '\'';
-	const char bq = '\\';
-	char c;
-
-	strbuf_addch(sb, sq);
-	while ((c = *src++)) {
-		if (c == sq || c == bq)
-			strbuf_addch(sb, bq);
-		strbuf_addch(sb, c);
-	}
-	strbuf_addch(sb, sq);
-}
-
-void perl_quote_buf_with_len(struct strbuf *sb, const char *src, size_t len)
+void perl_quote_buf(struct strbuf *sb, const char *src, size_t len)
 {
 	const char sq = '\'';
 	const char bq = '\\';
@@ -488,41 +472,46 @@ void perl_quote_buf_with_len(struct strbuf *sb, const char *src, size_t len)
 	strbuf_addch(sb, sq);
 }
 
-void python_quote_buf(struct strbuf *sb, const char *src)
+void python_quote_buf(struct strbuf *sb, const char *src, size_t len)
 {
+
 	const char sq = '\'';
 	const char bq = '\\';
 	const char nl = '\n';
-	char c;
+	const char *c = src;
+	const char *end = src + len;
 
 	strbuf_addch(sb, sq);
-	while ((c = *src++)) {
-		if (c == nl) {
+	while (c != end) {
+		if (*c == nl) {
 			strbuf_addch(sb, bq);
 			strbuf_addch(sb, 'n');
-			continue;
-		}
-		if (c == sq || c == bq)
+		} else if (*c == sq || *c == bq) {
 			strbuf_addch(sb, bq);
-		strbuf_addch(sb, c);
+			strbuf_addch(sb, *c);
+		} else {
+			strbuf_addch(sb, *c);
+		}
+		c++;
 	}
 	strbuf_addch(sb, sq);
 }
 
-void tcl_quote_buf(struct strbuf *sb, const char *src)
+void tcl_quote_buf(struct strbuf *sb, const char *src, size_t len)
 {
-	char c;
+	const char *c = src;
+	const char *end = src + len;
 
 	strbuf_addch(sb, '"');
-	while ((c = *src++)) {
-		switch (c) {
+	while (c != end) {
+		switch (*c) {
 		case '[': case ']':
 		case '{': case '}':
 		case '$': case '\\': case '"':
 			strbuf_addch(sb, '\\');
 			/* fallthrough */
 		default:
-			strbuf_addch(sb, c);
+			strbuf_addch(sb, *c);
 			break;
 		case '\f':
 			strbuf_addstr(sb, "\\f");
@@ -540,6 +529,7 @@ void tcl_quote_buf(struct strbuf *sb, const char *src)
 			strbuf_addstr(sb, "\\v");
 			break;
 		}
+		c++;
 	}
 	strbuf_addch(sb, '"');
 }

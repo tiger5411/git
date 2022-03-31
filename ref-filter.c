@@ -759,15 +759,15 @@ static void quote_formatting(struct strbuf *s, const char *str, ssize_t len, int
 		break;
 	case QUOTE_PERL:
 		if (len < 0)
-			perl_quote_buf(s, str);
+			perl_quote_buf(s, str, strlen(str));
 		else
-			perl_quote_buf_with_len(s, str, len);
+			perl_quote_buf(s, str, len);
 		break;
 	case QUOTE_PYTHON:
-		python_quote_buf(s, str);
+		python_quote_buf(s, str, strlen(str));
 		break;
 	case QUOTE_TCL:
-		tcl_quote_buf(s, str);
+		tcl_quote_buf(s, str, strlen(str));
 		break;
 	}
 }

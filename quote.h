@@ -94,10 +94,9 @@ char *quote_path(const char *in, const char *prefix, struct strbuf *out, unsigne
 #define QUOTE_PATH_QUOTE_SP 01
 
 /* quoting as a string literal for other languages */
-void perl_quote_buf(struct strbuf *sb, const char *src);
-void perl_quote_buf_with_len(struct strbuf *sb, const char *src, size_t len);
-void python_quote_buf(struct strbuf *sb, const char *src);
-void tcl_quote_buf(struct strbuf *sb, const char *src);
+void perl_quote_buf(struct strbuf *sb, const char *src, size_t len);
+void python_quote_buf(struct strbuf *sb, const char *src, size_t len);
+void tcl_quote_buf(struct strbuf *sb, const char *src, size_t len);
 void basic_regex_quote_buf(struct strbuf *sb, const char *src);
 
 #endif
