@@ -1069,7 +1069,8 @@ static int grab_oid(const char *name, const char *field, const struct object_id 
 		    struct atom_value *v, struct used_atom *atom)
 {
 	if (starts_with(name, field)) {
-		v->s = xstrdup(do_grab_oid(field, oid, atom));
+		v->s = xstrdupl(do_grab_oid(field, oid, atom), &v->len);
+		v->use_len = 1;
 		return 1;
 	}
 	return 0;

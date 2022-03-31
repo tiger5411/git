@@ -319,6 +319,7 @@ static int get_value(const char *key_, const char *regex_, unsigned flags)
 
 	if (use_key_regexp) {
 		char *tl;
+		size_t len;
 
 		/*
 		 * NEEDSWORK: this naive pattern lowercasing obviously does not
@@ -326,8 +327,8 @@ static int get_value(const char *key_, const char *regex_, unsigned flags)
 		 * Perhaps we should deprecate this altogether someday.
 		 */
 
-		key = xstrdup(key_);
-		for (tl = key + strlen(key) - 1;
+		key = xstrdupl(key_, &len);
+		for (tl = key + len - 1;
 		     tl >= key && *tl != '.';
 		     tl--)
 			*tl = tolower(*tl);

@@ -595,10 +595,11 @@ struct walker *get_http_walker(const char *url)
 	char *s;
 	struct walker_data *data = xmalloc(sizeof(struct walker_data));
 	struct walker *walker = xmalloc(sizeof(struct walker));
+	size_t len;
 
 	data->alt = xmalloc(sizeof(*data->alt));
-	data->alt->base = xstrdup(url);
-	for (s = data->alt->base + strlen(data->alt->base) - 1; *s == '/'; --s)
+	data->alt->base = xstrdupl(url, &len);
+	for (s = data->alt->base + len - 1; *s == '/'; --s)
 		*s = 0;
 
 	data->alt->got_indices = 0;

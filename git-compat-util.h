@@ -926,6 +926,7 @@ static inline unsigned long cast_size_t_to_ulong(size_t a)
 # define xalloca_free(p)    (free(p))
 #endif
 char *xstrdup(const char *str);
+char *xstrdupl(const char *str, size_t *len);
 void *xmalloc(size_t size);
 void *xmallocz(size_t size);
 void *xmallocz_gently(size_t size);

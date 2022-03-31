@@ -1368,8 +1368,7 @@ static void get_commit_info(struct am_state *state, struct commit *commit)
 	msg = strstr(buffer, "\n\n");
 	if (!msg)
 		die(_("unable to parse commit %s"), oid_to_hex(&commit->object.oid));
-	state->msg = xstrdup(msg + 2);
-	state->msg_len = strlen(state->msg);
+	state->msg = xstrdupl(msg + 2, &state->msg_len);
 	unuse_commit_buffer(commit, buffer);
 }
 

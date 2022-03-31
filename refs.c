@@ -1304,12 +1304,11 @@ int parse_hide_refs_config(const char *var, const char *value, const char *secti
 	    (!parse_config_key(var, section, NULL, NULL, &key) &&
 	     !strcmp(key, "hiderefs"))) {
 		char *ref;
-		int len;
+		size_t len;
 
 		if (!value)
 			return config_error_nonbool(var);
-		ref = xstrdup(value);
-		len = strlen(ref);
+		ref = xstrdupl(value, &len);
 		while (len && ref[len - 1] == '/')
 			ref[--len] = '\0';
 		if (!hide_refs) {

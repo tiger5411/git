@@ -575,6 +575,8 @@ void parse_pathspec(struct pathspec *pathspec,
 
 	/* No arguments with prefix -> prefix pathspec */
 	if (!entry) {
+		size_t len;
+
 		if (flags & PATHSPEC_PREFER_FULL)
 			return;
 
@@ -582,10 +584,9 @@ void parse_pathspec(struct pathspec *pathspec,
 			BUG("PATHSPEC_PREFER_CWD requires arguments");
 
 		pathspec->items = CALLOC_ARRAY(item, 1);
-		item->match = xstrdup(prefix);
-		item->original = xstrdup(prefix);
-		item->nowildcard_len = item->len = strlen(prefix);
-		item->prefix = item->len;
+		item->match = xstrdupl(prefix, &len);
+		item->original = xstrndup(prefix, len);
+		item->nowildcard_len = item->prefix = item->len = len;
 		pathspec->nr = 1;
 		return;
 	}

@@ -143,9 +143,9 @@ static char *relative_url(const char *remote_url,
 	int is_relative = 0;
 	int colonsep = 0;
 	char *out;
-	char *remoteurl = xstrdup(remote_url);
+	size_t len;
+	char *remoteurl = xstrdupl(remote_url, &len);
 	struct strbuf sb = STRBUF_INIT;
-	size_t len = strlen(remoteurl);
 
 	if (is_dir_sep(remoteurl[len-1]))
 		remoteurl[len-1] = '\0';

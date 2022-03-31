@@ -31,6 +31,13 @@ static int memory_limit_check(size_t size, int gentle)
 	return 0;
 }
 
+char *xstrdupl(const char *str, size_t *len)
+{
+	*len = strlen(str);
+
+	return xstrndup(str, *len);
+}
+
 char *xstrdup(const char *str)
 {
 	char *ret = strdup(str);
