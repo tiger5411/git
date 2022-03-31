@@ -649,18 +649,15 @@ struct ref_formatting_state {
 
 struct atom_value {
 	const char *s;
-	ssize_t s_size;
+	unsigned int use_len:1;
+	size_t len;
 	int (*handler)(struct atom_value *atomv, struct ref_formatting_state *state,
 		       struct strbuf *err);
 	uintmax_t value; /* used for sorting when not FIELD_STR */
 	struct used_atom *atom;
 };
 
-#define ATOM_SIZE_UNSPECIFIED (-1)
-
-#define ATOM_VALUE_INIT { \
-	.s_size = ATOM_SIZE_UNSPECIFIED \
-}
+#define ATOM_VALUE_INIT { 0 }
 
 /*
  * Used to parse format string and sort specifiers
@@ -745,29 +742,41 @@ static int parse_ref_filter_atom(struct ref_format *format,
 	return at;
 }
 
-static void quote_formatting(struct strbuf *s, const char *str, ssize_t len, int quote_style)
+
+static void quote_formatting(struct strbuf *s, const char *str,
+			     int quote_style)
 {
 	switch (quote_style) {
 	case QUOTE_NONE:
-		if (len < 0)
-			strbuf_addstr(s, str);
-		else
-			strbuf_add(s, str, len);
+		strbuf_addstr(s, str);
+		break;
+	case QUOTE_PERL:
+		perl_quote_buf(s, str);
 		break;
 	case QUOTE_SHELL:
 		sq_quote_buf(s, str);
-		break;
-	case QUOTE_PERL:
-		if (len < 0)
-			perl_quote_buf(s, str);
-		else
-			perl_quote_buf_with_len(s, str, len);
 		break;
 	case QUOTE_PYTHON:
 		python_quote_buf(s, str);
 		break;
 	case QUOTE_TCL:
 		tcl_quote_buf(s, str);
+		break;
+	}
+}
+
+static void quote_formatting_len(struct strbuf *s, const char *str, size_t len,
+				 int quote_style)
+{
+	switch (quote_style) {
+	case QUOTE_NONE:
+		strbuf_add(s, str, len);
+		break;
+	case QUOTE_PERL:
+		perl_quote_buf_with_len(s, str, len);
+		break;
+	default:
+		quote_formatting(s, str, quote_style);
 		break;
 	}
 }
@@ -781,12 +790,14 @@ static int append_atom(struct atom_value *v, struct ref_formatting_state *state,
 	 * element's entire output strbuf when the %(end) atom is
 	 * encountered.
 	 */
-	if (!state->stack->prev)
-		quote_formatting(&state->stack->output, v->s, v->s_size, state->quote_style);
-	else if (v->s_size < 0)
+	if (!state->stack->prev && v->use_len)
+		quote_formatting_len(&state->stack->output, v->s, v->len, state->quote_style);
+	else if (!state->stack->prev)
+		quote_formatting(&state->stack->output, v->s, state->quote_style);
+	else if (!v->use_len)
 		strbuf_addstr(&state->stack->output, v->s);
 	else
-		strbuf_add(&state->stack->output, v->s, v->s_size);
+		strbuf_add(&state->stack->output, v->s, v->len);
 	return 0;
 }
 
@@ -974,7 +985,7 @@ static int end_atom_handler(struct atom_value *atomv, struct ref_formatting_stat
 	 * only on the topmost supporting atom.
 	 */
 	if (!current->prev->prev) {
-		quote_formatting(&s, current->output.buf, current->output.len, state->quote_style);
+		quote_formatting_len(&s, current->output.buf, current->output.len, state->quote_style);
 		strbuf_swap(&current->output, &s);
 	}
 	strbuf_release(&s);
@@ -1445,7 +1456,8 @@ static void grab_sub_body_contents(struct atom_value *val, int deref, struct exp
 
 			if (atom->u.raw_data.option == RAW_BARE) {
 				v->s = xmemdupz(buf, buf_size);
-				v->s_size = buf_size;
+				v->use_len = 1;
+				v->len = buf_size;
 			} else if (atom->u.raw_data.option == RAW_LENGTH) {
 				v->s = xstrfmt("%"PRIuMAX, (uintmax_t)buf_size);
 			}
@@ -1847,7 +1859,7 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 		const char *refname;
 		struct branch *branch = NULL;
 
-		v->s_size = ATOM_SIZE_UNSPECIFIED;
+		v->use_len = 0;
 		v->handler = append_atom;
 		v->atom = atom;
 
@@ -2497,16 +2509,16 @@ static int cmp_ref_sorting(struct ref_sorting *s, struct ref_array_item *a, stru
 	} else if (s->sort_flags & REF_SORTING_VERSION) {
 		cmp = versioncmp(va->s, vb->s);
 	} else if (cmp_type == FIELD_STR) {
-		if (va->s_size < 0 && vb->s_size < 0) {
+		if (!va->use_len && !vb->use_len) {
 			int (*cmp_fn)(const char *, const char *);
 			cmp_fn = s->sort_flags & REF_SORTING_ICASE
 				? strcasecmp : strcmp;
 			cmp = cmp_fn(va->s, vb->s);
 		} else {
-			size_t a_size = va->s_size < 0 ?
-					strlen(va->s) : va->s_size;
-			size_t b_size = vb->s_size < 0 ?
-					strlen(vb->s) : vb->s_size;
+			size_t a_size = !va->use_len  ?
+					strlen(va->s) : va->len;
+			size_t b_size = !vb->use_len ?
+					strlen(vb->s) : vb->len;
 			int (*cmp_fn)(const void *, const void *, size_t);
 			cmp_fn = s->sort_flags & REF_SORTING_ICASE
 				? memcasecmp : memcmp;
