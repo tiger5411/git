@@ -1169,7 +1169,8 @@ static void grab_commit_values(struct atom_value *val, int deref, struct object 
 					strbuf_addch(&s, ' ');
 				strbuf_addstr(&s, do_grab_oid("parent", oid, &used_atom[i]));
 			}
-			v->s = strbuf_detach(&s, NULL);
+			v->s = strbuf_detach(&s, &v->len);
+			v->use_len = 1;
 		}
 	}
 }
@@ -1239,7 +1240,7 @@ static const char *copy_email(const char *buf, struct used_atom *atom)
 	return xmemdupz(email, eoemail - email);
 }
 
-static char *copy_subject(const char *buf, unsigned long len)
+static char *copy_subject(const char *buf, unsigned long len, size_t *lenp)
 {
 	struct strbuf sb = STRBUF_INIT;
 	int i;
@@ -1253,7 +1254,7 @@ static char *copy_subject(const char *buf, unsigned long len)
 		else
 			strbuf_addch(&sb, buf[i]);
 	}
-	return strbuf_detach(&sb, NULL);
+	return strbuf_detach(&sb, lenp);
 }
 
 static void grab_date(const char *buf, struct atom_value *v, const char *atomname)
@@ -1477,12 +1478,14 @@ static void grab_sub_body_contents(struct atom_value *val, int deref, struct exp
 				    &bodypos, &bodylen, &nonsiglen,
 				    &sigpos, &siglen);
 
-		if (atom->u.contents.option == C_SUB)
-			v->s = copy_subject(subpos, sublen);
-		else if (atom->u.contents.option == C_SUB_SANITIZE) {
+		if (atom->u.contents.option == C_SUB) {
+			v->s = copy_subject(subpos, sublen, &v->len);
+			v->use_len = 1;
+		} else if (atom->u.contents.option == C_SUB_SANITIZE) {
 			struct strbuf sb = STRBUF_INIT;
 			format_sanitized_subject(&sb, subpos, sublen);
-			v->s = strbuf_detach(&sb, NULL);
+			v->s = strbuf_detach(&sb, &v->len);
+			v->use_len = 1;
 		} else if (atom->u.contents.option == C_BODY_DEP)
 			v->s = xmemdupz(bodypos, bodylen);
 		else if (atom->u.contents.option == C_LENGTH)
@@ -1497,14 +1500,16 @@ static void grab_sub_body_contents(struct atom_value *val, int deref, struct exp
 
 			/*  Size is the length of the message after removing the signature */
 			append_lines(&s, subpos, contents_end - subpos, atom->u.contents.nlines);
-			v->s = strbuf_detach(&s, NULL);
+			v->s = strbuf_detach(&s, &v->len);
+			v->use_len = 1;
 		} else if (atom->u.contents.option == C_TRAILERS) {
 			struct strbuf s = STRBUF_INIT;
 
 			/* Format the trailer info according to the trailer_opts given */
 			format_trailers_from_commit(&s, subpos, &atom->u.contents.trailer_opts);
 
-			v->s = strbuf_detach(&s, NULL);
+			v->s = strbuf_detach(&s, &v->len);
+			v->use_len = 1;
 		} else if (atom->u.contents.option == C_BARE)
 			v->s = xstrdup(subpos);
 
