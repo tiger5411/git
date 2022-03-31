@@ -32,7 +32,7 @@ struct strbuf;
  * sq_quotef() quotes the entire formatted string as a single result.
  */
 
-void sq_quote_buf_len(struct strbuf *dst, const char *src, size_t len);
+void sq_quote_buf_len(struct strbuf *sb, const char *src, size_t len);
 void sq_quote_buf(struct strbuf *, const char *src);
 void sq_quote_argv(struct strbuf *, const char **argv);
 __attribute__((format (printf, 2, 3)))
