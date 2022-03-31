@@ -8,6 +8,14 @@ test_description='Gettext support for Git'
 TEST_PASSES_SANITIZE_LEAK=true
 . ./lib-gettext.sh
 
+test_expect_success "sanity: \$GIT_INTERNAL_GETTEXT_SH_SCHEME is set (to $GIT_INTERNAL_GETTEXT_SH_SCHEME)" '
+    test -n "$GIT_INTERNAL_GETTEXT_SH_SCHEME"
+'
+
+test_expect_success 'sanity: $TEXTDOMAIN is git' '
+    test $TEXTDOMAIN = "git"
+'
+
 test_expect_success 'xgettext sanity: Perl _() strings are not extracted' '
     ! grep "A Perl string xgettext will not get" "$GIT_PO_PATH"/is.po
 '
@@ -23,9 +31,24 @@ test_expect_success 'xgettext sanity: Comment extraction with --add-comments sto
     ! grep "the above comment" "$GIT_PO_PATH"/is.po
 '
 
+test_expect_success GETTEXT 'sanity: $TEXTDOMAINDIR exists without NO_GETTEXT=YesPlease' '
+    test -d "$TEXTDOMAINDIR" &&
+    test "$TEXTDOMAINDIR" = "$GIT_TEXTDOMAINDIR"
+'
 
 test_expect_success GETTEXT 'sanity: Icelandic locale was compiled' '
-    test -f "$GIT_TEXTDOMAINDIR/is/LC_MESSAGES/git.mo"
+    test -f "$TEXTDOMAINDIR/is/LC_MESSAGES/git.mo"
+'
+
+# TODO: When we have more locales, generalize this to test them
+# all. Maybe we'll need a dir->locale map for that.
+test_expect_success GETTEXT_LOCALE 'sanity: gettext("") metadata is OK' '
+    # Return value may be non-zero
+    LANGUAGE=is LC_ALL="$is_IS_locale" gettext "" >zero-expect &&
+    grep "Project-Id-Version: Git" zero-expect &&
+    grep "Git Mailing List <git@vger.kernel.org>" zero-expect &&
+    grep "Content-Type: text/plain; charset=UTF-8" zero-expect &&
+    grep "Content-Transfer-Encoding: 8bit" zero-expect
 '
 
 test_expect_success GETTEXT_LOCALE 'sanity: gettext(unknown) is passed through' '
@@ -37,10 +60,6 @@ test_expect_success GETTEXT_LOCALE 'sanity: gettext(unknown) is passed through' 
 test_expect_success GETTEXT_LOCALE 'sanity: eval_gettext(unknown) is an error' '
     ! eval_gettext "This is not a translation string"
 '
-
-gettext () {
-	git sh-i18n--helper "$1"
-}
 
 # xgettext from C
 test_expect_success GETTEXT_LOCALE 'xgettext: C extraction of _() and N_() strings' '
@@ -77,6 +96,11 @@ test_expect_success GETTEXT_LOCALE 'xgettext: Perl extraction with %s' '
     printf "TILRAUN: Perl tilraunastrengur með breytunni %%s" >expect &&
     LANGUAGE=is LC_ALL="$is_IS_locale" gettext "TEST: A Perl test variable %s" >actual &&
     test_cmp expect actual
+'
+
+test_expect_success GETTEXT_LOCALE 'sanity: Some gettext("") data for real locale' '
+    LANGUAGE=is LC_ALL="$is_IS_locale" gettext "" >real-locale &&
+    test -s real-locale
 '
 
 test_done

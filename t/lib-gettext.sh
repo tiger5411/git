@@ -17,19 +17,7 @@ else
 	. "$GIT_BUILD_DIR"/git-sh-i18n
 fi
 
-test_lazy_prereq GETTEXT_LOCALE '
-	test_have_prereq GETTEXT &&
-
-	echo "TEST: Hello World!" >msgid &&
-	git sh-i18n--helper "$(cat msgid)" >msgfmt &&
-	! test_cmp msgid msgfmt &&
-
-	# Exporting for t0202/test.pl
-	GETTEXT_LOCALE=1
-	export GETTEXT_LOCALE
-'
-
-if test_have_prereq GETTEXT_LOCALE
+if test_have_prereq GETTEXT
 then
 	# is_IS.UTF-8 on Solaris and FreeBSD, is_IS.utf8 on Debian
 	is_IS_locale=$(locale -a 2>/dev/null |

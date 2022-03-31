@@ -73,6 +73,9 @@ include shared.mak
 # A translated Git requires GNU libintl or another gettext implementation,
 # plus libintl-perl at runtime.
 #
+# Define USE_GETTEXT_SCHEME and set it to 'fallthrough', if you don't trust
+# the installed gettext translation of the shell scripts output.
+#
 # Define HAVE_LIBCHARSET_H if you haven't set NO_GETTEXT and you can't
 # trust the langinfo.h's nl_langinfo(CODESET) function to return the
 # current character set. GNU and Solaris have a nl_langinfo(CODESET),
@@ -1197,7 +1200,6 @@ BUILTIN_OBJS += builtin/rev-parse.o
 BUILTIN_OBJS += builtin/revert.o
 BUILTIN_OBJS += builtin/rm.o
 BUILTIN_OBJS += builtin/send-pack.o
-BUILTIN_OBJS += builtin/sh-i18n--helper.o
 BUILTIN_OBJS += builtin/shortlog.o
 BUILTIN_OBJS += builtin/show-branch.o
 BUILTIN_OBJS += builtin/show-index.o
@@ -1604,6 +1606,7 @@ ifdef NO_SYMLINK_HEAD
 endif
 ifdef NO_GETTEXT
 	BASIC_CFLAGS += -DNO_GETTEXT
+	USE_GETTEXT_SCHEME ?= fallthrough
 endif
 ifdef NO_POLL
 	NO_POLL_H = YesPlease
@@ -2286,7 +2289,7 @@ hook-list.h: generate-hooklist.sh Documentation/githooks.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-hooklist.sh >$@
 
 SCRIPT_DEFINES = $(SHELL_PATH_SQ):$(DIFF_SQ):\
-	$(localedir_SQ):$(SANE_TOOL_PATH_SQ):\
+	$(localedir_SQ):$(USE_GETTEXT_SCHEME):$(SANE_TOOL_PATH_SQ):\
 	$(gitwebdir_SQ):$(PERL_PATH_SQ):$(PAGER_ENV):\
 	$(perllibdir_SQ)
 GIT-SCRIPT-DEFINES: FORCE
@@ -2301,6 +2304,7 @@ sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
     -e 's|@SHELL_PATH@|$(SHELL_PATH_SQ)|' \
     -e 's|@@DIFF@@|$(DIFF_SQ)|' \
     -e 's|@@LOCALEDIR@@|$(localedir_SQ)|g' \
+    -e 's/@@USE_GETTEXT_SCHEME@@/$(USE_GETTEXT_SCHEME)/g' \
     -e $(BROKEN_PATH_FIX) \
     -e 's|@@GITWEBDIR@@|$(gitwebdir_SQ)|g' \
     -e 's|@@PERL@@|$(PERL_PATH_SQ)|g' \
@@ -2820,7 +2824,7 @@ GIT-PREFIX: FORCE
 		echo "$$FLAGS" >GIT-PREFIX; \
 	fi
 
-TRACK_CFLAGS = $(CC):$(subst ','\'',$(ALL_CFLAGS))
+TRACK_CFLAGS = $(CC):$(subst ','\'',$(ALL_CFLAGS)):$(USE_GETTEXT_SCHEME)
 
 GIT-CFLAGS: FORCE
 	@FLAGS='$(TRACK_CFLAGS)'; \
