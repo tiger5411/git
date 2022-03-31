@@ -21,20 +21,28 @@ static inline int need_bs_quote(char c)
  *  a'b      ==> a'\''b    ==> 'a'\''b'
  *  a!b      ==> a'\!'b    ==> 'a'\!'b'
  */
-void sq_quote_buf(struct strbuf *dst, const char *src)
+void sq_quote_buf_len(struct strbuf *dst, const char *src, size_t len)
 {
+	const char *c = src;
+	const char *end = src + len;
+
 	strbuf_addch(dst, '\'');
-	while (*src) {
-		size_t len = strcspn(src, "'!");
-		strbuf_add(dst, src, len);
-		src += len;
-		while (need_bs_quote(*src)) {
+	while (c != end) {
+		if (!need_bs_quote(*c)) {
+			strbuf_addch(dst, *c);
+		} else {
 			strbuf_addstr(dst, "'\\");
-			strbuf_addch(dst, *src++);
+			strbuf_addch(dst, *c);
 			strbuf_addch(dst, '\'');
 		}
+		c++;
 	}
 	strbuf_addch(dst, '\'');
+}
+
+void sq_quote_buf(struct strbuf *dst, const char *src)
+{
+	sq_quote_buf_len(dst, src, strlen(src));
 }
 
 void sq_quote_buf_pretty(struct strbuf *dst, const char *src)
@@ -68,7 +76,7 @@ void sq_quotef(struct strbuf *dst, const char *fmt, ...)
 	strbuf_vaddf(&src, fmt, ap);
 	va_end(ap);
 
-	sq_quote_buf(dst, src.buf);
+	sq_quote_buf_len(dst, src.buf, src.len);
 	strbuf_release(&src);
 }
 
