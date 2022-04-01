@@ -413,13 +413,7 @@ Common unit suffixes of 'k', 'm', or 'g' are supported.
 
 include::core/bigFileThreshold.txt[]
 
-core.excludesFile::
-	Specifies the pathname to the file that contains patterns to
-	describe paths that are not meant to be tracked, in addition
-	to `.gitignore` (per-directory) and `.git/info/exclude`.
-	Defaults to `$XDG_CONFIG_HOME/git/ignore`.
-	If `$XDG_CONFIG_HOME` is either not set or empty, `$HOME/.config/git/ignore`
-	is used instead. See linkgit:gitignore[5].
+include::core/excludesFile.txt[]
 
 core.askPass::
 	Some commands (e.g. svn and http interfaces) that interactively

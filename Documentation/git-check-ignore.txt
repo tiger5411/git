@@ -115,6 +115,13 @@ EXIT STATUS
 128::
 	A fatal error was encountered.
 
+CONFIGURATION
+-------------
+
+include::includes/cmd-config-section-all.txt[]
+
+include::config/core/excludesFile.txt[]
+
 SEE ALSO
 --------
 linkgit:gitignore[5]
