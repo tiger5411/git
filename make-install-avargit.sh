@@ -228,8 +228,20 @@ test_compile () {
 		return
 	fi
 
+	# Skipped tests, needs to go before ci-static-analysis
+	GIT_SKIP_TESTS=
+	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t5730.15"
+	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t0012.587"
+	export GIT_SKIP_TESTS
+
+	# Static
+	make ci-static-analysis sparse
+
 	# Compile
-	make all sparse hdr-check man
+	make all
+
+	# Doc
+	make man
 
 	# Test sanity
 	make -C t test-lint
@@ -238,12 +250,6 @@ test_compile () {
 	make -C t clean
 	GIT_PROVE_OPTS="--state=save --jobs=$(nproc) --timer"
 	export GIT_PROVE_OPT
-
-	# Skipped tests
-	GIT_SKIP_TESTS=
-	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t5730.15"
-	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t0012.587"
-	export GIT_SKIP_TESTS
 
 	# First run a smaller subset of tests, likelier to have
 	# failures. But maybe we're on master, or otherwise have no
