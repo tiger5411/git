@@ -1936,12 +1936,8 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			v->s = xstrdup("");
 			continue;
 		} else if (atom_type == ATOM_IF) {
-			const char *s;
-			if (skip_prefix(name, "if:", &s))
-				v->s = xstrdup(s);
-			else
-				v->s = xstrdup("");
 			v->handler = if_atom_handler;
+			v->s = xstrdup("");
 			continue;
 		} else if (atom_type == ATOM_THEN) {
 			v->handler = then_atom_handler;
