@@ -1687,14 +1687,6 @@ char *get_head_description(void)
 	return strbuf_detach(&desc, NULL);
 }
 
-static const char *get_symref(struct used_atom *atom, struct ref_array_item *ref)
-{
-	if (!ref->symref)
-		return xstrdup("");
-	else
-		return show_ref(&atom->u.refname, ref->symref);
-}
-
 static const char *get_refname(struct used_atom *atom, struct ref_array_item *ref)
 {
 	if (ref->kind & FILTER_REFS_DETACHED_HEAD)
@@ -1808,10 +1800,8 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 		const char *name = used_atom[i].name;
 		struct atom_value *v = &ref->value[i];
 		int deref = 0;
-		const char *refname;
 		struct branch *branch = NULL;
 		const struct atom_value blank = ATOM_VALUE_INIT;
-		size_t len;
 
 		memcpy(v, &blank, sizeof(*v));
 		v->handler = append_atom;
@@ -1822,17 +1812,34 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			name++;
 		}
 
-		if (atom_type == ATOM_REFNAME)
-			refname = get_refname(atom, ref);
-		else if (atom_type == ATOM_WORKTREEPATH) {
+		if (atom_type == ATOM_REFNAME ||
+		    atom_type == ATOM_SYMREF) {
+			const char *refname;
+			size_t len;
+
+			if (atom_type == ATOM_REFNAME)
+				refname = get_refname(atom, ref);
+			else if (atom_type == ATOM_SYMREF) {
+				if (!ref->symref)
+					continue;
+				else
+					refname = show_ref(&atom->u.refname, ref->symref);
+			} else
+				BUG("unreachable");
+
+			len = strlen(refname);
+			strbuf_attach(&v->buf, (void *)refname, len, len);
+			if (deref)
+				strbuf_addstr(&v->buf, "^{}");
+
+			continue;
+		} else if (atom_type == ATOM_WORKTREEPATH) {
 			if (ref->kind == FILTER_REFS_BRANCHES)
 				get_worktree_path(&v->buf, atom, ref);
-			continue;
-		}
-		else if (atom_type == ATOM_SYMREF)
-			refname = get_symref(atom, ref);
-		else if (atom_type == ATOM_UPSTREAM) {
+		} else if (atom_type == ATOM_UPSTREAM) {
+			const char *refname;
 			const char *branch_name;
+
 			/* only local branches may have an upstream */
 			if (!skip_prefix(ref->refname, "refs/heads/",
 					 &branch_name))
@@ -1842,9 +1849,10 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			refname = branch_get_upstream(branch, NULL);
 			if (refname)
 				fill_remote_ref_details(atom, refname, branch, &v->buf);
-			continue;
 		} else if (atom_type == ATOM_PUSH && atom->u.remote_ref.push) {
+			const char *refname;
 			const char *branch_name;
+
 			if (!skip_prefix(ref->refname, "refs/heads/",
 					 &branch_name))
 				continue;
@@ -1859,10 +1867,8 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			}
 			/* We will definitely re-init v->s on the next line. */
 			fill_remote_ref_details(atom, refname, branch, &v->buf);
-			continue;
 		} else if (atom_type == ATOM_COLOR) {
 			strbuf_addstr(&v->buf, atom->u.color);
-			continue;
 		} else if (atom_type == ATOM_FLAG) {
 			char buf[256], *cp = buf;
 			if (ref->flag & REF_ISSYMREF)
@@ -1876,39 +1882,25 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			continue;
 		} else if (!deref && atom_type == ATOM_OBJECTNAME &&
 			   grab_oid(name, "objectname", &ref->objectname, v, atom)) {
-				continue;
 		} else if (atom_type == ATOM_HEAD) {
 			if (atom->u.head && !strcmp(ref->refname, atom->u.head))
 				strbuf_addstr(&v->buf, "*");
 			else
 				strbuf_addstr(&v->buf, " ");
-			continue;
 		} else if (atom_type == ATOM_ALIGN) {
 			v->handler = align_atom_handler;
-			continue;
 		} else if (atom_type == ATOM_END) {
 			v->handler = end_atom_handler;
-			continue;
 		} else if (atom_type == ATOM_IF) {
 			v->handler = if_atom_handler;
-			continue;
 		} else if (atom_type == ATOM_THEN) {
 			v->handler = then_atom_handler;
-			continue;
 		} else if (atom_type == ATOM_ELSE) {
 			v->handler = else_atom_handler;
-			continue;
 		} else if (atom_type == ATOM_REST) {
 			if (ref->rest)
 				strbuf_addstr(&v->buf, ref->rest);
-			continue;
-		} else
-			continue;
-
-		len = strlen(refname);
-		strbuf_attach(&v->buf, (void *)refname, len, len);
-		if (deref)
-			strbuf_addstr(&v->buf, "^{}");
+		}
 	}
 
 	if (need_tagged)
