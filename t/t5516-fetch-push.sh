@@ -26,7 +26,6 @@ mk_empty () {
 	test_when_finished "rm -rf \"$repo_name\"" &&
 	test_path_is_missing "$repo_name" &&
 	git init "$repo_name" &&
-	mkdir "$repo_name"/.git/hooks &&
 	git -C "$repo_name" config receive.denyCurrentBranch warn
 }
 
@@ -60,15 +59,15 @@ mk_test_with_hooks() {
 	cat - >>pre-receive.actual
 	EOF
 
-	test_hook -C "$repo_name" update <<-'EOF' &&
+	test_hook -C "$repo_name" --no-setup-dir update <<-'EOF' &&
 	printf "%s %s %s\n" "$@" >>update.actual
 	EOF
 
-	test_hook -C "$repo_name" post-receive <<-'EOF' &&
+	test_hook -C "$repo_name" --no-setup-dir post-receive <<-'EOF' &&
 	cat - >>post-receive.actual
 	EOF
 
-	test_hook -C "$repo_name" post-update <<-'EOF'
+	test_hook -C "$repo_name" --no-setup-dir post-update <<-'EOF'
 	for ref in "$@"
 	do
 		printf "%s\n" "$ref" >>post-update.actual
@@ -653,6 +652,7 @@ test_expect_success 'push does not update local refs on failure' '
 
 	mk_test testrepo heads/main &&
 	mk_child testrepo child &&
+	mkdir testrepo/.git/hooks &&
 	echo "#!/no/frobnication/today" >testrepo/.git/hooks/pre-receive &&
 	chmod +x testrepo/.git/hooks/pre-receive &&
 	(
