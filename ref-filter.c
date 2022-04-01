@@ -1590,16 +1590,29 @@ static const char *rstrip_ref_components(const char *refname, int len)
 	return start;
 }
 
-static const char *show_ref(struct refname_atom *atom, const char *refname)
+static void show_ref(struct strbuf *buf, struct refname_atom *atom,
+		     const char *refname)
 {
-	if (atom->option == R_SHORT)
-		return shorten_unambiguous_ref(refname, warn_ambiguous_refs);
-	else if (atom->option == R_LSTRIP)
-		return lstrip_ref_components(refname, atom->lstrip);
-	else if (atom->option == R_RSTRIP)
-		return rstrip_ref_components(refname, atom->rstrip);
-	else
-		return xstrdup(refname);
+	const char *str;
+	size_t len;
+
+	if (atom->option == R_SHORT) {
+		str = shorten_unambiguous_ref(refname,
+					      warn_ambiguous_refs);
+		goto attach;
+	} else if (atom->option == R_LSTRIP) {
+		str = lstrip_ref_components(refname, atom->lstrip);
+		goto attach;
+	} else if (atom->option == R_RSTRIP) {
+		str = rstrip_ref_components(refname, atom->rstrip);
+		goto attach;
+	}
+	strbuf_addstr(buf, refname);
+	return;
+attach:
+	len = strlen(str);
+	strbuf_attach(buf, (void *)str, len, len);
+	return;
 }
 
 static void fill_remote_ref_details(struct used_atom *atom, const char *refname,
@@ -1607,7 +1620,7 @@ static void fill_remote_ref_details(struct used_atom *atom, const char *refname,
 {
 	int num_ours, num_theirs;
 	if (atom->u.remote_ref.option == RR_REF)
-		strbuf_addstr(buf, show_ref(&atom->u.remote_ref.refname, refname));
+		show_ref(buf, &atom->u.remote_ref.refname, refname);
 	else if (atom->u.remote_ref.option == RR_TRACK) {
 		if (stat_tracking_info(branch, &num_ours, &num_theirs,
 				       NULL, atom->u.remote_ref.push,
@@ -1657,41 +1670,49 @@ static void fill_remote_ref_details(struct used_atom *atom, const char *refname,
 		BUG("unhandled RR_* enum");
 }
 
-char *get_head_description(void)
+static void get_head_description_buf(struct strbuf *buf)
 {
-	struct strbuf desc = STRBUF_INIT;
 	struct wt_status_state state;
+
 	memset(&state, 0, sizeof(state));
 	wt_status_get_state(the_repository, &state, 1);
 	if (state.rebase_in_progress ||
 	    state.rebase_interactive_in_progress) {
 		if (state.branch)
-			strbuf_addf(&desc, _("(no branch, rebasing %s)"),
+			strbuf_addf(buf, _("(no branch, rebasing %s)"),
 				    state.branch);
 		else
-			strbuf_addf(&desc, _("(no branch, rebasing detached HEAD %s)"),
+			strbuf_addf(buf, _("(no branch, rebasing detached HEAD %s)"),
 				    state.detached_from);
 	} else if (state.bisect_in_progress)
-		strbuf_addf(&desc, _("(no branch, bisect started on %s)"),
+		strbuf_addf(buf, _("(no branch, bisect started on %s)"),
 			    state.branch);
 	else if (state.detached_from) {
 		if (state.detached_at)
-			strbuf_addf(&desc, _("(HEAD detached at %s)"),
+			strbuf_addf(buf, _("(HEAD detached at %s)"),
 				state.detached_from);
 		else
-			strbuf_addf(&desc, _("(HEAD detached from %s)"),
+			strbuf_addf(buf, _("(HEAD detached from %s)"),
 				state.detached_from);
 	} else
-		strbuf_addstr(&desc, _("(no branch)"));
+		strbuf_addstr(buf, _("(no branch)"));
+}
 
+char *get_head_description(void)
+{
+	struct strbuf desc = STRBUF_INIT;
+
+	get_head_description_buf(&desc);
 	return strbuf_detach(&desc, NULL);
 }
 
-static const char *get_refname(struct used_atom *atom, struct ref_array_item *ref)
+static void get_refname(struct strbuf *buf, struct used_atom *atom,
+			struct ref_array_item *ref)
 {
 	if (ref->kind & FILTER_REFS_DETACHED_HEAD)
-		return get_head_description();
-	return show_ref(&atom->u.refname, ref->refname);
+		get_head_description_buf(buf);
+	else
+		show_ref(buf, &atom->u.refname, ref->refname);
 }
 
 static int get_object(struct ref_array_item *ref, int deref, struct object **obj,
@@ -1786,12 +1807,9 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 
 	CALLOC_ARRAY(ref->value, used_atom_cnt);
 
-	if (need_symref && (ref->flag & REF_ISSYMREF) && !ref->symref) {
+	if (need_symref && (ref->flag & REF_ISSYMREF) && !ref->symref)
 		ref->symref = resolve_refdup(ref->refname, RESOLVE_REF_READING,
 					     NULL, NULL);
-		if (!ref->symref)
-			ref->symref = xstrdup("");
-	}
 
 	/* Fill in specials first */
 	for (i = 0; i < used_atom_cnt; i++) {
@@ -1812,64 +1830,67 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			name++;
 		}
 
-		if (atom_type == ATOM_REFNAME ||
-		    atom_type == ATOM_SYMREF) {
-			const char *refname;
-			size_t len;
-
-			if (atom_type == ATOM_REFNAME)
-				refname = get_refname(atom, ref);
-			else if (atom_type == ATOM_SYMREF) {
-				if (!ref->symref)
-					continue;
-				else
-					refname = show_ref(&atom->u.refname, ref->symref);
-			} else
-				BUG("unreachable");
-
-			len = strlen(refname);
-			strbuf_attach(&v->buf, (void *)refname, len, len);
+		switch (atom_type) {
+		case ATOM_REFNAME:
+			get_refname(&v->buf, atom, ref);
 			if (deref)
 				strbuf_addstr(&v->buf, "^{}");
-
-			continue;
-		} else if (atom_type == ATOM_WORKTREEPATH) {
+			break;
+		case ATOM_SYMREF:
+			if (!ref->symref)
+				break;
+			show_ref(&v->buf, &atom->u.refname, ref->symref);
+			if (deref)
+				strbuf_addstr(&v->buf, "^{}");
+			break;
+		case ATOM_WORKTREEPATH:
 			if (ref->kind == FILTER_REFS_BRANCHES)
 				get_worktree_path(&v->buf, atom, ref);
-		} else if (atom_type == ATOM_UPSTREAM) {
-			const char *refname;
+			break;
+		case ATOM_UPSTREAM:
+		{
+			const char *str;
 			const char *branch_name;
 
 			/* only local branches may have an upstream */
 			if (!skip_prefix(ref->refname, "refs/heads/",
 					 &branch_name))
-				continue;
+				break;
 			branch = branch_get(branch_name);
 
-			refname = branch_get_upstream(branch, NULL);
-			if (refname)
-				fill_remote_ref_details(atom, refname, branch, &v->buf);
-		} else if (atom_type == ATOM_PUSH && atom->u.remote_ref.push) {
-			const char *refname;
+			str = branch_get_upstream(branch, NULL);
+			if (str)
+				fill_remote_ref_details(atom, str, branch, &v->buf);
+			break;
+		}
+		case ATOM_PUSH:
+		{
+			const char *str;
 			const char *branch_name;
 
+			if (!atom->u.remote_ref.push)
+				break;
 			if (!skip_prefix(ref->refname, "refs/heads/",
 					 &branch_name))
-				continue;
+				break;
 			branch = branch_get(branch_name);
 
 			if (atom->u.remote_ref.push_remote)
-				refname = NULL;
+				str = NULL;
 			else {
-				refname = branch_get_push(branch, NULL);
-				if (!refname)
-					continue;
+				str = branch_get_push(branch, NULL);
+				if (!str)
+					break;
 			}
 			/* We will definitely re-init v->s on the next line. */
-			fill_remote_ref_details(atom, refname, branch, &v->buf);
-		} else if (atom_type == ATOM_COLOR) {
+			fill_remote_ref_details(atom, str, branch, &v->buf);
+			break;
+		}
+		case ATOM_COLOR:
 			strbuf_addstr(&v->buf, atom->u.color);
-		} else if (atom_type == ATOM_FLAG) {
+			break;
+		case ATOM_FLAG:
+		{
 			char buf[256], *cp = buf;
 			if (ref->flag & REF_ISSYMREF)
 				cp = copy_advance(cp, ",symref");
@@ -1879,28 +1900,41 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 				*cp = '\0';
 				strbuf_addstr(&v->buf, buf + 1);
 			}
-			continue;
-		} else if (!deref && atom_type == ATOM_OBJECTNAME &&
-			   grab_oid(name, "objectname", &ref->objectname, v, atom)) {
-		} else if (atom_type == ATOM_HEAD) {
+			break;
+		}
+		case ATOM_OBJECTNAME:
+			if (!deref)
+				grab_oid(name, "objectname", &ref->objectname, v, atom);
+			break;
+		case ATOM_HEAD:
 			if (atom->u.head && !strcmp(ref->refname, atom->u.head))
 				strbuf_addstr(&v->buf, "*");
 			else
 				strbuf_addstr(&v->buf, " ");
-		} else if (atom_type == ATOM_ALIGN) {
+			break;
+		case ATOM_ALIGN:
 			v->handler = align_atom_handler;
-		} else if (atom_type == ATOM_END) {
+			break;
+		case ATOM_END:
 			v->handler = end_atom_handler;
-		} else if (atom_type == ATOM_IF) {
+			break;
+		case ATOM_IF:
 			v->handler = if_atom_handler;
-		} else if (atom_type == ATOM_THEN) {
+			break;
+		case ATOM_THEN:
 			v->handler = then_atom_handler;
-		} else if (atom_type == ATOM_ELSE) {
+			break;
+		case ATOM_ELSE:
 			v->handler = else_atom_handler;
-		} else if (atom_type == ATOM_REST) {
+			break;
+		case ATOM_REST:
 			if (ref->rest)
 				strbuf_addstr(&v->buf, ref->rest);
+			break;
+		default:
+			break;
 		}
+
 	}
 
 	if (need_tagged)
