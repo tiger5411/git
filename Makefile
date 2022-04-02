@@ -2705,8 +2705,9 @@ pdf:
 XGETTEXT_FLAGS = \
 	--force-po \
 	--add-comments=TRANSLATORS: \
-	--msgid-bugs-address="Git Mailing List <git@vger.kernel.org>" \
-	--from-code=UTF-8
+	--from-code=UTF-8 \
+	--omit-header
+
 XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --language=C \
 	--keyword=_ --keyword=N_ --keyword="Q_:1,2"
 XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell \
@@ -2724,34 +2725,55 @@ LOCALIZED_SH += t/t0200/test.sh
 LOCALIZED_PERL += t/t0200/test.perl
 endif
 
-## Note that this is meant to be run only by the localization coordinator
-## under a very controlled condition, i.e. (1) it is to be run in a
-## Git repository (not a tarball extract), (2) any local modifications
-## will be lost.
+## We generate intermediate .build/pot/po/% files containing a extract
+## of the translations we find in each file in the source tree. The
+## files have the same basename as the source due xgettext(1) not
+## having a way to override the basename inserted into comments.
+LOCALIZED_ALL_GEN_PO =
+
+LOCALIZED_C_GEN_PO = $(LOCALIZED_C:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_C_GEN_PO)
+
+LOCALIZED_SH_GEN_PO = $(LOCALIZED_SH:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_SH_GEN_PO)
+
+LOCALIZED_PERL_GEN_PO = $(LOCALIZED_PERL:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_PERL_GEN_PO)
+
 ## Gettext tools cannot work with our own custom PRItime type, so
 ## we replace PRItime with PRIuMAX.  We need to update this to
 ## PRIdMAX if we switch to a signed type later.
+LOCALIZED_C_GEN	= $(LOCALIZED_C:%=.build/pot/in/%)
+$(LOCALIZED_C_GEN): .build/pot/in/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)sed -e 's|PRItime|PRIuMAX|g' <$< >$@
 
-po/git.pot: $(GENERATED_H) FORCE
-	# All modifications will be reverted at the end, so we do not
-	# want to have any local change.
-	git diff --quiet HEAD && git diff --quiet --cached
+$(LOCALIZED_C_GEN_PO): .build/pot/po/%: .build/pot/in/%
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)(\
+		cd .build/pot/in && \
+		$(XGETTEXT) -o $(@:.build/pot/po/%=../po/%) \
+			$(XGETTEXT_FLAGS_C) \
+			$(<:.build/pot/in/%=%) \
+	)
 
-	@for s in $(LOCALIZED_C) $(LOCALIZED_SH) $(LOCALIZED_PERL); \
-	do \
-		sed -e 's|PRItime|PRIuMAX|g' <"$$s" >"$$s+" && \
-		cat "$$s+" >"$$s" && rm "$$s+"; \
-	done
+$(LOCALIZED_SH_GEN_PO): .build/pot/po/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_SH) $<
 
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ $(XGETTEXT_FLAGS_C) $(LOCALIZED_C)
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_SH) \
-		$(LOCALIZED_SH)
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_PERL) \
-		$(LOCALIZED_PERL)
+$(LOCALIZED_PERL_GEN_PO): .build/pot/po/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_PERL) $<
 
-	# Reverting the munged source, leaving only the updated $@
-	git reset --hard
-	mv $@+ $@
+.build/pot/pot.header:
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)sed -n -e '/^$$/q' -e 'p' <po/git.pot >$@
+
+.build/pot/git.pot: .build/pot/pot.header $(LOCALIZED_ALL_GEN_PO)
+	$(QUIET_GEN)msgcat $^ >$@
+
+po/git.pot: .build/pot/git.pot FORCE
+	$(QUIET_CP)cp $< $@
 
 .PHONY: pot
 pot: po/git.pot
@@ -3290,6 +3312,7 @@ cocciclean:
 	$(RM) contrib/coccinelle/*.cocci.patch*
 
 clean: profile-clean coverage-clean cocciclean
+	$(RM) -r .build
 	$(RM) *.res
 	$(RM) $(OBJECTS)
 	$(RM) $(LIB_FILE) $(XDIFF_LIB) $(REFTABLE_LIB) $(REFTABLE_TEST_LIB)
