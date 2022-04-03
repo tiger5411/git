@@ -70,6 +70,10 @@ ifndef V
 	QUIET_RC       = @echo '   ' RC $@;
 	QUIET_SPATCH   = @echo '   ' SPATCH $<;
 
+## Used in "Makefile" for po/
+	QUIET_CHECK_MSGCAT	= @echo '   ' MSGCAT $(MSGCAT_CHECK_FLAGS) $< \>$@;
+	QUIET_CHECK_PO		= @echo '   ' CHECK PO $@;
+
 ## Used in "Documentation/Makefile"
 	QUIET_ASCIIDOC	= @echo '   ' ASCIIDOC $@;
 	QUIET_XMLTO	= @echo '   ' XMLTO $@;

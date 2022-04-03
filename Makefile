@@ -2776,7 +2776,26 @@ pot: po/git.pot
 .PHONY: check-pot
 check-pot: .build/pot/git.pot
 
+## po/*.po files & their rules
 POFILES = $(wildcard po/*.po)
+
+CHECK_POFILES = $(POFILES:po/%=.build/check-po/%)
+CHECK_POFILES_OK = $(CHECK_POFILES:%=%.ok)
+
+MSGCAT_CHECK_FLAGS = --no-location
+$(CHECK_POFILES): .build/check-po/%: po/%
+	$(call mkdir_p_parent_template)
+	$(QUIET_CHECK_MSGCAT)msgcat $(MSGCAT_CHECK_FLAGS) $< >$@
+
+$(CHECK_POFILES_OK): .build/check-po/%.ok : .build/check-po/%
+	$(call mkdir_p_parent_template)
+	$(QUIET_CHECK_PO)diff -u po/$(<F) $< && \
+	>$@
+
+.PHONY: check-po
+check-po: $(CHECK_POFILES_OK)
+
+## Generated *.mo files (from *.po) & their rules
 MOFILES = $(patsubst po/%.po,po/build/locale/%/LC_MESSAGES/git.mo,$(POFILES))
 ifndef NO_GETTEXT
 all:: $(MOFILES)

@@ -29,6 +29,7 @@ fi
 make hdr-check ||
 exit 1
 
+make check-po
 make check-pot
 
 save_good_tree
