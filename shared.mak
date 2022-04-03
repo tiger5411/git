@@ -63,6 +63,7 @@ ifndef V
 	QUIET_CP       = @echo '   ' CP $@;
 	QUIET_LNCP     = @echo '   ' LN/CP $@;
 	QUIET_XGETTEXT = @echo '   ' XGETTEXT $@;
+	QUIET_MSGINIT  = @echo '   ' MSGINIT $@;
 	QUIET_MSGFMT   = @echo '   ' MSGFMT $@;
 	QUIET_GCOV     = @echo '   ' GCOV $@;
 	QUIET_SP       = @echo '   ' SP $<;
@@ -73,6 +74,7 @@ ifndef V
 ## Used in "Makefile" for po/
 	QUIET_CHECK_MSGCAT	= @echo '   ' MSGCAT $(MSGCAT_CHECK_FLAGS) $< \>$@;
 	QUIET_CHECK_PO		= @echo '   ' CHECK PO $@;
+	QUIET_PO_INIT		= @echo '   ' PO INIT $@;
 
 ## Used in "Documentation/Makefile"
 	QUIET_ASCIIDOC	= @echo '   ' ASCIIDOC $@;

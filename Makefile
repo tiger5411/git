@@ -2764,7 +2764,7 @@ $(LOCALIZED_PERL_GEN_PO): .build/pot/po/%: %
 	$(call mkdir_p_parent_template)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_PERL) $<
 
-.build/pot/git.pot: po/pot.header $(LOCALIZED_ALL_GEN_PO)
+.build/pot/git.pot: $(LOCALIZED_ALL_GEN_PO)
 	$(QUIET_GEN)msgcat $^ >$@
 
 po/git.pot: .build/pot/git.pot
@@ -2775,6 +2775,69 @@ pot: po/git.pot
 
 .PHONY: check-pot
 check-pot: .build/pot/git.pot
+
+### TODO FIXME: Translating everything in these files is a bad
+### heuristic for "core", as we'll translate obscure error() messages
+### along with commonly seen i18n messages. A better heuristic would
+### be to e.g. use spatch to first remove error/die/warning
+### etc. messages.
+LOCALIZED_C_CORE =
+LOCALIZED_C_CORE += builtin/checkout.c
+LOCALIZED_C_CORE += builtin/clone.c
+LOCALIZED_C_CORE += builtin/index-pack.c
+LOCALIZED_C_CORE += builtin/push.c
+LOCALIZED_C_CORE += builtin/reset.c
+LOCALIZED_C_CORE += remote.c
+LOCALIZED_C_CORE += wt-status.c
+### This "clean" target is only needed for the dependency-busting
+### core-pot target
+clean-pot:
+	$(RM) -r .build/pot
+.PHONY: core-pot
+core-pot: clean-pot
+	$(MAKE) pot LOCALIZED_C="$(LOCALIZED_C_CORE)" LOCALIZED_SH= LOCALIZED_PERL=
+
+## Managing *.po files
+PO_INIT_FLAGS = \
+	--input=.build/pot/git.pot \
+	--output=$@ \
+	--no-translator \
+	--locale=$(PO_LANG)
+
+.build/po-init/$(PO_FILE).gen: .build/pot/git.pot
+	$(call mkdir_p_parent_template)
+	$(QUIET_MSGINIT)msginit $(PO_INIT_FLAGS)
+
+### We need some Po-Revision-Date or e.g. Emacs's po-mode.el will
+### replace the header entirely.
+.build/po-init/$(PO_FILE).head: .build/po-init/$(PO_FILE).gen
+	$(QUIET_GEN)\
+	echo "# This file is distributed under the same license as the Git package." >$@ && \
+	sed -n -e '1,/^$$/p' <$< | \
+		sed \
+			-e '/^$$/d' \
+			-e 's/PACKAGE VERSION/Git/' \
+			-e 's/Automatically generated/make by the Makefile/' \
+			-e 's/none/Git Mailing List <git@vger.kernel.org>/' \
+			-e 's/charset=ASCII/charset=UTF-8/' \
+		>>$@ && \
+	printf "\"PO-Revision-Date: 2022-04-11 11:05+0200\\\n\"\n" >>$@
+	echo >>$@
+
+.build/po-init/$(PO_FILE).tail: .build/po-init/$(PO_FILE).gen
+	$(QUIET_GEN)sed -n -e '1,/^$$/d' -e 'p' <$< >$@
+
+PO_LANG = $(PO_FILE:po/%.po=%)
+
+# TODO?: Prune out the "automatically generated" etc?
+
+.PHONY: po-init
+po-init: .build/po-init/$(PO_FILE).head .build/po-init/$(PO_FILE).tail
+	$(QUIET_PO_INIT)if test -e $(PO_FILE); then \
+		echo error: $(PO_FILE) exists already >&2; \
+		exit 1; \
+	fi && \
+	cat $^ >$(PO_FILE)
 
 ## po/*.po files & their rules
 POFILES = $(wildcard po/*.po)
