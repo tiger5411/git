@@ -2776,13 +2776,9 @@ pot: po/git.pot
 .PHONY: check-pot
 check-pot: .build/pot/git.pot
 
-ifdef NO_GETTEXT
-POFILES :=
-MOFILES :=
-else
-POFILES := $(wildcard po/*.po)
-MOFILES := $(patsubst po/%.po,po/build/locale/%/LC_MESSAGES/git.mo,$(POFILES))
-
+POFILES = $(wildcard po/*.po)
+MOFILES = $(patsubst po/%.po,po/build/locale/%/LC_MESSAGES/git.mo,$(POFILES))
+ifndef NO_GETTEXT
 all:: $(MOFILES)
 endif
 
@@ -3255,9 +3251,11 @@ ifneq ($(INCLUDE_DLLS_IN_ARTIFACTS),)
 OTHER_PROGRAMS += $(shell echo *.dll t/helper/*.dll)
 endif
 
+ifndef NO_GETTEXT
+artifacts-tar:: $(MOFILES)
+endif
 artifacts-tar:: $(ALL_COMMANDS_TO_INSTALL) $(SCRIPT_LIB) $(OTHER_PROGRAMS) \
-		GIT-BUILD-OPTIONS $(TEST_PROGRAMS) $(test_bindir_programs) \
-		$(MOFILES)
+		GIT-BUILD-OPTIONS $(TEST_PROGRAMS) $(test_bindir_programs)
 	$(QUIET_SUBDIR0)templates $(QUIET_SUBDIR1) \
 		SHELL_PATH='$(SHELL_PATH_SQ)' PERL_PATH='$(PERL_PATH_SQ)'
 	test -n "$(ARTIFACTS_DIRECTORY)"
