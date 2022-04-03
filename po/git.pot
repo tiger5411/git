@@ -22117,7 +22117,7 @@ msgstr ""
 
 #: builtin/submodule--helper.c:3363
 msgid ""
-"sets the submodules name to the given string instead of defaulting to its "
+"sets the submodule's name to the given string instead of defaulting to its "
 "path"
 msgstr ""
 
