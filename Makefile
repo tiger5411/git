@@ -2764,14 +2764,10 @@ $(LOCALIZED_PERL_GEN_PO): .build/pot/po/%: %
 	$(call mkdir_p_parent_template)
 	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_PERL) $<
 
-.build/pot/pot.header:
-	$(call mkdir_p_parent_template)
-	$(QUIET_GEN)sed -n -e '/^$$/q' -e 'p' <po/git.pot >$@
-
-.build/pot/git.pot: .build/pot/pot.header $(LOCALIZED_ALL_GEN_PO)
+.build/pot/git.pot: po/pot.header $(LOCALIZED_ALL_GEN_PO)
 	$(QUIET_GEN)msgcat $^ >$@
 
-po/git.pot: .build/pot/git.pot FORCE
+po/git.pot: .build/pot/git.pot
 	$(QUIET_CP)cp $< $@
 
 .PHONY: pot
@@ -3302,6 +3298,7 @@ dist-doc: git$X
 
 distclean: clean
 	$(RM) configure
+	$(RM) po/git.pot
 	$(RM) config.log config.status config.cache
 	$(RM) config.mak.autogen config.mak.append
 	$(RM) -r autom4te.cache
