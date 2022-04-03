@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: Git Mailing List <git@vger.kernel.org>\n"
-"POT-Creation-Date: 2022-04-03 12:56+0200\n"
+"POT-Creation-Date: 2022-01-17 08:31+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -537,6 +537,7 @@ msgid ""
 "Lines starting with %c will be removed.\n"
 msgstr ""
 
+#. #-#-#-#-#  git-add--interactive.perl  #-#-#-#-#
 #. TRANSLATORS: 'it' refers to the patch mentioned in the previous messages.
 #: add-patch.c:1106 git-add--interactive.perl:1129
 msgid ""
@@ -553,12 +554,14 @@ msgstr ""
 msgid "'git apply --cached' failed"
 msgstr ""
 
+#. #-#-#-#-#  add-patch.c  #-#-#-#-#
 #. TRANSLATORS: do not translate [y/n]
 #. The program will only accept that input at this point.
 #. Consider translating (saying "no" discards!) as
 #. (saying "n" for "no" discards!) if the translation
 #. of the word "no" does not start with n.
 #.
+#. #-#-#-#-#  git-add--interactive.perl  #-#-#-#-#
 #. TRANSLATORS: do not translate [y/n]
 #. The program will only accept that input
 #. at this point.
@@ -15334,6 +15337,7 @@ msgstr ""
 msgid "invalid number of threads specified (%d) for %s"
 msgstr ""
 
+#. #-#-#-#-#  grep.c  #-#-#-#-#
 #. TRANSLATORS: %s is the configuration
 #. variable for tweaking threads, currently
 #. grep.threads
@@ -22113,7 +22117,7 @@ msgstr ""
 
 #: builtin/submodule--helper.c:3363
 msgid ""
-"sets the submodule’s name to the given string instead of defaulting to its "
+"sets the submodules name to the given string instead of defaulting to its "
 "path"
 msgstr ""
 
