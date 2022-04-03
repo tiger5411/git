@@ -2705,7 +2705,6 @@ pdf:
 XGETTEXT_FLAGS = \
 	--force-po \
 	--add-comments=TRANSLATORS: \
-	--from-code=UTF-8 \
 	--omit-header
 
 XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --language=C \
@@ -2777,6 +2776,9 @@ po/git.pot: .build/pot/git.pot FORCE
 
 .PHONY: pot
 pot: po/git.pot
+
+.PHONY: check-pot
+check-pot: .build/pot/git.pot
 
 ifdef NO_GETTEXT
 POFILES :=
