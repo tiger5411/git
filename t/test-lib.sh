@@ -447,13 +447,16 @@ test -n "$BASH_VERSION" && shopt -u checkwinsize 2>/dev/null
 
 # For repeatability, reset the environment to known value.
 # TERM is sanitized below, after saving color control sequences.
-LANG=C
-LC_ALL=C
 PAGER=cat
 TZ=UTC
 COLUMNS=80
-export LANG LC_ALL PAGER TZ COLUMNS
+export PAGER TZ COLUMNS
 EDITOR=:
+
+for c in tr sed ls grep comm sort
+do
+	eval "$c () { LC_ALL=C command $c \"\$@\"; }"
+done
 
 # A call to "unset" with no arguments causes at least Solaris 10
 # /usr/xpg4/bin/sh and /bin/ksh to bail out.  So keep the unsets
