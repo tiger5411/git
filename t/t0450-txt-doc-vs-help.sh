@@ -28,10 +28,12 @@ expect_help_to_match_txt() {
 	get-tar-commit-id
 	hook
 	merge-base
+	merge-index
 	merge-tree
 	mktag
 	mktree
 	mv
+	pack-redundant
 	patch-id
 	prune
 	prune-packed
@@ -42,7 +44,9 @@ expect_help_to_match_txt() {
 	show-index
 	status
 	stripspace
+	unpack-file
 	unpack-objects
+	upload-archive
 	var
 	write-tree
 	EOF
