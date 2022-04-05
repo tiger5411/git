@@ -23,6 +23,7 @@ expect_help_to_match_txt() {
 	diff
 	difftool
 	fetch
+	for-each-repo
 	get-tar-commit-id
 	hook
 	merge-tree
