@@ -341,6 +341,8 @@ struct index_state {
 	struct progress *progress;
 	struct repository *repo;
 	struct pattern_list *sparse_checkout_patterns;
+	struct string_list *crlf2lf;
+	struct string_list *lf2crlf;
 };
 
 /* Name hashing */

@@ -185,8 +185,11 @@ static enum eol output_eol(enum convert_crlf_action crlf_action)
 }
 
 static void check_global_conv_flags_eol(const char *path,
-			    struct text_stat *old_stats, struct text_stat *new_stats,
-			    int conv_flags)
+					struct text_stat *old_stats,
+					struct text_stat *new_stats,
+					int conv_flags,
+					struct string_list *crlf2lf,
+					struct string_list *lf2crlf)
 {
 	if (old_stats->crlf && !new_stats->crlf ) {
 		/*
@@ -194,18 +197,20 @@ static void check_global_conv_flags_eol(const char *path,
 		 */
 		if (conv_flags & CONV_EOL_RNDTRP_DIE)
 			die(_("CRLF would be replaced by LF in %s"), path);
+		else if (conv_flags & CONV_EOL_RNDTRP_WARN && crlf2lf)
+			string_list_append(crlf2lf, path);
 		else if (conv_flags & CONV_EOL_RNDTRP_WARN)
-			warning(_("In '%s', CRLF will be replaced by LF the"
-				  " next time Git touches it"), path);
+			BUG("unreachable");
 	} else if (old_stats->lonelf && !new_stats->lonelf ) {
 		/*
 		 * CRLFs would be added by checkout
 		 */
 		if (conv_flags & CONV_EOL_RNDTRP_DIE)
 			die(_("LF would be replaced by CRLF in %s"), path);
+		else if (conv_flags & CONV_EOL_RNDTRP_WARN && lf2crlf)
+			string_list_append(lf2crlf, path);
 		else if (conv_flags & CONV_EOL_RNDTRP_WARN)
-			warning(_("In '%s', LF will be replaced by CRLF the"
-				  " next time Git touches it"), path);
+			BUG("unreachable");
 	}
 }
 
@@ -534,7 +539,8 @@ static int crlf_to_git(struct index_state *istate,
 			new_stats.crlf += new_stats.lonelf;
 			new_stats.lonelf = 0;
 		}
-		check_global_conv_flags_eol(path, &stats, &new_stats, conv_flags);
+		check_global_conv_flags_eol(path, &stats, &new_stats, conv_flags,
+					    istate->crlf2lf, istate->lf2crlf);
 	}
 	if (!convert_crlf_into_lf)
 		return 0;

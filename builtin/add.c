@@ -447,6 +447,11 @@ static int add_files(struct dir_struct *dir, int flags)
 {
 	int i, exit_status = 0;
 	struct string_list matched_sparse_paths = STRING_LIST_INIT_NODUP;
+	struct string_list crlf2lf = STRING_LIST_INIT_NODUP;
+	struct string_list lf2crlf = STRING_LIST_INIT_NODUP;
+
+	the_index.crlf2lf = &crlf2lf;
+	the_index.lf2crlf = &lf2crlf;
 
 	if (dir->ignored_nr) {
 		fprintf(stderr, _(ignore_error));
@@ -480,7 +485,26 @@ static int add_files(struct dir_struct *dir, int flags)
 		exit_status = 1;
 	}
 
+	if (crlf2lf.nr) {
+		struct string_list_item *item;
+
+		warning("ohes noes crlf2lf:");
+		for_each_string_list_item(item, &crlf2lf)
+			warning("\t%s", item->string);
+	}
+	if (lf2crlf.nr) {
+		struct string_list_item *item;
+
+		warning("ohes noes lf2crlf:");
+		for_each_string_list_item(item, &lf2crlf)
+			warning("\t%s", item->string);
+	}
+
 	string_list_clear(&matched_sparse_paths, 0);
+	string_list_clear(&crlf2lf, 0);
+	string_list_clear(&lf2crlf, 0);
+	the_index.crlf2lf = NULL;
+	the_index.lf2crlf = NULL;
 
 	return exit_status;
 }
