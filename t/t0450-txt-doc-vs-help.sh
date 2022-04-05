@@ -13,6 +13,7 @@ test_expect_success 'setup: list of builtins' '
 
 expect_help_to_match_txt() {
 	cat >ok <<-\EOF &&
+	bugreport
 	cat-file
 	check-attr
 	check-ignore
@@ -26,16 +27,21 @@ expect_help_to_match_txt() {
 	for-each-repo
 	get-tar-commit-id
 	hook
+	merge-base
 	merge-tree
 	mktag
 	mktree
+	mv
 	patch-id
 	prune
+	prune-packed
 	pull
 	replace
 	show-index
+	status
 	stripspace
 	unpack-objects
+	var
 	write-tree
 	EOF
 
