@@ -18,6 +18,7 @@ expect_help_to_match_txt() {
 	check-ignore
 	check-mailmap
 	cherry
+	clean
 	count-objects
 	diff
 	difftool
