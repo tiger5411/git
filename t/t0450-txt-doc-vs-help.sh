@@ -37,6 +37,7 @@ expect_help_to_match_txt() {
 	prune-packed
 	pull
 	replace
+	rerere
 	show-index
 	status
 	stripspace
