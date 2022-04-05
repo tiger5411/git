@@ -13,6 +13,7 @@ test_expect_success 'setup: list of builtins' '
 
 expect_help_to_match_txt() {
 	cat >ok <<-\EOF &&
+	cat-file
 	check-attr
 	check-ignore
 	check-mailmap
