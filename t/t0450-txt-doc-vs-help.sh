@@ -19,14 +19,18 @@ expect_help_to_match_txt() {
 	check-ignore
 	check-mailmap
 	cherry
+	cherry-pick
 	clean
 	count-objects
+	describe
 	diff
 	difftool
 	fetch
 	for-each-repo
 	get-tar-commit-id
+	help
 	hook
+	ls-remote
 	merge-base
 	merge-index
 	merge-tree
@@ -34,6 +38,7 @@ expect_help_to_match_txt() {
 	mktree
 	mv
 	pack-redundant
+	pack-refs
 	patch-id
 	prune
 	prune-packed
@@ -41,13 +46,24 @@ expect_help_to_match_txt() {
 	read-tree
 	replace
 	rerere
+	revert
+	send-pack
 	show-index
+	sparse-checkout
 	status
 	stripspace
+	symbolic-ref
+	tag
 	unpack-file
 	unpack-objects
+	update-server-info
 	upload-archive
+	upload-pack
 	var
+	verify-commit
+	verify-pack
+	verify-tag
+	version
 	write-tree
 	EOF
 
