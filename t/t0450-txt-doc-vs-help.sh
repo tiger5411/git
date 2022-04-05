@@ -36,6 +36,7 @@ expect_help_to_match_txt() {
 	prune
 	prune-packed
 	pull
+	read-tree
 	replace
 	rerere
 	show-index
