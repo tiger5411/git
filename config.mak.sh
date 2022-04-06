@@ -133,6 +133,9 @@ LIBPCREDIR=\$(HOME)/g/pcre2/inst
 # t/Makefile
 GIT_TEST_OPTS =${trash_dir:+ --root=$trash_dir}
 GIT_TEST_OPTS += --verbose-log
+ifdef GIT_TEST_OPTS_NO_BIN_WRAPPERS
+GIT_TEST_OPTS += --no-bin-wrappers
+endif
 
 DEFAULT_TEST_TARGET=prove
 
