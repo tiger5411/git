@@ -245,6 +245,11 @@ test_compile () {
 
 	# Test sanity
 	make -C t test-lint
+	
+	# Don't break these special snowflakes
+	parallel 'make -C {} test' ::: \
+		 gitweb \
+		 contrib/scalar contrib/mw-to-git contrib/subtree contrib/diff-highlight
 
 	# Remove any past test state
 	make -C t clean

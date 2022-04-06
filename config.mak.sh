@@ -141,7 +141,9 @@ DEFAULT_TEST_TARGET=prove
 #GIT_PROVE_OPTS=--jobs 8 --state=failed,slow,save --timer
 
 ## The optional "scalar" (MSFT "git-ng") interface
-INSTALL_SCALAR = Y
+##
+## TODO: Commented out the Makefile changes in series.conf
+#INSTALL_SCALAR = Y
 EOF
 
 if ! diff -u $toplevel/config.mak $tmp 2>/dev/null
