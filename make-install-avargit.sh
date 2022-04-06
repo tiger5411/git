@@ -231,7 +231,7 @@ test_compile () {
 	# Skipped tests, needs to go before ci-static-analysis
 	GIT_SKIP_TESTS=
 	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t5730.15"
-	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t0012.587"
+	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t0012.591"
 	export GIT_SKIP_TESTS
 
 	# Static
