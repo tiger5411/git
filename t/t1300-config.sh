@@ -245,11 +245,17 @@ test_expect_success 'non-match' '
 '
 
 test_expect_success 'non-match value' '
-	test_cmp_config wow --get nextsection.nonewline !for
+	echo wow >expect &&
+	git config --get nextsection.nonewline !for >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'multi-valued get returns final one' '
-	test_cmp_config "wow2 for me" --get nextsection.nonewline
+	cat >expect <<-\EOF &&
+	wow2 for me
+	EOF
+	git config nextsection.nonewline >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'multi-valued get-all returns all' '
@@ -511,7 +517,9 @@ test_expect_success 'editing stdin is an error' '
 
 test_expect_success 'refer config from subdirectory' '
 	mkdir x &&
-	test_cmp_config -C x strasse --file=../other-config --get ein.bahn
+	echo strasse >expect &&
+	git -C x config --file=../other-config ein.bahn >actual &&
+	test_cmp expect actual
 '
 
 cat > expect << EOF
@@ -665,8 +673,9 @@ test_expect_success numbers '
 
 test_expect_success '--int is at least 64 bits' '
 	git config giga.watts 121g &&
-	echo  >expect &&
-	test_cmp_config 129922760704 --int --get giga.watts
+	echo 129922760704 >expect &&
+	git config --int giga.watts >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'invalid unit' '
@@ -2175,15 +2184,21 @@ big = 1M
 EOF
 
 test_expect_success 'identical modern --type specifiers are allowed' '
-	test_cmp_config 1048576 --type=int --type=int section.big
+	echo 1048576 >expect &&
+	git config --type=int --type=int section.big >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'identical legacy --type specifiers are allowed' '
-	test_cmp_config 1048576 --int --int section.big
+	echo 1048576 >expect &&
+	git config --int --int section.big >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'identical mixed --type specifiers are allowed' '
-	test_cmp_config 1048576 --int --type=int section.big
+	echo 1048576 >expect &&
+	git config --int --type=int section.big >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'non-identical modern --type specifiers are not allowed' '
@@ -2202,15 +2217,21 @@ test_expect_success 'non-identical mixed --type specifiers are not allowed' '
 '
 
 test_expect_success '--type allows valid type specifiers' '
-	test_cmp_config true  --type=bool section.foo
+	echo true >expect &&
+	git config --type=bool section.foo >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success '--no-type unsets type specifiers' '
-	test_cmp_config 10 --type=bool --no-type section.number
+	echo 10 >expect &&
+	git config --type=bool --no-type section.number >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success 'unset type specifiers may be reset to conflicting ones' '
-	test_cmp_config 1048576 --type=bool --no-type --type=int section.big
+	echo 1048576 >expect &&
+	git config --type=bool --no-type --type=int section.big >actual &&
+	test_cmp expect actual
 '
 
 test_expect_success '--type rejects unknown specifiers' '
