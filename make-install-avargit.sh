@@ -230,6 +230,16 @@ test_compile () {
 		return
 	fi
 
+	# My test options
+	export GIT_TEST_HTTPD=1
+
+	# Make all of this faster, I'll run *once* with some of this
+	# sanity checking at the end.
+	export TEST_NO_MALLOC_CHECK=true
+	export GIT_TEST_CHAIN_LINT=0
+	export ORIG_MAKEFLAGS="$MAKEFLAGS"
+	export MAKEFLAGS="${MAKEFLAGS:+$MAKEFLAGS }GIT_TEST_OPTS_NO_BIN_WRAPPERS=Y"
+
 	# Skipped tests, needs to go before ci-static-analysis
 	GIT_SKIP_TESTS=
 	GIT_SKIP_TESTS="$GIT_SKIP_TESTS t5730.15"
@@ -268,7 +278,7 @@ test_compile () {
 	then
 		(
 			cd t
-			if ! GIT_TEST_HTTPD=1 make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+			if ! make T="$(cat /tmp/git.build-tests.tr)" GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 			then
 				suggest_bisect "$(git rev-parse HEAD)"
 			fi
@@ -282,7 +292,7 @@ test_compile () {
 		make clean-except-prove-cache
 		cut -d '-' -f1 </tmp/git.build-tests >/tmp/git.build-tests.cut
 		tr '\n' ' ' </tmp/git.build-tests.cut >/tmp/git.build-tests.cut.tr
-		if ! GIT_SKIP_TESTS="$GIT_SKIP_TESTS $(cat /tmp/git.build-tests.cut.tr)" GIT_TEST_HTTPD=1 GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
+		if ! GIT_SKIP_TESTS="$GIT_SKIP_TESTS $(cat /tmp/git.build-tests.cut.tr)" GIT_TEST_DEFAULT_HASH=sha256 make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /bin/bash"
 		then
 			suggest_bisect "$(git rev-parse HEAD)"
 		fi
@@ -304,11 +314,17 @@ test_compile () {
 		# TODO: The t3408 fail is on master, but I was too
 		# lazy to rebase out the commit that marked it as
 		# passing...
-		if ! GIT_TEST_HTTPD=1 GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
+		if ! GIT_TEST_PASSING_SANITIZE_LEAK=true GIT_TEST_PIPEFAIL=true make GIT_PROVE_OPTS="$GIT_PROVE_OPTS --exec /home/avar/g/bash/bash"
 		then
 			suggest_bisect "$(git rev-parse HEAD)"
 		fi
 	)
+
+	# Memory validation, and since it's slow anyway run with more sanity
+	TEST_NO_MALLOC_CHECK= \
+	GIT_TEST_CHAIN_LINT=1 \
+	MAKEFLAGS="$ORIG_MAKEFLAGS" \
+	make SANITIZE=address CFLAGS="-O3 -g" test
 }
 
 suggest_bisect() {
