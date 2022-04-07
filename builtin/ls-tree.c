@@ -14,12 +14,13 @@
 #include "parse-options.h"
 #include "pathspec.h"
 
-static void expand_objectsize(struct strbuf *line, const struct object_id *oid,
+static void expand_objectsize(struct repository *r, struct strbuf *line,
+			      const struct object_id *oid,
 			      const enum object_type type, unsigned int padded)
 {
 	if (type == OBJ_BLOB) {
 		unsigned long size;
-		if (oid_object_info(the_repository, oid, &size) < 0)
+		if (oid_object_info(r, oid, &size) < 0)
 			die(_("could not get object info about '%s'"),
 			    oid_to_hex(oid));
 		if (padded)
@@ -34,6 +35,7 @@ static void expand_objectsize(struct strbuf *line, const struct object_id *oid,
 }
 
 struct ls_tree_options {
+	struct repository *repository;
 	unsigned null_termination:1;
 	int abbrev;
 	enum ls_tree_path_options {
@@ -65,6 +67,7 @@ static size_t expand_show_tree(struct strbuf *sb, const char *start,
 {
 	struct show_tree_data_cb *wrapper = context;
 	struct ls_tree_options *options = wrapper->options;
+	struct repository *r = options->repository;
 	struct show_tree_data *data = wrapper->data;
 	const char *end;
 	const char *p;
@@ -88,9 +91,9 @@ static size_t expand_show_tree(struct strbuf *sb, const char *start,
 	} else if (skip_prefix(start, "(objecttype)", &p)) {
 		strbuf_addstr(sb, type_name(data->type));
 	} else if (skip_prefix(start, "(objectsize:padded)", &p)) {
-		expand_objectsize(sb, data->oid, data->type, 1);
+		expand_objectsize(r, sb, data->oid, data->type, 1);
 	} else if (skip_prefix(start, "(objectsize)", &p)) {
-		expand_objectsize(sb, data->oid, data->type, 0);
+		expand_objectsize(r, sb, data->oid, data->type, 0);
 	} else if (skip_prefix(start, "(objectname)", &p)) {
 		strbuf_add_unique_abbrev(sb, data->oid, options->abbrev);
 	} else if (skip_prefix(start, "(path)", &p)) {
@@ -379,7 +382,9 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	read_tree_fn_t fn = NULL;
 	enum ls_tree_cmdmode cmdmode = MODE_DEFAULT;
 	int null_termination = 0;
-	struct ls_tree_options options = { 0 };
+	struct ls_tree_options options = {
+		.repository = the_repository,
+	};
 	const struct option ls_tree_options[] = {
 		OPT_BIT('d', NULL, &options.ls_options, N_("only show trees"),
 			LS_TREE_ONLY),
