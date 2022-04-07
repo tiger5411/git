@@ -7,7 +7,6 @@ STANDALONE_TARGETS += GIT-VERSION-FILE
 ifeq ($(findstring n,$(MAKEFLAGS)),n)
 STANDALONE_TARGETS += artifacts-tar
 endif
-STANDALONE_TARGETS += check-builtins
 STANDALONE_TARGETS += check-docs
 ## Clean
 STANDALONE_TARGETS += profile-clean
