@@ -37,6 +37,7 @@ static void expand_objectsize(struct repository *r, struct strbuf *line,
 struct ls_tree_options {
 	struct repository *repository;
 	unsigned null_termination:1;
+	unsigned recurse_submodules:1;
 	int abbrev;
 	enum ls_tree_path_options {
 		LS_RECURSIVE = 1 << 0,
@@ -101,6 +102,9 @@ static size_t expand_show_tree(struct strbuf *sb, const char *start,
 		const char *prefix = options->chomp_prefix ? options->ls_tree_prefix : NULL;
 		struct strbuf quoted = STRBUF_INIT;
 		struct strbuf sbuf = STRBUF_INIT;
+
+		if (r->submodule_prefix)
+			strbuf_addstr(sb, r->submodule_prefix);
 		strbuf_addstr(data->base, data->pathname);
 		name = relative_path(data->base->buf, prefix, &sbuf);
 		quote_c_style(name, &quoted, NULL, 0);
@@ -145,6 +149,44 @@ static int show_recursive(struct ls_tree_options *options, const char *base,
 	return 0;
 }
 
+static void ls_tree_submodule(struct ls_tree_options *options,
+			      const struct object_id *oid,
+			      const char *path, read_tree_fn_t fn)
+{
+	struct repository subrepo;
+	struct ls_tree_options suboptions = *options;
+	struct tree *tree;
+
+	if (repo_submodule_init(&subrepo, options->repository, path,
+				null_oid()))
+		return;
+
+	tree = repo_parse_tree_indirect(&subrepo, oid);
+	if (!tree)
+		die("not a tree object");
+
+	suboptions.repository = &subrepo;
+	/*
+	 * TODO: Pathspec matching of submodules doesn't match because
+	 * we'll simply copy the pathspec from the parent here, so
+	 * it'll e.g. a one-item "sha1collisiondetection/" pathspec,
+	 * but here we're recursing down to "sha1collisiondetection/",
+	 * so we'd need to change that to ".".
+	 *
+	 * We probably need to pass things down to
+	 * tree_entry_interesting() here, and see
+	 * "ps->recurse_submodules" in tree-walk.c, in
+	 * particulareef3df5a937 (pathspec: only match across
+	 * submodule boundaries when requested, 2017-12-04).
+	 *
+	 * But some of that has to do with the index, so maybe we'll
+	 * need some significant API changes here?
+	 */
+	read_tree(&subrepo, tree, &options->pathspec, fn, &suboptions);
+
+	repo_clear(&subrepo);
+}
+
 static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
 			 const char *pathname, unsigned mode, void *context)
 {
@@ -165,7 +207,7 @@ static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
 		.options = options,
 	};
 
-	if (type == OBJ_TREE && show_recursive(options, base->buf, base->len, pathname))
+	if ((type == OBJ_TREE) && show_recursive(options, base->buf, base->len, pathname))
 		recurse = READ_TREE_RECURSIVE;
 	if (type == OBJ_TREE && recurse && !(options->ls_options & LS_SHOW_TREES))
 		return recurse;
@@ -179,6 +221,30 @@ static int show_tree_fmt(const struct object_id *oid, struct strbuf *base,
 	strbuf_release(&sb);
 	strbuf_setlen(base, baselen);
 	return recurse;
+}
+
+static int show_tree_fmt_sub(const struct object_id *oid, struct strbuf *base,
+			     const char *pathname, unsigned mode,
+			     void *context)
+{
+	struct ls_tree_options *options = context;
+	enum object_type type = object_type(mode);
+
+	if (type == OBJ_COMMIT && options->recurse_submodules) {
+		ls_tree_submodule(options, oid, pathname, show_tree_fmt_sub);
+		/*
+		 * Don't care about -r here, the ls_tree_submodule() *
+		 * will handle recursing.
+		 *
+		 * Also: Re the question of whether we should print
+		 * out submodule prefixes: should we always print this
+		 * entry? Probably not, should probably add a
+		 * %{submodulepath} format instead.
+		 */
+		return 0;
+	}
+
+	return show_tree_fmt(oid, base, pathname, mode, context);
 }
 
 static int show_tree_common(struct ls_tree_options *options, int *recurse,
@@ -382,6 +448,7 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	read_tree_fn_t fn = NULL;
 	enum ls_tree_cmdmode cmdmode = MODE_DEFAULT;
 	int null_termination = 0;
+	int recurse_submodules = 0;
 	struct ls_tree_options options = {
 		.repository = the_repository,
 	};
@@ -411,6 +478,8 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 					 N_("format to use for the output"),
 					 PARSE_OPT_NONEG),
 		OPT__ABBREV(&options.abbrev),
+		OPT_BOOL(0, "recurse-submodules", &recurse_submodules,
+			 N_("recurse into submodules")),
 		OPT_END()
 	};
 	struct ls_tree_cmdmode_to_fmt *m2f = ls_tree_cmdmode_format;
@@ -424,6 +493,7 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, ls_tree_options,
 			     ls_tree_usage, 0);
 	options.null_termination = null_termination;
+	options.recurse_submodules = recurse_submodules;
 
 	if (full_tree) {
 		options.ls_tree_prefix = prefix = NULL;
@@ -474,6 +544,10 @@ int cmd_ls_tree(int argc, const char **argv, const char *prefix)
 	while (m2f) {
 		if (!m2f->fmt) {
 			fn = options.format ? show_tree_fmt : show_tree_default;
+		} else if (options.recurse_submodules && !options.format &&
+			   cmdmode == m2f->mode) {
+			fn = show_tree_fmt_sub;
+			options.format = m2f->fmt;
 		} else if (options.format && !strcmp(options.format, m2f->fmt)) {
 			cmdmode = m2f->mode;
 			fn = m2f->fn;
