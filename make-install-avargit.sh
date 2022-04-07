@@ -243,7 +243,7 @@ test_compile () {
 	make all
 
 	# Doc
-	make man
+	make man doc info
 
 	# Test sanity
 	make -C t test-lint
@@ -674,7 +674,7 @@ new_version=$(git rev-parse HEAD)
 new_tagname=$(tag_name)
 new_tag=$(tag_it "$(git rev-parse HEAD)" "$new_tagname")
 last_version=$(git rev-parse avar/private)
-make install install-man
+make install install-man install-doc install-info
 ## Install git completions, same paths as the "git" debian package
 install -d -m 755 "$prefix/lib/git-core"
 install -m 644 contrib/completion/git-prompt.sh "$prefix/lib/git-core/"git-sh-prompt
