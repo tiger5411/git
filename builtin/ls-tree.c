@@ -83,6 +83,8 @@ static size_t expand_show_tree(struct strbuf *sb, const char *start,
 	len = end - start + 1;
 	if (skip_prefix(start, "(objectmode)", &p)) {
 		strbuf_addf(sb, "%06o", data->mode);
+	} else if (skip_prefix(start, "(objecttype:padded)", &p)) {
+		strbuf_addf(sb, "%6s", type_name(data->type));
 	} else if (skip_prefix(start, "(objecttype)", &p)) {
 		strbuf_addstr(sb, type_name(data->type));
 	} else if (skip_prefix(start, "(objectsize:padded)", &p)) {

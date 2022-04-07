@@ -152,6 +152,12 @@ objectmode::
 	The mode of the object.
 objecttype::
 	The type of the object (`commit`, `blob` or `tree`).
+objecttype[:padded]::
+	Like `%(objecttype)`, but whitespace-padded so that object
+	types will be vertically aligned. The reason that the
+	equivalent of `%(objecttype)` isn't aligned in the default
+	output is that `ls-tree` predates the existence of
+	submodules. See linkgit:git-submodule[1].
 objectname::
 	The name of the object.
 objectsize[:padded]::

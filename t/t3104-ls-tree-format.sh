@@ -17,6 +17,19 @@ test_expect_success 'setup' '
 	test_commit top-file
 '
 
+test_expect_success 'ls-tree format: %(objecttype:padded)' '
+	cat >expect <<-\EOF &&
+	|  tree|tree|dir|
+	|  blob|blob|dir/sub-file.t|
+	|  blob|blob|top-file.t|
+	EOF
+	git ls-tree -r -t \
+		--format="|%(objecttype:padded)|%(objecttype)|%(path)|" \
+		HEAD -- dir top-file.t \
+		>actual &&
+	test_cmp expect actual
+'
+
 test_ls_tree_format () {
 	format=$1 &&
 	opts=$2 &&
