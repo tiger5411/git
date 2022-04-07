@@ -182,6 +182,8 @@ tag_it() {
 }
 
 reset_it() {
+	# Stale things like e.g. "git-subtree"
+	git clean -dxf
 	git reset --hard
 	git checkout build-master || git checkout -b build-master -t origin/master
 	git bisect reset
