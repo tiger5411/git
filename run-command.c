@@ -1478,6 +1478,25 @@ struct parallel_process_child {
 	void *data;
 };
 
+#define PARALLEL_PROCESS_CHILD_INIT { \
+	.state = GIT_CP_FREE, \
+	.process = CHILD_PROCESS_INIT, \
+	.err = STRBUF_INIT, \
+}
+
+static void parallel_process_child_init(struct parallel_process_child *ppc)
+{
+	struct parallel_process_child blank = PARALLEL_PROCESS_CHILD_INIT;
+
+	memcpy(ppc, &blank, sizeof(*ppc));
+}
+
+static void parallel_process_child_clear(struct parallel_process_child *ppc)
+{
+	child_process_clear(&ppc->process);
+	strbuf_release(&ppc->err);
+}
+
 struct parallel_processes {
 	void *data;
 
@@ -1500,6 +1519,54 @@ struct parallel_processes {
 	int output_owner;
 	struct strbuf buffered_output; /* of finished children */
 };
+#define PARALLEL_PROCESSES_INIT { \
+	.buffered_output = STRBUF_INIT, \
+}
+
+static void parallel_processes_init(struct parallel_processes *pp, int n)
+{
+	struct parallel_processes blank = PARALLEL_PROCESSES_INIT;
+	int i;
+
+	memcpy(pp, &blank, sizeof(*pp));
+
+	if (n < 1)
+		n = online_cpus();
+
+	pp->max_processes = n;
+
+	trace_printf("run_processes_parallel: preparing to run up to %d tasks", n);
+
+	ALLOC_ARRAY(pp->children, n);
+	ALLOC_ARRAY(pp->pfd, n);
+
+	for (i = 0; i < n; i++) {
+		struct parallel_process_child *ppc = &pp->children[i];
+		struct pollfd *pfd = &pp->pfd[i];
+
+		parallel_process_child_init(ppc);
+		pfd->events = POLLIN | POLLHUP;
+		pfd->fd = -1;
+	}
+}
+
+static void parallel_processes_release(struct parallel_processes *pp)
+{
+	int i;
+
+	for (i = 0; i < pp->max_processes; i++)
+		parallel_process_child_clear(&pp->children[i]);
+
+	/*
+	 * When get_next_task added messages to the buffer in its last
+	 * iteration, the buffered output is non empty.
+	 */
+	strbuf_write(&pp->buffered_output, stderr);
+	strbuf_release(&pp->buffered_output);
+
+	free(pp->children);
+	free(pp->pfd);
+}
 
 static int default_start_failure(struct strbuf *out,
 				 void *pp_cb,
@@ -1544,15 +1611,7 @@ static void pp_init(struct parallel_processes *pp,
 		    task_finished_fn task_finished,
 		    void *data)
 {
-	int i;
-
-	if (n < 1)
-		n = online_cpus();
-
-	pp->max_processes = n;
-
-	trace_printf("run_processes_parallel: preparing to run up to %d tasks", n);
-
+	parallel_processes_init(pp, n);
 	pp->data = data;
 	if (!get_next_task)
 		BUG("you need to specify a get_next_task function");
@@ -1561,49 +1620,14 @@ static void pp_init(struct parallel_processes *pp,
 	pp->start_failure = start_failure ? start_failure : default_start_failure;
 	pp->task_finished = task_finished ? task_finished : default_task_finished;
 
-	pp->nr_processes = 0;
-	pp->output_owner = 0;
-	pp->shutdown = 0;
-	CALLOC_ARRAY(pp->children, n);
-	CALLOC_ARRAY(pp->pfd, n);
-	strbuf_init(&pp->buffered_output, 0);
-
-	for (i = 0; i < n; i++) {
-		struct parallel_process_child *ppc = &pp->children[i];
-		struct pollfd *pfd = &pp->pfd[i];
-
-		strbuf_init(&ppc->err, 0);
-		child_process_init(&ppc->process);
-		pfd->events = POLLIN | POLLHUP;
-		pfd->fd = -1;
-	}
-
 	pp_for_signal = pp;
 	sigchain_push_common(handle_children_on_signal);
 }
 
 static void pp_cleanup(struct parallel_processes *pp)
 {
-	int i;
-
 	trace_printf("run_processes_parallel: done");
-	for (i = 0; i < pp->max_processes; i++) {
-		struct parallel_process_child *ppc = &pp->children[i];
-
-		strbuf_release(&ppc->err);
-		child_process_clear(&ppc->process);
-	}
-
-	free(pp->children);
-	free(pp->pfd);
-
-	/*
-	 * When get_next_task added messages to the buffer in its last
-	 * iteration, the buffered output is non empty.
-	 */
-	strbuf_write(&pp->buffered_output, stderr);
-	strbuf_release(&pp->buffered_output);
-
+	parallel_processes_release(pp);
 	sigchain_pop_common();
 }
 
