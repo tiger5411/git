@@ -2730,9 +2730,6 @@ endif
 ## having a way to override the basename inserted into comments.
 LOCALIZED_ALL_GEN_PO =
 
-LOCALIZED_C_GEN_PO = $(LOCALIZED_C:%=.build/pot/po/%)
-LOCALIZED_ALL_GEN_PO += $(LOCALIZED_C_GEN_PO)
-
 LOCALIZED_SH_GEN_PO = $(LOCALIZED_SH:%=.build/pot/po/%)
 LOCALIZED_ALL_GEN_PO += $(LOCALIZED_SH_GEN_PO)
 
@@ -2742,12 +2739,56 @@ LOCALIZED_ALL_GEN_PO += $(LOCALIZED_PERL_GEN_PO)
 ## Gettext tools cannot work with our own custom PRItime type, so
 ## we replace PRItime with PRIuMAX.  We need to update this to
 ## PRIdMAX if we switch to a signed type later.
-LOCALIZED_C_GEN	= $(LOCALIZED_C:%=.build/pot/in/%)
-$(LOCALIZED_C_GEN): .build/pot/in/%: %
+##
+## We're saving ourselves work here by only creating the
+## .build/pot/in/ files for the files that contain the PRItime string,
+## but because rule evaluation in make is always:
+##
+##	IMMEDIATE : IMMEDIATE ; DEFERRED
+##		DEFERRED
+##
+## We cannot make anything on the LHS of a rule depend on the
+## "include" of the .build/pot/munged.mak, so we're optimistically
+## including it if we are doing a "make pot", which allows us to save
+## ourselves some work.
+##
+## But the whole .build/pot/munged.mak chain here is only an
+## optimization, these rules "fail safe" if we're not including
+## it. We'll just "sed" all of our *.[ch] files then, and have a large
+## .build/pot/in/* tree.
+LOCALIZED_C_MUNGED_GEN	= $(LOCALIZED_C:%=.build/pot/munged/%)
+$(LOCALIZED_C_MUNGED_GEN): .build/pot/munged/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)if grep -l PRItime $< >$@; \
+	then \
+		echo LOCALIZED_C_NEEDS_GEN_GEN += $<; \
+	fi >$@
+.build/pot/munged.mak: $(LOCALIZED_C_MUNGED_GEN)
+	$(QUIET_GEN)echo LOCALIZED_C_NEEDS_GEN_GEN = >$@ && \
+	cat $^ >>$@
+
+ifneq ($(filter pot,$(MAKECMDGOALS)),)
+include .build/pot/munged.mak
+endif
+
+ifndef LOCALIZED_C_NEEDS_GEN_GEN
+LOCALIZED_C_NEEDS_GEN_GEN = $(LOCALIZED_C)
+endif
+
+LOCALIZED_C_GEN = $(filter-out $(LOCALIZED_C_NEEDS_GEN_GEN),$(LOCALIZED_C))
+LOCALIZED_C_GEN_PO = $(LOCALIZED_C_GEN:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_C_GEN_PO)
+
+LOCALIZED_C_GEN_GEN = $(filter $(LOCALIZED_C_NEEDS_GEN_GEN),$(LOCALIZED_C))
+LOCALIZED_C_GEN_GEN_PO = $(LOCALIZED_C_GEN_GEN:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_C_GEN_GEN_PO)
+
+LOCALIZED_C_GEN_GEN_IN = $(LOCALIZED_C_GEN_GEN:%=.build/pot/in/%)
+$(LOCALIZED_C_GEN_GEN_IN): .build/pot/in/%: %
 	$(call mkdir_p_parent_template)
 	$(QUIET_GEN)sed -e 's|PRItime|PRIuMAX|g' <$< >$@
 
-$(LOCALIZED_C_GEN_PO): .build/pot/po/%: .build/pot/in/%
+$(LOCALIZED_C_GEN_GEN_PO): .build/pot/po/%: .build/pot/in/%
 	$(call mkdir_p_parent_template)
 	$(QUIET_XGETTEXT)(\
 		cd .build/pot/in && \
@@ -2755,6 +2796,10 @@ $(LOCALIZED_C_GEN_PO): .build/pot/po/%: .build/pot/in/%
 			$(XGETTEXT_FLAGS_C) \
 			$(<:.build/pot/in/%=%) \
 	)
+
+$(LOCALIZED_C_GEN_PO): .build/pot/po/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_C) $<
 
 $(LOCALIZED_SH_GEN_PO): .build/pot/po/%: %
 	$(call mkdir_p_parent_template)
