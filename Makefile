@@ -2584,6 +2584,8 @@ endef
 
 $(eval $(call computed-deps))
 
+## FIXUP! See note in series.conf
+$(LIB_H): $(GENERATED_H)
 else
 $(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
