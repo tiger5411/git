@@ -1925,8 +1925,7 @@ static int do_export_stash(const char *ref, int argc, const char **argv)
 	struct object_id base;
 	struct object_context unused;
 	struct commit *prev;
-	struct object_id *items = NULL;
-	int nitems = 0, nalloc = 0;
+	struct oid_array items = OID_ARRAY_INIT;
 	int res = 0;
 	int i;
 	struct strbuf revision = STRBUF_INIT;
@@ -1954,14 +1953,16 @@ static int do_export_stash(const char *ref, int argc, const char **argv)
 		 * Find each specified stash, and load data into the array.
 		 */
 		for (i = 0; i < argc; i++) {
-			ALLOC_GROW_BY(items, nitems, 1, nalloc);
+			struct object_id oid;
+
 			if (parse_revision(&revision, argv[i], 1) ||
 			    get_oid_with_context(the_repository, revision.buf,
 						 GET_OID_QUIETLY | GET_OID_GENTLY,
-						 &items[i], &unused)) {
+						 &oid, &unused)) {
 				res = error(_("unable to find stash entry %s"), argv[i]);
 				goto out;
 			}
+			oid_array_append(&items, &oid);
 		}
 	} else {
 		/*
@@ -1978,8 +1979,7 @@ static int do_export_stash(const char *ref, int argc, const char **argv)
 						 GET_OID_QUIETLY | GET_OID_GENTLY,
 						 &oid, &unused))
 				break;
-			ALLOC_GROW_BY(items, nitems, 1, nalloc);
-			oidcpy(&items[i], &oid);
+			oid_array_append(&items, &oid);
 		}
 	}
 
@@ -1988,14 +1988,15 @@ static int do_export_stash(const char *ref, int argc, const char **argv)
 	 * but where their first parents form a chain to our original empty
 	 * base commit.
 	 */
-	for (i = nitems - 1; i >= 0; i--) {
+	for (i = items.nr - 1; i >= 0; i--) {
 		struct commit_list *parents = NULL;
 		struct commit_list **next = &parents;
 		struct object_id out;
+		const struct object_id *oid = items.oid + i;
 
 		next = commit_list_append(prev, next);
-		next = commit_list_append(lookup_commit_reference(the_repository, &items[i]), next);
-		res = write_commit_with_parents(&out, &items[i], parents);
+		next = commit_list_append(lookup_commit_reference(the_repository, oid), next);
+		res = write_commit_with_parents(&out, oid, parents);
 		if (res)
 			goto out;
 		prev = lookup_commit_reference(the_repository, &out);
@@ -2006,7 +2007,7 @@ static int do_export_stash(const char *ref, int argc, const char **argv)
 		puts(oid_to_hex(&prev->object.oid));
 out:
 	strbuf_release(&revision);
-	free(items);
+	oid_array_clear(&items);
 
 	return res;
 }
