@@ -66,3 +66,73 @@ endif
 endif
 
 GIT_TEST_PERL_FATAL_WARNINGS = YesPlease
+
+# GCC's -fanalyzer mode. See also
+# https://developers.redhat.com/articles/2022/04/12/state-static-analysis-gcc-12-compiler
+ifneq ($(filter gcc10,$(COMPILER_FEATURES)),)
+ifeq ($(filter analyzer,$(DEVOPTS)),analyzer)
+DEVELOPER_CFLAGS += -fanalyzer
+
+## -fanalyzer exists exists as of gcc10, but versions older than gcc12
+## have a lot of false positives.
+ifeq ($(filter gcc12,$(COMPILER_FEATURES)),)
+DEVELOPER_CFLAGS += -Wno-analyzer-double-free
+DEVELOPER_CFLAGS += -Wno-analyzer-free-of-non-heap
+endif
+
+## Helper templates to whitelist existing issues
+define fn_disable_analyzer_tmpl
+$(1).sp $(1).s $(1).o: EXTRA_CPPFLAGS += $(2)
+
+endef
+
+define fn_disable_analyzer
+$(foreach f,$(2),$(call fn_disable_analyzer_tmpl,$(f),$(1)))
+endef
+
+## -Wno-error=analyzer-null-dereference
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-null-dereference, \
+	add-patch \
+	blame \
+	diff-lib \
+	dir \
+	gpg-interface \
+	graph \
+	range-diff \
+	ref-filter \
+	refs/packed-backend \
+	remote \
+	strbuf \
+	unpack-trees \
+	utf8 \
+))
+## -Wno-error=analyzer-null-dereference: pre-gcc12
+ifeq ($(filter gcc12,$(COMPILER_FEATURES)),)
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-null-dereference, \
+	merge \
+	builtin/name-rev \
+))
+endif
+## -Wno-error=analyzer-null-argument
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-null-argument, \
+	builtin/pull \
+	pack-write \
+))
+## -Wno-error=analyzer-use-of-uninitialized-value: post-gcc12
+ifneq ($(filter gcc12,$(COMPILER_FEATURES)),)
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-use-of-uninitialized-value, \
+	builtin/merge-file \
+))
+endif
+## -Wno-error=analyzer-malloc-leak
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-malloc-leak, \
+	fsmonitor-settings \
+))
+
+endif
+endif
