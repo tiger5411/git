@@ -1385,6 +1385,7 @@ static void write_commit_patch(const struct am_state *state, struct commit *comm
 	add_pending_object_no_name(&rev_info, &commit->object);
 	diff_setup_done(&rev_info.diffopt);
 	log_tree_commit(&rev_info, commit);
+	release_revisions(&rev_info);
 }
 
 /**
@@ -1417,6 +1418,7 @@ static void write_index_patch(const struct am_state *state)
 	add_pending_object_no_name(&rev_info, &tree->object);
 	diff_setup_done(&rev_info.diffopt);
 	run_diff_index(&rev_info, 1);
+	release_revisions(&rev_info);
 }
 
 /**
@@ -1570,6 +1572,7 @@ static int fall_back_threeway(const struct am_state *state, const char *index_pa
 		add_pending_oid(&rev_info, "HEAD", &our_tree, 0);
 		diff_setup_done(&rev_info.diffopt);
 		run_diff_index(&rev_info, 1);
+		release_revisions(&rev_info);
 	}
 
 	if (run_apply(state, index_path))

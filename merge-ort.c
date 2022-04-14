@@ -1594,6 +1594,7 @@ static int find_first_merges(struct repository *repo,
 	}
 
 	object_list_clear(&merges);
+	release_revisions(&revs);
 	return result->nr;
 }
 

@@ -304,6 +304,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 		revs.ignore_missing_links = 1;
 		mark_reachable_objects(&revs, 0, 0, progress);
 		stop_progress(&progress);
+		release_revisions(&revs);
 	}
 
 	if (do_all) {

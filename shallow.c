@@ -267,6 +267,7 @@ struct commit_list *get_shallow_commits_by_rev_list(struct strvec *args,
 		if ((o->flags & both_flags) == both_flags)
 			o->flags &= ~not_shallow_flag;
 	}
+	release_revisions(&revs);
 	return result;
 }
 
