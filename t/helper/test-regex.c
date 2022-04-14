@@ -24,27 +24,35 @@ static int test_regex_bug(void)
 	char *str = "={}\nfred";
 	regex_t r;
 	regmatch_t m[1];
+	int err = 0;
 
 	if (regcomp(&r, pat, REG_EXTENDED | REG_NEWLINE))
 		die("failed regcomp() for pattern '%s'", pat);
-	if (regexec(&r, str, 1, m, 0))
-		die("no match of pattern '%s' to string '%s'", pat, str);
+	if (regexec(&r, str, 1, m, 0)) {
+		err = error("no match of pattern '%s' to string '%s'", pat, str);
+		goto cleanup;
+	}
 
 	/* http://sourceware.org/bugzilla/show_bug.cgi?id=3957  */
-	if (m[0].rm_so == 3) /* matches '\n' when it should not */
-		die("regex bug confirmed: re-build git with NO_REGEX=1");
+	if (m[0].rm_so == 3) { /* matches '\n' when it should not */
+		err = error("regex bug confirmed: re-build git with NO_REGEX=1");
+		goto cleanup;
+	}
 
-	return 0;
+cleanup:
+	regfree(&r);
+	return err < 0 ? 1 : 0;
 }
 
 int cmd__regex(int argc, const char **argv)
 {
 	const char *pat;
 	const char *str;
-	int ret, silent = 0, flags = 0;
+	int silent = 0, flags = 0;
 	regex_t r;
 	regmatch_t m[1];
 	char errbuf[64];
+	int ret = 0;
 
 	argv++;
 	argc--;
@@ -85,27 +93,29 @@ int cmd__regex(int argc, const char **argv)
 	}
 	git_setup_gettext();
 
-	ret = regcomp(&r, pat, flags);
-	if (ret) {
+	if (regcomp(&r, pat, flags)) {
 		if (silent)
-			return ret;
+			return 1;
 
 		regerror(ret, &r, errbuf, sizeof(errbuf));
 		die("failed regcomp() for pattern '%s' (%s)", pat, errbuf);
 	}
 	if (!str)
-		return 0;
+		goto cleanup;
 
-	ret = regexec(&r, str, 1, m, 0);
-	if (ret) {
+	if (regexec(&r, str, 1, m, 0)) {
+		ret = 1;
 		if (silent || ret == REG_NOMATCH)
-			return ret;
+			goto cleanup;
 
 		regerror(ret, &r, errbuf, sizeof(errbuf));
-		die("failed regexec() for subject '%s' (%s)", str, errbuf);
+		error("failed regexec() for subject '%s' (%s)", str, errbuf);
+		goto cleanup;
 	}
 
-	return 0;
+cleanup:
+	regfree(&r);
+	return ret;
 usage:
 	usage("\ttest-tool regex --bug\n"
 	      "\ttest-tool regex [--silent] <pattern>\n"

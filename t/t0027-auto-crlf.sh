@@ -294,11 +294,17 @@ checkout_files () {
 	pfx=eol_${ceol}_crlf_${crlf}_attr_${attr}_ &&
 	for f in LF CRLF LF_mix_CR CRLF_mix_LF LF_nul
 	do
-		rm crlf_false_attr__$f.txt &&
-		if test -z "$ceol"; then
-			git checkout -- crlf_false_attr__$f.txt
+		if test -z "$ceol"
+		then
+			test_expect_success "setup $f checkout" '
+				rm crlf_false_attr__$f.txt &&
+				git checkout -- crlf_false_attr__$f.txt
+			'
 		else
-			git -c core.eol=$ceol checkout -- crlf_false_attr__$f.txt
+			test_expect_success "setup $f checkout with core.eol=$ceol" '
+				rm crlf_false_attr__$f.txt &&
+				git -c core.eol=$ceol checkout -- crlf_false_attr__$f.txt
+			'
 		fi
 	done
 
