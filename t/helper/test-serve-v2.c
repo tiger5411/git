@@ -21,10 +21,8 @@ int cmd__serve_v2(int argc, const char **argv)
 	};
 	const char *prefix = setup_git_directory();
 
-	/* ignore all unknown cmdline switches for now */
-	argc = parse_options(argc, argv, prefix, options, serve_usage,
-			     PARSE_OPT_KEEP_DASHDASH |
-			     PARSE_OPT_KEEP_UNKNOWN);
+	parse_options(argc, argv, prefix, options, serve_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (advertise_capabilities)
 		protocol_v2_advertise_capabilities();

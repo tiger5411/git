@@ -184,9 +184,9 @@ int cmd_show_ref(int argc, const char **argv, const char *prefix)
 {
 	git_config(git_default_config, NULL);
 
-	argc = parse_options(argc, argv, prefix, show_ref_options,
-			     show_ref_usage,
-			     PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG);
+	parse_options(argc, argv, prefix, show_ref_options,
+		      show_ref_usage,
+		      PARSE_OPT_INTERNAL_HELP_ON_ONE_ARG);
 
 	if (exclude_arg)
 		return exclude_existing(exclude_existing_arg);

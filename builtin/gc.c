@@ -580,9 +580,7 @@ int cmd_gc(int argc, const char **argv, const char *prefix)
 		pack_refs = !is_bare_repository();
 
 	argc = parse_options(argc, argv, prefix, builtin_gc_options,
-			     builtin_gc_usage, 0);
-	if (argc > 0)
-		usage_with_options(builtin_gc_usage, builtin_gc_options);
+			     builtin_gc_usage, PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (prune_expire && parse_expiry_date(prune_expire, &dummy))
 		die(_("failed to parse prune expiry value %s"), prune_expire);
@@ -1430,16 +1428,13 @@ static int maintenance_run(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix,
 			     builtin_maintenance_run_options,
 			     builtin_maintenance_run_usage,
-			     PARSE_OPT_STOP_AT_NON_OPTION);
+			     PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (opts.auto_flag && opts.schedule)
 		die(_("use at most one of --auto and --schedule=<frequency>"));
 
 	initialize_task_config(opts.schedule);
 
-	if (argc != 0)
-		usage_with_options(builtin_maintenance_run_usage,
-				   builtin_maintenance_run_options);
 	return maintenance_run_tasks(&opts);
 }
 
@@ -2485,10 +2480,9 @@ static int maintenance_start(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	argc = parse_options(argc, argv, prefix, options,
-			     builtin_maintenance_start_usage, 0);
-	if (argc)
-		usage_with_options(builtin_maintenance_start_usage, options);
+	parse_options(argc, argv, prefix, options,
+		      builtin_maintenance_start_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	opts.scheduler = resolve_scheduler(opts.scheduler);
 	validate_scheduler(opts.scheduler);

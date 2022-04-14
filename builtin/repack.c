@@ -677,8 +677,8 @@ int cmd_repack(int argc, const char **argv, const char *prefix)
 
 	git_config(repack_config, NULL);
 
-	argc = parse_options(argc, argv, prefix, builtin_repack_options,
-				git_repack_usage, 0);
+	parse_options(argc, argv, prefix, builtin_repack_options,
+		      git_repack_usage, PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (delete_redundant && repository_format_precious_objects)
 		die(_("cannot delete packs in a precious-objects repo"));

@@ -43,6 +43,10 @@ test_has_duplicate_object () {
 	test "$want_duplicate_object" = "$found_duplicate_object"
 }
 
+test_expect_success 'usage' '
+	test_expect_code 129 git repack subcommand
+'
+
 test_expect_success 'objects in packs marked .keep are not repacked' '
 	echo content1 >file1 &&
 	echo content2 >file2 &&

@@ -80,11 +80,9 @@ static int graph_verify(int argc, const char **argv)
 	trace2_cmd_mode("verify");
 
 	opts.progress = isatty(2);
-	argc = parse_options(argc, argv, NULL,
-			     options,
-			     builtin_commit_graph_verify_usage, 0);
-	if (argc)
-		usage_with_options(builtin_commit_graph_verify_usage, options);
+	parse_options(argc, argv, NULL, options,
+		      builtin_commit_graph_verify_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (!opts.obj_dir)
 		opts.obj_dir = get_object_directory();
@@ -241,11 +239,9 @@ static int graph_write(int argc, const char **argv)
 
 	git_config(git_commit_graph_write_config, &opts);
 
-	argc = parse_options(argc, argv, NULL,
-			     options,
-			     builtin_commit_graph_write_usage, 0);
-	if (argc)
-		usage_with_options(builtin_commit_graph_write_usage, options);
+	parse_options(argc, argv, NULL, options,
+		      builtin_commit_graph_write_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (opts.reachable + opts.stdin_packs + opts.stdin_commits > 1)
 		die(_("use at most one of --reachable, --stdin-commits, or --stdin-packs"));

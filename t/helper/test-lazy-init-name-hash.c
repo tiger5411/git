@@ -206,7 +206,8 @@ int cmd__lazy_init_name_hash(int argc, const char **argv)
 
 	prefix = setup_git_directory();
 
-	argc = parse_options(argc, argv, prefix, options, usage, 0);
+	parse_options(argc, argv, prefix, options, usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	/*
 	 * istate->dir_hash is only created when ignore_case is set.

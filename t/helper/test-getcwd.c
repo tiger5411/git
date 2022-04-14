@@ -14,9 +14,8 @@ int cmd__getcwd(int argc, const char **argv)
 	};
 	char *cwd;
 
-	argc = parse_options(argc, argv, "test-tools", options, getcwd_usage, 0);
-	if (argc > 0)
-		usage_with_options(getcwd_usage, options);
+	argc = parse_options(argc, argv, "test-tools", options, getcwd_usage,
+			     PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	cwd = xgetcwd();
 	puts(cwd);

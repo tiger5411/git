@@ -37,9 +37,7 @@ int cmd_fmt_merge_msg(int argc, const char **argv, const char *prefix)
 
 	git_config(fmt_merge_msg_config, NULL);
 	argc = parse_options(argc, argv, prefix, options, fmt_merge_msg_usage,
-			     0);
-	if (argc > 0)
-		usage_with_options(fmt_merge_msg_usage, options);
+			     PARSE_OPT_ERROR_AT_NON_OPTION);
 	if (shortlog_len < 0)
 		shortlog_len = (merge_log_config > 0) ? merge_log_config : 0;
 

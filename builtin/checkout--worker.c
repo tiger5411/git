@@ -126,9 +126,8 @@ int cmd_checkout__worker(int argc, const char **argv, const char *prefix)
 
 	git_config(git_default_config, NULL);
 	argc = parse_options(argc, argv, prefix, checkout_worker_options,
-			     checkout_worker_usage, 0);
-	if (argc > 0)
-		usage_with_options(checkout_worker_usage, checkout_worker_options);
+			     checkout_worker_usage,
+			     PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	if (state.base_dir)
 		state.base_dir_len = strlen(state.base_dir);

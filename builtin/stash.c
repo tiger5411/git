@@ -243,13 +243,9 @@ static int clear_stash(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	argc = parse_options(argc, argv, prefix, options,
-			     git_stash_clear_usage,
-			     PARSE_OPT_STOP_AT_NON_OPTION);
-
-	if (argc)
-		return error(_("git stash clear with arguments is "
-			       "unimplemented"));
+	parse_options(argc, argv, prefix, options,
+		      git_stash_clear_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	return do_clear_stash();
 }

@@ -590,6 +590,8 @@ void parse_options_start(struct parse_opt_ctx_t *ctx,
 	ctx->out   = argv;
 	ctx->prefix = prefix;
 	ctx->cpidx = ((flags & PARSE_OPT_KEEP_ARGV0) != 0);
+	if (flags & PARSE_OPT_ERROR_AT_NON_OPTION)
+		flags |= PARSE_OPT_STOP_AT_NON_OPTION;
 	ctx->flags = flags;
 	parse_options_alter_flags(ctx);
 	parse_options_check_flags(options, ctx->flags);
@@ -853,6 +855,11 @@ int parse_options(int argc, const char **argv,
 	case PARSE_OPT_COMPLETE:
 		exit(0);
 	case PARSE_OPT_NON_OPTION:
+		if (flags & PARSE_OPT_ERROR_AT_NON_OPTION) {
+			error(_("unknown non-option: `%s'"), ctx.argv[0]);
+			usage_with_options(usagestr, options);
+		}
+		break;
 	case PARSE_OPT_DONE:
 		break;
 	case PARSE_OPT_UNKNOWN:

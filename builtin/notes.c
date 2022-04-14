@@ -960,13 +960,8 @@ static int prune(int argc, const char **argv, const char *prefix)
 		OPT_END()
 	};
 
-	argc = parse_options(argc, argv, prefix, options, git_notes_prune_usage,
-			     0);
-
-	if (argc) {
-		error(_("too many arguments"));
-		usage_with_options(git_notes_prune_usage, options);
-	}
+	parse_options(argc, argv, prefix, options, git_notes_prune_usage,
+		      PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	t = init_notes_check("prune", NOTES_INIT_WRITABLE);
 
@@ -982,13 +977,8 @@ static int prune(int argc, const char **argv, const char *prefix)
 static int get_ref(int argc, const char **argv, const char *prefix)
 {
 	struct option options[] = { OPT_END() };
-	argc = parse_options(argc, argv, prefix, options,
-			     git_notes_get_ref_usage, 0);
-
-	if (argc) {
-		error(_("too many arguments"));
-		usage_with_options(git_notes_get_ref_usage, options);
-	}
+	parse_options(argc, argv, prefix, options,
+		      git_notes_get_ref_usage, PARSE_OPT_ERROR_AT_NON_OPTION);
 
 	puts(default_notes_ref());
 	return 0;
