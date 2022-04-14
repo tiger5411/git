@@ -20,15 +20,16 @@ test_xmllint () {
 	fi
 }
 
-test_lazy_prereq SYSTEMD_ANALYZE '
-	systemd-analyze verify /lib/systemd/system/basic.target
-'
-
 test_systemd_analyze_verify () {
-	if test_have_prereq SYSTEMD_ANALYZE
-	then
-		systemd-analyze verify "$@"
-	fi
+	# Ignoring any errors from systemd-analyze is intentional
+	systemd-analyze verify "$@" >systemd.out 2>systemd.err;
+
+	cat systemd.out >&5 &&
+	sed -n \
+		-e '/^Failed to load/d' \
+		-e '/git-maintenance@i*\.service:/x' \
+		<systemd.err >&6 &&
+	rm systemd.out systemd.err
 }
 
 test_expect_success 'help text' '
@@ -700,7 +701,11 @@ test_expect_success 'start and stop Linux/systemd maintenance' '
 	# start registers the repo
 	git config --get --global --fixed-value maintenance.repo "$(pwd)" &&
 
-	test_systemd_analyze_verify "systemd/user/git-maintenance@.service" &&
+	# If we have a systemd-analyze on the system we can verify the
+	# generated file.
+	test_systemd_analyze_verify "systemd/user/git-maintenance@.service" 5>out 6>err &&
+	test_must_be_empty out &&
+	test_must_be_empty err &&
 
 	printf -- "--user enable --now git-maintenance@%s.timer\n" hourly daily weekly >expect &&
 	test_cmp expect args &&
