@@ -18,15 +18,18 @@ struct throughput {
 };
 
 struct progress {
-	const char *title;
+	struct strbuf title;
+	size_t title_len_utf8;
+
+	struct strbuf status;
+	size_t status_len_utf8;
+
 	uint64_t last_value;
 	uint64_t total;
 	unsigned last_percent;
 	unsigned delay;
 	struct throughput *throughput;
 	uint64_t start_ns;
-	struct strbuf counters_sb;
-	int title_len;
 	int split;
 
 	/*
@@ -54,6 +57,6 @@ struct progress *start_delayed_sparse_progress(const char *title,
 void stop_progress_msg(struct progress **p_progress, const char *msg);
 static inline void stop_progress(struct progress **p_progress)
 {
-	stop_progress_msg(p_progress, _("done"));
+	stop_progress_msg(p_progress, _(", done."));
 }
 #endif

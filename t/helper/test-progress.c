@@ -28,7 +28,6 @@
 int cmd__progress(int argc, const char **argv)
 {
 	const char *const default_title = "Working hard";
-	struct string_list titles = STRING_LIST_INIT_DUP;
 	struct strbuf line = STRBUF_INIT;
 	struct progress *progress = NULL;
 
@@ -51,16 +50,10 @@ int cmd__progress(int argc, const char **argv)
 			uint64_t total = strtoull(end, &end, 10);
 			const char *title;
 
-			/*
-			 * We can't use "end + 1" as an argument to
-			 * start_progress(), it doesn't xstrdup() its
-			 * "title" argument. We need to hold onto a
-			 * valid "char *" for it until the end.
-			 */
 			if (!*end)
 				title = default_title;
 			else if (*end == ' ')
-				title = string_list_insert(&titles, end + 1)->string;
+				title = end + 1;
 			else
 				die("invalid input: '%s'\n", line.buf);
 
@@ -91,7 +84,6 @@ int cmd__progress(int argc, const char **argv)
 		}
 	}
 	strbuf_release(&line);
-	string_list_clear(&titles, 0);
 
 	return 0;
 }
