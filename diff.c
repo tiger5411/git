@@ -4685,6 +4685,9 @@ void diff_setup_done(struct diff_options *options)
 		die(_("options '%s' and '%s' cannot be used together, use '%s' with '%s'"),
 			"-G", "--pickaxe-regex", "--pickaxe-regex", "-S");
 
+	if (HAS_MULTI_BITS(options->pickaxe_opts & DIFF_PICKAXE_KINDS_S_PATCH_MASK))
+		die(_("-S and --pickaxe-patch are mutually exclusive, use --pickaxe-patch with -G"));
+
 	if (HAS_MULTI_BITS(options->pickaxe_opts & DIFF_PICKAXE_KINDS_ALL_OBJFIND_MASK))
 		die(_("options '%s' and '%s' cannot be used together, use '%s' with '%s' and '%s'"),
 			"--pickaxe-all", "--find-object", "--pickaxe-all", "-G", "-S");
@@ -5623,6 +5626,9 @@ static void prep_parse_options(struct diff_options *options)
 		OPT_BIT_F(0, "pickaxe-regex", &options->pickaxe_opts,
 			  N_("treat <string> in -S as extended POSIX regular expression"),
 			  DIFF_PICKAXE_REGEX, PARSE_OPT_NONEG),
+		OPT_BIT_F(0, "pickaxe-patch", &options->pickaxe_opts,
+			  N_("have <string> in -G match the full diff hunk output"),
+			  DIFF_PICKAXE_PATCH, PARSE_OPT_NONEG),
 		OPT_FILENAME('O', NULL, &options->orderfile,
 			     N_("control the order in which files appear in the output")),
 		OPT_CALLBACK_F(0, "rotate-to", options, N_("<path>"),
@@ -6453,6 +6459,12 @@ static void diff_free_ignore_regex(struct diff_options *options)
 	free(options->ignore_regex);
 }
 
+static void diff_free_pickaxe(struct diff_options *options)
+{
+	if (options->pickaxe_opts & DIFF_PICKAXE_KINDS_MASK)
+		free_grep_patterns(&options->pickaxe_grep_opt);
+}
+
 void diff_free(struct diff_options *options)
 {
 	if (options->no_free)
@@ -6462,6 +6474,7 @@ void diff_free(struct diff_options *options)
 	diff_free_ignore_regex(options);
 	clear_pathspec(&options->pathspec);
 	FREE_AND_NULL(options->parseopts);
+	diff_free_pickaxe(options);
 }
 
 void diff_flush(struct diff_options *options)

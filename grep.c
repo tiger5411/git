@@ -843,9 +843,9 @@ static void show_name(struct grep_opt *opt, const char *name)
 	grep_output(opt, opt->null_following_name ? "\0" : "\n", 1);
 }
 
-static int patmatch(struct grep_pat *p,
-		    const char *line, const char *eol,
-		    regmatch_t *match, int eflags)
+int patmatch(struct grep_pat *p,
+	     const char *line, const char *eol,
+	     regmatch_t *match, int eflags)
 {
 	int hit;
 
