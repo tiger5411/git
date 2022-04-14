@@ -68,7 +68,8 @@ static int is_foreground_fd(int fd)
 	return tpgrp < 0 || tpgrp == getpgid(0);
 }
 
-static void display(struct progress *progress, uint64_t n, const char *done)
+static void display(struct progress *progress, uint64_t n,
+		    const char *update_msg, int last_update)
 {
 	const char *tp;
 	struct strbuf *counters_sb = &progress->counters_sb;
@@ -98,9 +99,12 @@ static void display(struct progress *progress, uint64_t n, const char *done)
 		show_update = 1;
 	}
 
+	if (show_update && update_msg)
+		strbuf_addf(counters_sb, ", %s.", update_msg);
+
 	if (show_update) {
-		if (is_foreground_fd(fileno(stderr)) || done) {
-			const char *eol = done ? done : "\r";
+		if (is_foreground_fd(fileno(stderr)) || update_msg) {
+			const char *eol = last_update ? "\n" : "\r";
 			size_t clear_len = counters_sb->len < last_count_len ?
 					last_count_len - counters_sb->len + 1 :
 					0;
@@ -112,7 +116,7 @@ static void display(struct progress *progress, uint64_t n, const char *done)
 			if (progress->split) {
 				fprintf(stderr, "  %s%*s", counters_sb->buf,
 					(int) clear_len, eol);
-			} else if (!done && cols < progress_line_len) {
+			} else if (!update_msg && cols < progress_line_len) {
 				clear_len = progress->title_len + 1 < cols ?
 					    cols - progress->title_len - 1 : 0;
 				fprintf(stderr, "%s:%*s\n  %s%s",
@@ -204,13 +208,13 @@ void display_throughput(struct progress *progress, uint64_t total)
 
 	throughput_string(&tp->display, total, rate);
 	if (progress->last_value != -1 && progress_update)
-		display(progress, progress->last_value, NULL);
+		display(progress, progress->last_value, NULL, 0);
 }
 
 void display_progress(struct progress *progress, uint64_t n)
 {
 	if (progress)
-		display(progress, n, NULL);
+		display(progress, n, NULL, 0);
 }
 
 static void set_global_progress(struct progress *progress)
@@ -269,7 +273,6 @@ struct progress *start_progress(const char *title, uint64_t total)
 
 static void force_last_update(struct progress *progress, const char *msg)
 {
-	char *buf;
 	struct throughput *tp = progress->throughput;
 
 	if (tp) {
@@ -280,9 +283,7 @@ static void force_last_update(struct progress *progress, const char *msg)
 		throughput_string(&tp->display, tp->curr_total, rate);
 	}
 	progress_update = 1;
-	buf = xstrfmt(", %s.\n", msg);
-	display(progress, progress->last_value, buf);
-	free(buf);
+	display(progress, progress->last_value, msg, 1);
 }
 
 static void log_trace2(struct progress *progress)
