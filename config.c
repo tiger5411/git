@@ -2555,7 +2555,7 @@ int repo_config_get_string(struct repository *repo,
 	git_config_check_init(repo);
 	ret = git_configset_get_string(repo->config, key, dest);
 	if (ret < 0)
-		git_die_config(key, NULL);
+		git_die_config(key);
 	return ret;
 }
 
@@ -2566,7 +2566,7 @@ int repo_config_get_string_tmp(struct repository *repo,
 	git_config_check_init(repo);
 	ret = git_configset_get_string_tmp(repo->config, key, dest);
 	if (ret < 0)
-		git_die_config(key, NULL);
+		git_die_config(key);
 	return ret;
 }
 
@@ -2612,7 +2612,7 @@ int repo_config_get_pathname(struct repository *repo,
 	git_config_check_init(repo);
 	ret = git_configset_get_pathname(repo->config, key, dest);
 	if (ret < 0)
-		git_die_config(key, NULL);
+		git_die_config(key);
 	return ret;
 }
 
@@ -2684,8 +2684,10 @@ int git_config_get_expiry(const char *key, const char **output)
 		return ret;
 	if (strcmp(*output, "now")) {
 		timestamp_t now = approxidate("now");
-		if (approxidate(*output) >= now)
-			git_die_config(key, _("Invalid %s: '%s'"), key, *output);
+		if (approxidate(*output) >= now) {
+			error(_("Invalid %s: '%s'"), key, *output);
+			git_die_config(key);
+		}
 	}
 	return ret;
 }
@@ -2768,19 +2770,12 @@ void git_die_config_linenr(const char *key, const char *filename, int linenr)
 		    key, filename, linenr);
 }
 
-NORETURN __attribute__((format(printf, 2, 3)))
-void git_die_config(const char *key, const char *err, ...)
+NORETURN
+void git_die_config(const char *key)
 {
 	const struct string_list *values;
 	struct key_value_info *kv_info;
-	report_fn error_fn = get_error_routine();
 
-	if (err) {
-		va_list params;
-		va_start(params, err);
-		error_fn(err, params);
-		va_end(params);
-	}
 	values = git_config_get_value_multi(key);
 	kv_info = values->items[values->nr - 1].util;
 	git_die_config_linenr(key, kv_info->filename, kv_info->linenr);

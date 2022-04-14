@@ -612,11 +612,13 @@ struct key_value_info {
 };
 
 /**
- * First prints the error message specified by the caller in `err` and then
- * dies printing the line number and the file name of the highest priority
- * value for the configuration variable `key`.
+ * Dies printing the line number and the file name of the highest
+ * priority value for the configuration variable `key`.
+ *
+ * Consider calling error() first with a more specific formatted
+ * message of your own.
  */
-NORETURN void git_die_config(const char *key, const char *err, ...) __attribute__((format(printf, 2, 3)));
+NORETURN void git_die_config(const char *key);
 
 /**
  * Helper function which formats the die error message according to the

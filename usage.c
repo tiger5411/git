@@ -31,7 +31,7 @@ static void vreportf(const char *prefix, const char *err, va_list params)
 	write_in_full(2, msg, p - msg);
 }
 
-static NORETURN void usage_builtin(const char *err, va_list params)
+static NORETURN void usage_builtin(const char *file, int line, const char *err, va_list params)
 {
 	vreportf("usage: ", err, params);
 
@@ -55,35 +55,35 @@ static NORETURN void usage_builtin(const char *err, va_list params)
 	exit(129);
 }
 
-static void die_message_builtin(const char *err, va_list params)
+static void die_message_builtin(const char *file, int line, const char *err, va_list params)
 {
-	trace2_cmd_error_va(err, params);
+	trace2_cmd_error_va_fl(file, line, err, params);
 	vreportf("fatal: ", err, params);
 }
 
 /*
- * We call trace2_cmd_error_va() in the below functions first and
+ * We call trace2_cmd_error_va_fl(file, line, ...) in the below functions first and
  * expect it to va_copy 'params' before using it (because an 'ap' can
  * only be walked once).
  */
-static NORETURN void die_builtin(const char *err, va_list params)
+static NORETURN void die_builtin(const char *file, int line, const char *err, va_list params)
 {
 	report_fn die_message_fn = get_die_message_routine();
 
-	die_message_fn(err, params);
+	die_message_fn(file, line, err, params);
 	exit(128);
 }
 
-static void error_builtin(const char *err, va_list params)
+static void error_builtin(const char *file, int line, const char *err, va_list params)
 {
-	trace2_cmd_error_va(err, params);
+	trace2_cmd_error_va_fl(file, line, err, params);
 
 	vreportf("error: ", err, params);
 }
 
-static void warning_builtin(const char *warn, va_list params)
+static void warning_builtin(const char *file, int line, const char *warn, va_list params)
 {
-	trace2_cmd_error_va(warn, params);
+	trace2_cmd_error_va_fl(file, line, warn, params);
 
 	vreportf("warning: ", warn, params);
 }
@@ -178,21 +178,18 @@ static const char *fmt_with_err(char *buf, int n, const char *fmt)
 	return buf;
 }
 
-void NORETURN usage(const char *fmt)
-{
-	usagef("%s", fmt);
-}
-
-void NORETURN usagef(const char *fmt, ...)
+NORETURN
+void usage_fl(const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	usage_routine(fmt, ap);
+	usage_routine(file, line, fmt, ap);
 	va_end(ap);
 }
 
-void NORETURN die(const char *fmt, ...)
+NORETURN
+void die_fl(const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
 
@@ -202,14 +199,15 @@ void NORETURN die(const char *fmt, ...)
 	}
 
 	va_start(ap, fmt);
-	die_routine(fmt, ap);
+	die_routine(file, line, fmt, ap);
 	va_end(ap);
 }
 
-void NORETURN die_errno(const char *fmt, ...)
+NORETURN
+void die_errno_fl(const char *file, int line, const char *fmt, ...)
 {
-	char buf[1024];
 	va_list ap;
+	char buf[1024];
 
 	if (die_is_recursing()) {
 		fputs("fatal: recursion detected in die_errno handler\n",
@@ -218,72 +216,67 @@ void NORETURN die_errno(const char *fmt, ...)
 	}
 
 	va_start(ap, fmt);
-	die_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	die_routine(file, line, fmt_with_err(buf, sizeof(buf), fmt), ap);
 	va_end(ap);
 }
 
-#undef die_message
-int die_message(const char *fmt, ...)
+int die_message_fl(const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	die_message_routine(fmt, ap);
-	va_end(ap);
-	return 128;
-}
-
-#undef die_message_errno
-int die_message_errno(const char *fmt, ...)
-{
-	char buf[1024];
-	va_list ap;
-
-	va_start(ap, fmt);
-	die_message_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	die_message_routine(file, line, fmt, ap);
 	va_end(ap);
 	return 128;
 }
 
-#undef error
-int error(const char *fmt, ...)
+int die_message_errno_fl(const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
 
 	va_start(ap, fmt);
-	error_routine(fmt, ap);
+	die_message_routine(file, line, fmt, ap);
+	va_end(ap);
+	return 128;
+}
+
+int error_fl(const char *file, int line, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	error_routine(file, line, fmt, ap);
 	va_end(ap);
 	return -1;
 }
 
-#undef error_errno
-int error_errno(const char *fmt, ...)
+int error_errno_fl(const char *file, int line, const char *fmt, ...)
+{
+	va_list ap;
+	char buf[1024];
+
+	va_start(ap, fmt);
+	error_routine(file, line, fmt_with_err(buf, sizeof(buf), fmt), ap);
+	va_end(ap);
+	return -1;
+}
+
+void warning_fl(const char *file, int line, const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	warning_routine(file, line, fmt, ap);
+	va_end(ap);
+}
+
+void warning_errno_fl(const char *file, int line, const char *fmt, ...)
 {
 	char buf[1024];
 	va_list ap;
 
 	va_start(ap, fmt);
-	error_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
-	va_end(ap);
-	return -1;
-}
-
-void warning(const char *fmt, ...)
-{
-	va_list ap;
-
-	va_start(ap, fmt);
-	warning_routine(fmt, ap);
-	va_end(ap);
-}
-
-void warning_errno(const char *fmt, ...)
-{
-	char buf[1024];
-	va_list ap;
-
-	va_start(ap, fmt);
-	warning_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	warning_routine(file, line, fmt_with_err(buf, sizeof(buf), fmt), ap);
 	va_end(ap);
 }
 
@@ -313,7 +306,7 @@ static NORETURN void BUG_vfl(const char *file, int line, const char *fmt, va_lis
 		abort();
 	in_bug = 1;
 
-	trace2_cmd_error_va(fmt, params_copy);
+	trace2_cmd_error_va_fl(file, line, fmt, params_copy);
 
 	if (BUG_exit_code)
 		exit(BUG_exit_code);
@@ -339,7 +332,7 @@ int bug_fl(const char *file, int line, const char *fmt, ...)
 	va_start(ap, fmt);
 	BUG_vfl_common(file, line, fmt, ap);
 	va_end(ap);
-	trace2_cmd_error_va(fmt, cp);
+	trace2_cmd_error_va_fl(file, line, fmt, cp);
 
 	return -1;
 }
