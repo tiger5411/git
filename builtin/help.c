@@ -434,7 +434,7 @@ static const char *cmd_to_page(const char *git_cmd)
 		return xstrfmt("git%s", git_cmd);
 }
 
-static void setup_man_path(void)
+static void setup_real_man_path(void)
 {
 	struct strbuf new_path = STRBUF_INIT;
 	const char *old_path = getenv("MANPATH");
@@ -453,6 +453,16 @@ static void setup_man_path(void)
 	setenv("MANPATH", new_path.buf, 1);
 
 	strbuf_release(&new_path);
+}
+
+static void setup_man_path(void)
+{
+	const char *test_manpath = getenv("GIT_TEST_MANPATH");
+
+	if (test_manpath)
+		xsetenv("MANPATH", test_manpath, 1);
+	else
+		setup_real_man_path();
 }
 
 static void exec_viewer(const char *name, const char *page)
