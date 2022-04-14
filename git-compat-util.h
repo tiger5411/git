@@ -952,7 +952,16 @@ int xstrncmpz(const char *s, const char *t, size_t len);
 static inline void copy_array(void *dst, const void *src, size_t n, size_t size)
 {
 	if (n)
+#ifdef __clang__
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-argument"
+#endif
 		memcpy(dst, src, st_mult(size, n));
+#ifdef __clang__
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 }
 
 #define MOVE_ARRAY(dst, src, n) move_array((dst), (src), (n), sizeof(*(dst)) + \

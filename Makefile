@@ -526,6 +526,17 @@ include shared.mak
 #    no-pedantic:
 #
 #        Disable -pedantic compilation.
+#
+#    analyzer:
+#
+#        Compile with GCC's -fanalyzer or whatever the local
+#        compiler's equivalent of the *much slower* but exhaustive
+#        "code analysis" mode is.
+#
+#        This will be ignored if the compiler doesn't support it,
+#        i.e. currently on any non-GCC. The set of analysis flags is
+#        curated based on the state of the project and compiler
+#        version.
 
 GIT-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./GIT-VERSION-GEN
