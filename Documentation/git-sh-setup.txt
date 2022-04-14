@@ -90,6 +90,17 @@ create_virtual_base::
 	then the first file is left empty. The result is suitable
 	as a virtual base input for a 3-way merge.
 
+INTERNATIONALIZATION
+--------------------
+
+This library makes use of linkgit:git-sh-i18n[1] for some messages, as
+some of these functions are used by the git tooling itself.
+
+That translations are provided is not part of any implied or stated
+API promise here, and the user should assume that any messaging will
+be in the `LC_ALL=C locale, and that any currently provided
+translations might go away in the future.
+
 GIT
 ---
 Part of the linkgit:git[1] suite

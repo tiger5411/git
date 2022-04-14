@@ -26,44 +26,29 @@ then
 elif type gettext.sh >/dev/null 2>&1
 then
 	# GNU libintl's gettext.sh
-	GIT_INTERNAL_GETTEXT_SH_SCHEME=gnu
+	GIT_INTERNAL_GETTEXT_SH_SCHEME=gettext.sh
 elif test "$(gettext -h 2>&1)" = "-h"
 then
 	# gettext binary exists but no gettext.sh. likely to be a gettext
-	# binary on a Solaris or something that is not GNU libintl and
-	# lack eval_gettext.
-	GIT_INTERNAL_GETTEXT_SH_SCHEME=gettext_without_eval_gettext
+	# binary on a Solaris or something that is not GNU libintl
+	GIT_INTERNAL_GETTEXT_SH_SCHEME=no-gettext.sh
 fi
 export GIT_INTERNAL_GETTEXT_SH_SCHEME
 
 # ... and then follow that decision.
 case "$GIT_INTERNAL_GETTEXT_SH_SCHEME" in
-gnu)
+gettext.sh)
 	# Use libintl's gettext.sh, or fall back to English if we can't.
 	. gettext.sh
 	;;
-gettext_without_eval_gettext)
-	# Solaris has a gettext(1) but no eval_gettext(1)
-	eval_gettext () {
-		gettext "$1" | (
-			export PATH $(git sh-i18n--envsubst --variables "$1");
-			git sh-i18n--envsubst "$1"
-		)
-	}
-
+no-gettext.sh)
+	# Solaris has a gettext(1) but no eval_gettext(1), but we only
+	# use the former.
 	;;
 *)
 	gettext () {
 		printf "%s" "$1"
 	}
-
-	eval_gettext () {
-		printf "%s" "$1" | (
-			export PATH $(git sh-i18n--envsubst --variables "$1");
-			git sh-i18n--envsubst "$1"
-		)
-	}
-
 	;;
 esac
 
@@ -73,7 +58,20 @@ gettextln () {
 	echo
 }
 
-eval_gettextln () {
-	eval_gettext "$1"
+eval_gettext_unsafe () {
+	msgid="$1" &&
+	shift &&
+	eval "msgfmt=\"$msgid\"" &&
+	printf "%s" "$msgfmt"
+}
+
+eval_gettext_unsafeln () {
+	eval_gettext_unsafe "$@"
 	echo
+}
+
+# Forbid using eval_gettext, requires envsubst(1)
+eval_gettext () {
+	echo "do not use eval_gettext in git, use gettext(ln)_subst instead" >&2
+	return 1
 }

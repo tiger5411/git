@@ -86,16 +86,16 @@ if test -n "$OPTIONS_SPEC"; then
 else
 	dashless=$(basename -- "$0" | sed -e 's/-/ /')
 	usage() {
-		die "$(eval_gettext "usage: \$dashless \$USAGE")"
+		die "usage: $dashless $USAGE"
 	}
 
 	if [ -z "$LONG_USAGE" ]
 	then
-		LONG_USAGE="$(eval_gettext "usage: \$dashless \$USAGE")"
+		LONG_USAGE="usage: $dashless $USAGE"
 	else
-		LONG_USAGE="$(eval_gettext "usage: \$dashless \$USAGE
+		LONG_USAGE="usage: $dashless $USAGE
 
-$LONG_USAGE")"
+$LONG_USAGE"
 	fi
 
 	case "$1" in
@@ -171,15 +171,14 @@ cd_to_toplevel () {
 require_work_tree_exists () {
 	if test "z$(git rev-parse --is-bare-repository)" != zfalse
 	then
-		program_name=$0
-		die "$(eval_gettext "fatal: \$program_name cannot be used without a working tree.")"
+		die "fatal: $0 cannot be used without a working tree."
 	fi
 }
 
 require_work_tree () {
 	test "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = true || {
 		program_name=$0
-		die "$(eval_gettext "fatal: \$program_name cannot be used without a working tree.")"
+		die "$(eval_gettext_unsafe "fatal: \$program_name cannot be used without a working tree.")"
 	}
 }
 
@@ -190,13 +189,13 @@ require_clean_work_tree () {
 
 	if ! git diff-files --quiet --ignore-submodules
 	then
-		action=$1
-		case "$action" in
+		case "$1" in
 		"rewrite branches")
 			gettextln "Cannot rewrite branches: You have unstaged changes." >&2
 			;;
 		*)
-			eval_gettextln "Cannot \$action: You have unstaged changes." >&2
+			# Some out-of-tree user of require_clean_work_tree()
+			echo "Cannot $1: You have unstaged changes." >&2
 			;;
 		esac
 		err=1
@@ -206,8 +205,15 @@ require_clean_work_tree () {
 	then
 		if test $err = 0
 		then
-			action=$1
-			eval_gettextln "Cannot \$action: Your index contains uncommitted changes." >&2
+			case "$1" in
+			"rewrite branches")
+				gettextln "Cannot rewrite branches: You have unstaged changes." >&2
+				;;
+			*)
+				# Some out-of-tree user of require_clean_work_tree()
+				echo "Cannot $1: Your index contains uncommitted changes." >&2
+				;;
+			esac
 		else
 		    gettextln "Additionally, your index contains uncommitted changes." >&2
 		fi

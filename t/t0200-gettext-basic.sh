@@ -54,8 +54,11 @@ test_expect_success GETTEXT_LOCALE 'sanity: gettext("") metadata is OK' '
 test_expect_success GETTEXT_LOCALE 'sanity: gettext(unknown) is passed through' '
     printf "This is not a translation string"  >expect &&
     gettext "This is not a translation string" >actual &&
-    eval_gettext "This is not a translation string" >actual &&
     test_cmp expect actual
+'
+
+test_expect_success GETTEXT_LOCALE 'sanity: eval_gettext(unknown) is an error' '
+    ! eval_gettext "This is not a translation string"
 '
 
 # xgettext from C
@@ -80,12 +83,6 @@ test_expect_success GETTEXT_LOCALE 'xgettext: Shell extraction' '
     printf "TILRAUN: Skeljartilraunastrengur" >expect &&
     LANGUAGE=is LC_ALL="$is_IS_locale" gettext "TEST: A Shell test string" >actual &&
     test_cmp expect actual
-'
-
-test_expect_success GETTEXT_LOCALE 'xgettext: Shell extraction with $variable' '
-    printf "TILRAUN: Skeljartilraunastrengur með breytunni a var i able" >x-expect &&
-    LANGUAGE=is LC_ALL="$is_IS_locale" variable="a var i able" eval_gettext "TEST: A Shell test \$variable" >x-actual &&
-    test_cmp x-expect x-actual
 '
 
 # xgettext from Perl
