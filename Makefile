@@ -29,6 +29,9 @@ include shared.mak
 
 # Define V=1 to have a more verbose compile.
 #
+# Define CC to set the C compiler to use (defaults to "cc"), e.g. set
+# CC="ccache cc" to use ccache.
+#
 # Define SHELL_PATH to a POSIX shell if your /bin/sh is broken.
 #
 # Define SANE_TOOL_PATH to a colon-separated list of paths to prepend
