@@ -9,6 +9,8 @@
 #include "diff.h"
 #include "commit-slab-decl.h"
 #include "list-objects-filter-options.h"
+#include "object-array.h"
+#include "object-list.h"
 
 /**
  * The revision walking API offers functions to build a list of revisions
@@ -82,6 +84,7 @@ struct rev_cmdline_info {
 
 struct oidset;
 struct topo_walk_info;
+struct boundary_commits;
 
 struct rev_info {
 	/* Starting list */
@@ -90,7 +93,7 @@ struct rev_info {
 	struct repository *repo;
 
 	/* Parents of shown commits */
-	struct object_array boundary_commits;
+	struct object_list boundary_commits;
 
 	/* The end-points specified by the end user */
 	struct rev_cmdline_info cmdline;
@@ -462,10 +465,14 @@ void show_object_with_name(FILE *, struct object *, const char *);
  */
 void add_pending_object(struct rev_info *revs,
 			struct object *obj, const char *name);
+void add_pending_object_no_name(struct rev_info *revs, struct object *obj);
+
 
 void add_pending_oid(struct rev_info *revs,
 		     const char *name, const struct object_id *oid,
 		     unsigned int flags);
+void add_pending_oid_no_name(struct rev_info *revs,
+			     const struct object_id *oid, unsigned int flags);
 
 void add_head_to_pending(struct rev_info *);
 void add_reflogs_to_pending(struct rev_info *, unsigned int flags);

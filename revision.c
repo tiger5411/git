@@ -1,4 +1,5 @@
 #include "cache.h"
+#include "object-list.h"
 #include "object-store.h"
 #include "tag.h"
 #include "blob.h"
@@ -355,6 +356,11 @@ void add_pending_object(struct rev_info *revs,
 	add_pending_object_with_mode(revs, obj, name, S_IFINVALID);
 }
 
+void add_pending_object_no_name(struct rev_info *revs, struct object *obj)
+{
+	add_pending_object_with_mode(revs, obj, NULL, S_IFINVALID);
+}
+
 void add_head_to_pending(struct rev_info *revs)
 {
 	struct object_id oid;
@@ -390,7 +396,7 @@ static struct object *get_reference(struct rev_info *revs, const char *name,
 			return object;
 		if (revs->exclude_promisor_objects && is_promisor_object(oid))
 			return NULL;
-		die("bad object %s", name);
+		die("bad object %s", name ? name : oid_to_hex(oid));
 	}
 	object->flags |= flags;
 	return object;
@@ -401,6 +407,13 @@ void add_pending_oid(struct rev_info *revs, const char *name,
 {
 	struct object *object = get_reference(revs, name, oid, flags);
 	add_pending_object(revs, object, name);
+}
+
+void add_pending_oid_no_name(struct rev_info *revs,
+			     const struct object_id *oid, unsigned int flags)
+{
+	struct object *object = get_reference(revs, NULL, oid, flags);
+	add_pending_object_no_name(revs, object);
 }
 
 static struct commit *handle_commit(struct rev_info *revs,
@@ -1600,7 +1613,7 @@ static void handle_one_reflog_commit(struct object_id *oid, void *cb_data)
 		if (o) {
 			o->flags |= cb->all_flags;
 			/* ??? CMDLINEFLAGS ??? */
-			add_pending_object(cb->all_revs, o, "");
+			add_pending_object_no_name(cb->all_revs, o);
 		}
 		else if (!cb->warned_bad_reflog) {
 			warning("reflog of '%s' references pruned commits",
@@ -1678,7 +1691,7 @@ static void add_cache_tree(struct cache_tree *it, struct rev_info *revs,
 	if (it->entry_count >= 0) {
 		struct tree *tree = lookup_tree(revs->repo, &it->oid);
 		tree->object.flags |= flags;
-		add_pending_object_with_path(revs, &tree->object, "",
+		add_pending_object_with_path(revs, &tree->object, NULL,
 					     040000, path->buf);
 	}
 
@@ -1710,7 +1723,7 @@ static void do_add_index_objects_to_pending(struct rev_info *revs,
 		if (!blob)
 			die("unable to add index blob to traversal");
 		blob->object.flags |= flags;
-		add_pending_object_with_path(revs, &blob->object, "",
+		add_pending_object_with_path(revs, &blob->object, NULL,
 					     ce->ce_mode, ce->name);
 	}
 
@@ -3563,16 +3576,15 @@ static void expand_topo_walk(struct rev_info *revs, struct commit *commit)
 
 int prepare_revision_walk(struct rev_info *revs)
 {
-	int i;
 	struct object_array old_pending;
+	struct object_array_entry *e;
 	struct commit_list **next = &revs->commits;
 
 	memcpy(&old_pending, &revs->pending, sizeof(old_pending));
 	revs->pending.nr = 0;
 	revs->pending.alloc = 0;
 	revs->pending.objects = NULL;
-	for (i = 0; i < old_pending.nr; i++) {
-		struct object_array_entry *e = old_pending.objects + i;
+	for_each_object_array_entry(e, &old_pending) {
 		struct commit *commit = handle_commit(revs, e);
 		if (commit) {
 			if (!(commit->object.flags & SEEN)) {
@@ -4036,10 +4048,9 @@ static struct commit *get_revision_1(struct rev_info *revs)
 }
 
 /*
- * Return true for entries that have not yet been shown.  (This is an
- * object_array_each_func_t.)
+ * Return true for entries that have not yet been shown.
  */
-static int entry_unshown(struct object_array_entry *entry, void *cb_data_unused)
+static int entry_unshown(struct object_list_item *entry)
 {
 	return !(entry->item->flags & SHOWN);
 }
@@ -4048,18 +4059,30 @@ static int entry_unshown(struct object_array_entry *entry, void *cb_data_unused)
  * If array is on the verge of a realloc, garbage-collect any entries
  * that have already been shown to try to free up some space.
  */
-static void gc_boundary(struct object_array *array)
+static void gc_boundary(struct object_list *array)
 {
-	if (array->nr == array->alloc)
-		object_array_filter(array, entry_unshown, NULL);
+	size_t nr = array->nr, src, dst;
+	struct object_list_item *objects = array->objects;
+
+	if (nr != array->alloc)
+		return;
+
+	for (src = dst = 0; src < nr; src++) {
+		if (entry_unshown(&objects[src])) {
+			if (src != dst)
+				objects[dst] = objects[src];
+			dst++;
+		}
+	}
+	array->nr = dst;
 }
 
 static void create_boundary_commit_list(struct rev_info *revs)
 {
 	unsigned i;
 	struct commit *c;
-	struct object_array *array = &revs->boundary_commits;
-	struct object_array_entry *objects = array->objects;
+	struct object_list *array = &revs->boundary_commits;
+	struct object_list_item *objects = array->objects;
 
 	/*
 	 * If revs->commits is non-NULL at this point, an error occurred in
@@ -4175,7 +4198,7 @@ static struct commit *get_revision_internal(struct rev_info *revs)
 			continue;
 		p->flags |= CHILD_SHOWN;
 		gc_boundary(&revs->boundary_commits);
-		add_object_array(p, NULL, &revs->boundary_commits);
+		object_list_insert(&revs->boundary_commits, p);
 	}
 
 	return c;

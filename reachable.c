@@ -38,7 +38,7 @@ static int add_one_ref(const char *path, const struct object_id *oid,
 	}
 
 	object = parse_object_or_die(oid, path);
-	add_pending_object(revs, object, "");
+	add_pending_object_no_name(revs, object);
 
 	return 0;
 }
@@ -102,7 +102,7 @@ static void add_recent_object(const struct object_id *oid,
 	if (!obj)
 		die("unable to lookup %s", oid_to_hex(oid));
 
-	add_pending_object(data->revs, obj, "");
+	add_pending_object_no_name(data->revs, obj);
 }
 
 static int add_recent_loose(const struct object_id *oid,

@@ -1,6 +1,7 @@
 #include "cache.h"
 #include "walker.h"
 #include "repository.h"
+#include "object-queue.h"
 #include "object-store.h"
 #include "commit.h"
 #include "tree.h"
@@ -111,8 +112,8 @@ static int process_tag(struct walker *walker, struct tag *tag)
 	return process(walker, tag->tagged);
 }
 
-static struct object_list *process_queue = NULL;
-static struct object_list **process_queue_end = &process_queue;
+static struct object_queue *process_queue = NULL;
+static struct object_queue **process_queue_end = &process_queue;
 
 static int process_object(struct walker *walker, struct object *obj)
 {
@@ -155,14 +156,14 @@ static int process(struct walker *walker, struct object *obj)
 		walker->prefetch(walker, obj->oid.hash);
 	}
 
-	object_list_insert(obj, process_queue_end);
+	object_queue_insert(obj, process_queue_end);
 	process_queue_end = &(*process_queue_end)->next;
 	return 0;
 }
 
 static int loop(struct walker *walker)
 {
-	struct object_list *elem;
+	struct object_queue *elem;
 	struct progress *progress = NULL;
 	uint64_t nr = 0;
 

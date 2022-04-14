@@ -5,6 +5,7 @@
 #include "revision.h"
 #include "worktree.h"
 #include "progress.h"
+#include "object-list.h"
 
 /* Remember to update object flag allocation in object.h */
 #define INCOMPLETE	(1u<<10)
@@ -55,10 +56,10 @@ static int tree_is_complete(const struct object_id *oid)
 
 static int commit_is_complete(struct commit *commit)
 {
-	struct object_array study;
-	struct object_array found;
+	struct object_list study = OBJECT_LIST_INIT;
+	struct object_list found = OBJECT_LIST_INIT;
+	struct object_list_item *item;
 	int is_incomplete = 0;
-	int i;
 
 	/* early return */
 	if (commit->object.flags & SEEN)
@@ -72,16 +73,16 @@ static int commit_is_complete(struct commit *commit)
 	 * If some of the objects that are needed to complete this
 	 * commit are missing, mark this commit as INCOMPLETE.
 	 */
-	memset(&study, 0, sizeof(study));
-	memset(&found, 0, sizeof(found));
-	add_object_array(&commit->object, NULL, &study);
-	add_object_array(&commit->object, NULL, &found);
+	object_list_insert(&study, &commit->object);
+	object_list_insert(&found, &commit->object);
+
 	commit->object.flags |= STUDYING;
 	while (study.nr) {
 		struct commit *c;
 		struct commit_list *parent;
 
-		c = (struct commit *)object_array_pop(&study);
+		c = (struct commit *)object_list_pop(&study);
+
 		if (!c->object.parsed && !parse_object(the_repository, &c->object.oid))
 			c->object.flags |= INCOMPLETE;
 
@@ -96,8 +97,8 @@ static int commit_is_complete(struct commit *commit)
 			if (p->object.flags & STUDYING)
 				continue;
 			p->object.flags |= STUDYING;
-			add_object_array(&p->object, NULL, &study);
-			add_object_array(&p->object, NULL, &found);
+			object_list_insert(&study, &p->object);
+			object_list_insert(&found, &p->object);
 		}
 	}
 	if (!is_incomplete) {
@@ -105,9 +106,10 @@ static int commit_is_complete(struct commit *commit)
 		 * make sure all commits in "found" array have all the
 		 * necessary objects.
 		 */
-		for (i = 0; i < found.nr; i++) {
-			struct commit *c =
-				(struct commit *)found.objects[i].item;
+		for_each_object_list_item(item, &found) {
+			struct object *o = item->item;
+			struct commit *c = (struct commit *)o;
+
 			if (!tree_is_complete(get_commit_tree_oid(c))) {
 				is_incomplete = 1;
 				c->object.flags |= INCOMPLETE;
@@ -115,13 +117,15 @@ static int commit_is_complete(struct commit *commit)
 		}
 		if (!is_incomplete) {
 			/* mark all found commits as complete, iow SEEN */
-			for (i = 0; i < found.nr; i++)
-				found.objects[i].item->flags |= SEEN;
+			for_each_object_list_item(item, &found) {
+				struct object *o = item->item;
+				o->flags |= SEEN;
+			}
 		}
 	}
 	/* clear flags from the objects we traversed */
-	for (i = 0; i < found.nr; i++)
-		found.objects[i].item->flags &= ~STUDYING;
+	for_each_object_list_item(item, &found)
+		item->item->flags &= ~STUDYING;
 	if (is_incomplete)
 		commit->object.flags |= INCOMPLETE;
 	else {
@@ -133,12 +137,12 @@ static int commit_is_complete(struct commit *commit)
 		 * are complete.  Which means that we know *all* the commits
 		 * we have seen during this process are complete.
 		 */
-		for (i = 0; i < found.nr; i++)
-			found.objects[i].item->flags |= SEEN;
+		for_each_object_list_item(item, &found)
+			item->item->flags |= SEEN;
 	}
 	/* free object arrays */
-	object_array_clear(&study);
-	object_array_clear(&found);
+	object_list_clear(&study);
+	object_list_clear(&found);
 	return !is_incomplete;
 }
 

@@ -2,6 +2,7 @@
 #include "repository.h"
 #include "tempfile.h"
 #include "lockfile.h"
+#include "object-list.h"
 #include "object-store.h"
 #include "commit.h"
 #include "tag.h"
@@ -115,12 +116,13 @@ static void free_depth_in_slab(int **ptr)
 {
 	FREE_AND_NULL(*ptr);
 }
-struct commit_list *get_shallow_commits(struct object_array *heads, int depth,
+struct commit_list *get_shallow_commits(struct object_list *heads, int depth,
 		int shallow_flag, int not_shallow_flag)
 {
-	int i = 0, cur_depth = 0;
+	int cur_depth = 0;
+	size_t i = 0;
 	struct commit_list *result = NULL;
-	struct object_array stack = OBJECT_ARRAY_INIT;
+	struct object_list stack = OBJECT_LIST_INIT;
 	struct commit *commit = NULL;
 	struct commit_graft *graft;
 	struct commit_depth depths;
@@ -146,7 +148,7 @@ struct commit_list *get_shallow_commits(struct object_array *heads, int depth,
 				cur_depth = 0;
 			} else {
 				commit = (struct commit *)
-					object_array_pop(&stack);
+					object_list_pop(&stack);
 				cur_depth = **commit_depth_at(&depths, commit);
 			}
 		}
@@ -173,14 +175,16 @@ struct commit_list *get_shallow_commits(struct object_array *heads, int depth,
 				**depth_slot = cur_depth;
 			}
 			if (p->next)
-				add_object_array(&p->item->object,
-						NULL, &stack);
+				object_list_insert(&stack,
+							 &p->item->object);
 			else {
 				commit = p->item;
 				cur_depth = **commit_depth_at(&depths, commit);
 			}
 		}
 	}
+
+	object_list_clear(&stack);
 	deep_clear_commit_depth(&depths, free_depth_in_slab);
 
 	return result;

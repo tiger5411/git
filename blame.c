@@ -2657,22 +2657,22 @@ static int prepare_lines(struct blame_scoreboard *sb)
 static struct commit *find_single_final(struct rev_info *revs,
 					const char **name_p)
 {
-	int i;
+	struct object_array_entry *entry;
 	struct commit *found = NULL;
 	const char *name = NULL;
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object *obj = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *obj = entry->item;
 		if (obj->flags & UNINTERESTING)
 			continue;
 		obj = deref_tag(revs->repo, obj, NULL, 0);
 		if (!obj || obj->type != OBJ_COMMIT)
-			die("Non commit %s?", revs->pending.objects[i].name);
+			die("Non commit %s?", entry->name);
 		if (found)
 			die("More than one commit to dig from %s and %s?",
-			    revs->pending.objects[i].name, name);
+			    entry->name, name);
 		found = (struct commit *)obj;
-		name = revs->pending.objects[i].name;
+		name = entry->name;
 	}
 	if (name_p)
 		*name_p = xstrdup_or_null(name);
@@ -2720,7 +2720,7 @@ static struct commit *dwim_reverse_initial(struct rev_info *revs,
 static struct commit *find_single_initial(struct rev_info *revs,
 					  const char **name_p)
 {
-	int i;
+	struct object_array_entry *entry;
 	struct commit *found = NULL;
 	const char *name = NULL;
 
@@ -2728,18 +2728,18 @@ static struct commit *find_single_initial(struct rev_info *revs,
 	 * There must be one and only one negative commit, and it must be
 	 * the boundary.
 	 */
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object *obj = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *obj = entry->item;
 		if (!(obj->flags & UNINTERESTING))
 			continue;
 		obj = deref_tag(revs->repo, obj, NULL, 0);
 		if (!obj || obj->type != OBJ_COMMIT)
-			die("Non commit %s?", revs->pending.objects[i].name);
+			die("Non commit %s?", entry->name);
 		if (found)
 			die("More than one commit to dig up from, %s and %s?",
-			    revs->pending.objects[i].name, name);
+			    entry->name, name);
 		found = (struct commit *) obj;
-		name = revs->pending.objects[i].name;
+		name = entry->name;
 	}
 
 	if (!name)

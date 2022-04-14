@@ -12,6 +12,7 @@
 #include "refs.h"
 #include "strvec.h"
 #include "list-objects-filter-options.h"
+#include "object-array.h"
 
 static const char v2_bundle_signature[] = "# v2 git bundle\n";
 static const char v3_bundle_signature[] = "# v3 git bundle\n";
@@ -199,7 +200,8 @@ int verify_bundle(struct repository *r,
 	struct rev_info revs;
 	const char *argv[] = {NULL, "--all", NULL};
 	struct commit *commit;
-	int i, ret = 0, req_nr;
+	int ret = 0;
+	size_t i, req_nr;
 	const char *message = _("Repository lacks these prerequisite commits:");
 
 	if (!r || !r->objects || !r->objects->odb)
@@ -326,7 +328,7 @@ out:
 static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *pack_options)
 {
 	struct child_process pack_objects = CHILD_PROCESS_INIT;
-	int i;
+	struct object_array_entry *entry;
 
 	strvec_pushl(&pack_objects.args,
 		     "pack-objects",
@@ -356,8 +358,8 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
 	if (start_command(&pack_objects))
 		return error(_("Could not spawn pack-objects"));
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object *object = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *object = entry->item;
 		if (object->flags & UNINTERESTING)
 			write_or_die(pack_objects.in, "^", 1);
 		write_or_die(pack_objects.in, oid_to_hex(&object->oid), the_hash_algo->hexsz);
@@ -380,11 +382,10 @@ static int write_pack_data(int bundle_fd, struct rev_info *revs, struct strvec *
  */
 static int write_bundle_refs(int bundle_fd, struct rev_info *revs)
 {
-	int i;
+	struct object_array_entry *e;
 	int ref_count = 0;
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object_array_entry *e = revs->pending.objects + i;
+	for_each_object_array_entry(e, &revs->pending) {
 		struct object_id oid;
 		char *ref;
 		const char *display_ref;
@@ -488,8 +489,7 @@ static void write_bundle_prerequisites(struct commit *commit, void *data)
 
 	object = (struct object *)commit;
 	object->flags |= UNINTERESTING;
-	add_object_array_with_path(object, buf.buf, bpi->pending, S_IFINVALID,
-				   NULL);
+	add_object_array(object, buf.buf, bpi->pending);
 	strbuf_addch(&buf, '\n');
 	write_or_die(bpi->fd, buf.buf, buf.len);
 	strbuf_release(&buf);
@@ -505,7 +505,7 @@ int create_bundle(struct repository *r, const char *path,
 	struct rev_info revs, revs_copy;
 	int min_version = 2;
 	struct bundle_prerequisites_info bpi;
-	int i;
+	struct object_array_entry *e;
 
 	/* init revs to list objects for pack-objects later */
 	save_commit_buffer = 0;
@@ -571,8 +571,7 @@ int create_bundle(struct repository *r, const char *path,
 	revs_copy.pending.nr = 0;
 	revs_copy.pending.alloc = 0;
 	revs_copy.pending.objects = NULL;
-	for (i = 0; i < revs.pending.nr; i++) {
-		struct object_array_entry *e = revs.pending.objects + i;
+	for_each_object_array_entry(e, &revs.pending) {
 		if (e)
 			add_object_array_with_path(e->item, e->name,
 						   &revs_copy.pending,

@@ -1263,8 +1263,8 @@ static int stash_working_tree(struct stash_info *info, const struct pathspec *ps
 		goto done;
 	}
 
-	add_pending_object(&rev, parse_object(the_repository, &info->b_commit),
-			   "");
+	add_pending_object_no_name(&rev,
+				   parse_object(the_repository, &info->b_commit));
 	if (run_diff_index(&rev, 0)) {
 		ret = -1;
 		goto done;

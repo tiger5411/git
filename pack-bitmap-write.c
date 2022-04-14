@@ -113,10 +113,7 @@ void bitmap_writer_build_type_index(struct packing_data *to_pack,
 
 static inline void push_bitmapped_commit(struct commit *commit)
 {
-	if (writer.selected_nr >= writer.selected_alloc) {
-		writer.selected_alloc = (writer.selected_alloc + 32) * 2;
-		REALLOC_ARRAY(writer.selected, writer.selected_alloc);
-	}
+	ALLOC_GROW(writer.selected, writer.selected_nr + 1, writer.selected_alloc);
 
 	writer.selected[writer.selected_nr].commit = commit;
 	writer.selected[writer.selected_nr].bitmap = NULL;
@@ -228,7 +225,7 @@ static void bitmap_builder_init(struct bitmap_builder *bb,
 		ent->commit_mask = bitmap_new();
 		bitmap_set(ent->commit_mask, i);
 
-		add_pending_object(&revs, &c->object, "");
+		add_pending_object_no_name(&revs, &c->object);
 	}
 
 	if (prepare_revision_walk(&revs))

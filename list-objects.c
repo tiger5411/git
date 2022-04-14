@@ -351,18 +351,17 @@ void mark_edges_uninteresting(struct rev_info *revs,
 
 static void add_pending_tree(struct rev_info *revs, struct tree *tree)
 {
-	add_pending_object(revs, &tree->object, "");
+	add_pending_object_no_name(revs, &tree->object);
 }
 
 static void traverse_non_commits(struct traversal_context *ctx,
 				 struct strbuf *base)
 {
-	int i;
+	struct object_array_entry *pending;
 
 	assert(base->len == 0);
 
-	for (i = 0; i < ctx->revs->pending.nr; i++) {
-		struct object_array_entry *pending = ctx->revs->pending.objects + i;
+	for_each_object_array_entry(pending, &ctx->revs->pending) {
 		struct object *obj = pending->item;
 		const char *name = pending->name;
 		const char *path = pending->path;

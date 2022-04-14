@@ -11,6 +11,7 @@
 #include "pack-objects.h"
 #include "packfile.h"
 #include "repository.h"
+#include "object-list.h"
 #include "object-store.h"
 #include "list-objects-filter-options.h"
 #include "midx.h"
@@ -743,8 +744,8 @@ static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 {
 	struct bitmap *base = NULL;
 	int needs_walk = 0;
-
-	struct object_list *not_mapped = NULL;
+	struct object_list_item *item;
+	struct object_list not_mapped = OBJECT_LIST_INIT;
 
 	/*
 	 * Go through all the roots for the walk. The ones that have bitmaps
@@ -754,9 +755,8 @@ static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 	 * The ones without bitmaps in the index will be stored in the
 	 * `not_mapped_list` for further processing.
 	 */
-	while (roots) {
-		struct object *object = roots->item;
-		roots = roots->next;
+	for_each_object_list_item(item, roots) {
+		struct object *object = item->item;
 
 		if (object->type == OBJ_COMMIT &&
 		    add_commit_to_bitmap(bitmap_git, &base, (struct commit *)object)) {
@@ -764,17 +764,17 @@ static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 			continue;
 		}
 
-		object_list_insert(object, &not_mapped);
+		object_list_insert(&not_mapped, object);
 	}
 
 	/*
 	 * Best case scenario: We found bitmaps for all the roots,
 	 * so the resulting `or` bitmap has the full reachability analysis
 	 */
-	if (not_mapped == NULL)
+	if (!not_mapped.nr)
 		return base;
 
-	roots = not_mapped;
+	roots = &not_mapped;
 
 	/*
 	 * Let's iterate through all the roots that don't have bitmaps to
@@ -785,16 +785,15 @@ static struct bitmap *find_objects(struct bitmap_index *bitmap_git,
 	 * to push them to an actual walk and run it until we can confirm
 	 * they are reachable
 	 */
-	while (roots) {
-		struct object *object = roots->item;
+	for_each_object_list_item(item, roots) {
+		struct object *object = item->item;
 		int pos;
 
-		roots = roots->next;
 		pos = bitmap_position(bitmap_git, &object->oid);
 
 		if (pos < 0 || base == NULL || !bitmap_get(base, pos)) {
 			object->flags &= ~UNINTERESTING;
-			add_pending_object(revs, object, "");
+			add_pending_object_no_name(revs, object);
 			needs_walk = 1;
 		} else {
 			object->flags |= SEEN;
@@ -948,9 +947,10 @@ static void show_objects_for_type(
 static int in_bitmapped_pack(struct bitmap_index *bitmap_git,
 			     struct object_list *roots)
 {
-	while (roots) {
-		struct object *object = roots->item;
-		roots = roots->next;
+	struct object_list_item *item;
+
+	for_each_object_list_item(item, roots) {
+		struct object *object = item->item;
 
 		if (bitmap_is_midx(bitmap_git)) {
 			if (bsearch_midx(&object->oid, bitmap_git->midx, NULL))
@@ -969,15 +969,19 @@ static struct bitmap *find_tip_objects(struct bitmap_index *bitmap_git,
 				       enum object_type type)
 {
 	struct bitmap *result = bitmap_new();
-	struct object_list *p;
+	struct object_list_item *item;
 
-	for (p = tip_objects; p; p = p->next) {
+	if (!tip_objects)
+		return result;
+
+	for_each_object_list_item(item, tip_objects) {
+		struct object *object = item->item;
 		int pos;
 
-		if (p->item->type != type)
+		if (object->type != type)
 			continue;
 
-		pos = bitmap_position(bitmap_git, &p->item->oid);
+		pos = bitmap_position(bitmap_git, &object->oid);
 		if (pos < 0)
 			continue;
 
@@ -1220,10 +1224,10 @@ static int can_filter_bitmap(struct list_objects_filter_options *filter)
 struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 					 int filter_provided_objects)
 {
-	unsigned int i;
+	struct object_array_entry *entry;
 
-	struct object_list *wants = NULL;
-	struct object_list *haves = NULL;
+	struct object_list wants = OBJECT_LIST_INIT;
+	struct object_list haves = OBJECT_LIST_INIT;
 
 	struct bitmap *wants_bitmap = NULL;
 	struct bitmap *haves_bitmap = NULL;
@@ -1247,8 +1251,8 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 	if (open_bitmap(revs->repo, bitmap_git) < 0)
 		goto cleanup;
 
-	for (i = 0; i < revs->pending.nr; ++i) {
-		struct object *object = revs->pending.objects[i].item;
+	for_each_object_array_entry(entry, &revs->pending) {
+		struct object *object = entry->item;
 
 		if (object->type == OBJ_NONE)
 			parse_object_or_die(&object->oid, NULL);
@@ -1257,18 +1261,18 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 			struct tag *tag = (struct tag *) object;
 
 			if (object->flags & UNINTERESTING)
-				object_list_insert(object, &haves);
+				object_list_insert(&haves, object);
 			else
-				object_list_insert(object, &wants);
+				object_list_insert(&wants, object);
 
 			object = parse_object_or_die(get_tagged_oid(tag), NULL);
 			object->flags |= (tag->object.flags & UNINTERESTING);
 		}
 
 		if (object->flags & UNINTERESTING)
-			object_list_insert(object, &haves);
+			object_list_insert(&haves, object);
 		else
-			object_list_insert(object, &wants);
+			object_list_insert(&wants, object);
 	}
 
 	/*
@@ -1276,11 +1280,11 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 	 * in the packfile that has a bitmap, we don't have anything to
 	 * optimize here
 	 */
-	if (haves && !in_bitmapped_pack(bitmap_git, haves))
+	if (haves.nr && !in_bitmapped_pack(bitmap_git, &haves))
 		goto cleanup;
 
 	/* if we don't want anything, we're done here */
-	if (!wants)
+	if (!wants.nr)
 		goto cleanup;
 
 	/*
@@ -1293,9 +1297,9 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 
 	object_array_clear(&revs->pending);
 
-	if (haves) {
+	if (haves.nr) {
 		revs->ignore_missing_links = 1;
-		haves_bitmap = find_objects(bitmap_git, revs, haves, NULL);
+		haves_bitmap = find_objects(bitmap_git, revs, &haves, NULL);
 		reset_revision_walk();
 		revs->ignore_missing_links = 0;
 
@@ -1303,7 +1307,7 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 			BUG("failed to perform bitmap walk");
 	}
 
-	wants_bitmap = find_objects(bitmap_git, revs, wants, haves_bitmap);
+	wants_bitmap = find_objects(bitmap_git, revs, &wants, haves_bitmap);
 
 	if (!wants_bitmap)
 		BUG("failed to perform bitmap walk");
@@ -1312,22 +1316,22 @@ struct bitmap_index *prepare_bitmap_walk(struct rev_info *revs,
 		bitmap_and_not(wants_bitmap, haves_bitmap);
 
 	filter_bitmap(bitmap_git,
-		      (revs->filter.choice && filter_provided_objects) ? NULL : wants,
+		      (revs->filter.choice && filter_provided_objects) ? NULL : &wants,
 		      wants_bitmap,
 		      &revs->filter);
 
 	bitmap_git->result = wants_bitmap;
 	bitmap_git->haves = haves_bitmap;
 
-	object_list_free(&wants);
-	object_list_free(&haves);
+	object_list_clear(&wants);
+	object_list_clear(&haves);
 
 	return bitmap_git;
 
 cleanup:
 	free_bitmap_index(bitmap_git);
-	object_list_free(&wants);
-	object_list_free(&haves);
+	object_list_clear(&wants);
+	object_list_clear(&haves);
 	return NULL;
 }
 

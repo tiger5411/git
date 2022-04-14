@@ -271,11 +271,7 @@ static unsigned int indexed_commits_alloc;
 
 static void index_commit_for_bitmap(struct commit *commit)
 {
-	if (indexed_commits_nr >= indexed_commits_alloc) {
-		indexed_commits_alloc = (indexed_commits_alloc + 32) * 2;
-		REALLOC_ARRAY(indexed_commits, indexed_commits_alloc);
-	}
-
+	ALLOC_GROW(indexed_commits, indexed_commits_nr + 1, indexed_commits_alloc);
 	indexed_commits[indexed_commits_nr++] = commit;
 }
 
@@ -3224,7 +3220,7 @@ static int add_object_entry_from_pack(const struct object_id *oid,
 		 * commits in included packs are used as starting points for the
 		 * subsequent revision walk
 		 */
-		add_pending_oid(revs, NULL, oid, 0);
+		add_pending_oid_no_name(revs, oid, 0);
 	}
 
 	stdin_packs_found_nr++;

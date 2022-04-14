@@ -26,6 +26,7 @@
 #include "commit-reach.h"
 #include "commit-graph.h"
 #include "sigchain.h"
+#include "object-array.h"
 
 static int transfer_unpack_limit = -1;
 static int fetch_unpack_limit = -1;
@@ -2050,14 +2051,6 @@ cleanup:
 	return ref_cpy;
 }
 
-static int add_to_object_array(const struct object_id *oid, void *data)
-{
-	struct object_array *a = data;
-
-	add_object_array(lookup_object(the_repository, oid), "", a);
-	return 0;
-}
-
 static void clear_common_flag(struct oidset *s)
 {
 	struct oidset_iter iter;
@@ -2078,13 +2071,14 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 {
 	struct fetch_negotiator negotiator;
 	struct packet_reader reader;
-	struct object_array nt_object_array = OBJECT_ARRAY_INIT;
+	struct object_list nt_object_array = OBJECT_ARRAY_INIT;
 	struct strbuf req_buf = STRBUF_INIT;
 	int haves_to_send = INITIAL_FLUSH;
 	int in_vain = 0;
 	int seen_ack = 0;
 	int last_iteration = 0;
 	timestamp_t min_generation = GENERATION_NUMBER_INFINITY;
+	struct object_id *oid;
 
 	fetch_negotiator_init(the_repository, &negotiator);
 	mark_tips(&negotiator, negotiation_tips);
@@ -2093,9 +2087,10 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 			   PACKET_READ_CHOMP_NEWLINE |
 			   PACKET_READ_DIE_ON_ERR_PACKET);
 
-	oid_array_for_each((struct oid_array *) negotiation_tips,
-			   add_to_object_array,
-			   &nt_object_array);
+	for_each_oid_array_oid(oid, negotiation_tips) {
+		struct object *o = lookup_object(the_repository, oid);
+		object_list_insert(&nt_object_array, o);
+	}
 
 	while (!last_iteration) {
 		int haves_added;
@@ -2145,6 +2140,8 @@ void negotiate_using_fetch(const struct oid_array *negotiation_tips,
 						 min_generation))
 			last_iteration = 1;
 	}
+
+	object_list_clear(&nt_object_array);
 	clear_common_flag(acked_commits);
 	strbuf_release(&req_buf);
 }

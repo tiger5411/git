@@ -13,6 +13,7 @@
 #include "sigchain.h"
 #include "strvec.h"
 #include "packfile.h"
+#include "object-queue.h"
 #include "object-store.h"
 #include "commit-reach.h"
 
@@ -88,7 +89,7 @@ static int force_all;
 static int dry_run;
 static int helper_status;
 
-static struct object_list *objects;
+static struct object_queue *objects;
 
 struct repo {
 	char *url;
@@ -725,8 +726,8 @@ static void one_remote_object(const struct object_id *oid)
 		return;
 
 	obj->flags |= REMOTE;
-	if (!object_list_contains(objects, obj))
-		object_list_insert(obj, &objects);
+	if (!object_queue_contains(objects, obj))
+		object_queue_insert(obj, &objects);
 }
 
 static void handle_lockprop_ctx(struct xml_ctx *ctx, int tag_closed)
@@ -1262,17 +1263,18 @@ static int locking_available(void)
 	return lock_flags;
 }
 
-static struct object_list **add_one_object(struct object *obj, struct object_list **p)
+static struct object_queue **add_one_object(struct object *obj,
+					    struct object_queue **p)
 {
-	struct object_list *entry = xmalloc(sizeof(struct object_list));
+	struct object_queue *entry = xmalloc(sizeof(struct object_queue));
 	entry->item = obj;
 	entry->next = *p;
 	*p = entry;
 	return &entry->next;
 }
 
-static struct object_list **process_blob(struct blob *blob,
-					 struct object_list **p)
+static struct object_queue **process_blob(struct blob *blob,
+					  struct object_queue **p)
 {
 	struct object *obj = &blob->object;
 
@@ -1285,8 +1287,8 @@ static struct object_list **process_blob(struct blob *blob,
 	return add_one_object(obj, p);
 }
 
-static struct object_list **process_tree(struct tree *tree,
-					 struct object_list **p)
+static struct object_queue **process_tree(struct tree *tree,
+					  struct object_queue **p)
 {
 	struct object *obj = &tree->object;
 	struct tree_desc desc;
@@ -1325,9 +1327,9 @@ static struct object_list **process_tree(struct tree *tree,
 
 static int get_delta(struct rev_info *revs, struct remote_lock *lock)
 {
-	int i;
+	struct object_array_entry *entry;
 	struct commit *commit;
-	struct object_list **p = &objects;
+	struct object_queue **p = &objects;
 	int count = 0;
 
 	while ((commit = get_revision(revs)) != NULL) {
@@ -1337,8 +1339,7 @@ static int get_delta(struct rev_info *revs, struct remote_lock *lock)
 			count += add_send_request(&commit->object, lock);
 	}
 
-	for (i = 0; i < revs->pending.nr; i++) {
-		struct object_array_entry *entry = revs->pending.objects + i;
+	for_each_object_array_entry(entry, &revs->pending) {
 		struct object *obj = entry->item;
 		const char *name = entry->name;
 
