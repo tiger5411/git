@@ -636,7 +636,7 @@ static int rpc_read_from_out(struct rpc_state *rpc, int options,
 		return 0;
 
 	*status = packet_read_with_status(rpc->out, NULL, NULL, buf,
-			left, &pktlen_raw, options);
+			left, &pktlen_raw, options, NULL);
 	if (*status != PACKET_READ_EOF) {
 		*appended = pktlen_raw + (rpc->write_line_lengths ? 4 : 0);
 		rpc->len += *appended;

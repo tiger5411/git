@@ -1541,19 +1541,61 @@ static void receive_wanted_refs(struct packet_reader *reader,
 		die(_("error processing wanted refs: %d"), reader->status);
 }
 
+static char *find_packfile_uri_path(const char *buffer)
+{
+	const char *URI_MARK = "://";
+	char *path;
+
+	/* First char is sideband mark */
+	buffer += 1;
+	if (!buffer)
+		return NULL;
+
+	path = strstr(buffer, URI_MARK);
+
+	if (!path)
+		return NULL;
+	path = strchr(path + strlen(URI_MARK), '/');
+	if (!path || !*(path + 1))
+		return NULL;
+	/* position after '/' */
+	return ++path;
+}
+
 static void receive_packfile_uris(struct packet_reader *reader,
 				  struct string_list *uris)
 {
+	struct strbuf sb = STRBUF_INIT;
+	int redact_url = git_env_bool("GIT_TRACE_REDACT", 1);
+
 	process_section_header(reader, "packfile-uris", 0);
-	while (packet_reader_read(reader) == PACKET_READ_NORMAL) {
-		if (reader->pktlen < the_hash_algo->hexsz ||
-		    reader->line[the_hash_algo->hexsz] != ' ')
+	while (packet_reader_read_trace(reader, &sb) == PACKET_READ_NORMAL) {
+		const size_t hexsz = the_hash_algo->hexsz;
+		char *pack_hash;
+		const char *uri;
+		const char *uri_path_start;
+
+		if (reader->pktlen < hexsz || reader->line[hexsz] != ' ')
 			die("expected '<hash> <uri>', got: %s\n", reader->line);
 
-		string_list_append(uris, reader->line);
+		pack_hash = xstrfmt("%.*s", (int)hexsz, reader->line);
+		uri = xstrdup(reader->line + hexsz + 1);
+
+		string_list_append_nodup(uris, pack_hash)->util = (void *)uri;
+
+		if (redact_url &&
+		    (uri_path_start = find_packfile_uri_path(sb.buf))) {
+			const char *redacted = "<redacted>";
+			const size_t plen = uri_path_start - sb.buf;
+			strbuf_splice(&sb, plen, sb.len - plen, redacted,
+				      strlen(redacted));
+		}
+		packet_trace(sb.buf, sb.len, 0);
 	}
 	if (reader->status != PACKET_READ_DELIM)
 		die("expected DELIM");
+
+	strbuf_release(&sb);
 }
 
 enum fetch_state {
@@ -1592,7 +1634,7 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 	struct object_id common_oid;
 	int received_ready = 0;
 	struct string_list packfile_uris = STRING_LIST_INIT_DUP;
-	int i;
+	struct string_list_item *item;
 	struct strvec index_pack_args = STRVEC_INIT;
 
 	negotiator = &negotiator_alloc;
@@ -1682,12 +1724,8 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 				receive_wanted_refs(&reader, sought, nr_sought);
 
 			/* get the pack(s) */
-			if (git_env_bool("GIT_TRACE_REDACT", 1))
-				reader.options |= PACKET_READ_REDACT_URI_PATH;
 			if (process_section_header(&reader, "packfile-uris", 1))
 				receive_packfile_uris(&reader, &packfile_uris);
-			/* We don't expect more URIs. Reset to avoid expensive URI check. */
-			reader.options &= ~PACKET_READ_REDACT_URI_PATH;
 
 			process_section_header(&reader, "packfile", 0);
 
@@ -1712,17 +1750,15 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		}
 	}
 
-	for (i = 0; i < packfile_uris.nr; i++) {
+	for_each_string_list_item(item, &packfile_uris) {
 		int j;
 		struct child_process cmd = CHILD_PROCESS_INIT;
 		char packname[GIT_MAX_HEXSZ + 1];
-		const char *uri = packfile_uris.items[i].string +
-			the_hash_algo->hexsz + 1;
+		const size_t hexsz = the_hash_algo->hexsz;
+		const char *uri = item->util;
 
 		strvec_push(&cmd.args, "http-fetch");
-		strvec_pushf(&cmd.args, "--packfile=%.*s",
-			     (int) the_hash_algo->hexsz,
-			     packfile_uris.items[i].string);
+		strvec_pushf(&cmd.args, "--packfile=%s", item->string);
 		for (j = 0; j < index_pack_args.nr; j++)
 			strvec_pushf(&cmd.args, "--index-pack-arg=%s",
 				     index_pack_args.v[j]);
@@ -1737,12 +1773,9 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		    memcmp(packname, "keep\t", 5))
 			die("fetch-pack: expected keep then TAB at start of http-fetch output");
 
-		if (read_in_full(cmd.out, packname,
-				 the_hash_algo->hexsz + 1) < 0 ||
-		    packname[the_hash_algo->hexsz] != '\n')
+		if (read_in_full(cmd.out, packname, hexsz + 1) < 0 ||
+		    packname[hexsz] != '\n')
 			die("fetch-pack: expected hash then LF at end of http-fetch output");
-
-		packname[the_hash_algo->hexsz] = '\0';
 
 		parse_gitmodules_oids(cmd.out, &fsck_options.gitmodules_found);
 
@@ -1751,18 +1784,16 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 		if (finish_command(&cmd))
 			die("fetch-pack: unable to finish http-fetch");
 
-		if (memcmp(packfile_uris.items[i].string, packname,
-			   the_hash_algo->hexsz))
-			die("fetch-pack: pack downloaded from %s does not match expected hash %.*s",
-			    uri, (int) the_hash_algo->hexsz,
-			    packfile_uris.items[i].string);
+		if (memcmp(item->string, packname, hexsz))
+			die("fetch-pack: pack downloaded from %s does not match expected hash %s",
+			    uri, item->string);
 
 		string_list_append_nodup(pack_lockfiles,
 					 xstrfmt("%s/pack/pack-%s.keep",
 						 get_object_directory(),
-						 packname));
+						 item->string));
 	}
-	string_list_clear(&packfile_uris, 0);
+	string_list_clear(&packfile_uris, 1);
 	strvec_clear(&index_pack_args);
 
 	if (fsck_finish(&fsck_options))

@@ -87,7 +87,6 @@ void packet_fflush(FILE *f);
 #define PACKET_READ_CHOMP_NEWLINE        (1u<<1)
 #define PACKET_READ_DIE_ON_ERR_PACKET    (1u<<2)
 #define PACKET_READ_GENTLE_ON_READ_ERROR (1u<<3)
-#define PACKET_READ_REDACT_URI_PATH      (1u<<4)
 int packet_read(int fd, char *buffer, unsigned size, int options);
 
 /*
@@ -115,7 +114,8 @@ enum packet_read_status {
 enum packet_read_status packet_read_with_status(int fd, char **src_buffer,
 						size_t *src_len, char *buffer,
 						unsigned size, int *pktlen,
-						int options);
+						int options,
+						struct strbuf *trace_to);
 
 /*
  * Convenience wrapper for packet_read that is not gentle, and sets the
@@ -210,6 +210,19 @@ void packet_reader_init(struct packet_reader *reader, int fd,
  * PACKET_READ_FLUSH: 'pktlen' is set to '0' and 'line' is set to NULL
  */
 enum packet_read_status packet_reader_read(struct packet_reader *reader);
+
+/**
+ * Like packet_reader_read() but defers trace logging, logging instead
+ * into a "struct strbuf" you provide.
+ */
+enum packet_read_status packet_reader_read_trace(struct packet_reader *reader,
+						 struct strbuf *trace_to);
+
+/**
+ * With a deferred or altered "trace_to" from
+ * packet_reader_read_trace(), log the trace.
+ */
+void packet_trace(const char *buf, unsigned int len, int write);
 
 /*
  * Peek the next packet line without consuming it and return the status.
