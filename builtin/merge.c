@@ -1366,6 +1366,10 @@ int cmd_merge(int argc, const char **argv, const char *prefix)
 		if (!file_exists(git_path_merge_head(the_repository)))
 			die(_("There is no merge in progress (MERGE_HEAD missing)."));
 
+		strbuf_addstr(&buf, "merge (continue)");
+		setenv("GIT_REFLOG_ACTION", buf.buf, 0);
+		strbuf_reset(&buf);
+
 		/* Invoke 'git commit' */
 		ret = cmd_commit(nargc, nargv, prefix);
 		goto done;

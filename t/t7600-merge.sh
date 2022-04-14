@@ -772,6 +772,8 @@ test_expect_success 'completed merge (git merge --continue) with --no-commit and
 	git stash show -p MERGE_AUTOSTASH >actual &&
 	test_cmp expect actual &&
 	git merge --continue 2>err &&
+	git reflog -1 >reflog &&
+	grep -F "merge (continue)" reflog &&
 	grep "Applied autostash." err &&
 	git show HEAD:file >merge-result &&
 	test_cmp result.1-5 merge-result &&
