@@ -175,18 +175,18 @@ out_err:
 	strbuf_release(&key);
 	error(_("unable to write upstream branch configuration"));
 
-	advise(_("\nAfter fixing the error cause you may try to fix up\n"
+	error(_("\nAfter fixing the error cause you may try to fix up\n"
 		"the remote tracking information by invoking:"));
 	if (remotes->nr == 1)
-		advise("  git branch --set-upstream-to=%s%s%s",
+		error("  git branch --set-upstream-to=%s%s%s",
 			origin ? origin : "",
 			origin ? "/" : "",
 			remotes->items[0].string);
 	else {
-		advise("  git config --add branch.\"%s\".remote %s",
+		error("  git config --add branch.\"%s\".remote %s",
 			local, origin ? origin : ".");
 		for_each_string_list_item(item, remotes)
-			advise("  git config --add branch.\"%s\".merge %s",
+			error("  git config --add branch.\"%s\".merge %s",
 				local, item->string);
 	}
 
@@ -292,7 +292,8 @@ static void setup_tracking(const char *new_ref, const char *orig_ref,
 			 * TRANSLATORS: The second argument is a \n-delimited list of
 			 * duplicate refspecs, composed above.
 			 */
-			advise(_("There are multiple remotes whose fetch refspecs map to the remote\n"
+			advise(ADVICE_BRANCH_SET_UPSTREAM_FAILURE,
+			       _("There are multiple remotes whose fetch refspecs map to the remote\n"
 				 "tracking ref '%s':\n"
 				 "%s"
 				 "\n"
@@ -658,7 +659,8 @@ void create_branches_recursively(struct repository *r, const char *name,
 				_("submodule '%s': unable to find submodule"),
 				submodule_entry_list.entries[i].submodule->name);
 			if (advice_enabled(ADVICE_SUBMODULES_NOT_UPDATED))
-				advise(_("You may try updating the submodules using 'git checkout %s && git submodule update --init'"),
+				advise(ADVICE_SUBMODULES_NOT_UPDATED,
+				       _("You may try updating the submodules using 'git checkout %s && git submodule update --init'"),
 				       start_commitish);
 			exit(code);
 		}

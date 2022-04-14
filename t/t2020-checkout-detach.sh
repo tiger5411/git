@@ -198,23 +198,22 @@ test_expect_success 'describe_detached_head prints no SHA-1 ellipsis when not as
 
 	# The first detach operation is more chatty than the following ones.
 	cat >1st_detach <<-EOF &&
-	Note: switching to 'HEAD^'.
-
-	You are in 'detached HEAD' state. You can look around, make experimental
-	changes and commit them, and you can discard any commits you make in this
-	state without impacting any branches by switching back to a branch.
-
-	If you want to create a new branch to retain commits you create, you may
-	do so (now or later) by using -c with the switch command. Example:
-
-	  git switch -c <new-branch-name>
-
-	Or undo this operation with:
-
-	  git switch -
-
-	Turn off this advice by setting config variable advice.detachedHead to false
-
+	hint: Switching to 'HEAD^'.
+	hint:
+	hint: You are in 'detached HEAD' state. You can look around, make experimental
+	hint: changes and commit them, and you can discard any commits you make in this
+	hint: state without impacting any branches by switching back to a branch.
+	hint:
+	hint: If you want to create a new branch to retain commits you create, you may
+	hint: do so (now or later) by using -c with the switch command. Example:
+	hint:
+	hint:   git switch -c <new-branch-name>
+	hint:
+	hint: Or undo this operation with:
+	hint:
+	hint:   git switch -
+	hint:
+	hint: Disable this message with \"git config advice.detachedHead false\"
 	HEAD is now at \$commit three
 	EOF
 
@@ -280,23 +279,22 @@ test_expect_success 'describe_detached_head does print SHA-1 ellipsis when asked
 
 	# The first detach operation is more chatty than the following ones.
 	cat >1st_detach <<-EOF &&
-	Note: switching to 'HEAD^'.
-
-	You are in 'detached HEAD' state. You can look around, make experimental
-	changes and commit them, and you can discard any commits you make in this
-	state without impacting any branches by switching back to a branch.
-
-	If you want to create a new branch to retain commits you create, you may
-	do so (now or later) by using -c with the switch command. Example:
-
-	  git switch -c <new-branch-name>
-
-	Or undo this operation with:
-
-	  git switch -
-
-	Turn off this advice by setting config variable advice.detachedHead to false
-
+	hint: Switching to 'HEAD^'.
+	hint:
+	hint: You are in 'detached HEAD' state. You can look around, make experimental
+	hint: changes and commit them, and you can discard any commits you make in this
+	hint: state without impacting any branches by switching back to a branch.
+	hint:
+	hint: If you want to create a new branch to retain commits you create, you may
+	hint: do so (now or later) by using -c with the switch command. Example:
+	hint:
+	hint:   git switch -c <new-branch-name>
+	hint:
+	hint: Or undo this operation with:
+	hint:
+	hint:   git switch -
+	hint:
+	hint: Disable this message with \"git config advice.detachedHead false\"
 	HEAD is now at \$commit... three
 	EOF
 

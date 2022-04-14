@@ -616,8 +616,8 @@ static int parse_diff(struct add_p_state *s, const struct pathspec *ps)
 	if (colored_p != colored_pend) {
 mismatched_output:
 		error(_("mismatched output from interactive.diffFilter"));
-		advise(_("Your filter must maintain a one-to-one correspondence\n"
-			 "between its input and output lines."));
+		error(_("Your filter must maintain a one-to-one correspondence\n"
+			"between its input and output lines."));
 		return -1;
 	}
 

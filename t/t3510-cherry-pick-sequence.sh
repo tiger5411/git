@@ -193,6 +193,8 @@ test_expect_success 'check advice when we move HEAD by committing' '
 	error: there is nothing to skip
 	hint: have you committed already?
 	hint: try "git cherry-pick --continue"
+	hint:
+	hint: Disable this message with "git config advice.resolveConflict false"
 	fatal: cherry-pick failed
 	EOF
 	test_must_fail git cherry-pick base..yetanotherpick &&
@@ -208,6 +210,8 @@ test_expect_success 'selectively advise --skip while launching another sequence'
 	cat >expect <<-EOF &&
 	error: cherry-pick is already in progress
 	hint: try "git cherry-pick (--continue | --skip | --abort | --quit)"
+	hint:
+	hint: Disable this message with "git config advice.sequencerInUse false"
 	fatal: cherry-pick failed
 	EOF
 	test_must_fail git cherry-pick picked..yetanotherpick &&
@@ -216,6 +220,8 @@ test_expect_success 'selectively advise --skip while launching another sequence'
 	cat >expect <<-EOF &&
 	error: cherry-pick is already in progress
 	hint: try "git cherry-pick (--continue | --abort | --quit)"
+	hint:
+	hint: Disable this message with "git config advice.sequencerInUse false"
 	fatal: cherry-pick failed
 	EOF
 	git reset --merge &&

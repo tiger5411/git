@@ -970,7 +970,7 @@ static void update_refs_for_switch(const struct checkout_opts *opts,
 			   REF_NO_DEREF, UPDATE_REFS_DIE_ON_ERR);
 		if (!opts->quiet) {
 			if (old_branch_info->path &&
-			    advice_enabled(ADVICE_DETACHED_HEAD) && !opts->force_detach)
+			    !opts->force_detach)
 				detach_advice(new_branch_info->name);
 			describe_detached_head(_("HEAD is now at"), new_branch_info->commit);
 		}
@@ -1063,20 +1063,19 @@ static void suggest_reattach(struct commit *commit, struct rev_info *revs)
 		sb.buf);
 	strbuf_release(&sb);
 
-	if (advice_enabled(ADVICE_DETACHED_HEAD))
-		fprintf(stderr,
-			Q_(
-			/* The singular version */
-			"If you want to keep it by creating a new branch, "
-			"this may be a good time\nto do so with:\n\n"
-			" git branch <new-branch-name> %s\n\n",
-			/* The plural version */
-			"If you want to keep them by creating a new branch, "
-			"this may be a good time\nto do so with:\n\n"
-			" git branch <new-branch-name> %s\n\n",
-			/* Give ngettext() the count */
-			lost),
-			find_unique_abbrev(&commit->object.oid, DEFAULT_ABBREV));
+	advise_if_enabled(ADVICE_DETACHED_HEAD,
+			  Q_(
+				  /* The singular version */
+				  "If you want to keep it by creating a new branch, "
+				  "this may be a good time\nto do so with:\n\n"
+				  " git branch <new-branch-name> %s\n",
+				  /* The plural version */
+				  "If you want to keep them by creating a new branch, "
+				  "this may be a good time\nto do so with:\n\n"
+				  " git branch <new-branch-name> %s\n",
+				  /* Give ngettext() the count */
+				  lost),
+			  find_unique_abbrev(&commit->object.oid, DEFAULT_ABBREV));
 }
 
 /*
@@ -1238,16 +1237,15 @@ static const char *parse_remote_branch(const char *arg,
 	}
 
 	if (!remote && num_matches > 1) {
-	    if (advice_enabled(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME)) {
-		    advise(_("If you meant to check out a remote tracking branch on, e.g. 'origin',\n"
-			     "you can do so by fully qualifying the name with the --track option:\n"
-			     "\n"
-			     "    git checkout --track origin/<name>\n"
-			     "\n"
-			     "If you'd like to always have checkouts of an ambiguous <name> prefer\n"
-			     "one remote, e.g. the 'origin' remote, consider setting\n"
-			     "checkout.defaultRemote=origin in your config."));
-	    }
+	    advise_if_enabled(ADVICE_CHECKOUT_AMBIGUOUS_REMOTE_BRANCH_NAME,
+			      _("If you meant to check out a remote tracking branch on, e.g. 'origin',\n"
+				"you can do so by fully qualifying the name with the --track option:\n"
+				"\n"
+				"    git checkout --track origin/<name>\n"
+				"\n"
+				"If you'd like to always have checkouts of an ambiguous <name> prefer\n"
+				"one remote, e.g. the 'origin' remote, consider setting\n"
+				"checkout.defaultRemote=origin in your config."));
 
 	    die(_("'%s' matched multiple (%d) remote tracking branches"),
 		arg, num_matches);
@@ -1454,8 +1452,8 @@ static void die_expecting_a_branch(const struct branch_info *branch_info)
 		 */
 		code = die_message(_("a branch is expected, got '%s'"), branch_info->name);
 
-	if (advice_enabled(ADVICE_SUGGEST_DETACHING_HEAD))
-		advise(_("If you want to detach HEAD at the commit, try again with the --detach option."));
+	advise_if_enabled(ADVICE_SUGGEST_DETACHING_HEAD,
+			  _("If you want to detach HEAD at the commit, try again with the --detach option."));
 
 	exit(code);
 }

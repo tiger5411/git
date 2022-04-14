@@ -55,6 +55,8 @@ test_expect_success 'ambiguous blob output' '
 	hint: The candidates are:
 	hint:   beef... blob
 	hint:   beef... blob
+	hint:
+	hint: Disable this message with "git config advice.objectAmbiguous false"
 	fatal: ambiguous argument '\''beef...'\'': unknown revision or path not in the working tree.
 	Use '\''--'\'' to separate paths from revisions, like this:
 	'\''git <command> [<revision>...] -- [<file>...]'\''
@@ -100,6 +102,8 @@ test_expect_success POSIXPERM 'ambigous zlib corrupt loose blob' '
 	hint: The candidates are:
 	hint:   cafe... [bad object]
 	hint:   cafe... blob
+	hint:
+	hint: Disable this message with "git config advice.objectAmbiguous false"
 	fatal: ambiguous argument '\''cafe...'\'': unknown revision or path not in the working tree.
 	Use '\''--'\'' to separate paths from revisions, like this:
 	'\''git <command> [<revision>...] -- [<file>...]'\''
@@ -411,14 +415,14 @@ test_expect_success 'ambiguity hints' '
 	test_must_fail git rev-parse 000000000 2>stderr &&
 	grep ^hint: stderr >hints &&
 	# 16 candidates, plus one intro line
-	test_line_count = 17 hints
+	test_line_count = 19 hints
 '
 
 test_expect_success 'ambiguity hints respect type' '
 	test_must_fail git rev-parse 000000000^{commit} 2>stderr &&
 	grep ^hint: stderr >hints &&
 	# 5 commits, 1 tag (which is a committish), plus intro line
-	test_line_count = 7 hints
+	test_line_count = 9 hints
 '
 
 test_expect_success 'failed type-selector still shows hint' '
@@ -428,7 +432,7 @@ test_expect_success 'failed type-selector still shows hint' '
 	echo 872 | git hash-object --stdin -w &&
 	test_must_fail git rev-parse ee3d^{commit} 2>stderr &&
 	grep ^hint: stderr >hints &&
-	test_line_count = 3 hints
+	test_line_count = 5 hints
 '
 
 test_expect_success 'core.disambiguate config can prefer types' '

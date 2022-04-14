@@ -687,8 +687,7 @@ static int checkout(int submodule_progress, int filter_submodules)
 		return 0;
 	}
 	if (!strcmp(head, "HEAD")) {
-		if (advice_enabled(ADVICE_DETACHED_HEAD))
-			detach_advice(oid_to_hex(&oid));
+		detach_advice(oid_to_hex(&oid));
 		FREE_AND_NULL(head);
 	} else {
 		if (!starts_with(head, "refs/heads/"))

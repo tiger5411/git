@@ -1203,6 +1203,7 @@ static void show_push_unqualified_ref_name_error(const char *dst_value,
 {
 	struct object_id oid;
 	enum object_type type;
+	const enum advice_type atype = ADVICE_PUSH_UNQUALIFIED_REFNAME;
 
 	/*
 	 * TRANSLATORS: "matches '%s'%" is the <dst> part of "git push
@@ -1220,7 +1221,7 @@ static void show_push_unqualified_ref_name_error(const char *dst_value,
 		"Neither worked, so we gave up. You must fully qualify the ref."),
 	      dst_value, matched_src_name);
 
-	if (!advice_enabled(ADVICE_PUSH_UNQUALIFIED_REFNAME))
+	if (!advice_enabled(atype))
 		return;
 
 	if (get_oid(matched_src_name, &oid))
@@ -1229,22 +1230,26 @@ static void show_push_unqualified_ref_name_error(const char *dst_value,
 		    matched_src_name);
 	type = oid_object_info(the_repository, &oid, NULL);
 	if (type == OBJ_COMMIT) {
-		advise(_("The <src> part of the refspec is a commit object.\n"
+		advise(atype,
+		       _("The <src> part of the refspec is a commit object.\n"
 			 "Did you mean to create a new branch by pushing to\n"
 			 "'%s:refs/heads/%s'?"),
 		       matched_src_name, dst_value);
 	} else if (type == OBJ_TAG) {
-		advise(_("The <src> part of the refspec is a tag object.\n"
+		advise(atype,
+		       _("The <src> part of the refspec is a tag object.\n"
 			 "Did you mean to create a new tag by pushing to\n"
 			 "'%s:refs/tags/%s'?"),
 		       matched_src_name, dst_value);
 	} else if (type == OBJ_TREE) {
-		advise(_("The <src> part of the refspec is a tree object.\n"
+		advise(atype,
+		       _("The <src> part of the refspec is a tree object.\n"
 			 "Did you mean to tag a new tree by pushing to\n"
 			 "'%s:refs/tags/%s'?"),
 		       matched_src_name, dst_value);
 	} else if (type == OBJ_BLOB) {
-		advise(_("The <src> part of the refspec is a blob object.\n"
+		advise(atype,
+		       _("The <src> part of the refspec is a blob object.\n"
 			 "Did you mean to tag a new blob by pushing to\n"
 			 "'%s:refs/tags/%s'?"),
 		       matched_src_name, dst_value);

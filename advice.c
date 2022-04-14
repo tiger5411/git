@@ -35,24 +35,35 @@ static const char *advise_get_color(enum color_advice ix)
 
 static const char turn_off_instructions[] =
 N_("\n"
-   "Disable this message with \"git config advice.%s false\"");
+   "Disable this message with \"git config %s false\"");
 
-static void vadvise(const char *advice, int display_instructions,
-		    const char *key, va_list params)
+static void vadvise(enum advice_type *type, const char *advice, va_list params)
 {
 	struct strbuf buf = STRBUF_INIT;
 	const char *cp, *np;
 
 	strbuf_vaddf(&buf, advice, params);
+	if (type) {
+		/*
+		 * Some messages end with "\n", others not. Let's
+		 * normalize them.
+		 */
+		strbuf_rtrim(&buf);
+		strbuf_addstr(&buf, "\n");
 
-	if (display_instructions)
-		strbuf_addf(&buf, turn_off_instructions, key);
+		strbuf_addf(&buf, _(turn_off_instructions), advice_setting[*type].key);
+	}
 
 	for (cp = buf.buf; *cp; cp = np) {
+		int len;
+
 		np = strchrnul(cp, '\n');
-		fprintf(stderr,	_("%shint: %.*s%s\n"),
+		len = np - cp;
+
+		fprintf(stderr,	_("%shint:%s%.*s%s\n"),
 			advise_get_color(ADVICE_COLOR_HINT),
-			(int)(np - cp), cp,
+			len ? " " : "",
+			len, cp,
 			advise_get_color(ADVICE_COLOR_RESET));
 		if (*np)
 			np++;
@@ -60,34 +71,36 @@ static void vadvise(const char *advice, int display_instructions,
 	strbuf_release(&buf);
 }
 
-void advise(const char *advice, ...)
+void advise(enum advice_type type, const char *advice, ...)
 {
 	va_list params;
 	va_start(params, advice);
-	vadvise(advice, 0, "", params);
+	vadvise(&type, advice, params);
 	va_end(params);
 }
 
 int advice_enabled(enum advice_type type)
 {
-	return advice_setting[type].enabled;
+	return !advice_setting[type].disabled;
 }
 
-void advise_if_enabled(enum advice_type type, const char *advice, ...)
+int advise_if_enabled(enum advice_type type, const char *advice, ...)
 {
 	va_list params;
 
 	if (!advice_enabled(type))
-		return;
+		return 0;
 
 	va_start(params, advice);
-	vadvise(advice, 1, advice_setting[type].key, params);
+	vadvise(&type, advice, params);
 	va_end(params);
+
+	return 1;
 }
 
 int git_default_advice_config(const char *var, const char *value)
 {
-	const char *k, *slot_name;
+	const char *slot_name;
 	int i;
 
 	if (!strcmp(var, "color.advice")) {
@@ -104,13 +117,10 @@ int git_default_advice_config(const char *var, const char *value)
 		return color_parse(value, advice_colors[slot]);
 	}
 
-	if (!skip_prefix(var, "advice.", &k))
-		return 0;
-
 	for (i = 0; i < ARRAY_SIZE(advice_setting); i++) {
-		if (strcasecmp(k, advice_setting[i].key))
+		if (strcasecmp(var, advice_setting[i].key))
 			continue;
-		advice_setting[i].enabled = git_config_bool(var, value);
+		advice_setting[i].disabled = !git_config_bool(var, value);
 		return 0;
 	}
 
@@ -141,13 +151,13 @@ int error_resolve_conflict(const char *me)
 		error(_("It is not possible to %s because you have unmerged files."),
 			me);
 
-	if (advice_enabled(ADVICE_RESOLVE_CONFLICT))
-		/*
-		 * Message used both when 'git commit' fails and when
-		 * other commands doing a merge do.
-		 */
-		advise(_("Fix them up in the work tree, and then use 'git add/rm <file>'\n"
-			 "as appropriate to mark resolution and make a commit."));
+	/*
+	 * Message used both when 'git commit' fails and when
+	 * other commands doing a merge do.
+	 */
+	advise_if_enabled(ADVICE_RESOLVE_CONFLICT,
+			  _("Fix them up in the work tree, and then use 'git add/rm <file>'\n"
+			    "as appropriate to mark resolution and make a commit."));
 	return -1;
 }
 
@@ -155,14 +165,6 @@ void NORETURN die_resolve_conflict(const char *me)
 {
 	error_resolve_conflict(me);
 	die(_("Exiting because of an unresolved conflict."));
-}
-
-void NORETURN die_conclude_merge(void)
-{
-	error(_("You have not concluded your merge (MERGE_HEAD exists)."));
-	if (advice_enabled(ADVICE_RESOLVE_CONFLICT))
-		advise(_("Please, commit your changes before merging."));
-	die(_("Exiting because of unfinished merge."));
 }
 
 void NORETURN die_ff_impossible(void)
@@ -192,7 +194,7 @@ void advise_on_updating_sparse_paths(struct string_list *pathspec_list)
 void detach_advice(const char *new_name)
 {
 	const char *fmt =
-	_("Note: switching to '%s'.\n"
+	_("Switching to '%s'.\n"
 	"\n"
 	"You are in 'detached HEAD' state. You can look around, make experimental\n"
 	"changes and commit them, and you can discard any commits you make in this\n"
@@ -205,9 +207,7 @@ void detach_advice(const char *new_name)
 	"\n"
 	"Or undo this operation with:\n"
 	"\n"
-	"  git switch -\n"
-	"\n"
-	"Turn off this advice by setting config variable advice.detachedHead to false\n\n");
+	"  git switch -\n");
 
-	fprintf(stderr, fmt, new_name);
+	advise_if_enabled(ADVICE_DETACHED_HEAD, fmt, new_name);
 }

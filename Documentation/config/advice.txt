@@ -38,6 +38,10 @@ advice.*::
 	commitBeforeMerge::
 		Advice shown when linkgit:git-merge[1] refuses to
 		merge to avoid overwriting local changes.
+	convertByteOrderMark::
+		Advice show when running file conversions, and a byte
+		order mark (BOM) is either unexpectedly missing or
+		present.
 	detachedHead::
 		Advice shown when you used
 		linkgit:git-switch[1] or linkgit:git-checkout[1]
@@ -57,11 +61,23 @@ advice.*::
 		Advice on how to set your identity configuration when
 		your information is guessed from the system username and
 		domain name.
+	initInitialBranchNameIsMaster::
+		Advice shown if linkgit:git-init[1] picked a branch
+		name of "master" for you, without that being
+		explicitly configured via 'init.defaultBranch'.
 	nestedTag::
 		Advice shown if a user attempts to recursively tag a tag object.
+	objectAmbiguous::
+		Advice shown when on object ID is ambigious, to
+		suggest likely candidates based on the provided
+		ambiguous object prefix.
 	objectNameWarning::
 		Advice shown when resolving a reference that looks
 		like an object ID, which was likely created by.
+	pullNonFFConfig::
+		Advice shown by linkgit:git-pull[1] when a pull cannot
+		fast-forward, and 'pull.rebase' and 'pull.ff' aren't
+		configured.
 	pushAlreadyExists::
 		Shown when linkgit:git-push[1] rejects an update that
 		does not qualify for fast-forwarding (e.g., a tag.)
@@ -110,6 +126,11 @@ advice.*::
 		show directions on how to proceed from the current state.
 	sequencerInUse::
 		Advice shown when a sequencer command is already in progress.
+	sequencerRescheduled::
+		Advice shown when a sequencer command is rescheduled.
+	sequencerResolveConflict::
+		Advice shown when a sequencer command encounters a
+		conflict, with suggestions about how to solve it.
 	skippedCherryPicks::
 		Shown when linkgit:git-rebase[1] skips a commit that has already
 		been cherry-picked onto the upstream branch.
@@ -139,6 +160,10 @@ advice.*::
 	suggestDetachingHead::
 		Advice shown when linkgit:git-switch[1] refuses to detach HEAD
 		without the explicit `--detach` option.
+	transportIncompatibleVersion::
+		Advice shown when the server protocol version or the
+		presence of server options is incompatible with the
+		remote server protocol.
 	updateSparsePath::
 		Advice shown when either linkgit:git-add[1] or linkgit:git-rm[1]
 		is asked to update index entries outside the current sparse

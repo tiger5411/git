@@ -567,6 +567,8 @@ static enum get_oid_result get_short_oid(struct repository *r,
 		};
 
 		error(_("short object ID %s is ambiguous"), ds.hex_pfx);
+		if (!advice_enabled(ADVICE_OBJECT_AMBIGUOUS))
+			return status;
 
 		/*
 		 * We may still have ambiguity if we simply saw a series of
@@ -588,7 +590,8 @@ static enum get_oid_result get_short_oid(struct repository *r,
 		 * objects composed in show_ambiguous_object(). See
 		 * its "TRANSLATORS" comments for details.
 		 */
-		advise(_("The candidates are:\n%s"), out.advice.buf);
+		advise(ADVICE_OBJECT_AMBIGUOUS, _("The candidates are:\n%s"),
+		       out.advice.buf);
 
 		oid_array_clear(&collect);
 		strbuf_release(&out.advice);
@@ -892,8 +895,7 @@ static int get_oid_basic(struct repository *r, const char *str, int len,
 	"  git switch -c $br $(git rev-parse ...)\n"
 	"\n"
 	"where \"$br\" is somehow empty and a 40-hex ref is created. Please\n"
-	"examine these refs and maybe delete them. Turn this message off by\n"
-	"running \"git config advice.objectNameWarning false\"");
+	"examine these refs and maybe delete them.\n");
 	struct object_id tmp_oid;
 	char *real_ref = NULL;
 	int refs_found = 0;
@@ -904,8 +906,8 @@ static int get_oid_basic(struct repository *r, const char *str, int len,
 			refs_found = repo_dwim_ref(r, str, len, &tmp_oid, &real_ref, 0);
 			if (refs_found > 0) {
 				warning(warn_msg, len, str);
-				if (advice_enabled(ADVICE_OBJECT_NAME_WARNING))
-					fprintf(stderr, "%s\n", _(object_name_msg));
+				advise_if_enabled(ADVICE_OBJECT_NAME_WARNING,
+						  "%s", _(object_name_msg));
 			}
 			free(real_ref);
 		}

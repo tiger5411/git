@@ -526,10 +526,10 @@ int cmd_reset(int argc, const char **argv, const char *prefix)
 				refresh_index(&the_index, flags, NULL, NULL,
 					      _("Unstaged changes after reset:"));
 				t_delta_in_ms = (getnanotime() - t_begin) / 1000000;
-				if (!quiet && advice_enabled(ADVICE_RESET_NO_REFRESH) && t_delta_in_ms > REFRESH_INDEX_DELAY_WARNING_IN_MS) {
-					advise(_("It took %.2f seconds to refresh the index after reset.  You can use\n"
-						 "'--no-refresh' to avoid this."), t_delta_in_ms / 1000.0);
-				}
+				if (!quiet && t_delta_in_ms > REFRESH_INDEX_DELAY_WARNING_IN_MS)
+					advise_if_enabled(ADVICE_RESET_NO_REFRESH,
+							  _("It took %.2f seconds to refresh the index after reset.  You can use\n"
+							    "'--no-refresh' to avoid this."), t_delta_in_ms / 1000.0);
 			}
 		} else {
 			struct object_id dummy;
