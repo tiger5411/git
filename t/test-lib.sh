@@ -523,13 +523,12 @@ else
 fi
 
 # A call to "unset" with no arguments causes at least Solaris 10
-# /usr/xpg4/bin/sh and /bin/ksh to bail out.  So keep the unsets
-# deriving from the command substitution clustered with the other
-# ones.
-unset VISUAL EMAIL LANGUAGE $("$PERL_PATH" -e '
+# /usr/xpg4/bin/sh and /bin/ksh to bail out.  So we'll need at least
+# one unconditional variable here, which might as well be VISUAL.
+unset VISUAL $("$PERL_PATH" -we '
 	my @env = keys %ENV;
 	my $ok = join("|", qw(
-		TRACE
+		TRACE(?!2_(?:PARENT_NAME|PARENT_SID)$)
 		DEBUG
 		TEST
 		.*_TEST
@@ -541,13 +540,20 @@ unset VISUAL EMAIL LANGUAGE $("$PERL_PATH" -e '
 		TRACE_CURL
 	));
 	my @vars = grep(/^GIT_/ && !/^GIT_($ok)/o, @env);
+	my @nongit = qw(
+		CDPATH
+		EMAIL
+		GITPERLLIB
+		GREP_OPTIONS
+		LANGUAGE
+		UNZIP
+		XDG_CACHE_HOME
+		XDG_CONFIG_HOME
+	);
+	push @vars => grep { exists $ENV{$_} } @nongit;
 	print join("\n", @vars);
 ')
-unset XDG_CACHE_HOME
-unset XDG_CONFIG_HOME
-unset GITPERLLIB
-unset GIT_TRACE2_PARENT_NAME
-unset GIT_TRACE2_PARENT_SID
+
 TEST_AUTHOR_LOCALNAME=author
 TEST_AUTHOR_DOMAIN=example.com
 GIT_AUTHOR_EMAIL=${TEST_AUTHOR_LOCALNAME}@${TEST_AUTHOR_DOMAIN}
@@ -640,13 +646,6 @@ else
 		unset LD_PRELOAD GLIBC_TUNABLES
 	}
 fi
-
-# Protect ourselves from common misconfiguration to export
-# CDPATH into the environment
-unset CDPATH
-
-unset GREP_OPTIONS
-unset UNZIP
 
 case $(echo $GIT_TRACE |tr "[A-Z]" "[a-z]") in
 1|2|true)
