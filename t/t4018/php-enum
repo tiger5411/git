@@ -1,3 +1,4 @@
+t4018 header: enum RIGHT: string
 enum RIGHT: string
 {
     case Foo = 'ChangeMe';

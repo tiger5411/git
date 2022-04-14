@@ -1,3 +1,4 @@
+t4018 header: public <T extends Bar & Foo<T>, R> Map<T, R[]> foo(String[] RIGHT) {
 class MyExample {
     public <T extends Bar & Foo<T>, R> Map<T, R[]> foo(String[] RIGHT) {
         someMethodCall();
