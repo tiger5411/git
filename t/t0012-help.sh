@@ -246,7 +246,7 @@ test_expect_success "'git help -g' section spacing" '
 
 test_expect_success 'generate builtin list' '
 	mkdir -p sub &&
-	git --list-cmds=builtins >builtins &&
+	git --list-cmds=builtins-h >builtins &&
 	uniq builtins >builtins.uniq &&
 	test_cmp builtins builtins.uniq
 '

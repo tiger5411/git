@@ -980,7 +980,8 @@ int cmd_grep(int argc, const char **argv, const char *prefix)
 	 */
 	argc = parse_options(argc, argv, prefix, options, grep_usage,
 			     PARSE_OPT_KEEP_DASHDASH |
-			     PARSE_OPT_STOP_AT_NON_OPTION);
+			     PARSE_OPT_STOP_AT_NON_OPTION |
+			     PARSE_OPT_NO_INTERNAL_HELP);
 
 	if (use_index && !startup_info->have_repository) {
 		int fallback = 0;

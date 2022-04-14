@@ -121,6 +121,19 @@ test_expect_success 'show-ref -d' '
 
 '
 
+test_expect_success 'show-ref -h handling' '
+	test_expect_code 129 git show-ref -h >out &&
+	grep ^usage: out &&
+
+	git show-ref --head  HEAD >expect &&
+	git show-ref -h HEAD >actual &&
+	test_cmp expect actual &&
+
+	git show-ref --head --head >expect &&
+	git show-ref -hh >actual &&
+	test_cmp expect actual
+'
+
 test_expect_success 'show-ref --heads, --tags, --head, pattern' '
 	for branch in B main side
 	do
