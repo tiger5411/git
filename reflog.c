@@ -4,6 +4,7 @@
 #include "refs.h"
 #include "revision.h"
 #include "worktree.h"
+#include "progress.h"
 
 /* Remember to update object flag allocation in object.h */
 #define INCOMPLETE	(1u<<10)
@@ -184,6 +185,8 @@ static void mark_reachable(struct expire_reflog_policy_cb *cb)
 	while (pending) {
 		struct commit_list *parent;
 		struct commit *commit = pop_commit(&pending);
+
+		display_progress(cb->reachable_progress, ++cb->reachable_progress_cnt);
 		if (commit->object.flags & REACHABLE)
 			continue;
 		if (parse_commit(commit))
@@ -342,16 +345,27 @@ void reflog_expiry_prepare(const char *refname,
 		cb->unreachable_expire_kind = commit ? UE_NORMAL : UE_ALWAYS;
 	}
 
-	if (cb->cmd.expire_unreachable <= cb->cmd.expire_total)
+	if (cb->cmd.expire_unreachable <= cb->cmd.expire_total) {
+		if (cb->show_progress &&
+		    cb->unreachable_expire_kind == UE_HEAD)
+			cb->no_reachable_progress = 1;
 		cb->unreachable_expire_kind = UE_ALWAYS;
+	}
 
 	switch (cb->unreachable_expire_kind) {
 	case UE_ALWAYS:
 		return;
 	case UE_HEAD:
+		if (cb->show_progress) {
+			const char *s = _("Iterating (un)reachable HEAD");
+			cb->reachable_progress = start_delayed_progress(s, 0);
+		}
 		for_each_ref(push_tip_to_list, &cb->tips);
-		for (elem = cb->tips; elem; elem = elem->next)
+		for (elem = cb->tips; elem; elem = elem->next) {
+			display_progress(cb->reachable_progress,
+					 ++cb->reachable_progress_cnt);
 			commit_list_insert(elem->item, &cb->mark_list);
+		}
 		break;
 	case UE_NORMAL:
 		commit_list_insert(commit, &cb->mark_list);

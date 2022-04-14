@@ -4,6 +4,7 @@
 #include "reachable.h"
 #include "worktree.h"
 #include "reflog.h"
+#include "progress.h"
 
 #define BUILTIN_REFLOG_SHOW_USAGE \
 	N_("git reflog [show] [<log-options>] [<ref>]")
@@ -54,6 +55,8 @@ static timestamp_t default_reflog_expire_unreachable;
 struct worktree_reflogs {
 	struct worktree *worktree;
 	struct string_list reflogs;
+	struct progress *progress;
+	uint64_t reflogs_progress_cnt;
 };
 
 static int collect_reflog(const char *ref, const struct object_id *oid, int unused, void *cb_data)
@@ -61,6 +64,8 @@ static int collect_reflog(const char *ref, const struct object_id *oid, int unus
 	struct worktree_reflogs *cb = cb_data;
 	struct worktree *worktree = cb->worktree;
 	struct strbuf newref = STRBUF_INIT;
+
+	display_progress(cb->progress, ++cb->reflogs_progress_cnt);
 
 	/*
 	 * Avoid collecting the same shared ref multiple times because
@@ -235,6 +240,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	int i, status, do_all, all_worktrees = 1;
 	unsigned int flags = 0;
 	int verbose = 0;
+	int show_progress = -1;
 	reflog_expiry_should_prune_fn *should_prune_fn = should_expire_reflog_ent;
 	const struct option options[] = {
 		OPT_BIT(0, "dry-run", &flags, N_("do not actually prune any entries"),
@@ -246,6 +252,7 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 			N_("update the reference to the value of the top reflog entry"),
 			EXPIRE_REFLOGS_UPDATE_REF),
 		OPT_BOOL(0, "verbose", &verbose, N_("print extra information on screen")),
+		OPT_BOOL(0, "progress", &show_progress, N_("force progress reporting")),
 		OPT_CALLBACK_F(0, "expire", &cmd, N_("timestamp"),
 			       N_("prune entries older than the specified time"),
 			       PARSE_OPT_NONEG,
@@ -277,6 +284,8 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 
 	if (verbose)
 		should_prune_fn = should_expire_reflog_ent_verbose;
+	if (show_progress == -1)
+		show_progress = isatty(2);
 
 	/*
 	 * We can trust the commits and objects reachable from refs
@@ -285,24 +294,30 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 	 */
 	if (cmd.stalefix) {
 		struct rev_info revs;
+		struct progress *progress = NULL;
 
+		if (show_progress)
+			progress = start_delayed_progress(_("Marking reachable objects"), 0);
 		repo_init_revisions(the_repository, &revs, prefix);
 		revs.do_not_die_on_missing_tree = 1;
 		revs.ignore_missing = 1;
 		revs.ignore_missing_links = 1;
-		if (verbose)
-			printf(_("Marking reachable objects..."));
-		mark_reachable_objects(&revs, 0, 0, NULL);
-		if (verbose)
-			putchar('\n');
+		mark_reachable_objects(&revs, 0, 0, progress);
+		stop_progress(&progress);
 	}
 
 	if (do_all) {
+		struct progress *progress = NULL;
 		struct worktree_reflogs collected = {
 			.reflogs = STRING_LIST_INIT_DUP,
 		};
-		struct string_list_item *item;
 		struct worktree **worktrees, **p;
+		int show_head_progress = show_progress;
+		size_t j;
+
+		if (show_progress)
+			collected.progress = start_delayed_progress(_("Enumerating reflogs"),
+								    0);
 
 		worktrees = get_worktrees();
 		for (p = worktrees; *p; p++) {
@@ -313,20 +328,34 @@ static int cmd_reflog_expire(int argc, const char **argv, const char *prefix)
 					     collect_reflog, &collected);
 		}
 		free_worktrees(worktrees);
+		stop_progress(&collected.progress);
 
-		for_each_string_list_item(item, &collected.reflogs) {
+		for (j = 0; j < collected.reflogs.nr; j++) {
+			const char *string = collected.reflogs.items[j].string;
 			struct expire_reflog_policy_cb cb = {
 				.cmd = cmd,
 				.dry_run = !!(flags & EXPIRE_REFLOGS_DRY_RUN),
+				.show_progress = show_head_progress,
 			};
 
-			set_reflog_expiry_param(&cb.cmd,  item->string);
-			status |= reflog_expire(item->string, flags,
+			display_progress(progress, j + 1);
+			set_reflog_expiry_param(&cb.cmd, string);
+			status |= reflog_expire(string, flags,
 						reflog_expiry_prepare,
 						should_prune_fn,
 						reflog_expiry_cleanup,
 						&cb);
+
+			if (show_head_progress &&
+			    (cb.reachable_progress || cb.no_reachable_progress)) {
+				stop_progress(&cb.reachable_progress);
+				show_head_progress = 0;
+				progress = start_delayed_progress(_("Expiring reflogs"),
+								  collected.reflogs.nr);
+			}
 		}
+		display_progress(progress, collected.reflogs.nr);
+		stop_progress(&progress);
 		string_list_clear(&collected.reflogs, 0);
 	}
 
