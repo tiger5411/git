@@ -14,6 +14,7 @@ SYNOPSIS
     [-p|--paginate|-P|--no-pager] [--no-replace-objects] [--bare]
     [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
     [--super-prefix=<path>] [--config-env=<name>=<envvar>]
+    [--config-key[=]<name> --config-value[=]<value>]
     <command> [<args>]
 
 DESCRIPTION
@@ -83,6 +84,16 @@ Note that omitting the `=` in `git -c foo.bar ...` is allowed and sets
 config file). Including the equals but with an empty value (like `git -c
 foo.bar= ...`) sets `foo.bar` to the empty string which `git config
 --type=bool` will convert to `false`.
++
+It is not possible to set a `<name>` that includes the `=`
+character. See `--config-key` use `--config-value` if you need to do
+that.
+
+--config-key <name> --config-value <value>::
+	Like `-c <name>=<value>`, except that any key that's supported
+	by the config key file format can be set. Due to the parsing
+	of the "-c" option it's not possible to set a `<name>` that
+	includes the `=` character.
 
 --config-env=<name>=<envvar>::
 	Like `-c <name>=<value>`, give configuration variable

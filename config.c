@@ -445,7 +445,7 @@ static int git_config_include(const char *var, const char *value, void *data)
 	return ret;
 }
 
-static void git_config_push_split_parameter(const char *key, const char *value)
+void git_config_push_split_parameter(const char *key, const char *value)
 {
 	struct strbuf env = STRBUF_INIT;
 	const char *old = getenv(CONFIG_DATA_ENVIRONMENT);

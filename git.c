@@ -138,6 +138,7 @@ void setup_auto_pager(const char *cmd, int def)
 static int handle_options(const char ***argv, int *argc, int *envchanged)
 {
 	const char **orig_argv = *argv;
+	const char *config_key = NULL;
 
 	while (*argc > 0) {
 		const char *cmd = (*argv)[0];
@@ -155,7 +156,11 @@ static int handle_options(const char ***argv, int *argc, int *envchanged)
 		/*
 		 * Check remaining flags.
 		 */
-		if (skip_prefix(cmd, "--exec-path", &cmd)) {
+		if (config_key && strcmp(cmd, "--config-value") &&
+		    !starts_with(cmd, "--config-value=")) {
+			fprintf(stderr, _("'%s' option after --config-key, need a --config-value\n"), cmd);
+			usage(git_usage_string);
+		} else if (skip_prefix(cmd, "--exec-path", &cmd)) {
 			if (*cmd == '=')
 				git_set_exec_path(cmd + 1);
 			else {
@@ -268,6 +273,36 @@ static int handle_options(const char ***argv, int *argc, int *envchanged)
 			(*argc)--;
 		} else if (skip_prefix(cmd, "--config-env=", &cmd)) {
 			git_config_push_env(cmd);
+		} else if (!strcmp(cmd, "--config-key")) {
+			if (*argc < 2) {
+				fprintf(stderr, _("no config key given for --config-key\n" ));
+				usage(git_usage_string);
+			}
+			config_key = (*argv)[1];
+			(*argv)++;
+			(*argc)--;
+		} else if (skip_prefix(cmd, "--config-key=", &cmd)) {
+			config_key = cmd;
+		} else if (!strcmp(cmd, "--config-value")) {
+			if (!config_key) {
+				fprintf(stderr, _("--config-value given without preceding --config-key\n" ));
+				usage(git_usage_string);
+			}
+			if (*argc < 2) {
+				fprintf(stderr, _("no config value given for --config-value\n" ));
+				usage(git_usage_string);
+			}
+			git_config_push_split_parameter(config_key, (*argv)[1]);
+			config_key = NULL;
+			(*argv)++;
+			(*argc)--;
+		} else if (skip_prefix(cmd, "--config-value=", &cmd)) {
+			if (!config_key) {
+				fprintf(stderr, _("--config-value given without preceding --config-key\n" ));
+				usage(git_usage_string);
+			}
+			git_config_push_split_parameter(config_key, cmd);
+			config_key = NULL;
 		} else if (!strcmp(cmd, "--literal-pathspecs")) {
 			setenv(GIT_LITERAL_PATHSPECS_ENVIRONMENT, "1", 1);
 			if (envchanged)
@@ -333,6 +368,12 @@ static int handle_options(const char ***argv, int *argc, int *envchanged)
 		(*argv)++;
 		(*argc)--;
 	}
+
+	if (config_key) {
+		fprintf(stderr, _("--config-key given without --config-value\n"));
+		usage(git_usage_string);
+	}
+
 	return (*argv) - orig_argv;
 }
 

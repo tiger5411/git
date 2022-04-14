@@ -1461,6 +1461,93 @@ test_expect_success 'git config handles environment config pairs' '
 	test_cmp expect actual
 '
 
+test_expect_success 'git --config-key key --config-value var usage' '
+	cat >expect <<-\EOF &&
+	value
+	value
+	value
+	value
+	EOF
+	{
+		git --config-key core.name --config-value value config core.name &&
+		git --config-key=core.name --config-value value config core.name &&
+		git --config-key core.name --config-value=value config core.name &&
+		git --config-key=core.name --config-value=value config core.name
+	} >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'git --config-key without --config-value' '
+	test_must_fail env git --config-key core.name 2>error &&
+	grep "[-]-config-key given without --config-value" error
+'
+
+test_expect_success 'git --config-value without --config-key' '
+	test_must_fail env git --config-value value 2>error &&
+	grep "[-]-config-value given without preceding --config-key" error
+'
+
+test_expect_success 'git --config-value before --config-key' '
+	test_must_fail env git --config-value value --config.key core.name 2>error &&
+	grep "[-]-config-value given without preceding --config-key" error
+'
+
+test_expect_success 'git <option> between --config-key and --config-value' '
+	test_must_fail env git --config-key core.name -c core2.name2=value2  --config-value value 2>error &&
+	grep "'\''-c'\'' option after --config-key, need a --config-value" error
+'
+
+test_expect_success 'git --config-key fails with invalid parameters' '
+	test_must_fail git --config-key "=.=.=" --config-value value config -l 2>error &&
+	grep "invalid key" error
+'
+
+test_expect_success 'git -c, --config-{key,value} and --config-env work together' '
+	cat >expect <<-\EOF &&
+	bar.cmd cmd-value
+	bar.env env-value
+	bar.env config-value
+	EOF
+	ENVVAR=env-value git \
+		-c bar.cmd=cmd-value \
+		--config-env=bar.env=ENVVAR \
+		--config-key bar.env --config-value config-value \
+		config --get-regexp "^bar.*" >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'git -c and --config-env override each other' '
+	cat >expect <<-\EOF &&
+	env
+	cmd
+	EOF
+	{
+		ENVVAR=env git -c bar.bar=cmd --config-env=bar.bar=ENVVAR config bar.bar &&
+		ENVVAR=env git --config-env=bar.bar=ENVVAR -c bar.bar=cmd config bar.bar
+	} >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success '--config-env handles keys with equals' '
+	echo value=with=equals >expect &&
+	ENVVAR=value=with=equals git \
+		--config-env=section.subsection=with=equals.key=ENVVAR \
+		config section.subsection=with=equals.key >actual &&
+	test_cmp expect actual
+'
+
+test_expect_success 'git config handles environment config pairs' '
+	GIT_CONFIG_COUNT=2 \
+		GIT_CONFIG_KEY_0="pair.one" GIT_CONFIG_VALUE_0="foo" \
+		GIT_CONFIG_KEY_1="pair.two" GIT_CONFIG_VALUE_1="bar" \
+		git config --get-regexp "pair.*" >actual &&
+	cat >expect <<-EOF &&
+	pair.one foo
+	pair.two bar
+	EOF
+	test_cmp expect actual
+'
+
 test_expect_success 'git config ignores pairs without count' '
 	test_must_fail env GIT_CONFIG_KEY_0="pair.one" GIT_CONFIG_VALUE_0="value" \
 		git config pair.one 2>error &&
