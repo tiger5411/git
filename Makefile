@@ -2839,8 +2839,8 @@ pdf:
 XGETTEXT_FLAGS = \
 	--force-po \
 	--add-comments=TRANSLATORS: \
-	--msgid-bugs-address="Git Mailing List <git@vger.kernel.org>" \
-	--from-code=UTF-8
+	--omit-header
+
 XGETTEXT_FLAGS_C = $(XGETTEXT_FLAGS) --language=C \
 	--keyword=_ --keyword=N_ --keyword="Q_:1,2"
 XGETTEXT_FLAGS_SH = $(XGETTEXT_FLAGS) --language=Shell \
@@ -2860,45 +2860,188 @@ LOCALIZED_SH += t/t0200/test.sh
 LOCALIZED_PERL += t/t0200/test.perl
 endif
 
-## Note that this is meant to be run only by the localization coordinator
-## under a very controlled condition, i.e. (1) it is to be run in a
-## Git repository (not a tarball extract), (2) any local modifications
-## will be lost.
+## We generate intermediate .build/pot/po/% files containing a extract
+## of the translations we find in each file in the source tree. The
+## files have the same basename as the source due xgettext(1) not
+## having a way to override the basename inserted into comments.
+LOCALIZED_ALL_GEN_PO =
+
+LOCALIZED_SH_GEN_PO = $(LOCALIZED_SH:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_SH_GEN_PO)
+
+LOCALIZED_PERL_GEN_PO = $(LOCALIZED_PERL:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_PERL_GEN_PO)
+
 ## Gettext tools cannot work with our own custom PRItime type, so
 ## we replace PRItime with PRIuMAX.  We need to update this to
 ## PRIdMAX if we switch to a signed type later.
+##
+## We're saving ourselves work here by only creating the
+## .build/pot/in/ files for the files that contain the PRItime string,
+## but because rule evaluation in make is always:
+##
+##	IMMEDIATE : IMMEDIATE ; DEFERRED
+##		DEFERRED
+##
+## We cannot make anything on the LHS of a rule depend on the
+## "include" of the .build/pot/munged.mak, so we're optimistically
+## including it if we are doing a "make pot", which allows us to save
+## ourselves some work.
+##
+## But the whole .build/pot/munged.mak chain here is only an
+## optimization, these rules "fail safe" if we're not including
+## it. We'll just "sed" all of our *.[ch] files then, and have a large
+## .build/pot/in/* tree.
+LOCALIZED_C_MUNGED_GEN	= $(LOCALIZED_C:%=.build/pot/munged/%)
+$(LOCALIZED_C_MUNGED_GEN): .build/pot/munged/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)if grep -l PRItime $< >$@; \
+	then \
+		echo LOCALIZED_C_NEEDS_GEN_GEN += $<; \
+	fi >$@
+.build/pot/munged.mak: $(LOCALIZED_C_MUNGED_GEN)
+	$(QUIET_GEN)echo LOCALIZED_C_NEEDS_GEN_GEN = >$@ && \
+	cat $^ >>$@
 
-po/git.pot: $(GENERATED_H) FORCE
-	# All modifications will be reverted at the end, so we do not
-	# want to have any local change.
-	git diff --quiet HEAD && git diff --quiet --cached
+ifneq ($(filter pot,$(MAKECMDGOALS)),)
+include .build/pot/munged.mak
+endif
 
-	@for s in $(LOCALIZED_C) $(LOCALIZED_SH) $(LOCALIZED_PERL); \
-	do \
-		sed -e 's|PRItime|PRIuMAX|g' <"$$s" >"$$s+" && \
-		cat "$$s+" >"$$s" && rm "$$s+"; \
-	done
+ifndef LOCALIZED_C_NEEDS_GEN_GEN
+LOCALIZED_C_NEEDS_GEN_GEN = $(LOCALIZED_C)
+endif
 
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ $(XGETTEXT_FLAGS_C) $(LOCALIZED_C)
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_SH) \
-		$(LOCALIZED_SH)
-	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@+ --join-existing $(XGETTEXT_FLAGS_PERL) \
-		$(LOCALIZED_PERL)
+LOCALIZED_C_GEN = $(filter-out $(LOCALIZED_C_NEEDS_GEN_GEN),$(LOCALIZED_C))
+LOCALIZED_C_GEN_PO = $(LOCALIZED_C_GEN:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_C_GEN_PO)
 
-	# Reverting the munged source, leaving only the updated $@
-	git reset --hard
-	mv $@+ $@
+LOCALIZED_C_GEN_GEN = $(filter $(LOCALIZED_C_NEEDS_GEN_GEN),$(LOCALIZED_C))
+LOCALIZED_C_GEN_GEN_PO = $(LOCALIZED_C_GEN_GEN:%=.build/pot/po/%)
+LOCALIZED_ALL_GEN_PO += $(LOCALIZED_C_GEN_GEN_PO)
+
+LOCALIZED_C_GEN_GEN_IN = $(LOCALIZED_C_GEN_GEN:%=.build/pot/in/%)
+$(LOCALIZED_C_GEN_GEN_IN): .build/pot/in/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)sed -e 's|PRItime|PRIuMAX|g' <$< >$@
+
+$(LOCALIZED_C_GEN_GEN_PO): .build/pot/po/%: .build/pot/in/%
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)(\
+		cd .build/pot/in && \
+		$(XGETTEXT) -o $(@:.build/pot/po/%=../po/%) \
+			$(XGETTEXT_FLAGS_C) \
+			$(<:.build/pot/in/%=%) \
+	)
+
+$(LOCALIZED_C_GEN_PO): .build/pot/po/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_C) $<
+
+$(LOCALIZED_SH_GEN_PO): .build/pot/po/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_SH) $<
+
+$(LOCALIZED_PERL_GEN_PO): .build/pot/po/%: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_XGETTEXT)$(XGETTEXT) -o$@ $(XGETTEXT_FLAGS_PERL) $<
+
+.build/pot/git.pot: $(LOCALIZED_ALL_GEN_PO)
+	$(QUIET_GEN)msgcat $^ >$@
+
+po/git.pot: .build/pot/git.pot
+	$(QUIET_CP)cp $< $@
 
 .PHONY: pot
 pot: po/git.pot
 
-ifdef NO_GETTEXT
-POFILES =
-MOFILES =
-else
-POFILES = $(wildcard po/*.po)
-MOFILES = $(patsubst po/%.po,po/build/locale/%/LC_MESSAGES/git.mo,$(POFILES))
+.PHONY: check-pot
+check-pot: .build/pot/git.pot
 
+### TODO FIXME: Translating everything in these files is a bad
+### heuristic for "core", as we'll translate obscure error() messages
+### along with commonly seen i18n messages. A better heuristic would
+### be to e.g. use spatch to first remove error/die/warning
+### etc. messages.
+LOCALIZED_C_CORE =
+LOCALIZED_C_CORE += builtin/checkout.c
+LOCALIZED_C_CORE += builtin/clone.c
+LOCALIZED_C_CORE += builtin/index-pack.c
+LOCALIZED_C_CORE += builtin/push.c
+LOCALIZED_C_CORE += builtin/reset.c
+LOCALIZED_C_CORE += remote.c
+LOCALIZED_C_CORE += wt-status.c
+### This "clean" target is only needed for the dependency-busting
+### core-pot target
+clean-pot:
+	$(RM) -r .build/pot
+.PHONY: core-pot
+core-pot: clean-pot
+	$(MAKE) pot LOCALIZED_C="$(LOCALIZED_C_CORE)" LOCALIZED_SH= LOCALIZED_PERL=
+
+## Managing *.po files
+PO_INIT_FLAGS = \
+	--input=.build/pot/git.pot \
+	--output=$@ \
+	--no-translator \
+	--locale=$(PO_LANG)
+
+.build/po-init/$(PO_FILE).gen: .build/pot/git.pot
+	$(call mkdir_p_parent_template)
+	$(QUIET_MSGINIT)msginit $(PO_INIT_FLAGS)
+
+### We need some Po-Revision-Date or e.g. Emacs's po-mode.el will
+### replace the header entirely.
+.build/po-init/$(PO_FILE).head: .build/po-init/$(PO_FILE).gen
+	$(QUIET_GEN)\
+	echo "# This file is distributed under the same license as the Git package." >$@ && \
+	sed -n -e '1,/^$$/p' <$< | \
+		sed \
+			-e '/^$$/d' \
+			-e 's/PACKAGE VERSION/Git/' \
+			-e 's/Automatically generated/make by the Makefile/' \
+			-e 's/none/Git Mailing List <git@vger.kernel.org>/' \
+			-e 's/charset=ASCII/charset=UTF-8/' \
+		>>$@ && \
+	printf "\"PO-Revision-Date: 2022-04-11 11:05+0200\\\n\"\n" >>$@
+	echo >>$@
+
+.build/po-init/$(PO_FILE).tail: .build/po-init/$(PO_FILE).gen
+	$(QUIET_GEN)sed -n -e '1,/^$$/d' -e 'p' <$< >$@
+
+PO_LANG = $(PO_FILE:po/%.po=%)
+
+# TODO?: Prune out the "automatically generated" etc?
+
+.PHONY: po-init
+po-init: .build/po-init/$(PO_FILE).head .build/po-init/$(PO_FILE).tail
+	$(QUIET_PO_INIT)if test -e $(PO_FILE); then \
+		echo error: $(PO_FILE) exists already >&2; \
+		exit 1; \
+	fi && \
+	cat $^ >$(PO_FILE)
+
+## po/*.po files & their rules
+POFILES = $(wildcard po/*.po)
+
+CHECK_POFILES = $(POFILES:po/%=.build/check-po/%)
+CHECK_POFILES_OK = $(CHECK_POFILES:%=%.ok)
+
+MSGCAT_CHECK_FLAGS = --no-location
+$(CHECK_POFILES): .build/check-po/%: po/%
+	$(call mkdir_p_parent_template)
+	$(QUIET_CHECK_MSGCAT)msgcat $(MSGCAT_CHECK_FLAGS) $< >$@
+
+$(CHECK_POFILES_OK): .build/check-po/%.ok : .build/check-po/%
+	$(call mkdir_p_parent_template)
+	$(QUIET_CHECK_PO)diff -u po/$(<F) $< && \
+	>$@
+
+.PHONY: check-po
+check-po: $(CHECK_POFILES_OK)
+
+## Generated *.mo files (from *.po) & their rules
+MOFILES = $(patsubst po/%.po,po/build/locale/%/LC_MESSAGES/git.mo,$(POFILES))
+ifndef NO_GETTEXT
 all:: $(MOFILES)
 endif
 
@@ -3362,9 +3505,11 @@ ifneq ($(INCLUDE_DLLS_IN_ARTIFACTS),)
 OTHER_PROGRAMS += $(shell echo *.dll t/helper/*.dll)
 endif
 
+ifndef NO_GETTEXT
+artifacts-tar:: $(MOFILES)
+endif
 artifacts-tar:: $(ALL_COMMANDS_TO_INSTALL) $(SCRIPT_LIB) $(OTHER_PROGRAMS) \
-		GIT-BUILD-OPTIONS $(TEST_PROGRAMS) $(test_bindir_programs) \
-		$(MOFILES)
+		GIT-BUILD-OPTIONS $(TEST_PROGRAMS) $(test_bindir_programs)
 	$(QUIET_SUBDIR0)templates $(QUIET_SUBDIR1) \
 		SHELL_PATH='$(SHELL_PATH_SQ)' PERL_PATH='$(PERL_PATH_SQ)'
 	test -n "$(ARTIFACTS_DIRECTORY)"
@@ -3405,6 +3550,7 @@ dist-doc: git$X
 
 distclean: clean
 	$(RM) configure
+	$(RM) po/git.pot
 	$(RM) config.log config.status config.cache
 	$(RM) config.mak.autogen config.mak.append
 	$(RM) -r autom4te.cache

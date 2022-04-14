@@ -126,13 +126,16 @@ ifndef V
 	QUIET_MKDIR_P_PARENT  = @echo '   ' MKDIR -p $(patsubst %/.,%,$(1)$(@D))
 
 ## Used in "Makefile"
+
 	QUIET_CC       = @echo $(wspfx_SQ) CC $@;
 	QUIET_CC_ASM   = @echo $(wspfx_SQ) CC \(ASM\) $@;
 	QUIET_AR       = @echo $(wspfx_SQ) AR $@;
 	QUIET_LINK     = @echo $(wspfx_SQ) LINK $@;
 	QUIET_BUILT_IN = @echo $(wspfx_SQ) BUILTIN $@;
+	QUIET_CP       = @echo '   ' CP $@;
 	QUIET_LNCP     = @echo $(wspfx_SQ) LN/CP $@;
 	QUIET_XGETTEXT = @echo $(wspfx_SQ) XGETTEXT $@;
+	QUIET_MSGINIT  = @echo '   ' MSGINIT $@;
 	QUIET_MSGFMT   = @echo $(wspfx_SQ) MSGFMT $@;
 	QUIET_GCOV     = @echo $(wspfx_SQ) GCOV $@;
 	QUIET_SP       = @echo $(wspfx_SQ) SP $<;
@@ -141,6 +144,11 @@ ifndef V
 	QUIET_SPATCH   = @echo $(wspfx_SQ) SPATCH $<;
 	QUIET_CHECK    = @echo $(wspfx_SQ) CHECK $@;
 	QUIET_CMP      = @echo $(wspfx_SQ) CMP $^;
+
+## Used in "Makefile" for po/
+	QUIET_CHECK_MSGCAT	= @echo '   ' MSGCAT $(MSGCAT_CHECK_FLAGS) $< \>$@;
+	QUIET_CHECK_PO		= @echo '   ' CHECK PO $@;
+	QUIET_PO_INIT		= @echo '   ' PO INIT $@;
 
 ## Used in "Documentation/Makefile"
 	QUIET_ASCIIDOC	= @echo $(wspfx_SQ) ASCIIDOC $@;
