@@ -335,9 +335,7 @@ static void log_show_early(struct rev_info *revs, struct commit_list *list)
 {
 	int i = revs->early_output;
 	int show_header = 1;
-	int no_free = revs->diffopt.no_free;
 
-	revs->diffopt.no_free = 0;
 	sort_in_topological_order(&list, revs->sort_order);
 	while (list && i) {
 		struct commit *commit = list->item;
@@ -354,19 +352,14 @@ static void log_show_early(struct rev_info *revs, struct commit_list *list)
 		case commit_ignore:
 			break;
 		case commit_error:
-			revs->diffopt.no_free = no_free;
-			diff_free(&revs->diffopt);
 			return;
 		}
 		list = list->next;
 	}
 
 	/* Did we already get enough commits for the early output? */
-	if (!i) {
-		revs->diffopt.no_free = 0;
-		diff_free(&revs->diffopt);
+	if (!i)
 		return;
-	}
 
 	/*
 	 * ..if no, then repeat it twice a second until we
@@ -451,7 +444,6 @@ static int cmd_log_walk(struct rev_info *rev)
 	 * and HAS_CHANGES being accumulated in rev->diffopt, so be careful to
 	 * retain that state information if replacing rev->diffopt in this loop
 	 */
-	rev->diffopt.no_free = 1;
 	while ((commit = get_revision(rev)) != NULL) {
 		if (!log_tree_commit(rev, commit) && rev->max_count >= 0)
 			/*
@@ -476,8 +468,6 @@ static int cmd_log_walk(struct rev_info *rev)
 	}
 	rev->diffopt.degraded_cc_to_c = saved_dcctc;
 	rev->diffopt.needed_rename_limit = saved_nrl;
-	rev->diffopt.no_free = 0;
-	diff_free(&rev->diffopt);
 
 	if (rev->remerge_diff) {
 		tmp_objdir_destroy(rev->remerge_objdir);
@@ -2022,7 +2012,6 @@ int cmd_format_patch(int argc, const char **argv, const char *prefix)
 		 * The diff code parsed --output; it has already opened the
 		 * file, but we must instruct it not to close after each diff.
 		 */
-		rev.diffopt.no_free = 1;
 	} else {
 		int saved;
 
