@@ -97,4 +97,11 @@ void strvec_clear(struct strvec *);
  */
 const char **strvec_detach(struct strvec *);
 
+/**
+ * Attach set the `v` member to an existing `const char **items` argument.
+ * The `items` argument must be allocated on the heap, as it will eventually
+ * be free()'d by strvec_clear().
+ */
+void strvec_attach(struct strvec *array, const char **items);
+
 #endif /* STRVEC_H */

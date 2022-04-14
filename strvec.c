@@ -106,3 +106,9 @@ const char **strvec_detach(struct strvec *array)
 		return ret;
 	}
 }
+
+void strvec_attach(struct strvec *array, const char **items)
+{
+	for (; *items; items++)
+		strvec_push_nodup(array, *items);
+}
