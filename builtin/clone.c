@@ -505,6 +505,7 @@ static struct ref *wanted_peer_refs(const struct ref *refs,
 			/* if --branch=tag, pull the requested tag explicitly */
 			get_fetch_map(remote_head, tag_refspec, &tail, 0);
 		}
+		free(remote_head);
 	} else {
 		int i;
 		for (i = 0; i < refspec->nr; i++)

@@ -9,8 +9,11 @@ test_description='Test various path utilities'
 
 norm_path() {
 	expected=$(test-tool path-utils print_path "$2")
-	test_expect_success $3 "normalize path: $1 => $2" \
-	"test \"\$(test-tool path-utils normalize_path_copy '$1')\" = '$expected'"
+	test_expect_success $3 "normalize path: $1 => $2" "
+		echo '$expected' >expect &&
+		test-tool path-utils normalize_path_copy '$1' >actual &&
+		test_cmp expect actual
+	"
 }
 
 relative_path() {

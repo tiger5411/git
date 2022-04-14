@@ -766,8 +766,10 @@ int cmd_main(int argc, const char **argv)
 		if (!regexec(&re, dir, 1, out, 0)) {
 			size_t n;
 
-			if (strcmp(method, c->method))
+			if (strcmp(method, c->method)) {
+				regfree(&re);
 				return bad_request(&hdr, c);
+			}
 
 			cmd = c;
 			n = out[0].rm_eo - out[0].rm_so;

@@ -563,5 +563,7 @@ int cmd_reset(int argc, const char **argv, const char *prefix)
 	if (!pathspec.nr)
 		remove_branch_state(the_repository, 0);
 
+	clear_pathspec(&pathspec);
+
 	return update_ref_status;
 }
