@@ -44,6 +44,8 @@ test_expect_success 'invalid usage' '
 	test_expect_code 129 git help -g add &&
 	test_expect_code 129 git help -a -g &&
 
+	test_expect_code 129 git help --user-formats add &&
+
 	test_expect_code 129 git help -g -c &&
 	test_expect_code 129 git help --config-for-completion add &&
 	test_expect_code 129 git help --config-sections-for-completion add
@@ -104,9 +106,9 @@ test_expect_success 'git help' '
 	test_i18ngrep "^   commit " help.output &&
 	test_i18ngrep "^   fetch  " help.output
 '
+
 test_expect_success 'git help -g' '
 	git help -g >help.output &&
-	test_i18ngrep "^   attributes " help.output &&
 	test_i18ngrep "^   everyday   " help.output &&
 	test_i18ngrep "^   tutorial   " help.output
 '
@@ -125,6 +127,12 @@ test_expect_success 'git help succeeds without git.html' '
 	git -c help.htmlpath=html-with-docs help status &&
 	echo "html-with-docs/git-status.html" >expect &&
 	test_cmp expect test-browser.log
+'
+
+test_expect_success 'git help --user-formats' '
+	git help --user-formats >help.output &&
+	grep "^   gitattributes   " help.output &&
+	grep "^   gitmailmap   " help.output
 '
 
 test_expect_success 'git help -c' '
@@ -220,6 +228,10 @@ test_expect_success "'git help -a' section spacing" '
 	Low-level Commands / Syncing Repositories
 
 	Low-level Commands / Internal Helpers
+
+	Git user-facing file formats
+
+	Git internal file formats and protocols
 	EOF
 	test_cmp expect actual
 '
