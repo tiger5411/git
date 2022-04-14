@@ -66,6 +66,30 @@ prepend_var () {
 prepend_var GIT_SAN_OPTIONS : abort_on_error=1
 prepend_var GIT_SAN_OPTIONS : strip_path_prefix=\"$GIT_BUILD_DIR/\"
 
+# Does "set -o pipefail" on this bash version handle SIGPIPE? Use it!
+. "$TEST_DIRECTORY/lib-bash-detection.sh"
+GIT_TEST_PIPEFAIL_TRUE=
+GIT_TEST_PIPEFAIL_DEFAULT=false
+if test -n "$TEST_SH_IS_BIN_BASH" &&
+       $BASH -c 'set -eo pipefail; yes | head -n 1 >/dev/null'
+then
+	GIT_TEST_PIPEFAIL_DEFAULT=true
+fi
+# We're too early for test_bool_env or "git env--helper".
+if test "$GIT_TEST_PIPEFAIL$GIT_TEST_PIPEFAIL_DEFAULT" = "true" || test "$GIT_TEST_PIPEFAIL_DEFAULT" = "true"
+then
+	set -o pipefail
+
+	# Only "set -o pipefail" in the main test scripts, not any
+	# sub-programs we spawn.
+	GIT_TEST_PIPEFAIL=
+	export GIT_TEST_PIPEFAIL
+
+	# For the convenience of the prereq for it.
+	GIT_TEST_PIPEFAIL_TRUE=true
+	export GIT_TEST_PIPEFAIL_TRUE
+fi
+
 # If we were built with ASAN, it may complain about leaks
 # of program-lifetime variables. Disable it by default to lower
 # the noise level. This needs to happen at the start of the script,
@@ -1550,6 +1574,11 @@ then
 	skip_all="skip all tests in $this_test"
 	test_done
 fi
+if test -n "$skip_all"
+then
+	skip_all="$skip_all"
+	test_done
+fi
 
 if test -n "$invert_exit_code" && test -z "$immediate"
 then
@@ -1784,6 +1813,10 @@ test_lazy_prereq PIPE '
 	# test whether the filesystem supports FIFOs
 	test_have_prereq !MINGW,!CYGWIN &&
 	rm -f testfifo && mkfifo testfifo
+'
+
+test_lazy_prereq BASH_SET_O_PIPEFAIL '
+	test -n "$GIT_TEST_PIPEFAIL_TRUE"
 '
 
 test_lazy_prereq SYMLINKS '

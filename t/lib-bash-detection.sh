@@ -1,0 +1,16 @@
+#!/bin/sh
+
+TEST_SH_IS_BIN_BASH=
+TEST_SH_IS_BIN_BASH_POSIXLY_CORRECT=
+
+if test -n "$BASH"
+then
+	TEST_SH_IS_BIN_BASH=true
+	if test -n "$POSIXLY_CORRECT"
+	then
+		TEST_SH_IS_BIN_BASH_POSIXLY_CORRECT=true
+	fi
+fi
+
+export TEST_SH_IS_BIN_BASH
+export TEST_SH_IS_BIN_BASH_POSIXLY_CORRECT

@@ -1314,4 +1314,8 @@ test_expect_success 'test_must_fail rejects a non-git command with env' '
 	grep -F "test_must_fail: only '"'"'git'"'"' is allowed" err
 '
 
+test_expect_success BASH_SET_O_PIPEFAIL 'our bash under "set -o pipefail" mode ignores SIGPIPE failures' '
+	yes | head -n 1 | true
+'
+
 test_done

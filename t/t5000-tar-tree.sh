@@ -430,7 +430,7 @@ test_expect_success LONG_IS_64BIT 'set up repository with huge blob' '
 
 # We expect git to die with SIGPIPE here (otherwise we
 # would generate the whole 64GB).
-test_expect_success LONG_IS_64BIT 'generate tar with huge size' '
+test_expect_success LONG_IS_64BIT,!BASH_SET_O_PIPEFAIL 'generate tar with huge size' '
 	{
 		git archive HEAD
 		echo $? >exit-code

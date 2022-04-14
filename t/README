@@ -445,6 +445,11 @@ the --sparse command-line argument.
 GIT_TEST_PRELOAD_INDEX=<boolean> exercises the preload-index code path
 by overriding the minimum number of cache entries required per thread.
 
+GIT_TEST_PIPEFAIL=<boolean>, when true, run 'set -o pipefail' to catch
+failures in commands that aren't the last in a pipe. Defaults to true
+on bash versions which know how to ignore SIGPIPE failures under the
+'set -o pipefail' mode.
+
 GIT_TEST_ADD_I_USE_BUILTIN=<boolean>, when true, enables the
 built-in version of git add -i. See 'add.interactive.useBuiltin' in
 git-config(1).
