@@ -383,31 +383,45 @@ ifeq ($(uname_S),IRIX64)
 	NEEDS_LIBGEN = YesPlease
 endif
 ifeq ($(uname_S),HP-UX)
-	INLINE = __inline
-	NO_IPV6 = YesPlease
-	NO_SETENV = YesPlease
-	NO_STRCASESTR = YesPlease
-	NO_MEMMEM = YesPlease
-	NO_STRLCPY = YesPlease
-	NO_MKDTEMP = YesPlease
-	NO_UNSETENV = YesPlease
-	NO_HSTRERROR = YesPlease
-	NO_SYS_SELECT_H = YesPlease
-	SNPRINTF_RETURNS_BOGUS = YesPlease
-	NO_NSEC = YesPlease
+	INLINE			= __inline
+	FREAD_READS_DIRECTORIES = YesPlease
+	NO_C99_FORMAT		= YesPlease
+	NO_GETTEXT		= YesPlease
+	NO_HSTRERROR		= YesPlease
+	NO_IPV6			= YesPlease
+	NO_MEMMEM		= YesPlease
+	NO_MKDTEMP		= YesPlease
+	NO_NSEC			= YesPlease
+	NO_PYTHON		= YesPlease
+	NO_REGEX		= NeedsStartEnd
+	NO_SETENV		= YesPlease
+	NO_STRCASESTR		= YesPlease
+	NO_STRLCPY		= YesPlease
+	NO_SYS_SELECT_H		= YesPlease
+	NO_UNSETENV		= YesPlease
+	SNPRINTF_RETURNS_BOGUS	= YesPlease
+	CC		= cc
+	CFLAGS		= -Ae -AC99 +DD64 +Z -z -O2 -D_HPUX_SOURCE -D_POSIX_C_SOURCE=199506L -D_REENTRANT
+	BASIC_CFLAGS   += +DD64 -I/pro/gnu/include -I/pro/local/include -I/usr/local/ssl/include -I/usr/local/include
+	BASIC_LDFLAGS  += -L/pro/gnu/lib -L/usr/local/ssl/lib -L/usr/local/lib -L/pro/lib -L/pro/local/lib
+	EXTLIBS        += -liconv -lcrypto
+	INSTALL		= ginstall
+	SHELL_PATH	= /pro/local/bin/bash
+	PERL_PATH	= /pro/bin/perl
+
 	ifeq ($(uname_R),B.11.00)
-		NO_INET_NTOP = YesPlease
-		NO_INET_PTON = YesPlease
+		NO_INET_NTOP	= YesPlease
+		NO_INET_PTON	= YesPlease
 	endif
 	ifeq ($(uname_R),B.10.20)
 		# Override HP-UX 11.x setting:
-		INLINE =
-		SOCKLEN_T = size_t
-		NO_PREAD = YesPlease
-		NO_INET_NTOP = YesPlease
-		NO_INET_PTON = YesPlease
+		INLINE		=
+		SOCKLEN_T	= size_t
+		NO_PREAD	= YesPlease
+		NO_INET_NTOP	= YesPlease
+		NO_INET_PTON	= YesPlease
 	endif
-	GIT_TEST_CMP = cmp
+	GIT_TEST_CMP		= cmp
 endif
 ifeq ($(uname_S),Windows)
 	GIT_VERSION := $(GIT_VERSION).MSVC
