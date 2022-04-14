@@ -35,8 +35,6 @@ struct reftable_block_source_vtable {
 	   beyond the end of the block */
 	int (*read_block)(void *source, struct reftable_block *dest,
 			  uint64_t off, uint32_t size);
-	/* mark the block as read; may return the data back to malloc */
-	void (*return_block)(void *source, struct reftable_block *blockp);
 
 	/* release all resources associated with the block source */
 	void (*close)(void *source);

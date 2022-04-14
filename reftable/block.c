@@ -442,9 +442,7 @@ void block_writer_release(struct block_writer *bw)
 
 void reftable_block_done(struct reftable_block *blockp)
 {
-	struct reftable_block_source source = blockp->source;
-	if (blockp && source.ops)
-		source.ops->return_block(source.arg, blockp);
+	FREE_AND_NULL(blockp->data);
 	blockp->data = NULL;
 	blockp->len = 0;
 	blockp->source.ops = NULL;
