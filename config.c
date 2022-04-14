@@ -2937,14 +2937,6 @@ static int store_aux(const char *key, const char *value, void *cb)
 	return 0;
 }
 
-static int write_error(const char *filename)
-{
-	error(_("failed to write new configuration file %s"), filename);
-
-	/* Same error code as "failed to rename". */
-	return 4;
-}
-
 static struct strbuf store_create_section(const char *key,
 					  const struct config_store_data *store)
 {
@@ -2970,19 +2962,59 @@ static struct strbuf store_create_section(const char *key,
 	return sb;
 }
 
-static ssize_t write_section(int fd, const char *key,
+/*
+ * TRANSLATORS: The first argument is the name of a syscall such as
+ * "write()" or "chmod()". The second is the path to the
+ * "config" file.
+ */
+static const char *config_path_fail = N_("failed '%s' call on configuration file '%s'");
+
+/*
+ * TRANSLATORS: This is the same as "config_path_fail" above, except
+ * with an added supplementary error from the OS, such as the return
+ * value of mmap_os_err().
+ */
+static const char *config_path_fail_err = N_("failed '%s' call on configuration file '%s': '%s'");
+
+/*
+ * TRANSLATORS: The first argument is the name of a syscall or
+ * function call such as "write()", "chmod()" or
+ * hold_lock_file_for_update(). The second is the path to the
+ * "config.lock" file.
+ */
+static const char *lock_path_fail = N_("failed '%s' call on new configuration file '%s'");
+
+/*
+ * TRANSLATORS: The first argument is the "config.lock" file, the
+ * second the "config" file.
+ */
+static const char *lock_path_to_config_path_fail = N_("could not update configuration file by renaming lock '%s' to '%s'");
+
+static int write_lock_in_full(const char *lock_path, int fd, const void *buf,
+			      size_t count)
+{
+	if (write_in_full(fd, buf, count) < 0) {
+		error_errno(_(lock_path_fail), "write()", lock_path);
+		/* Same error code as "failed to rename". */
+		return 4;
+	}
+	return 0;
+}
+
+static ssize_t write_section(const char *lock_path, int fd, const char *key,
 			     const struct config_store_data *store)
 {
 	struct strbuf sb = store_create_section(key, store);
 	ssize_t ret;
 
-	ret = write_in_full(fd, sb.buf, sb.len);
+	ret = write_lock_in_full(lock_path, fd, sb.buf, sb.len);
 	strbuf_release(&sb);
 
 	return ret;
 }
 
-static ssize_t write_pair(int fd, const char *key, const char *value,
+static ssize_t write_pair(const char *lock_path, int fd, const char *key,
+			  const char *value,
 			  const struct config_store_data *store)
 {
 	int i;
@@ -3025,7 +3057,7 @@ static ssize_t write_pair(int fd, const char *key, const char *value,
 		}
 	strbuf_addf(&sb, "%s\n", quote);
 
-	ret = write_in_full(fd, sb.buf, sb.len);
+	ret = write_lock_in_full(lock_path, fd, sb.buf, sb.len);
 	strbuf_release(&sb);
 
 	return ret;
@@ -3182,6 +3214,7 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	int fd = -1, in_fd = -1;
 	int ret;
 	struct lock_file lock = LOCK_INIT;
+	const char *lock_path;
 	char *filename_buf = NULL;
 	char *contents = NULL;
 	size_t contents_sz;
@@ -3205,10 +3238,12 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	 */
 	fd = hold_lock_file_for_update(&lock, config_filename, 0);
 	if (fd < 0) {
-		error_errno(_("could not lock config file %s"), config_filename);
+		error_errno(_(config_path_fail), "hold_lock_file_for_update()",
+			    config_filename);
 		ret = CONFIG_NO_LOCK;
 		goto out_free;
 	}
+	lock_path = get_lock_file_path(&lock);
 
 	/*
 	 * If .git/config does not exist yet, write a minimal version.
@@ -3216,7 +3251,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 	in_fd = open(config_filename, O_RDONLY);
 	if ( in_fd < 0 ) {
 		if ( ENOENT != errno ) {
-			error_errno(_("opening %s"), config_filename);
+			error_errno(_(config_path_fail), "open()",
+				    config_filename);
 			ret = CONFIG_INVALID_FILE; /* same as "invalid config file" */
 			goto out_free;
 		}
@@ -3228,9 +3264,9 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 
 		free(store.key);
 		store.key = xstrdup(key);
-		if (write_section(fd, key, &store) < 0 ||
-		    write_pair(fd, key, value, &store) < 0)
-			goto write_err_out;
+		if (write_section(lock_path, fd, key, &store) < 0 ||
+		    write_pair(lock_path, fd, key, value, &store) < 0)
+			goto out_free;
 	} else {
 		struct stat st;
 		size_t copy_begin, copy_end;
@@ -3291,7 +3327,7 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		}
 
 		if (fstat(in_fd, &st) == -1) {
-			error_errno(_("fstat on %s failed"), config_filename);
+			error_errno(_(lock_path_fail), "fstat()", lock_path);
 			ret = CONFIG_INVALID_FILE;
 			goto out_free;
 		}
@@ -3302,8 +3338,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		if (contents == MAP_FAILED) {
 			if (errno == ENODEV && S_ISDIR(st.st_mode))
 				errno = EISDIR;
-			error_errno(_("unable to mmap '%s'%s"),
-					config_filename, mmap_os_err());
+			error_errno(_(config_path_fail_err), config_filename,
+				    mmap_os_err());
 			ret = CONFIG_INVALID_FILE;
 			contents = NULL;
 			goto out_free;
@@ -3311,8 +3347,8 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 		close(in_fd);
 		in_fd = -1;
 
-		if (chmod(get_lock_file_path(&lock), st.st_mode & 07777) < 0) {
-			error_errno(_("chmod on %s failed"), get_lock_file_path(&lock));
+		if (chmod(lock_path, st.st_mode & 07777) < 0) {
+			error_errno(_(lock_path_fail), "chmod()", lock_path);
 			ret = CONFIG_NO_WRITE;
 			goto out_free;
 		}
@@ -3365,39 +3401,40 @@ int git_config_set_multivar_in_file_gently(const char *config_filename,
 				new_line = 1;
 
 			/* write the first part of the config */
-			if (copy_end > copy_begin) {
-				if (write_in_full(fd, contents + copy_begin,
-						  copy_end - copy_begin) < 0)
-					goto write_err_out;
-				if (new_line &&
-				    write_str_in_full(fd, "\n") < 0)
-					goto write_err_out;
-			}
+			if (copy_end > copy_begin &&
+			    (write_lock_in_full(lock_path, fd,
+						contents + copy_begin,
+						copy_end - copy_begin) < 0 ||
+			     (new_line &&
+			      write_lock_in_full(lock_path, fd, "\n",
+						 strlen("\n")) < 0)))
+				goto out_free;
 			copy_begin = replace_end;
 		}
 
 		/* write the pair (value == NULL means unset) */
 		if (value != NULL) {
-			if (!store.section_seen) {
-				if (write_section(fd, key, &store) < 0)
-					goto write_err_out;
-			}
-			if (write_pair(fd, key, value, &store) < 0)
-				goto write_err_out;
+			if (!store.section_seen &&
+			    write_section(lock_path, fd, key, &store) < 0)
+				goto out_free;
+			if (write_pair(lock_path, fd, key, value, &store) < 0)
+				goto out_free;
 		}
 
 		/* write the rest of the config */
-		if (copy_begin < contents_sz)
-			if (write_in_full(fd, contents + copy_begin,
-					  contents_sz - copy_begin) < 0)
-				goto write_err_out;
+		if (copy_begin < contents_sz &&
+		    write_lock_in_full(lock_path, fd,
+				       contents + copy_begin,
+				       contents_sz - copy_begin) < 0)
+			goto out_free;
 
 		munmap(contents, contents_sz);
 		contents = NULL;
 	}
 
 	if (commit_lock_file(&lock) < 0) {
-		error_errno(_("could not write config file %s"), config_filename);
+		error_errno(_(lock_path_to_config_path_fail), lock_path,
+			    config_filename);
 		ret = CONFIG_NO_WRITE;
 		goto out_free;
 	}
@@ -3416,10 +3453,6 @@ out_free:
 		close(in_fd);
 	config_store_data_clear(&store);
 	return ret;
-
-write_err_out:
-	ret = write_error(get_lock_file_path(&lock));
-	goto out_free;
 
 }
 
@@ -3527,6 +3560,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	int ret = 0, remove = 0;
 	char *filename_buf = NULL;
 	struct lock_file lock = LOCK_INIT;
+	const char *lock_path;
 	int out_fd;
 	char buf[1024];
 	FILE *config_file = NULL;
@@ -3549,6 +3583,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 		ret = error(_("could not lock config file %s"), config_filename);
 		goto out;
 	}
+	lock_path = get_lock_file_path(&lock);
 
 	if (!(config_file = fopen(config_filename, "rb"))) {
 		ret = warn_on_fopen_errors(config_filename);
@@ -3559,13 +3594,13 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	}
 
 	if (fstat(fileno(config_file), &st) == -1) {
-		ret = error_errno(_("fstat on %s failed"), config_filename);
+		ret = error_errno(_(config_path_fail), "fstat()",
+				  config_filename);
 		goto out;
 	}
 
-	if (chmod(get_lock_file_path(&lock), st.st_mode & 07777) < 0) {
-		ret = error_errno(_("chmod on %s failed"),
-				  get_lock_file_path(&lock));
+	if (chmod(lock_path, st.st_mode & 07777) < 0) {
+		ret = error_errno(_(lock_path_fail), "chmod()", lock_path);
 		goto out;
 	}
 
@@ -3588,10 +3623,10 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 			 * multiple [branch "$name"] sections.
 			 */
 			if (copystr.len > 0) {
-				if (write_in_full(out_fd, copystr.buf, copystr.len) < 0) {
-					ret = write_error(get_lock_file_path(&lock));
+				if (write_lock_in_full(lock_path, out_fd,
+						       copystr.buf,
+						       copystr.len))
 					goto out;
-				}
 				strbuf_reset(&copystr);
 			}
 
@@ -3604,10 +3639,9 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 				}
 				store.baselen = strlen(new_name);
 				if (!copy) {
-					if (write_section(out_fd, new_name, &store) < 0) {
-						ret = write_error(get_lock_file_path(&lock));
+					if (write_section(lock_path, out_fd,
+							  new_name, &store) < 0)
 						goto out;
-					}
 					/*
 					 * We wrote out the new section, with
 					 * a newline, now skip the old
@@ -3638,10 +3672,8 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 			strbuf_add(&copystr, output, length);
 		}
 
-		if (write_in_full(out_fd, output, length) < 0) {
-			ret = write_error(get_lock_file_path(&lock));
+		if (write_lock_in_full(lock_path, out_fd, output, length))
 			goto out;
-		}
 	}
 
 	/*
@@ -3650,10 +3682,9 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	 * logic in the loop above.
 	 */
 	if (copystr.len > 0) {
-		if (write_in_full(out_fd, copystr.buf, copystr.len) < 0) {
-			ret = write_error(get_lock_file_path(&lock));
+		if (write_lock_in_full(lock_path, out_fd, copystr.buf,
+				       copystr.len))
 			goto out;
-		}
 		strbuf_reset(&copystr);
 	}
 
@@ -3661,7 +3692,7 @@ static int git_config_copy_or_rename_section_in_file(const char *config_filename
 	config_file = NULL;
 commit_and_out:
 	if (commit_lock_file(&lock) < 0)
-		ret = error_errno(_("could not write config file %s"),
+		ret = error_errno(_(lock_path_to_config_path_fail), lock_path,
 				  config_filename);
 out:
 	if (config_file)

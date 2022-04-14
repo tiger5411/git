@@ -922,7 +922,7 @@ test_expect_success '--set-upstream-to fails on locked config' '
 	>.git/config.lock &&
 	git branch locked &&
 	test_must_fail git branch --set-upstream-to locked 2>err &&
-	grep "could not lock config file .git/config" err
+	grep "error: failed ${SQ}hold_lock_file_for_update()$SQ call on configuration file $SQ.git/config$SQ: " err
 '
 
 test_expect_success 'use --set-upstream-to modify HEAD' '
@@ -953,7 +953,7 @@ test_expect_success '--unset-upstream should fail if config is locked' '
 	git branch --set-upstream-to locked &&
 	>.git/config.lock &&
 	test_must_fail git branch --unset-upstream 2>err &&
-	grep "could not lock config file .git/config" err
+	grep "error: failed ${SQ}hold_lock_file_for_update()$SQ call on configuration file $SQ.git/config$SQ: " err
 '
 
 test_expect_success 'test --unset-upstream on HEAD' '
