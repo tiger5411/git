@@ -1444,7 +1444,7 @@ endif
 endif
 
 ifdef SANE_TOOL_PATH
-SANE_TOOL_PATH_SQ = $(subst ','\'',$(SANE_TOOL_PATH))
+SANE_TOOL_PATH_SQ = $(call shq,$(SANE_TOOL_PATH))
 BROKEN_PATH_FIX = 's|^\# @@BROKEN_PATH_FIX@@$$|git_broken_path_fix "$(SANE_TOOL_PATH_SQ)"|'
 PATH := $(SANE_TOOL_PATH):${PATH}
 else
@@ -2034,8 +2034,7 @@ ifneq ($(findstring openssl,$(CSPRNG_METHOD)),)
 endif
 
 ifneq ($(PROCFS_EXECUTABLE_PATH),)
-	procfs_executable_path_SQ = $(subst ','\'',$(PROCFS_EXECUTABLE_PATH))
-	BASIC_CFLAGS += '-DPROCFS_EXECUTABLE_PATH="$(procfs_executable_path_SQ)"'
+	BASIC_CFLAGS += -DPROCFS_EXECUTABLE_PATH=$(PROCFS_EXECUTABLE_PATH_SQ_CQS)
 endif
 
 ifndef HAVE_PLATFORM_PROCINFO
@@ -2105,36 +2104,53 @@ ifneq ("$(PROFILE)","")
 endif
 endif
 
-# Shell quote (do not use $(call) to accommodate ancient setups);
+# Shell quote
+$(eval $(call make-SQ-vars, \
+DESTDIR \
+DIFF \
+GIT_USER_AGENT \
+NO_GETTEXT \
+NO_PERL_CPAN_FALLBACKS \
+PAGER_ENV \
+PERLLIB_EXTRA \
+PERL_PATH \
+PYTHON_PATH \
+SHELL_PATH \
+TCLTK_PATH \
+TEST_SHELL_PATH \
+bindir \
+bindir_relative \
+gitexecdir_relative \
+gitwebdir \
+localedir \
+localedir_relative \
+mandir \
+perllibdir \
+perllibdir_relative \
+prefix \
+))
 
-ETC_GITCONFIG_SQ = $(subst ','\'',$(ETC_GITCONFIG))
-ETC_GITATTRIBUTES_SQ = $(subst ','\'',$(ETC_GITATTRIBUTES))
-
-DESTDIR_SQ = $(subst ','\'',$(DESTDIR))
-NO_GETTEXT_SQ = $(subst ','\'',$(NO_GETTEXT))
-bindir_SQ = $(subst ','\'',$(bindir))
-bindir_relative_SQ = $(subst ','\'',$(bindir_relative))
-mandir_SQ = $(subst ','\'',$(mandir))
-mandir_relative_SQ = $(subst ','\'',$(mandir_relative))
-infodir_relative_SQ = $(subst ','\'',$(infodir_relative))
-perllibdir_SQ = $(subst ','\'',$(perllibdir))
-localedir_SQ = $(subst ','\'',$(localedir))
-localedir_relative_SQ = $(subst ','\'',$(localedir_relative))
-gitexecdir_SQ = $(subst ','\'',$(gitexecdir))
-gitexecdir_relative_SQ = $(subst ','\'',$(gitexecdir_relative))
-template_dir_SQ = $(subst ','\'',$(template_dir))
-htmldir_relative_SQ = $(subst ','\'',$(htmldir_relative))
-prefix_SQ = $(subst ','\'',$(prefix))
-perllibdir_relative_SQ = $(subst ','\'',$(perllibdir_relative))
-gitwebdir_SQ = $(subst ','\'',$(gitwebdir))
-
-SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
-TEST_SHELL_PATH_SQ = $(subst ','\'',$(TEST_SHELL_PATH))
-PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
-PYTHON_PATH_SQ = $(subst ','\'',$(PYTHON_PATH))
-TCLTK_PATH_SQ = $(subst ','\'',$(TCLTK_PATH))
-DIFF_SQ = $(subst ','\'',$(DIFF))
-PERLLIB_EXTRA_SQ = $(subst ','\'',$(PERLLIB_EXTRA))
+# C quote
+$(eval $(call make-SQ_CQS-vars, \
+DEFAULT_EDITOR \
+DEFAULT_HELP_FORMAT \
+DEFAULT_PAGER \
+ETC_GITATTRIBUTES \
+ETC_GITCONFIG \
+GIT_USER_AGENT \
+GIT_VERSION \
+PAGER_ENV \
+PROCFS_EXECUTABLE_PATH \
+SHELL_PATH \
+bindir_relative \
+gitexecdir \
+htmldir_relative \
+infodir_relative \
+localedir_relative \
+mandir_relative \
+prefix \
+template_dir \
+))
 
 # RUNTIME_PREFIX's resolution logic requires resource paths to be expressed
 # relative to each other and share an installation path.
@@ -2174,39 +2190,22 @@ LIBS = $(filter-out %.o, $(GITLIBS)) $(EXTLIBS)
 BASIC_CFLAGS += $(COMPAT_CFLAGS)
 LIB_OBJS += $(COMPAT_OBJS)
 
-# Quote for C
-
 ifdef DEFAULT_EDITOR
-DEFAULT_EDITOR_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_EDITOR)))"
-DEFAULT_EDITOR_CQ_SQ = $(subst ','\'',$(DEFAULT_EDITOR_CQ))
-
-BASIC_CFLAGS += -DDEFAULT_EDITOR='$(DEFAULT_EDITOR_CQ_SQ)'
+BASIC_CFLAGS += -DDEFAULT_EDITOR=$(DEFAULT_EDITOR_SQ_CQS)
 endif
 
 ifdef DEFAULT_PAGER
-DEFAULT_PAGER_CQ = "$(subst ",\",$(subst \,\\,$(DEFAULT_PAGER)))"
-DEFAULT_PAGER_CQ_SQ = $(subst ','\'',$(DEFAULT_PAGER_CQ))
-
-BASIC_CFLAGS += -DDEFAULT_PAGER='$(DEFAULT_PAGER_CQ_SQ)'
+BASIC_CFLAGS += -DDEFAULT_PAGER=$(DEFAULT_PAGER_SQ_CQS)
 endif
 
 ifdef SHELL_PATH
-SHELL_PATH_CQ = "$(subst ",\",$(subst \,\\,$(SHELL_PATH)))"
-SHELL_PATH_CQ_SQ = $(subst ','\'',$(SHELL_PATH_CQ))
-
-BASIC_CFLAGS += -DSHELL_PATH='$(SHELL_PATH_CQ_SQ)'
+BASIC_CFLAGS += -DSHELL_PATH=$(SHELL_PATH_SQ_CQS)
 endif
 
-GIT_USER_AGENT_SQ = $(subst ','\'',$(GIT_USER_AGENT))
-GIT_USER_AGENT_CQ = "$(subst ",\",$(subst \,\\,$(GIT_USER_AGENT)))"
-GIT_USER_AGENT_CQ_SQ = $(subst ','\'',$(GIT_USER_AGENT_CQ))
-GIT-USER-AGENT: FORCE
-	@if test x'$(GIT_USER_AGENT_SQ)' != x"`cat GIT-USER-AGENT 2>/dev/null`"; then \
-		echo '$(GIT_USER_AGENT_SQ)' >GIT-USER-AGENT; \
-	fi
+$(eval $(call TRACK_template,GIT-USER-AGENT,GIT_USER_AGENT_SQ))
 
 ifdef DEFAULT_HELP_FORMAT
-BASIC_CFLAGS += -DDEFAULT_HELP_FORMAT='"$(DEFAULT_HELP_FORMAT)"'
+BASIC_CFLAGS += -DDEFAULT_HELP_FORMAT=$(DEFAULT_HELP_FORMAT_SQ_CQS)
 endif
 
 ALL_CFLAGS += $(BASIC_CFLAGS)
@@ -2296,9 +2295,9 @@ strip: $(PROGRAMS) git$X
 
 git.sp git.s git.o: GIT-PREFIX
 git.sp git.s git.o: EXTRA_CPPFLAGS = \
-	'-DGIT_HTML_PATH="$(htmldir_relative_SQ)"' \
-	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
-	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
+	-DGIT_HTML_PATH=$(htmldir_relative_SQ_CQS) \
+	-DGIT_MAN_PATH=$(mandir_relative_SQ_CQS) \
+	-DGIT_INFO_PATH=$(infodir_relative_SQ_CQS)
 
 git$X: git.o GIT-LDFLAGS $(BUILTIN_OBJS) $(GITLIBS)
 	$(QUIET_LINK)$(CC) $(ALL_CFLAGS) -o $@ $(ALL_LDFLAGS) \
@@ -2309,20 +2308,17 @@ builtin/bugreport.sp builtin/bugreport.s builtin/bugreport.o: hook-list.h
 
 builtin/help.sp builtin/help.s builtin/help.o: config-list.h GIT-PREFIX
 builtin/help.sp builtin/help.s builtin/help.o: EXTRA_CPPFLAGS = \
-	'-DGIT_HTML_PATH="$(htmldir_relative_SQ)"' \
-	'-DGIT_MAN_PATH="$(mandir_relative_SQ)"' \
-	'-DGIT_INFO_PATH="$(infodir_relative_SQ)"'
+	-DGIT_HTML_PATH=$(htmldir_relative_SQ_CQS) \
+	-DGIT_MAN_PATH=$(mandir_relative_SQ_CQS) \
+	-DGIT_INFO_PATH=$(infodir_relative_SQ_CQS)
 
-PAGER_ENV_SQ = $(subst ','\'',$(PAGER_ENV))
-PAGER_ENV_CQ = "$(subst ",\",$(subst \,\\,$(PAGER_ENV)))"
-PAGER_ENV_CQ_SQ = $(subst ','\'',$(PAGER_ENV_CQ))
 pager.sp pager.s pager.o: EXTRA_CPPFLAGS = \
-	-DPAGER_ENV='$(PAGER_ENV_CQ_SQ)'
+	-DPAGER_ENV=$(PAGER_ENV_SQ_CQS)
 
 version.sp version.s version.o: GIT-VERSION-FILE GIT-USER-AGENT
 version.sp version.s version.o: EXTRA_CPPFLAGS = \
-	'-DGIT_VERSION="$(GIT_VERSION)"' \
-	'-DGIT_USER_AGENT=$(GIT_USER_AGENT_CQ_SQ)' \
+	-DGIT_VERSION=$(GIT_VERSION_SQ_CQS) \
+	-DGIT_USER_AGENT=$(GIT_USER_AGENT_SQ_CQS) \
 	'-DGIT_BUILT_FROM_COMMIT="$(shell \
 		GIT_CEILING_DIRECTORIES="$(CURDIR)/.." \
 		git rev-parse -q --verify HEAD 2>/dev/null)"'
@@ -2351,16 +2347,17 @@ command-list.h: $(wildcard Documentation/git*.txt)
 hook-list.h: generate-hooklist.sh Documentation/githooks.txt
 	$(QUIET_GEN)$(SHELL_PATH) ./generate-hooklist.sh >$@
 
-SCRIPT_DEFINES = $(SHELL_PATH_SQ):$(DIFF_SQ):\
-	$(localedir_SQ):$(USE_GETTEXT_SCHEME):$(SANE_TOOL_PATH_SQ):\
-	$(gitwebdir_SQ):$(PERL_PATH_SQ):$(PAGER_ENV):\
-	$(perllibdir_SQ)
-GIT-SCRIPT-DEFINES: FORCE
-	@FLAGS='$(SCRIPT_DEFINES)'; \
-	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
-		echo >&2 "    * new script parameters"; \
-		echo "$$FLAGS" >$@; \
-            fi
+SCRIPT_DEFINES =
+SCRIPT_DEFINES += $(DIFF)
+SCRIPT_DEFINES += $(PAGER_ENV)
+SCRIPT_DEFINES += $(PERL_PATH)
+SCRIPT_DEFINES += $(SANE_TOOL_PATH)
+SCRIPT_DEFINES += $(SHELL_PATH)
+SCRIPT_DEFINES += $(USE_GETTEXT_SCHEME)
+SCRIPT_DEFINES += $(gitwebdir)
+SCRIPT_DEFINES += $(localedir)
+SCRIPT_DEFINES += $(perllibdir)
+$(eval $(call TRACK_template,GIT-SCRIPT-DEFINES,SCRIPT_DEFINES))
 
 define cmd_munge_script
 sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
@@ -2426,6 +2423,7 @@ PERL_DEFINES += $(perllibdir_relative_SQ)
 else
 PERL_DEFINES += $(perllocaledir_SQ)
 endif
+$(eval $(call TRACK_template,GIT-PERL-DEFINES,PERL_DEFINES))
 
 ifdef RUNTIME_PREFIX
 PERL_HEADER_TEMPLATE = perl/header_templates/runtime_prefix.template.pl
@@ -2473,13 +2471,6 @@ git-instaweb: git-instaweb.sh GIT-SCRIPT-DEFINES
 	mv $@+ $@
 endif # NO_PERL
 
-GIT-PERL-DEFINES: FORCE
-	@FLAGS='$(PERL_DEFINES)'; \
-	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
-		echo >&2 "    * new perl-specific parameters"; \
-		echo "$$FLAGS" >$@; \
-	    fi
-
 # As with NO_PERL=Y we'll still make GIT-PYTHON-DEFINES if "NO_PYTHON"
 # is defined, for creating the "unimplemented.sh" scripts.
 PYTHON_DEFINES =
@@ -2507,12 +2498,7 @@ $(SCRIPT_PYTHON_GEN): % : %.py GIT-PYTHON-DEFINES
 	mv $@+ $@
 endif # NO_PYTHON
 
-GIT-PYTHON-DEFINES: FORCE
-	@FLAGS='$(PYTHON_DEFINES)'; \
-	    if test x"$$FLAGS" != x"`cat $@ 2>/dev/null`" ; then \
-		echo >&2 "    * new python-specific parameters"; \
-		echo "$$FLAGS" >$@; \
-	    fi
+$(eval $(call TRACK_template,GIT-PYTHON-DEFINES,PYTHON_DEFINES))
 
 CONFIGURE_RECIPE = sed -e 's/@@GIT_VERSION@@/$(GIT_VERSION)/g' \
 			configure.ac >configure.ac+ && \
@@ -2722,26 +2708,26 @@ endif
 
 exec-cmd.sp exec-cmd.s exec-cmd.o: GIT-PREFIX
 exec-cmd.sp exec-cmd.s exec-cmd.o: EXTRA_CPPFLAGS = \
-	'-DGIT_EXEC_PATH="$(gitexecdir_SQ)"' \
-	'-DGIT_LOCALE_PATH="$(localedir_relative_SQ)"' \
-	'-DBINDIR="$(bindir_relative_SQ)"' \
-	'-DFALLBACK_RUNTIME_PREFIX="$(prefix_SQ)"'
+	-DGIT_EXEC_PATH=$(gitexecdir_SQ_CQS) \
+	-DGIT_LOCALE_PATH=$(localedir_relative_SQ_CQS) \
+	-DBINDIR=$(bindir_relative_SQ_CQS) \
+	-DFALLBACK_RUNTIME_PREFIX=$(prefix_SQ_CQS)
 
 builtin/init-db.sp builtin/init-db.s builtin/init-db.o: GIT-PREFIX
 builtin/init-db.sp builtin/init-db.s builtin/init-db.o: EXTRA_CPPFLAGS = \
-	-DDEFAULT_GIT_TEMPLATE_DIR='"$(template_dir_SQ)"'
+	-DDEFAULT_GIT_TEMPLATE_DIR=$(template_dir_SQ_CQS)
 
 config.sp config.s config.o: GIT-PREFIX
 config.sp config.s config.o: EXTRA_CPPFLAGS = \
-	-DETC_GITCONFIG='"$(ETC_GITCONFIG_SQ)"'
+	-DETC_GITCONFIG=$(ETC_GITCONFIG_SQ_CQS)
 
 attr.sp attr.s attr.o: GIT-PREFIX
 attr.sp attr.s attr.o: EXTRA_CPPFLAGS = \
-	-DETC_GITATTRIBUTES='"$(ETC_GITATTRIBUTES_SQ)"'
+	-DETC_GITATTRIBUTES=$(ETC_GITATTRIBUTES_SQ_CQS)
 
 gettext.sp gettext.s gettext.o: GIT-PREFIX
 gettext.sp gettext.s gettext.o: EXTRA_CPPFLAGS = \
-	-DGIT_LOCALE_PATH='"$(localedir_relative_SQ)"'
+	-DGIT_LOCALE_PATH=$(localedir_relative_SQ_CQS)
 
 http-push.sp http.sp http-walker.sp remote-curl.sp imap-send.sp: SP_EXTRA_FLAGS += \
 	-DCURL_DISABLE_TYPECHECK
@@ -2944,33 +2930,22 @@ cscope.out: $(FOUND_SOURCE_FILES)
 cscope: cscope.out
 
 ### Detect prefix changes
-TRACK_PREFIX = $(bindir_SQ):$(gitexecdir_SQ):$(template_dir_SQ):$(prefix_SQ):\
-		$(localedir_SQ)
+TRACK_PREFIX =
+TRACK_PREFIX += $(bindir)
+TRACK_PREFIX += $(gitexecdir)
+TRACK_PREFIX += $(localedir)
+TRACK_PREFIX += $(prefix)
+TRACK_PREFIX += $(template_dir)
+$(eval $(call TRACK_template,GIT-PREFIX,TRACK_PREFIX))
 
-GIT-PREFIX: FORCE
-	@FLAGS='$(TRACK_PREFIX)'; \
-	if test x"$$FLAGS" != x"`cat GIT-PREFIX 2>/dev/null`" ; then \
-		echo >&2 "    * new prefix flags"; \
-		echo "$$FLAGS" >GIT-PREFIX; \
-	fi
+TRACK_CFLAGS =
+TRACK_CFLAGS += $(CC)
+TRACK_CFLAGS += $(ALL_CFLAGS)
+TRACK_CFLAGS += $(USE_GETTEXT_SCHEME)
+$(eval $(call TRACK_template,GIT-CFLAGS,TRACK_CFLAGS))
 
-TRACK_CFLAGS = $(CC):$(subst ','\'',$(ALL_CFLAGS)):$(USE_GETTEXT_SCHEME)
-
-GIT-CFLAGS: FORCE
-	@FLAGS='$(TRACK_CFLAGS)'; \
-	    if test x"$$FLAGS" != x"`cat GIT-CFLAGS 2>/dev/null`" ; then \
-		echo >&2 "    * new build flags"; \
-		echo "$$FLAGS" >GIT-CFLAGS; \
-            fi
-
-TRACK_LDFLAGS = $(subst ','\'',$(ALL_LDFLAGS))
-
-GIT-LDFLAGS: FORCE
-	@FLAGS='$(TRACK_LDFLAGS)'; \
-	    if test x"$$FLAGS" != x"`cat GIT-LDFLAGS 2>/dev/null`" ; then \
-		echo >&2 "    * new link flags"; \
-		echo "$$FLAGS" >GIT-LDFLAGS; \
-            fi
+TRACK_LDFLAGS = $(ALL_LDFLAGS)
+$(eval $(call TRACK_template,GIT-LDFLAGS,TRACK_LDFLAGS))
 
 # We need to apply sq twice, once to protect from the shell
 # that runs GIT-BUILD-OPTIONS, and then again to protect it
@@ -3180,7 +3155,7 @@ gitexec_instdir = $(gitexecdir)
 else
 gitexec_instdir = $(prefix)/$(gitexecdir)
 endif
-gitexec_instdir_SQ = $(subst ','\'',$(gitexec_instdir))
+gitexec_instdir_SQ = $(call shq,$(gitexec_instdir))
 export gitexec_instdir
 
 ifneq ($(filter /%,$(firstword $(mergetoolsdir))),)
@@ -3188,7 +3163,7 @@ mergetools_instdir = $(mergetoolsdir)
 else
 mergetools_instdir = $(prefix)/$(mergetoolsdir)
 endif
-mergetools_instdir_SQ = $(subst ','\'',$(mergetools_instdir))
+mergetools_instdir_SQ = $(call shq,$(mergetools_instdir))
 
 install_bindir_xprograms := $(patsubst %,%$X,$(BINDIR_PROGRAMS_NEED_X))
 install_bindir_programs := $(install_bindir_xprograms) $(BINDIR_PROGRAMS_NO_X)
