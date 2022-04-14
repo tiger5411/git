@@ -81,7 +81,7 @@ static void error_builtin(const char *err, va_list params)
 	vreportf("error: ", err, params);
 }
 
-static void warn_builtin(const char *warn, va_list params)
+static void warning_builtin(const char *warn, va_list params)
 {
 	trace2_cmd_error_va(warn, params);
 
@@ -116,7 +116,7 @@ static NORETURN_PTR report_fn usage_routine = usage_builtin;
 static NORETURN_PTR report_fn die_routine = die_builtin;
 static report_fn die_message_routine = die_message_builtin;
 static report_fn error_routine = error_builtin;
-static report_fn warn_routine = warn_builtin;
+static report_fn warning_routine = warning_builtin;
 static int (*die_is_recursing)(void) = die_is_recursing_builtin;
 
 void set_die_routine(NORETURN_PTR report_fn routine)
@@ -139,47 +139,19 @@ report_fn get_error_routine(void)
 	return error_routine;
 }
 
-void set_warn_routine(report_fn routine)
+void set_warning_routine(report_fn routine)
 {
-	warn_routine = routine;
+	warning_routine = routine;
 }
 
-report_fn get_warn_routine(void)
+report_fn get_warning_routine(void)
 {
-	return warn_routine;
+	return warning_routine;
 }
 
 void set_die_is_recursing_routine(int (*routine)(void))
 {
 	die_is_recursing = routine;
-}
-
-void NORETURN usagef(const char *err, ...)
-{
-	va_list params;
-
-	va_start(params, err);
-	usage_routine(err, params);
-	va_end(params);
-}
-
-void NORETURN usage(const char *err)
-{
-	usagef("%s", err);
-}
-
-void NORETURN die(const char *err, ...)
-{
-	va_list params;
-
-	if (die_is_recursing()) {
-		fputs("fatal: recursion detected in die handler\n", stderr);
-		exit(128);
-	}
-
-	va_start(params, err);
-	die_routine(err, params);
-	va_end(params);
 }
 
 static const char *fmt_with_err(char *buf, int n, const char *fmt)
@@ -206,10 +178,38 @@ static const char *fmt_with_err(char *buf, int n, const char *fmt)
 	return buf;
 }
 
+void NORETURN usage(const char *fmt)
+{
+	usagef("%s", fmt);
+}
+
+void NORETURN usagef(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	usage_routine(fmt, ap);
+	va_end(ap);
+}
+
+void NORETURN die(const char *fmt, ...)
+{
+	va_list ap;
+
+	if (die_is_recursing()) {
+		fputs("fatal: recursion detected in die handler\n", stderr);
+		exit(128);
+	}
+
+	va_start(ap, fmt);
+	die_routine(fmt, ap);
+	va_end(ap);
+}
+
 void NORETURN die_errno(const char *fmt, ...)
 {
 	char buf[1024];
-	va_list params;
+	va_list ap;
 
 	if (die_is_recursing()) {
 		fputs("fatal: recursion detected in die_errno handler\n",
@@ -217,19 +217,19 @@ void NORETURN die_errno(const char *fmt, ...)
 		exit(128);
 	}
 
-	va_start(params, fmt);
-	die_routine(fmt_with_err(buf, sizeof(buf), fmt), params);
-	va_end(params);
+	va_start(ap, fmt);
+	die_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	va_end(ap);
 }
 
 #undef die_message
-int die_message(const char *err, ...)
+int die_message(const char *fmt, ...)
 {
-	va_list params;
+	va_list ap;
 
-	va_start(params, err);
-	die_message_routine(err, params);
-	va_end(params);
+	va_start(ap, fmt);
+	die_message_routine(fmt, ap);
+	va_end(ap);
 	return 128;
 }
 
@@ -237,54 +237,54 @@ int die_message(const char *err, ...)
 int die_message_errno(const char *fmt, ...)
 {
 	char buf[1024];
-	va_list params;
+	va_list ap;
 
-	va_start(params, fmt);
-	die_message_routine(fmt_with_err(buf, sizeof(buf), fmt), params);
-	va_end(params);
+	va_start(ap, fmt);
+	die_message_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	va_end(ap);
 	return 128;
+}
+
+#undef error
+int error(const char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	error_routine(fmt, ap);
+	va_end(ap);
+	return -1;
 }
 
 #undef error_errno
 int error_errno(const char *fmt, ...)
 {
 	char buf[1024];
-	va_list params;
+	va_list ap;
 
-	va_start(params, fmt);
-	error_routine(fmt_with_err(buf, sizeof(buf), fmt), params);
-	va_end(params);
+	va_start(ap, fmt);
+	error_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	va_end(ap);
 	return -1;
 }
 
-#undef error
-int error(const char *err, ...)
+void warning(const char *fmt, ...)
 {
-	va_list params;
+	va_list ap;
 
-	va_start(params, err);
-	error_routine(err, params);
-	va_end(params);
-	return -1;
+	va_start(ap, fmt);
+	warning_routine(fmt, ap);
+	va_end(ap);
 }
 
-void warning_errno(const char *warn, ...)
+void warning_errno(const char *fmt, ...)
 {
 	char buf[1024];
-	va_list params;
+	va_list ap;
 
-	va_start(params, warn);
-	warn_routine(fmt_with_err(buf, sizeof(buf), warn), params);
-	va_end(params);
-}
-
-void warning(const char *warn, ...)
-{
-	va_list params;
-
-	va_start(params, warn);
-	warn_routine(warn, params);
-	va_end(params);
+	va_start(ap, fmt);
+	warning_routine(fmt_with_err(buf, sizeof(buf), fmt), ap);
+	va_end(ap);
 }
 
 /* Only set this, ever, from t/helper/, when verifying that bugs are caught. */

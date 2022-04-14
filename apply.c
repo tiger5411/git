@@ -162,9 +162,9 @@ int check_apply_state(struct apply_state *state, int force_apply)
 
 	if (state->apply_verbosity <= verbosity_silent) {
 		state->saved_error_routine = get_error_routine();
-		state->saved_warn_routine = get_warn_routine();
+		state->saved_warning_routine = get_warning_routine();
 		set_error_routine(mute_routine);
-		set_warn_routine(mute_routine);
+		set_warning_routine(mute_routine);
 	}
 
 	return 0;
@@ -4985,7 +4985,7 @@ end:
 
 	if (state->apply_verbosity <= verbosity_silent) {
 		set_error_routine(state->saved_error_routine);
-		set_warn_routine(state->saved_warn_routine);
+		set_warning_routine(state->saved_warning_routine);
 	}
 
 	if (res > -1)

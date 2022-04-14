@@ -512,20 +512,7 @@ static inline int git_has_dir_sep(const char *path)
 #include "compat/bswap.h"
 
 #include "wildmatch.h"
-
-struct strbuf;
-
-/* General helper functions */
-NORETURN void usage(const char *err);
-NORETURN void usagef(const char *err, ...) __attribute__((format (printf, 1, 2)));
-NORETURN void die(const char *err, ...) __attribute__((format (printf, 1, 2)));
-NORETURN void die_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int die_message(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int die_message_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int error(const char *err, ...) __attribute__((format (printf, 1, 2)));
-int error_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
-void warning(const char *err, ...) __attribute__((format (printf, 1, 2)));
-void warning_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
+#include "usage.h"
 
 #ifndef NO_OPENSSL
 #ifdef APPLE_COMMON_CRYPTO
@@ -540,30 +527,6 @@ void warning_errno(const char *err, ...) __attribute__((format (printf, 1, 2)));
 #ifdef HAVE_OPENSSL_CSPRNG
 #include <openssl/rand.h>
 #endif
-
-/*
- * Let callers be aware of the constant return value; this can help
- * gcc with -Wuninitialized analysis. We restrict this trick to gcc, though,
- * because other compilers may be confused by this.
- */
-#if defined(__GNUC__)
-static inline int const_error(void)
-{
-	return -1;
-}
-#define error(...) (error(__VA_ARGS__), const_error())
-#define error_errno(...) (error_errno(__VA_ARGS__), const_error())
-#endif
-
-typedef void (*report_fn)(const char *, va_list params);
-
-void set_die_routine(NORETURN_PTR report_fn routine);
-report_fn get_die_message_routine(void);
-void set_error_routine(report_fn routine);
-report_fn get_error_routine(void);
-void set_warn_routine(report_fn routine);
-report_fn get_warn_routine(void);
-void set_die_is_recursing_routine(int (*routine)(void));
 
 int starts_with(const char *str, const char *prefix);
 int istarts_with(const char *str, const char *prefix);
@@ -1266,25 +1229,6 @@ static inline int regexec_buf(const regex_t *preg, const char *buf, size_t size,
 #endif
 #endif
 
-/* usage.c: only to be used for testing BUG() implementation (see test-tool) */
-extern int BUG_exit_code;
-
-/* usage.c: if bug() is called we must have a BUG() invocation afterwards */
-extern int bug_called_must_BUG;
-
-__attribute__((format (printf, 3, 4))) NORETURN
-void BUG_fl(const char *file, int line, const char *fmt, ...);
-#define BUG(...) BUG_fl(__FILE__, __LINE__, __VA_ARGS__)
-__attribute__((format (printf, 3, 4)))
-int bug_fl(const char *file, int line, const char *fmt, ...);
-#define bug(...) bug_fl(__FILE__, __LINE__, __VA_ARGS__)
-#define BUG_if_bug() do { \
-	if (bug_called_must_BUG) { \
-		bug_called_must_BUG = 0; \
-		BUG_fl(__FILE__, __LINE__, "see bug() output above"); \
-	} \
-} while (0)
-
 #ifndef FSYNC_METHOD_DEFAULT
 #ifdef __APPLE__
 #define FSYNC_METHOD_DEFAULT FSYNC_METHOD_WRITEOUT_ONLY
@@ -1328,6 +1272,7 @@ int unlink_or_warn(const char *path);
   * appends a message to err suitable for
   * 'error("%s", err->buf)' on error.
   */
+struct strbuf;
 int unlink_or_msg(const char *file, struct strbuf *err);
 /*
  * Preserves errno, prints a message, but gives no warning for ENOENT.

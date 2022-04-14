@@ -346,9 +346,9 @@ static void child_error_fn(const char *err, va_list params)
 	xwrite(2, msg, sizeof(msg) - 1);
 }
 
-static void child_warn_fn(const char *err, va_list params)
+static void child_warning_fn(const char *err, va_list params)
 {
-	const char msg[] = "warn() should not be called in child\n";
+	const char msg[] = "warning() should not be called in child\n";
 	xwrite(2, msg, sizeof(msg) - 1);
 }
 
@@ -362,10 +362,9 @@ static void NORETURN child_die_fn(const char *err, va_list params)
 /* this runs in the parent process */
 static void child_err_spew(struct child_process *cmd, struct child_err *cerr)
 {
-	static void (*old_errfn)(const char *err, va_list params);
+	report_fn old_errfn = get_error_routine();
 	report_fn die_message_routine = get_die_message_routine();
 
-	old_errfn = get_error_routine();
 	set_error_routine(die_message_routine);
 	errno = cerr->syserr;
 
@@ -768,12 +767,12 @@ fail_pipe:
 	if (!cmd->pid) {
 		int sig;
 		/*
-		 * Ensure the default die/error/warn routines do not get
+		 * Ensure the default die/error/warning routines do not get
 		 * called, they can take stdio locks and malloc.
 		 */
 		set_die_routine(child_die_fn);
 		set_error_routine(child_error_fn);
-		set_warn_routine(child_warn_fn);
+		set_warning_routine(child_warning_fn);
 
 		close(notify_pipe[0]);
 		set_cloexec(notify_pipe[1]);
