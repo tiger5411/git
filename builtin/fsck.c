@@ -668,11 +668,11 @@ static int fsck_cruft(const char *basename, const char *path, void *data)
 	return 0;
 }
 
-static int fsck_subdir(unsigned int nr, const char *path, void *data)
+static int fsck_subdir(const char *path, void *data)
 {
 	struct for_each_loose_cb *cb_data = data;
 	struct progress *progress = cb_data->progress;
-	display_progress(progress, nr + 1);
+	increment_progress(progress);
 	return 0;
 }
 

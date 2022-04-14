@@ -2283,13 +2283,13 @@ static void get_object_details(void)
 		sorted_by_offset[i] = to_pack.objects + i;
 	QSORT(sorted_by_offset, to_pack.nr_objects, pack_offset_sort);
 
-	for (i = 0; i < to_pack.nr_objects; i++) {
+	for_progress_var (progress_state, i = 0, i < to_pack.nr_objects, i++) {
 		struct object_entry *entry = sorted_by_offset[i];
+
 		check_object(entry, i);
 		if (entry->type_valid &&
 		    oe_size_greater_than(&to_pack, entry, big_file_threshold))
 			entry->no_try_delta = 1;
-		display_progress(progress_state, i + 1);
 	}
 	stop_progress(&progress_state);
 

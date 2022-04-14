@@ -271,7 +271,7 @@ void resolve_tree_islands(struct repository *r,
 	if (progress)
 		progress_state = start_progress(_("Propagating island marks"), nr);
 
-	for (i = 0; i < nr; i++) {
+	for_progress_var (progress_state, i = 0, i < nr, i++) {
 		struct object_entry *ent = todo[i].entry;
 		struct island_bitmap *root_marks;
 		struct tree *tree;
@@ -304,8 +304,6 @@ void resolve_tree_islands(struct repository *r,
 		}
 
 		free_tree_buffer(tree);
-
-		display_progress(progress_state, i+1);
 	}
 
 	stop_progress(&progress_state);

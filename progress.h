@@ -50,6 +50,8 @@ void test_progress_setnanotime(struct progress *progress, uint64_t time);
 
 void display_throughput(struct progress *progress, uint64_t total);
 void display_progress(struct progress *progress, uint64_t n);
+void increment_progress(struct progress *progress);
+int increment_progress_expr(struct progress *progress);
 struct progress *start_progress(const char *title, uint64_t total);
 struct progress *start_sparse_progress(const char *title, uint64_t total);
 struct progress *start_delayed_progress(const char *title, uint64_t total);
@@ -61,5 +63,10 @@ static inline void stop_progress(struct progress **p_progress)
 	stop_progress_msg(p_progress, _(", done."));
 }
 void stop_progress_early(struct progress **p_progress);
+
+#define for_progress(exp1,exp2,exp3) \
+	for (exp1; (exp2) && increment_progress_expr(progress); exp3)
+#define for_progress_var(progress,exp1,exp2,exp3) \
+	for (exp1; (exp2) && increment_progress_expr(progress); exp3)
 
 #endif
