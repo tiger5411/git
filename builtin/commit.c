@@ -1065,10 +1065,8 @@ static int prepare_to_commit(const char *index_file, const char *prefix,
 	}
 	read_cache_from(index_file);
 
-	if (update_main_cache_tree(0)) {
-		error(_("Error building trees"));
+	if (update_main_cache_tree(0))
 		return 0;
-	}
 
 	if (run_commit_hook(use_editor, index_file, NULL, "prepare-commit-msg",
 			    git_path_commit_editmsg(), hook_arg1, hook_arg2, NULL))

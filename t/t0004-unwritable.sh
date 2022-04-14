@@ -26,7 +26,7 @@ test_lazy_prereq WRITE_TREE_OUT 'test -e "$TRASH_DIRECTORY"/out.write-tree'
 test_expect_success WRITE_TREE_OUT 'write-tree output on unwritable repository' '
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
-	fatal: git-write-tree: error building trees
+	error: error building trees
 	EOF
 	test_cmp expect out.write-tree
 '
@@ -41,7 +41,7 @@ test_lazy_prereq COMMIT_OUT 'test -e "$TRASH_DIRECTORY"/out.commit'
 test_expect_success COMMIT_OUT 'commit output on unwritable repository' '
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
-	error: Error building trees
+	error: error building trees
 	EOF
 	test_cmp expect out.commit
 '
@@ -58,7 +58,7 @@ test_expect_success UPDATE_INDEX_OUT 'update-index output on unwritable reposito
 	cat >expect <<-\EOF &&
 	error: insufficient permission for adding an object to repository database .git/objects
 	error: file: failed to insert into database
-	fatal: Unable to process path file
+	fatal: unable to index file '\''file'\''
 	EOF
 	test_cmp expect out.update-index
 '

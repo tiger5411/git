@@ -18,10 +18,10 @@ static const char * const write_tree_usage[] = {
 
 int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 {
-	int flags = 0, ret;
+	int flags = 0;
+	enum write_index_result ret;
 	const char *tree_prefix = NULL;
 	struct object_id oid;
-	const char *me = "git-write-tree";
 	struct option write_tree_options[] = {
 		OPT_BIT(0, "missing-ok", &flags, N_("allow missing objects"),
 			WRITE_TREE_MISSING_OK),
@@ -40,18 +40,26 @@ int cmd_write_tree(int argc, const char **argv, const char *cmd_prefix)
 
 	ret = write_cache_as_tree(&oid, flags, tree_prefix);
 	switch (ret) {
-	case 0:
+	case WRITE_TREE_INDEX_OK:
 		printf("%s\n", oid_to_hex(&oid));
-		break;
-	case WRITE_TREE_UNREADABLE_INDEX:
-		die("%s: error reading the index", me);
-		break;
+		return 0;
 	case WRITE_TREE_UNMERGED_INDEX:
-		die("%s: error building trees", me);
-		break;
+		/* error() emitted by write_cache_as_tree() */
+		return 128;
+	case WRITE_TREE_UNREADABLE_INDEX:
+		/*
+		 * TODO: I think this only happens if the index file
+		 * format is corrupt. We use LOCK_DIE_ON_ERROR so just
+		 * getting the lock or renaming the file in-place due
+		 * to permissions would fail there. This is if
+		 * read_index_from() returns -1.
+		 */
+		error("failed to read the index");
+		return 128;
 	case WRITE_TREE_PREFIX_ERROR:
-		die("%s: prefix %s not found", me, tree_prefix);
-		break;
+		/* error() emitted in write_index_as_tree_internal()? */
+		return 128;
+
 	}
-	return ret;
+	BUG("unreachable");
 }

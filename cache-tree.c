@@ -465,7 +465,7 @@ int cache_tree_update(struct index_state *istate, int flags)
 	i = verify_cache(istate, flags);
 
 	if (i)
-		return i;
+		goto error;
 
 	if (!istate->cache_tree)
 		istate->cache_tree = cache_tree();
@@ -482,9 +482,13 @@ int cache_tree_update(struct index_state *istate, int flags)
 	trace2_region_leave("cache_tree", "update", the_repository);
 	trace_performance_leave("cache_tree_update");
 	if (i < 0)
-		return i;
+		goto error;
 	istate->cache_changed |= CACHE_TREE_CHANGED;
-	return 0;
+	i = 0;
+error:
+	if (i && !(flags & WRITE_TREE_SILENT))
+		error(_("error building trees"));
+	return i;
 }
 
 static void write_one(struct strbuf *buffer, struct cache_tree *it,
@@ -657,11 +661,11 @@ static struct cache_tree *cache_tree_find(struct cache_tree *it, const char *pat
 	return it;
 }
 
-static int write_index_as_tree_internal(struct object_id *oid,
-					struct index_state *index_state,
-					int cache_tree_valid,
-					int flags,
-					const char *prefix)
+static enum write_index_result write_index_as_tree_internal(struct object_id *oid,
+							    struct index_state *index_state,
+							    int cache_tree_valid,
+							    int flags,
+							    const char *prefix)
 {
 	if (flags & WRITE_TREE_IGNORE_CACHE_TREE) {
 		cache_tree_free(&index_state->cache_tree);
@@ -674,26 +678,34 @@ static int write_index_as_tree_internal(struct object_id *oid,
 	if (prefix) {
 		struct cache_tree *subtree;
 		subtree = cache_tree_find(index_state->cache_tree, prefix);
-		if (!subtree)
+		if (!subtree) {
+			error("prefix '%s' not found", prefix);
 			return WRITE_TREE_PREFIX_ERROR;
+		}
 		oidcpy(oid, &subtree->oid);
 	}
 	else
 		oidcpy(oid, &index_state->cache_tree->oid);
 
-	return 0;
+	return WRITE_TREE_INDEX_OK;
 }
 
 struct tree* write_in_core_index_as_tree(struct repository *repo) {
 	struct object_id o;
-	int was_valid, ret;
+	int was_valid;
+	enum write_index_result ret;
 
 	struct index_state *index_state	= repo->index;
 	was_valid = index_state->cache_tree &&
 		    cache_tree_fully_valid(index_state->cache_tree);
 
 	ret = write_index_as_tree_internal(&o, index_state, was_valid, 0, NULL);
-	if (ret == WRITE_TREE_UNMERGED_INDEX) {
+	switch (ret) {
+	case WRITE_TREE_INDEX_OK:
+	case WRITE_TREE_PREFIX_ERROR:
+		break;
+	case WRITE_TREE_UNMERGED_INDEX:
+	{
 		int i;
 		for (i = 0; i < index_state->cache_nr; i++) {
 			const struct cache_entry *ce = index_state->cache[i];
@@ -702,17 +714,24 @@ struct tree* write_in_core_index_as_tree(struct repository *repo) {
 				    ce_stage(ce), (int)ce_namelen(ce), ce->name);
 		}
 		BUG_if_bug();
+		break;
+	}
+	case WRITE_TREE_UNREADABLE_INDEX:
+		BUG("unreachable");
+		break;
 	}
 
 	return lookup_tree(repo, &index_state->cache_tree->oid);
 }
 
-
-int write_index_as_tree(struct object_id *oid, struct index_state *index_state, const char *index_path, int flags, const char *prefix)
+enum write_index_result write_index_as_tree(struct object_id *oid,
+					    struct index_state *index_state,
+					    const char *index_path, int flags,
+					    const char *prefix)
 {
 	int entries, was_valid;
 	struct lock_file lock_file = LOCK_INIT;
-	int ret;
+	enum write_index_result ret;
 
 	hold_lock_file_for_update(&lock_file, index_path, LOCK_DIE_ON_ERROR);
 
@@ -728,7 +747,13 @@ int write_index_as_tree(struct object_id *oid, struct index_state *index_state, 
 
 	ret = write_index_as_tree_internal(oid, index_state, was_valid, flags,
 					   prefix);
-	if (!ret && !was_valid) {
+	switch (ret) {
+	case WRITE_TREE_UNMERGED_INDEX:
+	case WRITE_TREE_PREFIX_ERROR:
+		break;
+	case WRITE_TREE_INDEX_OK:
+		if (was_valid)
+			break;
 		write_locked_index(index_state, &lock_file, COMMIT_LOCK);
 		/* Not being able to write is fine -- we are only interested
 		 * in updating the cache-tree part, and if the next caller
@@ -736,6 +761,9 @@ int write_index_as_tree(struct object_id *oid, struct index_state *index_state, 
 		 * it misses the work we did here, but that is just a
 		 * performance penalty and not a big deal.
 		 */
+		break;
+	case WRITE_TREE_UNREADABLE_INDEX:
+		BUG("unreachable");
 	}
 
 out:
