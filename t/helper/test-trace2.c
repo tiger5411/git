@@ -204,6 +204,7 @@ static int ut_006data(int argc, const char **argv)
 static int ut_007BUG(int argc, const char **argv)
 {
 	BUG("the bug message");
+	return 0;
 }
 
 static int ut_008bug(int argc, const char **argv)

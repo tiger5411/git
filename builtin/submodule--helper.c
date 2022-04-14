@@ -2252,17 +2252,7 @@ static int update_clone_task_finished(int result,
 	if (!result)
 		return 0;
 
-	if (idx < suc->update_data->list.nr) {
-		ce  = suc->update_data->list.entries[idx];
-		strbuf_addf(err, _("Failed to clone '%s'. Retry scheduled"),
-			    ce->name);
-		strbuf_addch(err, '\n');
-		ALLOC_GROW(suc->failed_clones,
-			   suc->failed_clones_nr + 1,
-			   suc->failed_clones_alloc);
-		suc->failed_clones[suc->failed_clones_nr++] = ce;
-		return 0;
-	} else {
+	if (idx >= suc->update_data->list.nr) {
 		idx -= suc->update_data->list.nr;
 		ce  = suc->failed_clones[idx];
 		strbuf_addf(err, _("Failed to clone '%s' a second time, aborting"),
@@ -2272,6 +2262,13 @@ static int update_clone_task_finished(int result,
 		return 1;
 	}
 
+	ce  = suc->update_data->list.entries[idx];
+	strbuf_addf(err, _("Failed to clone '%s'. Retry scheduled"), ce->name);
+	strbuf_addch(err, '\n');
+	ALLOC_GROW(suc->failed_clones,
+		   suc->failed_clones_nr + 1,
+		   suc->failed_clones_alloc);
+	suc->failed_clones[suc->failed_clones_nr++] = ce;
 	return 0;
 }
 

@@ -16,7 +16,7 @@ int cmd__xml_encode(int argc, const char **argv)
 		if (++cur == len) {
 			len = xread(0, buf, sizeof(buf));
 			if (!len)
-				return 0;
+				break;
 			if (len < 0)
 				die_errno("Could not read <stdin>");
 			cur = 0;

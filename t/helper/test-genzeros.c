@@ -3,8 +3,7 @@
 
 int cmd__genzeros(int argc, const char **argv)
 {
-	/* static, so that it is NUL-initialized */
-	static const char zeros[256 * 1024];
+	const char zeros[256 * 1024] = { 0 };
 	intmax_t count;
 	ssize_t n;
 
