@@ -623,6 +623,7 @@ test_expect_success 'rerere with inner conflict markers' '
 	git commit -q -m "will solve conflicts later" &&
 	test_must_fail git merge A &&
 
+	cp .git/MERGE_RR merge_rr &&
 	echo "resolved" >test &&
 	git add test &&
 	git commit -q -m "solved conflict" &&
@@ -643,6 +644,13 @@ test_expect_success 'rerere with inner conflict markers' '
 	test_must_fail git merge A &&
 	cat test >actual &&
 	test_cmp expect actual
+'
+
+test_expect_success 'rerere clear does not segfault with bad data' '
+	res_id=$($PERL_PATH -nF"\t" -e "print \$F[0]" merge_rr) &&
+	cp merge_rr .git/MERGE_RR &&
+	rm -f .git/rr-cache/$res_id/* &&
+	git rerere clear
 '
 
 test_expect_success 'setup simple stage 1 handling' '
