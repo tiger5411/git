@@ -304,13 +304,13 @@ static int diffsize(const char *a, const char *b)
 static void get_correspondences(struct string_list *a, struct string_list *b,
 				int creation_factor)
 {
-	int n = a->nr + b->nr;
+	int column_count = st_add(a->nr, b->nr);
 	int *cost, c, *a2b, *b2a;
 	int i, j;
 
-	ALLOC_ARRAY(cost, st_mult(n, n));
-	ALLOC_ARRAY(a2b, n);
-	ALLOC_ARRAY(b2a, n);
+	CALLOC_ARRAY(cost, st_mult(column_count, column_count));
+	CALLOC_ARRAY(a2b, column_count);
+	CALLOC_ARRAY(b2a, column_count);
 
 	for (i = 0; i < a->nr; i++) {
 		struct patch_util *a_util = a->items[i].util;
@@ -324,13 +324,13 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 				c = diffsize(a_util->diff, b_util->diff);
 			else
 				c = COST_MAX;
-			cost[i + n * j] = c;
+			COST(i, j) = c;
 		}
 
 		c = a_util->matching < 0 ?
 			a_util->diffsize * creation_factor / 100 : COST_MAX;
-		for (j = b->nr; j < n; j++)
-			cost[i + n * j] = c;
+		for (j = b->nr; j < column_count; j++)
+			COST(i, j) = c;
 	}
 
 	for (j = 0; j < b->nr; j++) {
@@ -338,15 +338,12 @@ static void get_correspondences(struct string_list *a, struct string_list *b,
 
 		c = util->matching < 0 ?
 			util->diffsize * creation_factor / 100 : COST_MAX;
-		for (i = a->nr; i < n; i++)
-			cost[i + n * j] = c;
+		for (i = a->nr; i < column_count; i++)
+			COST(i, j) = c;
 	}
 
-	for (i = a->nr; i < n; i++)
-		for (j = b->nr; j < n; j++)
-			cost[i + n * j] = 0;
-
-	compute_assignment(n, n, cost, a2b, b2a);
+	if (column_count > 1)
+		compute_assignment(column_count, column_count, cost, a2b, b2a);
 
 	for (i = 0; i < a->nr; i++)
 		if (a2b[i] >= 0 && a2b[i] < b->nr) {

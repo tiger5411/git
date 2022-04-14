@@ -6,28 +6,12 @@
 #include "cache.h"
 #include "linear-assignment.h"
 
-#define COST(column, row) cost[(column) + column_count * (row)]
-
-/*
- * The parameter `cost` is the cost matrix: the cost to assign column j to row
- * i is `cost[j + column_count * i].
- */
-void compute_assignment(int column_count, int row_count, int *cost,
-			int *column2row, int *row2column)
+static void columns_reduction(size_t column_count, size_t row_count,
+			      int *cost,
+			      int *column2row, int *row2column,
+			      int *v)
 {
-	int *v, *d;
-	int *free_row, free_count = 0, saved_free_count, *pred, *col;
-	int i, j, phase;
-
-	if (column_count < 2) {
-		memset(column2row, 0, sizeof(int) * column_count);
-		memset(row2column, 0, sizeof(int) * row_count);
-		return;
-	}
-
-	memset(column2row, -1, sizeof(int) * column_count);
-	memset(row2column, -1, sizeof(int) * row_count);
-	ALLOC_ARRAY(v, column_count);
+	int i, j;
 
 	/* column reduction */
 	for (j = column_count - 1; j >= 0; j--) {
@@ -47,13 +31,21 @@ void compute_assignment(int column_count, int row_count, int *cost,
 			column2row[j] = -1;
 		}
 	}
+}
+
+static void reduction_transfer(size_t column_count, size_t row_count,
+			       int *cost,
+			       int *free_row, int *free_count,
+			       int *column2row, int *row2column,
+			       int *v)
+{
+	int i, j;
 
 	/* reduction transfer */
-	ALLOC_ARRAY(free_row, row_count);
 	for (i = 0; i < row_count; i++) {
 		int j1 = row2column[i];
 		if (j1 == -1)
-			free_row[free_count++] = i;
+			free_row[(*free_count)++] = i;
 		else if (j1 < -1)
 			row2column[i] = -2 - j1;
 		else {
@@ -64,21 +56,25 @@ void compute_assignment(int column_count, int row_count, int *cost,
 			v[j1] -= min;
 		}
 	}
+}
 
-	if (free_count ==
-	    (column_count < row_count ? row_count - column_count : 0)) {
-		free(v);
-		free(free_row);
-		return;
-	}
+static void augmenting_row_reduction(size_t column_count,
+				     int *cost,
+				     int *column2row, int *row2column,
+				     int *free_row, int *free_count, int *saved_free_count,
+				     int *v)
+{
+	int phase;
 
 	/* augmenting row reduction */
 	for (phase = 0; phase < 2; phase++) {
+		int i;
 		int k = 0;
 
-		saved_free_count = free_count;
-		free_count = 0;
-		while (k < saved_free_count) {
+		*saved_free_count = *free_count;
+		*free_count = 0;
+		while (k < *saved_free_count) {
+			int j;
 			int u1, u2;
 			int j1 = 0, j2, i0;
 
@@ -117,12 +113,24 @@ void compute_assignment(int column_count, int row_count, int *cost,
 				if (u1 < u2)
 					free_row[--k] = i0;
 				else
-					free_row[free_count++] = i0;
+					free_row[(*free_count)++] = i0;
 			}
 			row2column[i] = j1;
 			column2row[j1] = i;
 		}
 	}
+}
+
+static void augmentation(size_t column_count,
+			 int *cost,
+			 int *column2row, int *row2column,
+			 int *free_row, int free_count,
+			 int *v)
+{
+	int i, j;
+	int *d;
+	int *pred, *col;
+	int saved_free_count;
 
 	/* augmentation */
 	saved_free_count = free_count;
@@ -202,6 +210,42 @@ update:
 	free(col);
 	free(pred);
 	free(d);
+}
+
+/*
+ * The parameter `cost` is the cost matrix: the cost to assign column j to row
+ * i is `cost[j + column_count * i].
+ */
+void compute_assignment(size_t column_count, size_t row_count,
+			int *cost,
+			int *column2row, int *row2column)
+{
+	int *v;
+	int *free_row, free_count = 0, saved_free_count;
+
+	assert(column_count > 1);
+	memset(column2row, -1, sizeof(int) * column_count);
+	memset(row2column, -1, sizeof(int) * row_count);
+	ALLOC_ARRAY(v, column_count);
+
+	columns_reduction(column_count, row_count, cost, column2row,
+			  row2column, v);
+
+	ALLOC_ARRAY(free_row, row_count);
+	reduction_transfer(column_count, row_count, cost, free_row,
+			   &free_count, column2row, row2column, v);
+	if (free_count ==
+	    (column_count < row_count ? row_count - column_count : 0))
+		goto cleanup;
+
+	augmenting_row_reduction(column_count, cost, column2row,
+				 row2column, free_row, &free_count,
+				 &saved_free_count,v);
+
+	augmentation(column_count, cost, column2row, row2column,
+		     free_row, free_count, v);
+
+cleanup:
 	free(v);
 	free(free_row);
 }
