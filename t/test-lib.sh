@@ -500,13 +500,27 @@ test -n "$BASH_VERSION" && shopt -u checkwinsize 2>/dev/null
 
 # For repeatability, reset the environment to known value.
 # TERM is sanitized below, after saving color control sequences.
-LANG=C
-LC_ALL=C
 PAGER=cat
 TZ=UTC
 COLUMNS=80
-export LANG LC_ALL PAGER TZ COLUMNS
+export PAGER TZ COLUMNS
 EDITOR=:
+
+# We'd like to have repeatability when it comes to locale, but we'd
+# also like to test that git itself isn't exhibiting different
+# behavior depending on locale. Whitelisting a narrow set of coreutils
+# as using the C locale is a good middle ground.
+if test -z "$GIT_TEST_ENV_LC"
+then
+	LANG=C
+	LC_ALL=C
+	export LANG LC_ALL
+else
+	for c in sed ls grep comm sort
+	do
+		eval "$c () { LANG=C LC_ALL=C command $c \"\$@\"; }"
+	done
+fi
 
 # A call to "unset" with no arguments causes at least Solaris 10
 # /usr/xpg4/bin/sh and /bin/ksh to bail out.  So keep the unsets
