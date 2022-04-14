@@ -489,52 +489,22 @@ int for_each_loose_file_in_objdir_buf(struct strbuf *path,
 				      each_loose_subdir_fn subdir_cb,
 				      void *data);
 
-/* Flags for for_each_*_object() below. */
-enum for_each_object_flags {
-	/* Iterate only over local objects, not alternates. */
-	FOR_EACH_OBJECT_LOCAL_ONLY = (1<<0),
-
-	/* Only iterate over packs obtained from the promisor remote. */
-	FOR_EACH_OBJECT_PROMISOR_ONLY = (1<<1),
-
-	/*
-	 * Visit objects within a pack in packfile order rather than .idx order
-	 */
-	FOR_EACH_OBJECT_PACK_ORDER = (1<<2),
-
-	/* Only iterate over packs that are not marked as kept in-core. */
-	FOR_EACH_OBJECT_SKIP_IN_CORE_KEPT_PACKS = (1<<3),
-
-	/* Only iterate over packs that do not have .keep files. */
-	FOR_EACH_OBJECT_SKIP_ON_DISK_KEPT_PACKS = (1<<4),
-};
-
-/*
+/**
  * Iterate over all accessible loose objects without respect to
- * reachability. By default, this includes both local and alternate objects.
+ * reachability. This includes both local and alternate objects, see
+ * for_each_local_loose_object() below for the local-only version.
+ *
  * The order in which objects are visited is unspecified.
- *
- * Any flags specific to packs are ignored.
  */
-int for_each_loose_object(each_loose_object_fn, void *,
-			  enum for_each_object_flags flags);
+int for_each_loose_object(each_loose_object_fn, void *);
 
-/*
- * Iterate over all accessible packed objects without respect to reachability.
- * By default, this includes both local and alternate packs.
+/**
+ * Like for_each_loose_object(), but will only consider objects local
+ * to the repository (no alternates).
  *
- * Note that some objects may appear twice if they are found in multiple packs.
- * Each pack is visited in an unspecified order. By default, objects within a
- * pack are visited in pack-idx order (i.e., sorted by oid).
+ * This is semantically the same as the `FOR_EACH_OBJECT_LOCAL_ONLY` flag
+ * in "packfile.h", but for loose objects instead of packs.
  */
-typedef int each_packed_object_fn(const struct object_id *oid,
-				  struct packed_git *pack,
-				  uint32_t pos,
-				  void *data);
-int for_each_object_in_pack(struct packed_git *p,
-			    each_packed_object_fn, void *data,
-			    enum for_each_object_flags flags);
-int for_each_packed_object(each_packed_object_fn, void *,
-			   enum for_each_object_flags flags);
+int for_each_local_loose_object(each_loose_object_fn, void *);
 
 #endif /* OBJECT_STORE_H */

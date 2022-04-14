@@ -3602,7 +3602,7 @@ int prepare_revision_walk(struct rev_info *revs)
 
 	if (revs->exclude_promisor_objects) {
 		for_each_packed_object(mark_uninteresting, revs,
-				       FOR_EACH_OBJECT_PROMISOR_ONLY);
+				       FOR_EACH_OBJECT_SKIP_PROMISOR_PACKS);
 	}
 
 	if (!revs->reflog_info)

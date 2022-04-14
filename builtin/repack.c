@@ -261,7 +261,7 @@ static void repack_promisor_objects(const struct pack_objects_args *args,
 	 * of a {type -> size} ordering, which may produce better deltas.
 	 */
 	for_each_packed_object(write_oid, &cmd,
-			       FOR_EACH_OBJECT_PROMISOR_ONLY);
+			       FOR_EACH_OBJECT_SKIP_PROMISOR_PACKS);
 
 	if (cmd.in == -1) {
 		/* No packed objects; cmd was never started */

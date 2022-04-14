@@ -2662,8 +2662,8 @@ int for_each_loose_file_in_objdir(const char *path,
 	return r;
 }
 
-int for_each_loose_object(each_loose_object_fn cb, void *data,
-			  enum for_each_object_flags flags)
+static int for_each_local_loose_object_1(each_loose_object_fn cb, void *data,
+					 int local_only)
 {
 	struct object_directory *odb;
 
@@ -2674,11 +2674,21 @@ int for_each_loose_object(each_loose_object_fn cb, void *data,
 		if (r)
 			return r;
 
-		if (flags & FOR_EACH_OBJECT_LOCAL_ONLY)
+		if (local_only)
 			break;
 	}
 
 	return 0;
+}
+
+int for_each_loose_object(each_loose_object_fn cb, void *data)
+{
+	return for_each_local_loose_object_1(cb, data, 0);
+}
+
+int for_each_local_loose_object(each_loose_object_fn cb, void *data)
+{
+	return for_each_local_loose_object_1(cb, data, 1);
 }
 
 static int append_loose_object(const struct object_id *oid, const char *path,

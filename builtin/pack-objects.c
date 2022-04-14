@@ -3530,7 +3530,7 @@ static void add_objects_in_unpacked_packs(void)
 {
 	if (for_each_packed_object(add_object_in_unpacked_pack, NULL,
 				   FOR_EACH_OBJECT_PACK_ORDER |
-				   FOR_EACH_OBJECT_LOCAL_ONLY |
+				   FOR_EACH_OBJECT_SKIP_NON_LOCAL_PACKS |
 				   FOR_EACH_OBJECT_SKIP_IN_CORE_KEPT_PACKS |
 				   FOR_EACH_OBJECT_SKIP_ON_DISK_KEPT_PACKS))
 		die(_("cannot open pack index"));

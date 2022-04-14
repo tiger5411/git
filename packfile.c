@@ -13,7 +13,6 @@
 #include "tag.h"
 #include "tree-walk.h"
 #include "tree.h"
-#include "object-store.h"
 #include "midx.h"
 #include "commit-graph.h"
 #include "promisor-remote.h"
@@ -2186,9 +2185,10 @@ int for_each_packed_object(each_packed_object_fn cb, void *data,
 
 	prepare_packed_git(the_repository);
 	for (p = get_all_packs(the_repository); p; p = p->next) {
-		if ((flags & FOR_EACH_OBJECT_LOCAL_ONLY) && !p->pack_local)
+		if ((flags & FOR_EACH_OBJECT_SKIP_NON_LOCAL_PACKS) &&
+		    !p->pack_local)
 			continue;
-		if ((flags & FOR_EACH_OBJECT_PROMISOR_ONLY) &&
+		if ((flags & FOR_EACH_OBJECT_SKIP_PROMISOR_PACKS) &&
 		    !p->pack_promisor)
 			continue;
 		if ((flags & FOR_EACH_OBJECT_SKIP_IN_CORE_KEPT_PACKS) &&
@@ -2260,7 +2260,7 @@ int is_promisor_object(const struct object_id *oid)
 		if (has_promisor_remote()) {
 			for_each_packed_object(add_promisor_object,
 					       &promisor_objects,
-					       FOR_EACH_OBJECT_PROMISOR_ONLY);
+					       FOR_EACH_OBJECT_SKIP_PROMISOR_PACKS);
 		}
 		promisor_objects_prepared = 1;
 	}
