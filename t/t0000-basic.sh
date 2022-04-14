@@ -261,8 +261,6 @@ test_expect_success 'subtest: --verbose option' '
 	test_expect_success "failing test" false
 	test_done
 	EOF
-	mv t1234-verbose/out t1234-verbose/out+ &&
-	grep -v "^Initialized empty" t1234-verbose/out+ >t1234-verbose/out &&
 	check_sub_test_lib_test t1234-verbose <<-\EOF
 	> expecting success of 1234.1 '\''passing test'\'': true
 	> ok 1 - passing test
@@ -296,6 +294,78 @@ test_expect_success 'subtest: --verbose-only option' '
 	> # failed 1 among 3 test(s)
 	> 1..3
 	EOF
+'
+
+test_expect_success 'setup subtest: --verbose-only output correctness' '
+	write_sub_test_lib_test verbose-only <<-\EOF
+	test_expect_success "one" "
+		printf \"ok 1 - try to screw with TAP output | \"
+	"
+	test_expect_success "two" "true"
+	test_done
+	EOF
+'
+
+test_expect_success 'subtest: --verbose output correctness' '
+	run_sub_test_lib_test verbose-only --verbose &&
+	check_sub_test_lib_test verbose-only <<-\EOF
+	> expecting success of verbose.1 '"'"'one'"'"': Z
+	> printf "ok 1 - try to screw with TAP output | "
+	> Z
+	> ok 1 - try to screw with TAP output | ok 1 - one
+	> Z
+	> expecting success of verbose.2 '"'"'two'"'"': true
+	> ok 2 - two
+	> Z
+	> # passed all 2 test(s)
+	> 1..2
+	EOF
+'
+
+test_expect_failure 'subtest: --verbose-only=1 output correctness' '
+	run_sub_test_lib_test verbose-only --verbose-only=1 &&
+
+	# TODO: replace this with check_sub_test_lib_test once it passes
+	grep "^1\.\.2$" verbose-only/out.raw &&
+	grep "^ok 1 - one" verbose-only/out.raw
+'
+
+test_expect_success 'subtest: --verbose-only=* globbing' '
+	write_sub_test_lib_test verbose-only-glob <<-\EOF &&
+	test_expect_success "one" "
+		>1-file &&
+		>2-file
+	"
+	test_expect_success "two" "true"
+	test_done
+	EOF
+
+	run_sub_test_lib_test verbose-only-glob --verbose &&
+	cp verbose-only-glob/out.raw expected &&
+	run_sub_test_lib_test verbose-only-glob --verbose-only=* &&
+	cp verbose-only-glob/out.raw actual &&
+	test_cmp expected actual
+'
+
+test_expect_success 'subtest: skip all with skip_all=*' '
+	write_and_run_sub_test_lib_test skip-all --verbose --color <<-\EOF &&
+	skip_all="cannot run here"
+	test_done
+	EOF
+	check_sub_test_lib_test skip-all <<-\EOF
+	<CYAN>1..0 # SKIP cannot run here<RESET>
+	EOF
+'
+
+test_expect_success 'subtest: skip all GIT_SKIP_TESTS' '
+	(
+		run_sub_test_lib_test full-pass \
+			--skip="full" \
+			 --color --verbose &&
+		check_sub_test_lib_test full-pass <<-\EOF
+		> <CYAN>1..0 # SKIP skip all tests in full<RESET>
+		EOF
+	)
 '
 
 test_expect_success 'subtest: skip one with GIT_SKIP_TESTS' '
@@ -750,7 +820,23 @@ test_expect_success 'subtest: lazy prereqs do not turn off tracing' '
 	test_done
 	EOF
 
-	grep "echo trace" lazy-prereq-and-tracing/err
+	check_sub_test_lib_test_out lazy-prereq-and-tracing \
+		<<-\EOF &&
+	> expecting success of lazy.1 '"'"'lazy'"'"': test_have_prereq LAZY && echo trace
+	> checking prerequisite: LAZY
+	> Z
+	> mkdir -p "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&
+	> (
+	> 	cd "$TRASH_DIRECTORY/prereq-test-dir-LAZY" &&true
+	> )
+	> prerequisite LAZY ok
+	> trace
+	> ok 1 - lazy
+	> Z
+	> # passed all 1 test(s)
+	> 1..1
+	EOF
+	grep "echo trace" lazy-prereq-and-tracing/err.raw
 '
 
 test_expect_success 'subtest: tests clean up after themselves' '

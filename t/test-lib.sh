@@ -173,6 +173,8 @@ parse_option () {
 		with_dashes=t ;;
 	--no-bin-wrappers)
 		no_bin_wrappers=t ;;
+	--color)
+		color=t ;;
 	--no-color)
 		color= ;;
 	--va|--val|--valg|--valgr|--valgri|--valgrin|--valgrind)
@@ -655,18 +657,23 @@ then
 	# substitutions strip trailing newlines).  Given that most
 	# (all?) terminals in common use are related to ECMA-48, this
 	# shouldn't be a problem.
-	say_color_error=$(tput bold; tput setaf 1) # bold red
-	say_color_skip=$(tput setaf 4) # blue
-	say_color_warn=$(tput setaf 3) # brown/yellow
-	say_color_pass=$(tput setaf 2) # green
-	say_color_info=$(tput setaf 6) # cyan
-	say_color_reset=$(tput sgr0)
+	say_color_reset=$(printf "\033[0m")
+	say_color_error=$(printf "\033[31m") # red
+	say_color_berror=$(printf "\033[31;1m") # bold red
+	say_color_pass=$(printf "\033[32m") # green
+	say_color_bpass=$(printf "\033[32;1m") # green
+	say_color_warn=$(printf "\033[33m") # brown/yellow
+	say_color_bwarn=$(printf "\033[33;1m") # bold brown/yellow
+	say_color_skip=$(printf "\033[34m") # blue
+	say_color_bskip=$(printf "\033[34;1m") # bold blue
+	say_color_info=$(printf "\033[36m") # cyan
+	say_color_binfo=$(printf "\033[36;1m") # bold cyan
 	say_color_="" # no formatting for normal text
 	say_color () {
 		test -z "$1" && test -n "$quiet" && return
 		eval "say_color_color=\$say_color_$1"
 		shift
-		printf "%s\\n" "$say_color_color$*$say_color_reset"
+		printf "%s\\n" "$say_color_color$*${say_color_color:+$say_color_reset}"
 	}
 else
 	say_color() {
@@ -703,7 +710,7 @@ _error_exit () {
 }
 
 error () {
-	say_color error "error: $*"
+	say_color berror "error: $*"
 	_finalize_plan
 	_error_exit
 }
@@ -810,7 +817,7 @@ trap '{ code=$?; set +x; } 2>/dev/null; exit $code' INT TERM HUP
 
 test_ok_ () {
 	test_success=$(($test_success + 1))
-	say_color "" "ok $test_count - $@"
+	say_color "${verbose:+pass}" "ok $test_count - $@"
 	finalize_test_case_output ok "$@"
 }
 
@@ -857,7 +864,7 @@ test_failure_ () {
 		write_junit_xml_testcase "$1" "      $junit_insert"
 	fi
 	test_failure=$(($test_failure + 1))
-	say_color error "not ok $test_count - $1"
+	say_color berror "not ok $test_count - $1"
 	shift
 	printf '%s\n' "$*" | sed -e 's/^/#	/'
 	if test -n "$immediate"
@@ -876,11 +883,11 @@ test_known_broken_ok_ () {
 	then
 		# test_expect_todo
 		test_broken=$(($test_broken+1))
-		say_color warn "not ok $test_count - $@ # TODO known breakage"
+		say_color bwarn "not ok $test_count - $@ # TODO known breakage"
 	else
 		# test_expect_failure
 		test_fixed=$(($test_fixed+1))
-		say_color error "ok $test_count - $@ # TODO known breakage vanished"
+		say_color berror "ok $test_count - $@ # TODO known breakage vanished"
 	fi
 	finalize_test_case_output fixed "$@"
 }
@@ -1127,7 +1134,7 @@ test_eval_ () {
 
 	if test "$test_eval_ret_" != 0 && want_trace
 	then
-		say_color error >&4 "error: last command exited with \$?=$test_eval_ret_"
+		say_color berror >&4 "error: last command exited with \$?=$test_eval_ret_"
 	fi
 	return $test_eval_ret_
 }
@@ -1286,7 +1293,7 @@ test_done () {
 
 	if test "$test_fixed" != 0
 	then
-		say_color error "# $test_fixed known breakage(s) vanished; please update test(s)"
+		say_color berror "# $test_fixed known breakage(s) vanished; please update test(s)"
 	fi
 	if test "$test_broken" != 0
 	then
@@ -1386,7 +1393,7 @@ test_done () {
 	*)
 		if test $test_external_has_tap -eq 0
 		then
-			say_color error "# failed $test_failure among $msg"
+			say_color berror "# failed $test_failure among $msg"
 			say "1..$test_count"
 		fi
 
@@ -1540,7 +1547,6 @@ this_test=${0##*/}
 this_test=${this_test%%-*}
 if match_pattern_list "$this_test" "$GIT_SKIP_TESTS"
 then
-	say_color info >&3 "skipping test $this_test altogether"
 	skip_all="skip all tests in $this_test"
 	test_done
 fi
