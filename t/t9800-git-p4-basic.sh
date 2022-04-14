@@ -287,7 +287,7 @@ test_expect_success 'run hook p4-pre-submit before submit' '
 		git p4 submit --dry-run >out &&
 		grep "Would apply" out
 	) &&
-	test_hook -C "$git" --clobber p4-pre-submit <<-\EOF &&
+	test_hook -C "$git" --clobber --no-setup-dir p4-pre-submit <<-\EOF &&
 	exit 1
 	EOF
 	(

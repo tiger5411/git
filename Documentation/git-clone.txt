@@ -9,7 +9,7 @@ git-clone - Clone a repository into a new directory
 SYNOPSIS
 --------
 [verse]
-'git clone' [--template=<template-directory>]
+'git clone' [--no-template | --template=<template-directory>]
 	  [-l] [-s] [--no-hardlinks] [-q] [-n] [--bare] [--mirror]
 	  [-o <name>] [-b <name>] [-u <upload-pack>] [--reference <repository>]
 	  [--dissociate] [--separate-git-dir <git-dir>]
@@ -215,6 +215,10 @@ objects from the source repository into a pack in the cloned repository.
 	When given, and the repository to clone from is accessed
 	via ssh, this specifies a non-default path for the command
 	run on the other end.
+
+--no-template:
+	Specify that no template directory will be used;
+	(See the "TEMPLATE DIRECTORY" section of linkgit:git-init[1].)
 
 --template=<template-directory>::
 	Specify the directory from which templates will be used;

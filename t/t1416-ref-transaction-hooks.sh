@@ -116,7 +116,7 @@ test_expect_success 'interleaving hook calls succeed' '
 		echo $0 "$@" >>actual
 	EOF
 
-	test_hook -C target-repo.git update <<-\EOF &&
+	test_hook -C target-repo.git --no-setup-dir update <<-\EOF &&
 		echo $0 "$@" >>actual
 	EOF
 

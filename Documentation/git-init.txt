@@ -9,7 +9,8 @@ git-init - Create an empty Git repository or reinitialize an existing one
 SYNOPSIS
 --------
 [verse]
-'git init' [-q | --quiet] [--bare] [--template=<template-directory>]
+'git init' [-q | --quiet] [--bare]
+	  [--no-template | --template=<template-directory>]
 	  [--separate-git-dir <git-dir>] [--object-format=<format>]
 	  [-b <branch-name> | --initial-branch=<branch-name>]
 	  [--shared[=<permissions>]] [<directory>]
@@ -61,6 +62,11 @@ include::object-format-disclaimer.txt[]
 
 Specify the directory from which templates will be used.  (See the "TEMPLATE
 DIRECTORY" section below.)
+
+--no-template::
+Do not use any template directory. On older versions of git this can
+be emulated by providing a `--template' argument where
+'<template_directory>' is a path to an empty directory.
 
 --separate-git-dir=<git-dir>::
 
@@ -132,16 +138,32 @@ does not exist, it will be created.
 TEMPLATE DIRECTORY
 ------------------
 
-Files and directories in the template directory whose name do not start with a
+If a template directory is in use files and directories in the
+template directory whose name do not start with a
 dot will be copied to the `$GIT_DIR` after it is created.
 
-The template directory will be one of the following (in order):
+Using a template template directory can be disabled by any of of:
+
+ - The `--no-template` option being given. This option is incompatible
+   with `--template`.
+
+ - The `init.templateDirectory' option being set to 'false' (or
+   another stand-in for 'false', see linkgit:git-config[1]).
+
+ - The `GIT_NO_TEMPLATE_DIR` variable being set to `true` in the
+   environment (or any other `true` value. See the discussion of
+   boolean canonicalization in linkgit:git-config[1]).
+
+If none of those conditions are true, then the template directory
+will be one of the following (in order):
 
  - the argument given with the `--template` option;
 
  - the contents of the `$GIT_TEMPLATE_DIR` environment variable;
 
- - the `init.templateDir` configuration variable; or
+ - the `init.templateDir` configuration variable, if set to 'true' (or
+   another stand-in for 'true', see linkgit:git-config[1]) the default
+   template directory; or
 
  - the default template directory: `/usr/share/git-core/templates`.
 

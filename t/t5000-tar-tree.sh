@@ -143,6 +143,7 @@ test_expect_success 'populate workdir' '
 test_expect_success \
     'add ignored file' \
     'echo ignore me >a/ignored &&
+     mkdir .git/info &&
      echo ignored export-ignore >.git/info/attributes'
 
 test_expect_success 'add files to repository' '
@@ -158,6 +159,7 @@ test_expect_success 'setup export-subst' '
 
 test_expect_success 'create bare clone' '
 	git clone --bare . bare.git &&
+	mkdir bare.git/info &&
 	cp .git/info/attributes bare.git/info/attributes
 '
 

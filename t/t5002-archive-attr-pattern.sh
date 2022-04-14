@@ -15,6 +15,7 @@ test_expect_missing() {
 
 test_expect_success 'setup' '
 	echo ignored >ignored &&
+	mkdir .git/info &&
 	echo ignored export-ignore >>.git/info/attributes &&
 	git add ignored &&
 
@@ -55,6 +56,7 @@ test_expect_success 'setup' '
 	git commit -m. &&
 
 	git clone --bare . bare &&
+	mkdir bare/info &&
 	cp .git/info/attributes bare/info/attributes
 '
 

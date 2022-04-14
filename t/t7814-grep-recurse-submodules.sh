@@ -481,9 +481,10 @@ test_expect_todo 'grep --textconv: superproject .gitattributes (from index) does
 test_expect_todo 'grep --textconv: superproject .git/info/attributes does not affect submodules' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
-	super_attr="$(git rev-parse --git-path info/attributes)" &&
-	test_when_finished "rm -f \"$super_attr\"" &&
-	echo "a diff=d2x" >"$super_attr" &&
+	super_info="$(git rev-parse --git-path info)" &&
+	test_when_finished "rm -f \"$super_info\"/attributes" &&
+	mkdir "$super_info" &&
+	echo "a diff=d2x" >"$super_info/attributes" &&
 
 	cat >want <<-\EOF &&
 	a:(1|2)x(3|4)
@@ -537,9 +538,10 @@ test_expect_todo 'grep --textconv correctly reads submodule .git/info/attributes
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 
-	submodule_attr="$(git -C submodule rev-parse --path-format=absolute --git-path info/attributes)" &&
-	test_when_finished "rm -f \"$submodule_attr\"" &&
-	echo "a diff=d2x" >"$submodule_attr" &&
+	submodule_info="$(git -C submodule rev-parse --path-format=absolute --git-path info)" &&
+	test_when_finished "rm -f \"$submodule_info\"/attributes" &&
+	mkdir "$submodule_info" &&
+	echo "a diff=d2x" >"$submodule_info/attributes" &&
 
 	cat >want <<-\EOF &&
 	submodule/a:(1|2)x(3|4)

@@ -558,6 +558,16 @@ write_script () {
 #   --setup
 #	Setup a hook for subsequent tests, i.e. don't remove it in a
 #	"test_when_finished"
+#
+#	When this is used all subsequent "test_hook" won't remove or
+#	make the ".git/hooks" directory itself.
+#   --no-setup-dir
+#       Assume that a previous hook has setup the ".git/hooks"
+#       directory itself, and don't "mkdir" it or "rmdir" it at the
+#       end.
+#
+#	Use this for all except the first "test_hook" invocation when
+#       a test needs to set up mulitple different hooks,
 #   --clobber
 #	Overwrite an existing <hook-name>, if it exists. Implies
 #	--setup (i.e. the "test_when_finished" is assumed to have been
@@ -565,9 +575,13 @@ write_script () {
 #    --disable
 #	Disable (chmod -x) an existing <hook-name>, which must exist.
 #    --remove
-#	Remove (rm -f) an existing <hook-name>, which must exist.
+#	Remove (rm -f) an existing <hook-name>, which must exist, and
+#	the containing ".git/hooks" directory (unless --no-setup-dir
+#	is provided)
+test_hook_using_setup=
 test_hook () {
 	setup= &&
+	no_setup_dir= &&
 	clobber= &&
 	disable= &&
 	remove= &&
@@ -580,7 +594,11 @@ test_hook () {
 			shift
 			;;
 		--setup)
-			setup=t
+			setup=t &&
+			test_hook_using_setup=t
+			;;
+		--no-setup-dir)
+			no_setup_dir=t
 			;;
 		--clobber)
 			clobber=t
@@ -603,6 +621,7 @@ test_hook () {
 
 	git_dir=$(git -C "$indir" rev-parse --absolute-git-dir) &&
 	hook_dir="$git_dir/hooks" &&
+
 	hook_file="$hook_dir/$1" &&
 	if test -n "$disable$remove"
 	then
@@ -612,13 +631,27 @@ test_hook () {
 			chmod -x "$hook_file"
 		elif test -n "$remove"
 		then
-			rm -f "$hook_file"
+			rm -f "$hook_file" &&
+			if test -z "$no_setup_dir"
+			then
+				rmdir "$hook_dir"
+			fi
 		fi &&
 		return 0
 	fi &&
 	if test -z "$clobber"
 	then
 		test_path_is_missing "$hook_file"
+	fi &&
+	if test -n "$setup$test_hook_using_setup"
+	then
+		# TODO: Also be strict about creating and cleaning up
+		# .git/hooks, not just .git/hooks/$1
+		mkdir "$hook_dir" || :
+	elif test -z "$no_setup_dir"
+	then
+		test_when_finished "rmdir \"$hook_dir\"" &&
+		mkdir "$hook_dir"
 	fi &&
 	if test -z "$setup$clobber"
 	then

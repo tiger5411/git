@@ -59,15 +59,15 @@ mk_test_with_hooks() {
 	cat - >>pre-receive.actual
 	EOF
 
-	test_hook -C "$repo_name" update <<-'EOF' &&
+	test_hook -C "$repo_name" --no-setup-dir update <<-'EOF' &&
 	printf "%s %s %s\n" "$@" >>update.actual
 	EOF
 
-	test_hook -C "$repo_name" post-receive <<-'EOF' &&
+	test_hook -C "$repo_name" --no-setup-dir post-receive <<-'EOF' &&
 	cat - >>post-receive.actual
 	EOF
 
-	test_hook -C "$repo_name" post-update <<-'EOF'
+	test_hook -C "$repo_name" --no-setup-dir post-update <<-'EOF'
 	for ref in "$@"
 	do
 		printf "%s\n" "$ref" >>post-update.actual
@@ -652,6 +652,7 @@ test_expect_success 'push does not update local refs on failure' '
 
 	mk_test testrepo heads/main &&
 	mk_child testrepo child &&
+	mkdir testrepo/.git/hooks &&
 	echo "#!/no/frobnication/today" >testrepo/.git/hooks/pre-receive &&
 	chmod +x testrepo/.git/hooks/pre-receive &&
 	(
@@ -916,6 +917,7 @@ test_expect_success 'fetch with branches' '
 	mk_empty testrepo &&
 	git branch second $the_first_commit &&
 	git checkout second &&
+	mkdir testrepo/.git/branches &&
 	echo ".." > testrepo/.git/branches/branch1 &&
 	(
 		cd testrepo &&
@@ -929,6 +931,7 @@ test_expect_success 'fetch with branches' '
 
 test_expect_success 'fetch with branches containing #' '
 	mk_empty testrepo &&
+	mkdir testrepo/.git/branches &&
 	echo "..#second" > testrepo/.git/branches/branch2 &&
 	(
 		cd testrepo &&
@@ -943,7 +946,11 @@ test_expect_success 'fetch with branches containing #' '
 test_expect_success 'push with branches' '
 	mk_empty testrepo &&
 	git checkout second &&
+
+	test_when_finished "rm -rf .git/branches" &&
+	mkdir .git/branches &&
 	echo "testrepo" > .git/branches/branch1 &&
+
 	git push branch1 &&
 	(
 		cd testrepo &&
@@ -955,7 +962,11 @@ test_expect_success 'push with branches' '
 
 test_expect_success 'push with branches containing #' '
 	mk_empty testrepo &&
+
+	test_when_finished "rm -rf .git/branches" &&
+	mkdir .git/branches &&
 	echo "testrepo#branch3" > .git/branches/branch2 &&
+
 	git push branch2 &&
 	(
 		cd testrepo &&

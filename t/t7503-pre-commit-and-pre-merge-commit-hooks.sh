@@ -68,7 +68,7 @@ test_expect_success '--no-verify with no hook (merge)' '
 setup_success_hook () {
 	test_when_finished "rm -f actual_hooks expected_hooks" &&
 	echo "$1" >expected_hooks &&
-	test_hook "$1" <<-EOF
+	test_hook $2 "$1" <<-EOF
 	echo $1 >>actual_hooks
 	EOF
 }
@@ -91,7 +91,7 @@ test_expect_success 'with succeeding hook (merge)' '
 
 test_expect_success 'automatic merge fails; both hooks are available' '
 	setup_success_hook "pre-commit" &&
-	setup_success_hook "pre-merge-commit" &&
+	setup_success_hook "pre-merge-commit" "--no-setup-dir" &&
 
 	git checkout conflicting-a &&
 	test_must_fail git merge -m "merge conflicting-b" conflicting-b &&

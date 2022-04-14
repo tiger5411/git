@@ -229,6 +229,7 @@ test_expect_success 'checkout with grafts' '
 	SHA1=$(git rev-parse HEAD) &&
 	test_commit def &&
 	test_commit xyz &&
+	mkdir .git/info &&
 	echo "$(git rev-parse HEAD) $SHA1" >.git/info/grafts &&
 	cat >expected <<-\EOF &&
 	xyz

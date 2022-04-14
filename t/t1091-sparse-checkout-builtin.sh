@@ -84,7 +84,7 @@ test_expect_success 'git sparse-checkout init' '
 
 test_expect_success 'git sparse-checkout init in empty repo' '
 	test_when_finished rm -rf empty-repo blank-template &&
-	git init --template= empty-repo &&
+	git init empty-repo &&
 	git -C empty-repo sparse-checkout init
 '
 

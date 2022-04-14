@@ -257,11 +257,12 @@ test_expect_success 'checkout -b to a new branch preserves mergeable changes des
 		git checkout branch1-scratch &&
 		test_might_fail git branch -D branch3 &&
 		git config core.sparseCheckout false &&
-		rm .git/info/sparse-checkout" &&
+		rm -rf .git/info" &&
 
 	test_commit file2 &&
 
 	echo stuff >>file1 &&
+	mkdir .git/info &&
 	echo file2 >.git/info/sparse-checkout &&
 	git config core.sparseCheckout true &&
 

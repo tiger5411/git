@@ -254,6 +254,15 @@ int git_config_string(const char **, const char *, const char *);
  */
 int git_config_pathname(const char **, const char *, const char *);
 
+/**
+ * Same as `git_config_pathname`, except that we'll first try to parse
+ * the value as a boolean. Check the `is_bool` to see if it was a
+ * boolen. Otherwise it'll have the same semantics as
+ * `git_config_pathname`.
+ */
+int git_config_bool_or_pathname(const char **dest, const char *name,
+				const char *value, int *is_bool);
+
 int git_config_expiry_date(timestamp_t *, const char *, const char *);
 int git_config_color(char *, const char *, const char *);
 int git_config_set_in_file_gently(const char *, const char *, const char *);
@@ -480,6 +489,8 @@ int git_configset_get_bool(struct config_set *cs, const char *key, int *dest);
 int git_configset_get_bool_or_int(struct config_set *cs, const char *key, int *is_bool, int *dest);
 int git_configset_get_maybe_bool(struct config_set *cs, const char *key, int *dest);
 int git_configset_get_pathname(struct config_set *cs, const char *key, const char **dest);
+int git_configset_get_bool_or_pathname(struct config_set *cs, const char *key,
+				       int *is_bool, const char **dest);
 
 /* Functions for reading a repository's config */
 struct repository;
@@ -504,6 +515,9 @@ int repo_config_get_maybe_bool(struct repository *repo,
 			       const char *key, int *dest);
 int repo_config_get_pathname(struct repository *repo,
 			     const char *key, const char **dest);
+int repo_config_get_bool_or_pathname(struct repository *repo,
+				     const char *key, int *is_bool,
+				     const char **dest);
 
 /**
  * Querying For Specific Variables
@@ -593,6 +607,9 @@ int git_config_get_maybe_bool(const char *key, int *dest);
  * the user's home directory when found at the beginning of the path.
  */
 int git_config_get_pathname(const char *key, const char **dest);
+
+int git_config_get_bool_or_pathname(const char *key, int *is_bool,
+				    const char **dest);
 
 int git_config_get_index_threads(int *dest);
 int git_config_get_split_index(void);

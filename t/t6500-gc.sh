@@ -128,7 +128,7 @@ test_expect_success 'pre-auto-gc hook can stop auto gc' '
 	See "git help gc" for manual housekeeping.
 	EOF
 
-	test_hook -C pre-auto-gc-hook --clobber pre-auto-gc <<-\EOF &&
+	test_hook -C pre-auto-gc-hook --no-setup-dir --clobber pre-auto-gc <<-\EOF &&
 	echo >&2 will gc for you &&
 	exit 0
 	EOF

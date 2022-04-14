@@ -33,6 +33,7 @@ test_expect_success 'sparse checkout setup which hides .gitmodules' '
 	) &&
 	git clone upstream super &&
 	(cd super &&
+		mkdir .git/info &&
 		cat >.git/info/sparse-checkout <<-\EOF &&
 		/*
 		!/.gitmodules

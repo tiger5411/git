@@ -174,6 +174,68 @@ test_expect_success 'reinit' '
 	test_must_be_empty again/err2
 '
 
+test_expect_success 'init: assets created by the default test template' '
+	test_path_is_missing .git/branches &&
+	test_path_is_missing .git/hooks &&
+	test_path_is_missing .git/hooks/update.sample &&
+	test_path_is_missing .git/info &&
+	test_path_is_missing .git/info/exclude &&
+	test_path_is_missing .git/description
+'
+
+test_expect_success 'usage: init with --no-template --template' '
+	test_expect_code 128 git init --no-template --template=$PWD
+'
+
+setup_template_priority() {
+	test_when_finished "rm -rf template" &&
+	mkdir template &&
+	touch template/file &&
+
+	test_when_finished "rm -rf template2" &&
+	mkdir template2 &&
+	touch template2/file2 &&
+
+	# Created by the caller
+	test_when_finished "rm -rf repo"
+}
+
+test_expect_success 'usage priority: --template only' '
+	setup_template_priority &&
+	git init --template=template repo &&
+	test_path_is_file repo/.git/file
+'
+
+test_expect_success 'usage priority: --template takes precedence over GIT_TEMPLATE_DIR' '
+	setup_template_priority &&
+	GIT_TEMPLATE_DIR="$PWD/template2" git init --template=template repo &&
+	test_path_is_file repo/.git/file
+'
+
+test_expect_success 'usage priority: --template takes precedence over init.templateDir' '
+	setup_template_priority &&
+	git -c init.templateDir="$PWD/template2" init --template=template repo &&
+	test_path_is_file repo/.git/file
+'
+
+test_expect_success 'usage priority: --no-template takes precedence over init.templateDir' '
+	setup_template_priority &&
+	git -c init.templateDir="$PWD/template" init --no-template repo &&
+	test_path_is_missing repo/.git/file
+'
+
+test_expect_success 'usage priority: --no-template takes precedence over GIT_TEMPLATE_DIR' '
+	setup_template_priority &&
+	GIT_TEMPLATE_DIR="$PWD/template" git init --no-template repo &&
+	test_path_is_missing repo/.git/file
+'
+
+test_expect_success 'usage priority: GIT_NO_TEMPLATE_DIR=true takes precedence over GIT_TEMPLATE_DIR' '
+	setup_template_priority &&
+	GIT_TEMPLATE_DIR="$PWD/template" GIT_NO_TEMPLATE_DIR=true git init repo &&
+	test_path_is_missing repo/.git/file
+'
+
 test_expect_success 'init with --template' '
 	mkdir template-source &&
 	echo content >template-source/file &&
@@ -182,17 +244,26 @@ test_expect_success 'init with --template' '
 '
 
 test_expect_success 'init with --template (blank)' '
-	git init template-plain &&
-	test_path_is_file template-plain/.git/info/exclude &&
-	git init --template= template-blank &&
-	test_path_is_missing template-blank/.git/info/exclude
+	(
+		sane_unset GIT_NO_TEMPLATE_DIR &&
+		git init template-plain &&
+		test_path_is_file template-plain/.git/info/exclude &&
+		git init --template= template-blank &&
+		test_path_is_missing template-blank/.git/info/exclude &&
+		git init --no-template no-template &&
+		test_path_is_missing no-template/.git/info/exclude
+	)
 '
+
+no_templatedir_env () {
+	sane_unset GIT_TEMPLATE_DIR &&
+	NO_SET_GIT_TEMPLATE_DIR=t &&
+	export NO_SET_GIT_TEMPLATE_DIR
+}
 
 init_no_templatedir_env () {
 	(
-		sane_unset GIT_TEMPLATE_DIR &&
-		NO_SET_GIT_TEMPLATE_DIR=t &&
-		export NO_SET_GIT_TEMPLATE_DIR &&
+		no_templatedir_env &&
 		git init "$1"
 	)
 }
@@ -213,6 +284,30 @@ test_expect_success 'init with init.templatedir using ~ expansion' '
 
 	init_no_templatedir_env templatedir-expansion &&
 	test_cmp templatedir-source/file templatedir-expansion/.git/file
+'
+
+test_expect_success 'init with init.templateDir=does-not-exist' '
+	test_when_finished "rm -rf repo" &&
+	(
+		no_templatedir_env &&
+
+		cat >expect <<-\EOF &&
+		warning: templates not found in does-not-exist
+		EOF
+		git -c init.templateDir=does-not-exist init repo 2>actual &&
+		test_cmp expect actual
+	)
+'
+
+test_expect_success 'init with init.templateDir=[bool]' '
+	test_when_finished "rm -rf repo" &&
+	(
+		no_templatedir_env &&
+
+		git -c init.templateDir=false init repo 2>err &&
+		test_must_be_empty err &&
+		test_path_is_missing repo/.git/description
+	)
 '
 
 test_expect_success 'init --bare/--shared overrides system/global config' '
@@ -483,8 +578,9 @@ test_expect_success 'remote init from does not use config from cwd' '
 '
 
 test_expect_success 're-init from a linked worktree' '
-	git init main-worktree &&
 	(
+		sane_unset GIT_NO_TEMPLATE_DIR &&
+		git init main-worktree &&
 		cd main-worktree &&
 		test_commit first &&
 		git worktree add ../linked-worktree &&

@@ -64,7 +64,7 @@ test_expect_success 'indicates populated hooks' '
 	test_hook applypatch-msg <<-\EOF &&
 	true
 	EOF
-	test_hook unknown-hook <<-\EOF &&
+	test_hook --no-setup-dir unknown-hook <<-\EOF &&
 	true
 	EOF
 	git bugreport -s hooks &&

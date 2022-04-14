@@ -93,7 +93,8 @@ static void copy_templates_1(struct strbuf *path, struct strbuf *template_path,
 	}
 }
 
-static void copy_templates(const char *template_dir, const char *init_template_dir)
+static void copy_templates(int no_template, const char *template_dir,
+			   const char *init_template_dir)
 {
 	struct strbuf path = STRBUF_INIT;
 	struct strbuf template_path = STRBUF_INIT;
@@ -103,6 +104,11 @@ static void copy_templates(const char *template_dir, const char *init_template_d
 	DIR *dir;
 	char *to_free = NULL;
 
+	if (no_template)
+		return;
+	if (!template_dir && !init_template_dir &&
+	    git_env_bool(GIT_NO_TEMPLATE_DIR_ENVIRONMENT, 0))
+		return;
 	if (!template_dir)
 		template_dir = getenv(TEMPLATE_DIR_ENVIRONMENT);
 	if (!template_dir)
@@ -187,8 +193,32 @@ void initialize_repository_version(int hash_algo, int reinit)
 		git_config_set_gently("extensions.objectformat", NULL);
 }
 
-static int create_default_files(const char *template_path,
-				const char *original_git_dir,
+static void create_template_files(int no_template, const char *template_path)
+{
+	const char *init_template_dir = NULL;
+	int is_bool, ret;
+
+	/*
+	 * First copy the templates -- we might have the default
+	 * config file there, in which case we would want to read
+	 * from it after installing.
+	 *
+	 * Before reading that config, we also need to clear out any cached
+	 * values (since we've just potentially changed what's available on
+	 * disk).
+	 */
+	ret = git_config_get_bool_or_pathname("init.templatedir", &is_bool,
+					      &init_template_dir);
+	if (no_template == -1)
+		no_template = is_bool ? !ret : 0;
+	copy_templates(no_template, template_path, init_template_dir);
+	free((char *)init_template_dir);
+	git_config_clear();
+	reset_shared_repository();
+	git_config(git_default_config, NULL);
+}
+
+static int create_default_files(const char *original_git_dir,
 				const char *initial_branch,
 				const struct repository_format *fmt,
 				int quiet)
@@ -200,24 +230,7 @@ static int create_default_files(const char *template_path,
 	int reinit;
 	int filemode;
 	struct strbuf err = STRBUF_INIT;
-	const char *init_template_dir = NULL;
 	const char *work_tree = get_git_work_tree();
-
-	/*
-	 * First copy the templates -- we might have the default
-	 * config file there, in which case we would want to read
-	 * from it after installing.
-	 *
-	 * Before reading that config, we also need to clear out any cached
-	 * values (since we've just potentially changed what's available on
-	 * disk).
-	 */
-	git_config_get_pathname("init.templatedir", &init_template_dir);
-	copy_templates(template_path, init_template_dir);
-	free((char *)init_template_dir);
-	git_config_clear();
-	reset_shared_repository();
-	git_config(git_default_config, NULL);
 
 	/*
 	 * We must make sure command-line options continue to override any
@@ -382,7 +395,8 @@ static void validate_hash_algorithm(struct repository_format *repo_fmt, int hash
 }
 
 int init_db(const char *git_dir, const char *real_git_dir,
-	    const char *template_dir, int hash, const char *initial_branch,
+	    int no_template, const char *template_dir,
+	    int hash, const char *initial_branch,
 	    unsigned int flags)
 {
 	int reinit;
@@ -425,7 +439,8 @@ int init_db(const char *git_dir, const char *real_git_dir,
 
 	validate_hash_algorithm(&repo_fmt, hash);
 
-	reinit = create_default_files(template_dir, original_git_dir,
+	create_template_files(no_template, template_dir);
+	reinit = create_default_files(original_git_dir,
 				      initial_branch, &repo_fmt,
 				      flags & INIT_DB_QUIET);
 	if (reinit && initial_branch)
@@ -515,7 +530,7 @@ static int shared_callback(const struct option *opt, const char *arg, int unset)
 }
 
 static const char *const init_db_usage[] = {
-	N_("git init [-q | --quiet] [--bare] [--template=<template-directory>] [--shared[=<permissions>]] [<directory>]"),
+	N_("git init [-q | --quiet] [--bare] [--no-template | --template=<template-directory>] [--shared[=<permissions>]] [<directory>]"),
 	NULL
 };
 
@@ -530,14 +545,18 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	const char *git_dir;
 	const char *real_git_dir = NULL;
 	const char *work_tree;
+	int no_template = -1;
 	const char *template_dir = NULL;
 	unsigned int flags = 0;
 	const char *object_format = NULL;
 	const char *initial_branch = NULL;
 	int hash_algo = GIT_HASH_UNKNOWN;
 	const struct option init_db_options[] = {
-		OPT_STRING(0, "template", &template_dir, N_("template-directory"),
-				N_("directory from which templates will be used")),
+		OPT_BOOL_F(0, "no-template", &no_template, NULL,
+			   PARSE_OPT_NONEG | PARSE_OPT_HIDDEN),
+		OPT_STRING_F(0, "template", &template_dir, N_("template-directory"),
+			     N_("directory from which templates will be used"),
+			     PARSE_OPT_NONEG),
 		OPT_SET_INT(0, "bare", &is_bare_repository_cfg,
 				N_("create a bare repository"), 1),
 		{ OPTION_CALLBACK, 0, "shared", &init_shared_repository,
@@ -562,6 +581,8 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	if (real_git_dir && !is_absolute_path(real_git_dir))
 		real_git_dir = real_pathdup(real_git_dir, 1);
 
+	if (no_template != -1 && template_dir)
+		die(_("--no-template and --template are incompatible"));
 	if (template_dir && *template_dir && !is_absolute_path(template_dir)) {
 		template_dir = absolute_pathdup(template_dir);
 		UNLEAK(template_dir);
@@ -691,6 +712,7 @@ int cmd_init_db(int argc, const char **argv, const char *prefix)
 	UNLEAK(work_tree);
 
 	flags |= INIT_DB_EXIST_OK;
-	return init_db(git_dir, real_git_dir, template_dir, hash_algo,
-		       initial_branch, flags);
+	return init_db(git_dir, real_git_dir,
+		       no_template, template_dir,
+		       hash_algo, initial_branch, flags);
 }
