@@ -450,41 +450,9 @@ You probably do not need to adjust this value.
 +
 Common unit suffixes of 'k', 'm', or 'g' are supported.
 
-core.bigFileThreshold::
-	The size of files considered "big", which as discussed below
-	changes the behavior of numerous git commands, as well as how
-	such files are stored within the repository. The default is
-	512 MiB. Common unit suffixes of 'k', 'm', or 'g' are
-	supported.
-+
-Files above the configured limit will be:
-+
-* Stored deflated, without attempting delta compression.
-+
-The default limit is primarily set with this use-case in mind. With it
-most projects will have their source code and other text files delta
-compressed, but not larger binary media files.
-+
-Storing large files without delta compression avoids excessive memory
-usage, at the slight expense of increased disk usage.
-+
-* Will be treated as if though they were labeled "binary" (see
-  linkgit:gitattributes[5]). This means that e.g. linkgit:git-log[1]
-  and linkgit:git-diff[1] will not diffs for files above this limit.
-+
-* Will be generally be streamed when written, which avoids excessive
-memory usage, at the cost of some fixed overhead. Commands that make
-use of this include linkgit:git-archive[1],
-linkgit:git-fast-import[1], linkgit:git-index-pack[1],
-linkgit:git-unpack-objects[1] and linkgit:git-fsck[1].
+include::core/bigFileThreshold.txt[]
 
-core.excludesFile::
-	Specifies the pathname to the file that contains patterns to
-	describe paths that are not meant to be tracked, in addition
-	to `.gitignore` (per-directory) and `.git/info/exclude`.
-	Defaults to `$XDG_CONFIG_HOME/git/ignore`.
-	If `$XDG_CONFIG_HOME` is either not set or empty, `$HOME/.config/git/ignore`
-	is used instead. See linkgit:gitignore[5].
+include::core/excludesFile.txt[]
 
 core.askPass::
 	Some commands (e.g. svn and http interfaces) that interactively
