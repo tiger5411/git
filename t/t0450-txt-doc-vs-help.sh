@@ -30,7 +30,6 @@ expect_help_to_match_txt() {
 	for-each-repo
 	get-tar-commit-id
 	help
-	hook
 	ls-remote
 	merge-base
 	merge-index
