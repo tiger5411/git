@@ -238,6 +238,9 @@ parse_option () {
 			;;
 		esac
 		;;
+	--invert-exit-code)
+		invert_exit_code=t
+		;;
 	*)
 		echo "error: unknown test option '$opt'" >&2; exit 1 ;;
 	esac
@@ -302,12 +305,27 @@ TEST_NUMBER="${TEST_NAME%%-*}"
 TEST_NUMBER="${TEST_NUMBER#t}"
 TEST_RESULTS_DIR="$TEST_OUTPUT_DIRECTORY/test-results"
 TEST_RESULTS_BASE="$TEST_RESULTS_DIR/$TEST_NAME$TEST_STRESS_JOB_SFX"
+TEST_RESULTS_SAN_FILE_PFX=trace
+TEST_RESULTS_SAN_DIR_SFX=leak
+TEST_RESULTS_SAN_FILE=
+TEST_RESULTS_SAN_DIR="$TEST_RESULTS_DIR/$TEST_NAME.$TEST_RESULTS_SAN_DIR_SFX"
+TEST_RESULTS_SAN_DIR_NR_LEAKS_STARTUP=
 TRASH_DIRECTORY="trash directory.$TEST_NAME$TEST_STRESS_JOB_SFX"
 test -n "$root" && TRASH_DIRECTORY="$root/$TRASH_DIRECTORY"
 case "$TRASH_DIRECTORY" in
 /*) ;; # absolute path is good
  *) TRASH_DIRECTORY="$TEST_OUTPUT_DIRECTORY/$TRASH_DIRECTORY" ;;
 esac
+
+# Utility functions using $TEST_RESULTS_* variables
+nr_san_dir_leaks_ () {
+	# stderr piped to /dev/null because the directory may have
+	# been "rmdir"'d already.
+	find "$TEST_RESULTS_SAN_DIR" \
+		-type f \
+		-name "$TEST_RESULTS_SAN_FILE_PFX.*" 2>/dev/null |
+	wc -l
+}
 
 # If --stress was passed, run this test repeatedly in several parallel loops.
 if test "$GIT_TEST_STRESS_STARTED" = "done"
@@ -671,6 +689,13 @@ exec 5>&1
 exec 6<&0
 exec 7>&2
 
+_finalize_plan () {
+	if test -n "$test_finished" && test $test_finished -ge 1
+	then
+		say_color error "1..$test_finished"
+	fi
+}
+
 _error_exit () {
 	finalize_test_output
 	GIT_EXIT_OK=t
@@ -679,6 +704,7 @@ _error_exit () {
 
 error () {
 	say_color error "error: $*"
+	_finalize_plan
 	_error_exit
 }
 
@@ -744,6 +770,7 @@ BASH_XTRACEFD=4
 
 test_failure=0
 test_count=0
+test_finished=0
 test_fixed=0
 test_broken=0
 test_success=0
@@ -789,6 +816,46 @@ test_ok_ () {
 
 test_failure_ () {
 	failure_label=$1
+
+	if test -n "$invert_exit_code" # we already checked for --immediate
+	then
+		if test -n "$write_junit_xml"
+		then
+			error "--invert-exit-code does not support --write-junit-xml"
+		fi
+
+		# Should be "$1 # TODO[...]" not "# TODO [...] ($1)",
+		# but a "#" in the "$1" will ruin our TAP
+		# syntax. These need to be escaped in general (also
+		# for "test_known_broken_ok_" and
+		# "test_known_broken_failure_", but work around it for
+		# now.
+		say_color error "not ok $test_count - # TODO pretending that 'not ok' was OK with --immediate --invert-exit-code ($1)"
+		say_color error "1..$test_count"
+		GIT_EXIT_OK=t
+		exit 0
+	fi
+
+	if test -n "$write_junit_xml"
+	then
+		junit_insert="<failure message=\"not ok $test_count -"
+		junit_insert="$junit_insert $(xml_attr_encode "$1")\">"
+		junit_insert="$junit_insert $(xml_attr_encode \
+			"$(if test -n "$GIT_TEST_TEE_OUTPUT_FILE"
+			   then
+				test-tool path-utils skip-n-bytes \
+					"$GIT_TEST_TEE_OUTPUT_FILE" $GIT_TEST_TEE_OFFSET
+			   else
+				printf '%s\n' "$@" | sed 1d
+			   fi)")"
+		junit_insert="$junit_insert</failure>"
+		if test -n "$GIT_TEST_TEE_OUTPUT_FILE"
+		then
+			junit_insert="$junit_insert<system-err>$(xml_attr_encode \
+				"$(cat "$GIT_TEST_TEE_OUTPUT_FILE")")</system-err>"
+		fi
+		write_junit_xml_testcase "$1" "      $junit_insert"
+	fi
 	test_failure=$(($test_failure + 1))
 	say_color error "not ok $test_count - $1"
 	shift
@@ -1114,6 +1181,7 @@ test_start_ () {
 }
 
 test_finish_ () {
+	test_finished=$(($test_finished+1))
 	echo >&3 ""
 	maybe_teardown_valgrind
 	maybe_teardown_verbose
@@ -1268,6 +1336,49 @@ test_done () {
 			} ||
 			error "Tests passed but test cleanup failed; aborting"
 		fi
+
+		if test -n "$TEST_RESULTS_SAN_FILE"
+		then
+			old_=$TEST_RESULTS_SAN_DIR_NR_LEAKS_STARTUP
+			new_=$(nr_san_dir_leaks_)
+
+			if test $new_ -gt $old_
+			then
+				local msg=$(cat <<-\EOF
+				With SANITIZE=leak at exit we have %d leak logs, but started with %d
+
+				This means that we have a blindspot where git is leaking but we're
+				losing the exit code somewhere, or not propagating it appropriately
+				upwards!
+
+				See the logs at "%s"
+				EOF
+				) &&
+
+				local out=$(printf "$msg\n" "$new_" "$old_" "$TEST_RESULTS_SAN_FILE") &&
+				say_color error "$out"
+
+				if test -n "$passes_sanitize_leak"
+				then
+					say "As TEST_PASSES_SANITIZE_LEAK=true and our logs show we're leaking, exit non-zero!"
+					invert_exit_code=t
+				elif test -n "$sanitize_leak_check"
+				then
+					say "As TEST_PASSES_SANITIZE_LEAK=true isn't set the above leak is 'ok' with GIT_TEST_PASSING_SANITIZE_LEAK=check"
+					invert_exit_code=
+				else
+					say "With GIT_TEST_SANITIZE_LEAK_LOG=true our logs revealed a memory leak, exit non-zero!"
+					invert_exit_code=t
+				fi
+			fi
+		fi
+
+		if test -z "$skip_all" && test -n "$invert_exit_code"
+		then
+			say_color warn "# faking up non-zero exit with --invert-exit-code"
+			exit 1
+		fi
+
 		test_at_end_hook_
 
 		exit 0 ;;
@@ -1434,22 +1545,72 @@ then
 	test_done
 fi
 
+if test -n "$invert_exit_code" && test -z "$immediate"
+then
+	BAIL_OUT "the --invert-exit-code option currently requires --immediate"
+fi
+
 # skip non-whitelisted tests when compiled with SANITIZE=leak
 if test -n "$SANITIZE_LEAK"
 then
-	if test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
-	then
-		# We need to see it in "git env--helper" (via
-		# test_bool_env)
-		export TEST_PASSES_SANITIZE_LEAK
+	# Normalize with test_bool_env
+	passes_sanitize_leak=
 
-		if ! test_bool_env TEST_PASSES_SANITIZE_LEAK false
-		then
-			skip_all="skipping $this_test under GIT_TEST_PASSING_SANITIZE_LEAK=true"
-			test_done
-		fi
+	# We need to see TEST_PASSES_SANITIZE_LEAK in "git
+	# env--helper" (via test_bool_env)
+	export TEST_PASSES_SANITIZE_LEAK
+	if test_bool_env TEST_PASSES_SANITIZE_LEAK false
+	then
+		passes_sanitize_leak=t
 	fi
-elif test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
+
+	if test "$GIT_TEST_PASSING_SANITIZE_LEAK" = "check"
+	then
+		sanitize_leak_check=t
+		if test -n "$invert_exit_code"
+		then
+			BAIL_OUT "cannot use --invert-exit-code under GIT_TEST_PASSING_SANITIZE_LEAK=check"
+		fi
+
+		if test -z "$immediate"
+		then
+			say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, using --immediate"
+			immediate=t
+		fi
+		if test -z "$passes_sanitize_leak"
+		then
+			say "in GIT_TEST_PASSING_SANITIZE_LEAK=check mode, setting --invert-exit-code for TEST_PASSES_SANITIZE_LEAK != true"
+			invert_exit_code=t
+		fi
+	elif test -z "$passes_sanitize_leak" &&
+	     test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
+	then
+		skip_all="skipping $this_test under GIT_TEST_PASSING_SANITIZE_LEAK=true"
+		test_done
+	fi
+
+	if test_bool_env GIT_TEST_SANITIZE_LEAK_LOG false
+	then
+		if ! mkdir -p "$TEST_RESULTS_SAN_DIR"
+		then
+			BAIL_OUT "cannot create $TEST_RESULTS_SAN_DIR"
+		fi &&
+		TEST_RESULTS_SAN_FILE="$TEST_RESULTS_SAN_DIR/$TEST_RESULTS_SAN_FILE_PFX"
+
+		# In case "test-results" is left over from a previous
+		# run: Only report if new leaks show up.
+		TEST_RESULTS_SAN_DIR_NR_LEAKS_STARTUP=$(nr_san_dir_leaks_)
+
+		# Don't litter *.leak dirs if there was nothing to report
+		test_atexit "rmdir \"$TEST_RESULTS_SAN_DIR\" 2>/dev/null || :"
+
+		prepend_var LSAN_OPTIONS : dedup_token_length=9999
+		prepend_var LSAN_OPTIONS : log_exe_name=1
+		prepend_var LSAN_OPTIONS : log_path=\"$TEST_RESULTS_SAN_FILE\"
+		export LSAN_OPTIONS
+	fi
+elif test "$GIT_TEST_PASSING_SANITIZE_LEAK" = "check" ||
+     test_bool_env GIT_TEST_PASSING_SANITIZE_LEAK false
 then
 	BAIL_OUT "GIT_TEST_PASSING_SANITIZE_LEAK=true has no effect except when compiled with SANITIZE=leak"
 fi
