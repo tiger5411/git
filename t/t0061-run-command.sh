@@ -144,6 +144,46 @@ test_expect_success 'run_command runs in parallel with more tasks than jobs avai
 	test_cmp expect actual
 '
 
+test_expect_success 'run_command can divert output' '
+	test_when_finished rm sideband &&
+	test-tool run-command run-command-sideband 3 sh -c "printf \"%s\n%s\n\" Hello World" 2>actual &&
+	test_must_be_empty actual &&
+	test_cmp expect sideband
+'
+
+test_expect_success 'run_command listens to stdin' '
+	write_script stdin-script <<-\EOF &&
+	echo BEGIN stdin
+	cat
+	echo END stdin
+	EOF
+
+	cat >expect <<-\EOF &&
+	preloaded output of a child
+	BEGIN stdin
+	sample stdin 1
+	sample stdin 0
+	END stdin
+	preloaded output of a child
+	BEGIN stdin
+	sample stdin 1
+	sample stdin 0
+	END stdin
+	preloaded output of a child
+	BEGIN stdin
+	sample stdin 1
+	sample stdin 0
+	END stdin
+	preloaded output of a child
+	BEGIN stdin
+	sample stdin 1
+	sample stdin 0
+	END stdin
+	EOF
+	test-tool run-command run-command-stdin 2 ./stdin-script 2>actual &&
+	test_cmp expect actual
+'
+
 cat >expect <<-EOF
 preloaded output of a child
 asking for a quick stop
