@@ -12,7 +12,7 @@ GIT_TEST_MULTI_PACK_INDEX_WRITE_BITMAP=0
 GIT_TEST_COMMIT_GRAPH=0
 
 delete_object () {
-	rm $1/.git/objects/$(echo $2 | sed -e 's|^..|&/|')
+	rm "$1"/"$(test_oid_to_objects_path $2)"
 }
 
 pack_as_from_promisor () {

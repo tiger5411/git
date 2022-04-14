@@ -9,10 +9,6 @@ test_description='exercise basic bitmap functionality'
 # their place.
 GIT_TEST_MULTI_PACK_INDEX_WRITE_BITMAP=0
 
-objpath () {
-	echo ".git/objects/$(echo "$1" | sed -e 's|\(..\)|\1/|')"
-}
-
 # show objects present in pack ($1 should be associated *.idx)
 list_packed_objects () {
 	git show-index <"$1" >object-list &&
@@ -82,7 +78,7 @@ test_expect_success 'pack-objects respects --honor-pack-keep (local non-bitmappe
 	pack2=$(git pack-objects pack2 <keepobjects) &&
 	mv pack2-$pack2.* .git/objects/pack/ &&
 	>.git/objects/pack/pack2-$pack2.keep &&
-	rm $(objpath $blob2) &&
+	test_rm_loose_oid "$blob2" &&
 	echo HEAD | git pack-objects --honor-pack-keep --stdout --revs >2a.pack &&
 	git index-pack 2a.pack &&
 	list_packed_objects 2a.idx >2a.objects &&
@@ -172,17 +168,17 @@ test_expect_success 'pack-objects respects --incremental' '
 '
 
 test_expect_success 'pack with missing blob' '
-	rm $(objpath $blob) &&
+	test_rm_loose_oid "$blob" &&
 	git pack-objects --stdout --revs <revs >/dev/null
 '
 
 test_expect_success 'pack with missing tree' '
-	rm $(objpath $tree) &&
+	test_rm_loose_oid "$tree" &&
 	git pack-objects --stdout --revs <revs >/dev/null
 '
 
 test_expect_success 'pack with missing parent' '
-	rm $(objpath $parent) &&
+	test_rm_loose_oid "$parent" &&
 	git pack-objects --stdout --revs <revs >/dev/null
 '
 

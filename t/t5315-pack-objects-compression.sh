@@ -6,12 +6,10 @@ TEST_PASSES_SANITIZE_LEAK=true
 . ./test-lib.sh
 
 test_expect_success setup '
-	printf "%2000000s" X |
-	git hash-object -w --stdin >object-name &&
-	# make sure it resulted in a loose object
-	ob=$(sed -e "s/\(..\).*/\1/" object-name) &&
-	ject=$(sed -e "s/..\(.*\)/\1/" object-name) &&
-	test -f .git/objects/$ob/$ject
+	printf "%2000000s" X >content &&
+	git hash-object -w content >object-name &&
+	object_name=$(cat object-name) &&
+	test -f "$(test_oid_to_objects_path $object_name)"
 '
 
 while read expect config

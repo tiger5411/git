@@ -71,8 +71,8 @@ test_expect_success 'get an error for missing tree object' '
 	git -C r5 add foo &&
 	git -C r5 commit -m "foo" &&
 	git -C r5 rev-parse HEAD^{tree} >tree &&
-	del=$(sed "s|..|&/|" tree) &&
-	rm r5/.git/objects/$del &&
+	tree="$(cat tree)" &&
+	rm r5/"$(test_oid_to_objects_path $tree)" &&
 	test_must_fail git -C r5 pack-objects --revs --stdout 2>bad_tree <<-EOF &&
 	HEAD
 	EOF
@@ -404,9 +404,9 @@ test_expect_success 'setup r1 - delete loose blobs' '
 	test_parse_ls_files_stage_oids |
 	sort >expected &&
 
-	for id in `cat expected | sed "s|..|&/|"`
+	for id in `cat expected`
 	do
-		rm r1/.git/objects/$id || return 1
+		rm r1/"$(test_oid_to_objects_path $id)" || return 1
 	done
 '
 
