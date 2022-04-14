@@ -153,6 +153,35 @@ test_expect_success 'renaming checked out branch works with d/f conflict' '
 	test_cmp expect actual
 '
 
+test_expect_success 'renaming a branch with d/f conflict' '
+	git init df-conflict &&
+	git -C df-conflict config core.logAllRefUpdates false &&
+	(
+		cd df-conflict &&
+		test_commit A &&
+		master=$(git rev-parse --abbrev-ref HEAD) &&
+		git branch new-copy &&
+		git branch new-move &&
+
+		test_must_fail git update-ref refs/heads/$master/file $master &&
+		test_must_fail git branch $master/file $master 2>err.create &&
+
+		cat >err.move.expect <<-\EOF &&
+		error: '\''refs/heads/main'\'' exists; cannot create '\''refs/heads/main/file'\''
+		fatal: Branch rename failed
+		EOF
+		test_must_fail git branch -m new-move $master/file 2>err.move &&
+		test_cmp err.move.expect err.move &&
+
+		cat >err.copy.expect <<-\EOF &&
+		error: '\''refs/heads/main'\'' exists; cannot create '\''refs/heads/main/file'\''
+		fatal: Branch copy failed
+		EOF
+		test_must_fail git branch -c new-copy $master/file 2>err.copy &&
+		test_cmp err.copy.expect err.copy
+	)
+'
+
 test_expect_success 'git branch -m o/o o should fail when o/p exists' '
 	git branch o/o &&
 	git branch o/p &&
