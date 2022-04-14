@@ -8,7 +8,6 @@
  * published by the Free Software Foundation.
  */
 
-#define GIT_TEST_PROGRESS_ONLY
 #include "cache.h"
 #include "gettext.h"
 #include "progress.h"
@@ -17,33 +16,6 @@
 #include "utf8.h"
 #include "config.h"
 
-#define TP_IDX_MAX      8
-
-struct throughput {
-	off_t curr_total;
-	off_t prev_total;
-	uint64_t prev_ns;
-	unsigned int avg_bytes;
-	unsigned int avg_misecs;
-	unsigned int last_bytes[TP_IDX_MAX];
-	unsigned int last_misecs[TP_IDX_MAX];
-	unsigned int idx;
-	struct strbuf display;
-};
-
-struct progress {
-	const char *title;
-	uint64_t last_value;
-	uint64_t total;
-	unsigned last_percent;
-	unsigned delay;
-	struct throughput *throughput;
-	uint64_t start_ns;
-	struct strbuf counters_sb;
-	int title_len;
-	int split;
-};
-
 static volatile sig_atomic_t progress_update;
 static struct progress *global_progress;
 
@@ -51,9 +23,7 @@ static struct progress *global_progress;
  * These are only intended for testing the progress output, i.e. exclusively
  * for 'test-tool progress'.
  */
-int progress_testing;
-uint64_t progress_test_ns = 0;
-void progress_test_force_update(void)
+void test_progress_force_update(void)
 {
 	progress_update = 1;
 }
@@ -68,9 +38,6 @@ static void set_progress_signal(void)
 {
 	struct sigaction sa;
 	struct itimerval v;
-
-	if (progress_testing)
-		return;
 
 	progress_update = 0;
 
@@ -89,9 +56,6 @@ static void set_progress_signal(void)
 static void clear_progress_signal(void)
 {
 	struct itimerval v = {{0,},};
-
-	if (progress_testing)
-		return;
 
 	setitimer(ITIMER_REAL, &v, NULL);
 	signal(SIGALRM, SIG_IGN);
@@ -177,8 +141,8 @@ static void throughput_string(struct strbuf *buf, uint64_t total,
 
 static uint64_t progress_getnanotime(struct progress *progress)
 {
-	if (progress_testing)
-		return progress->start_ns + progress_test_ns;
+	if (progress->test_getnanotime)
+		return progress->start_ns + progress->test_getnanotime;
 	else
 		return getnanotime();
 }
@@ -236,7 +200,7 @@ void display_throughput(struct progress *progress, uint64_t total)
 	tp->avg_misecs -= tp->last_misecs[tp->idx];
 	tp->last_bytes[tp->idx] = count;
 	tp->last_misecs[tp->idx] = misecs;
-	tp->idx = (tp->idx + 1) % TP_IDX_MAX;
+	tp->idx = (tp->idx + 1) % PROGRESS_THROUGHPUT_IDX_MAX;
 
 	throughput_string(&tp->display, total, rate);
 	if (progress->last_value != -1 && progress_update)
@@ -258,7 +222,7 @@ static void set_global_progress(struct progress *progress)
 }
 
 static struct progress *start_progress_delay(const char *title, uint64_t total,
-					     unsigned delay)
+					     unsigned delay, int testing)
 {
 	struct progress *progress = xmalloc(sizeof(*progress));
 	progress->title = title;
@@ -272,9 +236,15 @@ static struct progress *start_progress_delay(const char *title, uint64_t total,
 	progress->title_len = utf8_strwidth(title);
 	progress->split = 0;
 	set_global_progress(progress);
-	set_progress_signal();
+	if (!testing)
+		set_progress_signal();
 	trace2_region_enter("progress", title, the_repository);
 	return progress;
+}
+
+struct progress *start_progress_testing(const char *title, uint64_t total)
+{
+	return start_progress_delay(title, total, 0, 1);
 }
 
 static int get_default_delay(void)
@@ -289,12 +259,12 @@ static int get_default_delay(void)
 
 struct progress *start_delayed_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, get_default_delay());
+	return start_progress_delay(title, total, get_default_delay(), 0);
 }
 
 struct progress *start_progress(const char *title, uint64_t total)
 {
-	return start_progress_delay(title, total, 0);
+	return start_progress_delay(title, total, 0, 0);
 }
 
 static void force_last_update(struct progress *progress, const char *msg)
