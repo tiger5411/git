@@ -1047,12 +1047,6 @@ struct notes_tree **load_notes_trees(struct string_list *refs, int flags)
 	return trees;
 }
 
-void init_display_notes(struct display_notes_opt *opt)
-{
-	memset(opt, 0, sizeof(*opt));
-	opt->use_default_notes = -1;
-}
-
 void enable_default_display_notes(struct display_notes_opt *opt, int *show_notes)
 {
 	opt->use_default_notes = 1;
