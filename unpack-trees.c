@@ -370,8 +370,9 @@ static void setup_collided_checkout_detection(struct checkout *state,
 
 static void report_collided_checkout(struct index_state *index)
 {
-	struct string_list list = STRING_LIST_INIT_NODUP;
 	int i;
+	struct string_list list;
+	string_list_cmp_init_nodup(&list, fspathcmp);
 
 	for (i = 0; i < index->cache_nr; i++) {
 		struct cache_entry *ce = index->cache[i];
@@ -383,7 +384,6 @@ static void report_collided_checkout(struct index_state *index)
 		ce->ce_flags &= ~CE_MATCHED;
 	}
 
-	list.cmp = fspathcmp;
 	string_list_sort(&list);
 
 	if (list.nr) {

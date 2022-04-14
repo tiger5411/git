@@ -253,13 +253,13 @@ static int migrate_one(struct strbuf *src, struct strbuf *dst)
 static int migrate_paths(struct strbuf *src, struct strbuf *dst)
 {
 	size_t src_len = src->len, dst_len = dst->len;
-	struct string_list paths = STRING_LIST_INIT_DUP;
 	int i;
 	int ret = 0;
+	struct string_list paths;
+	string_list_cmp_init_dup(&paths, pack_copy_cmp);
 
 	if (read_dir_paths(&paths, src->buf) < 0)
 		return -1;
-	paths.cmp = pack_copy_cmp;
 	string_list_sort(&paths);
 
 	for (i = 0; i < paths.nr; i++) {

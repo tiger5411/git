@@ -173,9 +173,8 @@ static int split_maildir(const char *maildir, const char *dir,
 	FILE *f = NULL;
 	int ret = -1;
 	int i;
-	struct string_list list = STRING_LIST_INIT_DUP;
-
-	list.cmp = maildir_filename_cmp;
+	struct string_list list;
+	string_list_cmp_init_dup(&list, maildir_filename_cmp);
 
 	if (populate_maildir_list(&list, maildir) < 0)
 		goto out;

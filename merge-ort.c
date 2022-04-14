@@ -4004,11 +4004,12 @@ static void process_entries(struct merge_options *opt,
 {
 	struct hashmap_iter iter;
 	struct strmap_entry *e;
-	struct string_list plist = STRING_LIST_INIT_NODUP;
 	struct string_list_item *entry;
 	struct directory_versions dir_metadata = { STRING_LIST_INIT_NODUP,
 						   STRING_LIST_INIT_NODUP,
 						   NULL, 0 };
+	struct string_list plist;
+	string_list_cmp_init_nodup(&plist, sort_dirs_next_to_their_children);
 
 	trace2_region_enter("merge", "process_entries setup", opt->repo);
 	if (strmap_empty(&opt->priv->paths)) {
@@ -4029,7 +4030,6 @@ static void process_entries(struct merge_options *opt,
 	trace2_region_leave("merge", "plist copy", opt->repo);
 
 	trace2_region_enter("merge", "plist special sort", opt->repo);
-	plist.cmp = sort_dirs_next_to_their_children;
 	string_list_sort(&plist);
 	trace2_region_leave("merge", "plist special sort", opt->repo);
 

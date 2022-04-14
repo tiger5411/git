@@ -1317,8 +1317,8 @@ int parse_hide_refs_config(const char *var, const char *value, const char *secti
 		while (len && ref[len - 1] == '/')
 			ref[--len] = '\0';
 		if (!hide_refs) {
-			CALLOC_ARRAY(hide_refs, 1);
-			hide_refs->strdup_strings = 1;
+			ALLOC_ARRAY(hide_refs, 1);
+			string_list_init_dup(hide_refs);
 		}
 		string_list_append(hide_refs, ref);
 	}

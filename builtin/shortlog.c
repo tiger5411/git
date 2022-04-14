@@ -338,8 +338,7 @@ void shortlog_init(struct shortlog *log)
 	log->wrap = DEFAULT_WRAPLEN;
 	log->in1 = DEFAULT_INDENT1;
 	log->in2 = DEFAULT_INDENT2;
-	log->trailers.strdup_strings = 1;
-	log->trailers.cmp = strcasecmp;
+	string_list_cmp_init_dup(&log->trailers, strcasecmp);
 }
 
 int cmd_shortlog(int argc, const char **argv, const char *prefix)

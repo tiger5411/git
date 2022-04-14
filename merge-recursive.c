@@ -593,10 +593,12 @@ static void record_df_conflict_files(struct merge_options *opt,
 	 * and the file need to be present, then the D/F file will be
 	 * reinstated with a new unique name at the time it is processed.
 	 */
-	struct string_list df_sorted_entries = STRING_LIST_INIT_NODUP;
 	const char *last_file = NULL;
 	int last_len = 0;
 	int i;
+	struct string_list df_sorted_entries;
+	string_list_cmp_init_nodup(&df_sorted_entries,
+				   string_list_df_name_compare);
 
 	/*
 	 * If we're merging merge-bases, we don't want to bother with
@@ -611,7 +613,6 @@ static void record_df_conflict_files(struct merge_options *opt,
 		string_list_append(&df_sorted_entries, next->string)->util =
 				   next->util;
 	}
-	df_sorted_entries.cmp = string_list_df_name_compare;
 	string_list_sort(&df_sorted_entries);
 
 	string_list_clear(&opt->priv->df_conflict_file_set, 1);
@@ -2348,13 +2349,9 @@ static struct hashmap *get_directory_renames(struct diff_queue_struct *pairs)
 		/*
 		 * The relevant directory sub-portion of the original full
 		 * filepaths were xstrndup'ed before inserting into
-		 * possible_new_dirs, and instead of manually iterating the
-		 * list and free'ing each, just lie and tell
-		 * possible_new_dirs that it did the strdup'ing so that it
-		 * will free them for us.
+		 * possible_new_dirs.
 		 */
-		entry->possible_new_dirs.strdup_strings = 1;
-		string_list_clear(&entry->possible_new_dirs, 1);
+		string_list_clear_strings(&entry->possible_new_dirs, 1);
 	}
 
 	return dir_renames;
