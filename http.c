@@ -2185,8 +2185,8 @@ struct http_pack_request *new_direct_http_pack_request(
 	strbuf_addf(&preq->tmpfile, "%s.temp", sha1_pack_name(packed_git_hash));
 	preq->packfile = fopen(preq->tmpfile.buf, "a");
 	if (!preq->packfile) {
-		error("Unable to open local file %s for pack",
-		      preq->tmpfile.buf);
+		error_errno("Unable to open local file %s for pack",
+			    preq->tmpfile.buf);
 		goto abort;
 	}
 
