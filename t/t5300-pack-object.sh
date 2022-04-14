@@ -109,14 +109,11 @@ test_expect_success 'pack-object <stdin parsing: [|--revs] with --stdin' '
 	# There is the "--stdin-packs is incompatible with --revs"
 	# test below, but we should make sure that the revision.c
 	# --stdin is not picked up
-	cat >err.expect <<-EOF &&
-	fatal: disallowed abbreviated or ambiguous option '"'"'stdin'"'"'
-	EOF
-	test_must_fail git -C pack-object-stdin pack-objects stdin-with-stdin-option --stdin <in 2>err.actual &&
-	test_cmp err.expect err.actual &&
+	test_expect_code 134 git -C pack-object-stdin pack-objects stdin-with-stdin-option --stdin <in 2>err &&
+	grep BUG: err &&
 
-	test_must_fail git -C pack-object-stdin pack-objects --stdin --revs stdin-with-stdin-option-revs 2>err.actual <in &&
-	test_cmp err.expect err.actual
+	test_expect_code 134 git -C pack-object-stdin pack-objects --stdin --revs stdin-with-stdin-option-revs 2>err.actual <in 2>err &&
+	grep BUG: err
 '
 
 test_expect_success 'pack-object <stdin parsing: --stdin-packs handles garbage' '

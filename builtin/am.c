@@ -2327,8 +2327,7 @@ int cmd_am(int argc, const char **argv, const char *prefix)
 	struct option options[] = {
 		OPT_BOOL('i', "interactive", &state.interactive,
 			N_("run interactively")),
-		OPT_HIDDEN_BOOL('b', "binary", &binary,
-			N_("historical option -- no-op")),
+		OPT_HIDDEN_BOOL('b', "binary", &binary),
 		OPT_BOOL('3', "3way", &state.threeway,
 			N_("allow fall back on 3way merging if needed")),
 		OPT__QUIET(&state.quiet, N_("be quiet")),
@@ -2421,8 +2420,7 @@ int cmd_am(int argc, const char **argv, const char *prefix)
 		OPT_CALLBACK_F(STOP_ON_EMPTY_COMMIT, "empty", &state.empty_type, "{stop,drop,keep}",
 		  N_("how to handle empty patches"),
 		  PARSE_OPT_NONEG, am_option_parse_empty),
-		OPT_HIDDEN_BOOL(0, "rebasing", &state.rebasing,
-			N_("(internal use for git-rebase)")),
+		OPT_HIDDEN_BOOL(0, "rebasing", &state.rebasing),
 		OPT_END()
 	};
 

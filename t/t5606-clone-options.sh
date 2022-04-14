@@ -16,6 +16,19 @@ test_expect_success 'setup' '
 
 '
 
+for opt in \
+	--rec --recur --recurs --recursi --recursiv --recursive \
+	--recurse --recurse- --recurse-s --recurse-su --recurse-sub \
+	--recurse-subm --recurse-submo --recurse-submod --recurse-submodu \
+	--recurse-submodul --recurse-submodule
+do
+	test_expect_success "usage: $opt is an alias for --recurse-submodules" '
+		test_when_finished "rm -rf repo" &&
+		GIT_TEST_DISALLOW_ABBREVIATED_OPTIONS=false \
+		git clone $opt "file://$PWD/parent" repo
+	'
+done
+
 test_expect_success 'submodule.stickyRecursiveClone flag manipulates submodule.recurse value' '
 
 	test_config_global submodule.stickyRecursiveClone true &&

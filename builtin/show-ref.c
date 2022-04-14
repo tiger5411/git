@@ -163,8 +163,7 @@ static const struct option show_ref_options[] = {
 	OPT_BOOL(0, "heads", &heads_only, N_("only show heads (can be combined with tags)")),
 	OPT_BOOL(0, "verify", &verify, N_("stricter reference checking, "
 		    "requires exact ref path")),
-	OPT_HIDDEN_BOOL('h', NULL, &show_head,
-			N_("show the HEAD reference, even if it would be filtered out")),
+	OPT_HIDDEN_BOOL('h', NULL, &show_head),
 	OPT_BOOL(0, "head", &show_head,
 	  N_("show the HEAD reference, even if it would be filtered out")),
 	OPT_BOOL('d', "dereference", &deref_tags,

@@ -1670,10 +1670,8 @@ int cmd_commit(int argc, const char **argv, const char *prefix)
 		OPT_PATHSPEC_FILE_NUL(&pathspec_file_nul),
 		/* end commit contents options */
 
-		OPT_HIDDEN_BOOL(0, "allow-empty", &allow_empty,
-				N_("ok to record an empty change")),
-		OPT_HIDDEN_BOOL(0, "allow-empty-message", &allow_empty_message,
-				N_("ok to record a change with an empty message")),
+		OPT_HIDDEN_BOOL(0, "allow-empty", &allow_empty),
+		OPT_HIDDEN_BOOL(0, "allow-empty-message", &allow_empty_message),
 
 		OPT_END()
 	};

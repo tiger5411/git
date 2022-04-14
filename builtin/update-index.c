@@ -985,7 +985,7 @@ int cmd_update_index(int argc, const char **argv, const char *prefix)
 	int force_write = 0;
 	int fsmonitor = -1;
 	struct lock_file lock_file = LOCK_INIT;
-	struct parse_opt_ctx_t ctx;
+	struct parse_opt_ctx_t ctx = { 0 };
 	strbuf_getline_fn getline_fn;
 	int parseopt_state = PARSE_OPT_UNKNOWN;
 	struct repository *r = the_repository;

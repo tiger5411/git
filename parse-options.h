@@ -10,11 +10,9 @@ enum parse_opt_type {
 	OPTION_END,
 	OPTION_GROUP,
 	OPTION_NUMBER,
-	OPTION_ALIAS,
 	/* options with no arguments */
 	OPTION_BIT,
 	OPTION_NEGBIT,
-	OPTION_BITOP,
 	OPTION_COUNTUP,
 	OPTION_SET_INT,
 	/* options with arguments (usually) */
@@ -34,8 +32,65 @@ enum parse_opt_flags {
 	PARSE_OPT_NO_INTERNAL_HELP = 1 << 4,
 	PARSE_OPT_ONE_SHOT = 1 << 5,
 	PARSE_OPT_SHELL_EVAL = 1 << 6,
+	PARSE_OPT_REV_PARSE_PARSEOPT = 1 << 7,
 };
 
+/**
+ * The `enum parse_opt_option_flags`
+ *
+ *   PARSE_OPT_OPTARG: says that the argument is optional (not for BOOLEANs)
+ *   PARSE_OPT_NOARG: says that this option does not take an argument
+ *   PARSE_OPT_NONEG: says that this option cannot be negated
+ *   PARSE_OPT_HIDDEN: this option is skipped in the default usage, and
+ *                     shown only in the full usage.
+ *   PARSE_OPT_LASTARG_DEFAULT: says that this option will take the default
+ *				value if no argument is given when the option
+ *				is last on the command line. If the option is
+ *				not last it will require an argument.
+ *				Should not be used with PARSE_OPT_OPTARG.
+ *   PARSE_OPT_NODASH: this option doesn't start with a dash.
+ *   PARSE_OPT_LITERAL_ARGHELP: says that argh shouldn't be enclosed in brackets
+ *				(i.e. '<argh>') in the help message.
+ *				Useful for options with multiple parameters.
+ * PARSE_OPT_NO_AMBIG:
+ *
+ *	Exclude this option from being considered when resolving
+ *	ambiguous abbreviations. Used for e.g. "git clone"'s
+ *	"--recursive" option, which if "--recurse" is given should not
+ *	conflict with the canonical "--recurse-submodule" option.
+ *
+ *	This flag is incompatible with PARSE_OPT_NO_ABBREV.
+ *
+ * PARSE_OPT_NO_ABBREV:
+ *
+ *	When using the `PARSE_OPT_KEEP_UNKNOWN` flag to
+ *	parse_options(), stop a given option from participating in
+ *	abbreviation.
+ *
+ *	E.g. for an "--output-file" option set this flag so that it
+ *	will not be confused with a yet-to-be-parsed "--output" flag.
+ *
+ *	The parse_options() machinery will detect if an abbreviation
+ *	is ambiguous, so this is only useful for cases which do
+ *	two-pass parsing of the options, e.g. when we're about to hand
+ *	the rest of "argv" off to setup_revisions().
+ *
+ *   PARSE_OPT_NOCOMPLETE: by default all visible options are completable
+ *			   by git-completion.bash. This option suppresses that.
+ *   PARSE_OPT_COMP_ARG: this option forces to git-completion.bash to
+ *			 complete an option as --name= not --name even if
+ *			 the option takes optional argument.
+ *
+ * PARSE_OPT_CMDMODE:
+ *	This option is mutually exclusive with other options using the
+ *	PARSE_OPT_CMDMODE flag. See OPT_CMDMODE().
+ *
+ *	While originally intended for mutually exclusive command
+ *	"modes" such as "git tag (-l|-d|-v)", it is also just as valid
+ *	to use it to mark an arbitrary set of mutually exclusive
+ *	flags. E.g. "cat-file" uses it for (among others) "-p" and
+ *	"--textconv", which can never be combined.
+ */
 enum parse_opt_option_flags {
 	PARSE_OPT_OPTARG  = 1 << 0,
 	PARSE_OPT_NOARG   = 1 << 1,
@@ -44,7 +99,8 @@ enum parse_opt_option_flags {
 	PARSE_OPT_LASTARG_DEFAULT = 1 << 4,
 	PARSE_OPT_NODASH = 1 << 5,
 	PARSE_OPT_LITERAL_ARGHELP = 1 << 6,
-	PARSE_OPT_FROM_ALIAS = 1 << 7,
+	PARSE_OPT_NO_AMBIG = 1 << 7,
+	PARSE_OPT_NO_ABBREV = 1 << 8,
 	PARSE_OPT_NOCOMPLETE = 1 << 9,
 	PARSE_OPT_COMP_ARG = 1 << 10,
 	PARSE_OPT_CMDMODE = 1 << 11,
@@ -67,7 +123,7 @@ typedef enum parse_opt_result parse_opt_ll_cb(struct parse_opt_ctx_t *ctx,
 					      const struct option *opt,
 					      const char *arg, int unset);
 
-/*
+/**
  * `type`::
  *   holds the type of the option, you must have an OPTION_END last in your
  *   array.
@@ -98,26 +154,7 @@ typedef enum parse_opt_result parse_opt_ll_cb(struct parse_opt_ctx_t *ctx,
  *   Should be wrapped by N_() for translation.
  *
  * `flags`::
- *   mask of parse_opt_option_flags.
- *   PARSE_OPT_OPTARG: says that the argument is optional (not for BOOLEANs)
- *   PARSE_OPT_NOARG: says that this option does not take an argument
- *   PARSE_OPT_NONEG: says that this option cannot be negated
- *   PARSE_OPT_HIDDEN: this option is skipped in the default usage, and
- *                     shown only in the full usage.
- *   PARSE_OPT_LASTARG_DEFAULT: says that this option will take the default
- *				value if no argument is given when the option
- *				is last on the command line. If the option is
- *				not last it will require an argument.
- *				Should not be used with PARSE_OPT_OPTARG.
- *   PARSE_OPT_NODASH: this option doesn't start with a dash.
- *   PARSE_OPT_LITERAL_ARGHELP: says that argh shouldn't be enclosed in brackets
- *				(i.e. '<argh>') in the help message.
- *				Useful for options with multiple parameters.
- *   PARSE_OPT_NOCOMPLETE: by default all visible options are completable
- *			   by git-completion.bash. This option suppresses that.
- *   PARSE_OPT_COMP_ARG: this option forces to git-completion.bash to
- *			 complete an option as --name= not --name even if
- *			 the option takes optional argument.
+ *   mask of parse_opt_option_flags. See `enum parse_opt_option_flags` above.
  *
  * `callback`::
  *   pointer to the callback to use for OPTION_CALLBACK
@@ -143,7 +180,6 @@ struct option {
 	parse_opt_cb *callback;
 	intptr_t defval;
 	parse_opt_ll_cb *ll_callback;
-	intptr_t extra;
 };
 
 #define OPT_BIT_F(s, l, v, h, b, f) { OPTION_BIT, (s), (l), (v), NULL, (h), \
@@ -152,27 +188,32 @@ struct option {
 				       (h), PARSE_OPT_NOARG|(f) }
 #define OPT_SET_INT_F(s, l, v, h, i, f) { OPTION_SET_INT, (s), (l), (v), NULL, \
 					  (h), PARSE_OPT_NOARG | (f), NULL, (i) }
+#define OPT_SET_HIDDEN_INT(s, l, v, i) OPT_SET_INT_F(s, l, v, NULL, i, PARSE_OPT_HIDDEN)
 #define OPT_BOOL_F(s, l, v, h, f)   OPT_SET_INT_F(s, l, v, h, 1, f)
 #define OPT_CALLBACK_F(s, l, v, a, h, f, cb)			\
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), (cb) }
+#define OPT_CALLBACK(s, l, v, a, h, f) OPT_CALLBACK_F(s, l, v, a, h, 0, f)
+#define OPT_HIDDEN_CALLBACK_F(s, l, v, f, cb) OPT_CALLBACK_F(s, l, v, NULL, NULL, (f) | PARSE_OPT_HIDDEN, cb)
+#define OPT_HIDDEN_CALLBACK(s, l, v, cb) OPT_HIDDEN_CALLBACK_F(s, l, v, 0, cb)
 #define OPT_STRING_F(s, l, v, a, h, f)   { OPTION_STRING,  (s), (l), (v), (a), (h), (f) }
+#define OPT_HIDDEN_STRING(s, l, v) OPT_STRING_F(s, l, v, NULL, NULL, PARSE_OPT_HIDDEN)
 #define OPT_INTEGER_F(s, l, v, h, f)     { OPTION_INTEGER, (s), (l), (v), N_("n"), (h), (f) }
 
 #define OPT_END()                   { OPTION_END }
 #define OPT_GROUP(h)                { OPTION_GROUP, 0, NULL, NULL, NULL, (h) }
 #define OPT_BIT(s, l, v, h, b)      OPT_BIT_F(s, l, v, h, b, 0)
-#define OPT_BITOP(s, l, v, h, set, clear) { OPTION_BITOP, (s), (l), (v), NULL, (h), \
-					    PARSE_OPT_NOARG|PARSE_OPT_NONEG, NULL, \
-					    (set), NULL, (clear) }
+#define OPT_BITOP(s, l, v, h, set, cb) { OPTION_CALLBACK, (s), (l), (v), NULL, \
+					 (h), PARSE_OPT_NOARG|PARSE_OPT_NONEG, \
+					 (cb), (set) }
 #define OPT_NEGBIT(s, l, v, h, b)   { OPTION_NEGBIT, (s), (l), (v), NULL, \
 				      (h), PARSE_OPT_NOARG, NULL, (b) }
 #define OPT_COUNTUP(s, l, v, h)     OPT_COUNTUP_F(s, l, v, h, 0)
 #define OPT_SET_INT(s, l, v, h, i)  OPT_SET_INT_F(s, l, v, h, i, 0)
 #define OPT_BOOL(s, l, v, h)        OPT_BOOL_F(s, l, v, h, 0)
-#define OPT_HIDDEN_BOOL(s, l, v, h) { OPTION_SET_INT, (s), (l), (v), NULL, \
-				      (h), PARSE_OPT_NOARG | PARSE_OPT_HIDDEN, NULL, 1}
-#define OPT_CMDMODE_F(s, l, v, h, i, f)  { OPTION_SET_INT, (s), (l), (v), NULL, \
-				      (h), PARSE_OPT_CMDMODE|PARSE_OPT_NOARG|PARSE_OPT_NONEG | (f), NULL, (i) }
+#define OPT_HIDDEN_BOOL(s, l, v) OPT_BOOL_F(s, l, v, NULL, \
+					    PARSE_OPT_NOARG | PARSE_OPT_HIDDEN)
+#define OPT_CMDMODE_F(s, l, v, h, i, f) OPT_SET_INT_F(s, l, v, h, i, \
+						      PARSE_OPT_CMDMODE|PARSE_OPT_NONEG | (f))
 #define OPT_CMDMODE(s, l, v, h, i)  OPT_CMDMODE_F(s, l, v, h, i, 0)
 
 #define OPT_INTEGER(s, l, v, h)     OPT_INTEGER_F(s, l, v, h, 0)
@@ -180,14 +221,12 @@ struct option {
 				      N_("n"), (h), PARSE_OPT_NONEG }
 #define OPT_STRING(s, l, v, a, h)   OPT_STRING_F(s, l, v, a, h, 0)
 #define OPT_STRING_LIST(s, l, v, a, h) \
-				    { OPTION_CALLBACK, (s), (l), (v), (a), \
-				      (h), 0, &parse_opt_string_list }
-#define OPT_UYN(s, l, v, h)         { OPTION_CALLBACK, (s), (l), (v), NULL, \
-				      (h), PARSE_OPT_NOARG, &parse_opt_tertiary }
+	OPT_CALLBACK(s, l, v, a, h, &parse_opt_string_list)
+#define OPT_UYN(s, l, v, h) OPT_CALLBACK_F(s, l, v, NULL, h, PARSE_OPT_NOARG, \
+					   &parse_opt_tertiary)
 #define OPT_EXPIRY_DATE(s, l, v, h) \
-	{ OPTION_CALLBACK, (s), (l), (v), N_("expiry-date"),(h), 0,	\
-	  parse_opt_expiry_date_cb }
-#define OPT_CALLBACK(s, l, v, a, h, f) OPT_CALLBACK_F(s, l, v, a, h, 0, f)
+	OPT_CALLBACK_F(s, l, v, N_("expiry-date"), h, 0, \
+		       parse_opt_expiry_date_cb)
 #define OPT_NUMBER_CALLBACK(v, h, f) \
 	{ OPTION_NUMBER, 0, NULL, (v), NULL, (h), \
 	  PARSE_OPT_NOARG | PARSE_OPT_NONEG, (f) }
@@ -197,13 +236,8 @@ struct option {
 	{ OPTION_CALLBACK, (s), (l), (v), N_("when"), (h), PARSE_OPT_OPTARG, \
 		parse_opt_color_flag_cb, (intptr_t)"always" }
 
-#define OPT_NOOP_NOARG(s, l) \
-	{ OPTION_CALLBACK, (s), (l), NULL, NULL, \
-	  N_("no-op (backward compatibility)"),		\
-	  PARSE_OPT_HIDDEN | PARSE_OPT_NOARG, parse_opt_noop_cb }
-
-#define OPT_ALIAS(s, l, source_long_name) \
-	{ OPTION_ALIAS, (s), (l), (source_long_name) }
+#define OPT_NOOP_NOARG(s, l) OPT_HIDDEN_CALLBACK_F((s), (l), NULL, \
+		PARSE_OPT_NOARG, parse_opt_noop_cb)
 
 /*
  * parse_options() will filter out the processed options and leave the
@@ -295,7 +329,6 @@ struct parse_opt_ctx_t {
 	const char *opt;
 	enum parse_opt_flags flags;
 	const char *prefix;
-	const char **alias_groups; /* must be in groups of 3 elements! */
 	struct option *updated_options;
 };
 
@@ -356,15 +389,15 @@ int parse_opt_tracking_mode(const struct option *, const char *, int);
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), parse_opt_passthru }
 #define OPT_PASSTHRU_ARGV(s, l, v, a, h, f) \
 	{ OPTION_CALLBACK, (s), (l), (v), (a), (h), (f), parse_opt_passthru_argv }
-#define _OPT_CONTAINS_OR_WITH(name, variable, help, flag) \
-	{ OPTION_CALLBACK, 0, name, (variable), N_("commit"), (help), \
+#define _OPT_CONTAINS_OR_WITH(name, variable, argh, help, flag) \
+	{ OPTION_CALLBACK, 0, name, (variable), (argh), (help), \
 	  PARSE_OPT_LASTARG_DEFAULT | flag, \
 	  parse_opt_commits, (intptr_t) "HEAD" \
 	}
-#define OPT_CONTAINS(v, h) _OPT_CONTAINS_OR_WITH("contains", v, h, PARSE_OPT_NONEG)
-#define OPT_NO_CONTAINS(v, h) _OPT_CONTAINS_OR_WITH("no-contains", v, h, PARSE_OPT_NONEG)
-#define OPT_WITH(v, h) _OPT_CONTAINS_OR_WITH("with", v, h, PARSE_OPT_HIDDEN | PARSE_OPT_NONEG)
-#define OPT_WITHOUT(v, h) _OPT_CONTAINS_OR_WITH("without", v, h, PARSE_OPT_HIDDEN | PARSE_OPT_NONEG)
+#define OPT_CONTAINS(v, h) _OPT_CONTAINS_OR_WITH("contains", v, N_("commit"), h, PARSE_OPT_NONEG)
+#define OPT_NO_CONTAINS(v, h) _OPT_CONTAINS_OR_WITH("no-contains", v, N_("commit"), h, PARSE_OPT_NONEG)
+#define OPT_WITH(v, h) _OPT_CONTAINS_OR_WITH("with", v, NULL, NULL, PARSE_OPT_HIDDEN | PARSE_OPT_NONEG)
+#define OPT_WITHOUT(v, h) _OPT_CONTAINS_OR_WITH("without", v, NULL, NULL, PARSE_OPT_HIDDEN | PARSE_OPT_NONEG)
 #define OPT_CLEANUP(v) OPT_STRING(0, "cleanup", v, N_("mode"), N_("how to strip spaces and #comments from message"))
 #define OPT_PATHSPEC_FROM_FILE(v) OPT_FILENAME(0, "pathspec-from-file", v, N_("read pathspec from file"))
 #define OPT_PATHSPEC_FILE_NUL(v)  OPT_BOOL(0, "pathspec-file-nul", v, N_("with --pathspec-from-file, pathspec elements are separated with NUL character"))

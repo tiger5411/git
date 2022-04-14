@@ -102,8 +102,7 @@ static struct option builtin_clone_options[] = {
 	OPT_BOOL('n', "no-checkout", &option_no_checkout,
 		 N_("don't create a checkout")),
 	OPT_BOOL(0, "bare", &option_bare, N_("create a bare repository")),
-	OPT_HIDDEN_BOOL(0, "naked", &option_bare,
-			N_("create a bare repository")),
+	OPT_HIDDEN_BOOL(0, "naked", &option_bare),
 	OPT_BOOL(0, "mirror", &option_mirror,
 		 N_("create a mirror repository (implies bare)")),
 	OPT_BOOL('l', "local", &option_local,
@@ -112,10 +111,14 @@ static struct option builtin_clone_options[] = {
 		    N_("don't use local hardlinks, always copy")),
 	OPT_BOOL('s', "shared", &option_shared,
 		    N_("setup as shared repository")),
-	{ OPTION_CALLBACK, 0, "recurse-submodules", &option_recurse_submodules,
-	  N_("pathspec"), N_("initialize submodules in the clone"),
-	  PARSE_OPT_OPTARG, recurse_submodules_cb, (intptr_t)"." },
-	OPT_ALIAS(0, "recursive", "recurse-submodules"),
+#define OPT_RECURSE_F(l, d, f) \
+	{ OPTION_CALLBACK, 0, (l), &option_recurse_submodules, \
+	  N_("pathspec"), (d), \
+	  PARSE_OPT_OPTARG | (f), recurse_submodules_cb, (intptr_t)"." }
+	OPT_RECURSE_F("recurse-submodules",
+		      N_("initialize submodules in the clone"), 0),
+	OPT_RECURSE_F("recursive", N_("alias of --recurse-submodules"),
+		      PARSE_OPT_NO_AMBIG | PARSE_OPT_NOCOMPLETE),
 	OPT_INTEGER('j', "jobs", &max_jobs,
 		    N_("number of submodules cloned in parallel")),
 	OPT_BOOL_F(0, "no-template", &option_no_template, NULL,
