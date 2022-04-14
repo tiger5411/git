@@ -649,6 +649,20 @@ if(NOT EXISTS ${CMAKE_BINARY_DIR}/hook-list.h)
 			OUTPUT_FILE ${CMAKE_BINARY_DIR}/hook-list.h)
 endif()
 
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/advice-type.h)
+	message("Generating advice-type.h")
+	execute_process(COMMAND ${SH_EXE} ${CMAKE_SOURCE_DIR}/generate-advice.sh advice-type.h
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			OUTPUT_FILE ${CMAKE_BINARY_DIR}/advice-type.h)
+endif()
+
+if(NOT EXISTS ${CMAKE_BINARY_DIR}/advice-config.h)
+	message("Generating advice-config.h")
+	execute_process(COMMAND ${SH_EXE} ${CMAKE_SOURCE_DIR}/generate-advice.sh advice-config.h
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			OUTPUT_FILE ${CMAKE_BINARY_DIR}/advice-config.h)
+endif()
+
 include_directories(${CMAKE_BINARY_DIR})
 
 #build

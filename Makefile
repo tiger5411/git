@@ -489,8 +489,8 @@ include shared.mak
 # INSTALL_STRIP can be set to "-s" to strip binaries during installation,
 # if your $(INSTALL) command supports the option.
 #
-# Define GENERATE_COMPILATION_DATABASE to "yes" to generate JSON compilation
-# database entries during compilation if your compiler supports it, using the
+# Define GENERATE_COMPILATION_DATABASE" to generate JSON compilation database
+# entries during compilation. This is (only?) supported by "clang" using the
 # `-MJ` flag. The JSON entries will be placed in the `compile_commands/`
 # directory, and the JSON compilation database 'compile_commands.json' will be
 # created at the root of the repository.
@@ -615,9 +615,11 @@ PTHREAD_LIBS = -lpthread
 # Guard against environment variables
 BUILTIN_OBJS =
 BUILT_INS =
+COMMON_GENERATED_H =
 COMPAT_CFLAGS =
 COMPAT_OBJS =
 XDIFF_OBJS =
+GENERATED_ADVICE_H =
 GENERATED_H =
 EXTRA_CPPFLAGS =
 FUZZ_OBJS =
@@ -866,6 +868,15 @@ XDIFF_LIB = xdiff/lib.a
 REFTABLE_LIB = reftable/libreftable.a
 REFTABLE_TEST_LIB = reftable/libreftable_test.a
 
+# Generated headers. The "COMMON_GENERATED_H" will be added as
+# implicit dependencies on fresh builds (without existing dep/*.mak
+# files)
+GENERATED_ADVICE_H += advice-config.h
+GENERATED_ADVICE_H += advice-type.h
+
+COMMON_GENERATED_H += $(GENERATED_ADVICE_H)
+
+GENERATED_H += $(COMMON_GENERATED_H)
 GENERATED_H += command-list.h
 GENERATED_H += config-list.h
 GENERATED_H += hook-list.h
@@ -2335,6 +2346,9 @@ $(BUILT_INS): git$X
 	ln -s $< $@ 2>/dev/null || \
 	cp $< $@
 
+$(GENERATED_ADVICE_H): generate-advice.sh Documentation/config/advice.txt
+	$(QUIET_GEN)$(SHELL_PATH) ./generate-advice.sh $@ >$@
+
 config-list.h: generate-configlist.sh
 
 config-list.h: Documentation/*config.txt Documentation/config/*.txt
@@ -2607,59 +2621,112 @@ OBJECTS += $(SCALAR_OBJECTS)
 .PHONY: objects
 objects: $(OBJECTS)
 
-dep_files := $(foreach f,$(OBJECTS),$(dir $f).depend/$(notdir $f).d)
-dep_dirs := $(addsuffix .depend,$(sort $(dir $(OBJECTS))))
+# Derived from $(OBJECTS)
+OBJECTS_S = $(OBJECTS:%.o=%.s)
 
-ifeq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
-$(dep_dirs):
-	@mkdir -p $@
+# Our USE_COMPUTED_HEADER_DEPENDENCIES targets
+OBJECTS_BASENAME = $(OBJECTS:%.o=%)
+OBJECTS_DEP = $(OBJECTS:%.o=.build/dep/%.mak)
 
-missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
-dep_file = $(dir $@).depend/$(notdir $@).d
-dep_args = -MF $(dep_file) -MQ $@ -MMD -MP
-endif
+.PHONY: asm-objs
+asm-objs: $(OBJECTS_S)
 
-ifneq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
-missing_dep_dirs =
-dep_args =
-endif
-
-compdb_dir = compile_commands
-
-ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
-missing_compdb_dir = $(compdb_dir)
-$(missing_compdb_dir):
-	@mkdir -p $@
-
-compdb_file = $(compdb_dir)/$(subst /,-,$@.json)
-compdb_args = -MJ $(compdb_file)
-else
-missing_compdb_dir =
-compdb_args =
-endif
-
-C_OBJ = $(OBJECTS)
-
-$(C_OBJ): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
-	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
-
-%.s: %.c GIT-CFLAGS FORCE
-	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
-
-ifndef GOAL_STANDALONE
-ifdef USE_COMPUTED_HEADER_DEPENDENCIES
 # Take advantage of gcc's on-the-fly dependency generation
 # See <http://gcc.gnu.org/gcc-3.0/features.html>.
-dep_files_present := $(wildcard $(dep_files))
-ifneq ($(dep_files_present),)
-include $(dep_files_present)
-endif
+dep_file =
+dep_args =
+asm_deps = FORCE
+asm_dep_args =
+dep_exts =
+
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+# The extensions we compute header dependecies for
+dep_exits = .o .s
+# Will be part of the $(CC) command-line
+dep_file = .build/dep/$(basename $@).mak
+dep_args = -MF $(dep_file) $(foreach s,$(dep_exts),-MQ $(basename $@)$(s)) -MMD -MP
+asm_deps =
+asm_dep_args = -c $(dep_args)
+
+# Generate different dependencies for objects that have corresponding
+# dep/*.mak files, and those that don't.
+OBJECTS_DEP_PRESENT = $(wildcard $(OBJECTS_DEP))
+OBJECTS_DEP_PRESENT_BASENAME = $(OBJECTS_DEP_PRESENT:.build/dep/%.mak=%)
+OBJECTS_DEP_MISSING_BASENAME = $(filter-out $(OBJECTS_DEP_PRESENT_BASENAME),$(OBJECTS_BASENAME))
+
+# The generated $$(COMMON_GENERATED_H) are widespread enough that
+# exhaustively listing their dependencies would be painful, so let's
+# fall back on having all *.$(dep_exts) depend on them IFF there is no
+# corresponding dep/*.mak file listing the actual dependencies.
+define dep-line
+
+$(1): $(2)
+endef
+define dep-lines
+$(foreach e,$(dep_exits),$(call dep-line,$(1)$(e),$(2)))
+endef
+
+define dep-missing
+$(call dep-lines,$(1),$$(COMMON_GENERATED_H))
+endef
+
+define dep-present
+# Dependencies for $(1) provided by generated *.mak
+
+endef
+
+# The "dep-present" isn't strictly needed (it only makes comments),
+# but makes ad-hoc debugging & inspection easier.
+define computed-deps
+$(foreach f,$(OBJECTS_DEP_PRESENT_BASENAME),$(call dep-present,$(f)))
+$(foreach f,$(OBJECTS_DEP_MISSING_BASENAME),$(call dep-missing,$(f)))
+endef
+
+$(eval $(call computed-deps))
+
 else
 $(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
-endif # GOAL_STANDALONE
 
-ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
+# Generate a "JSON Compilation Database" under Clang:
+# https://clang.llvm.org/docs/JSONCompilationDatabase.html
+compdb_file =
+compdb_args =
+compdb_dir =
+
+ifdef GENERATE_COMPILATION_DATABASE
+# Will be part of the $(CC) command-line
+compdb_dir = compile_commands
+compdb_file = $(compdb_dir)/$(subst /,-,$@.json)
+compdb_args = -MJ $(compdb_file)
+
+$(compdb_dir):
+	$(QUIET_MKDIR)mkdir $@
+endif
+
+## "Object" creation rules, making optional use of the dep/*.mak files
+## created with COMPUTE_HEADER_DEPENDENCIES
+# *.o
+$(OBJECTS): %.o: %.c GIT-CFLAGS $(compdb_dir)
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+	$(call mkdir_p_prefix_parent_template,.build/dep/)
+endif
+	$(QUIET_CC)$(CC) -o $*.o -c $(dep_args) $(compdb_args) $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+# *.s
+%.s: %.c $(asm_deps)
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+	$(call mkdir_p_prefix_parent_template,.build/dep/)
+endif
+	$(QUIET_CC_ASM)$(CC) -o $@ $(asm_dep_args) -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
+
+ifdef USE_COMPUTED_HEADER_DEPENDENCIES
+dep_files_present := $(wildcard $(OBJECTS_DEP))
+ifneq ($(dep_files_present),)
+include $(dep_files_present)
+endif
+endif
+
+ifdef GENERATE_COMPILATION_DATABASE
 all:: compile_commands.json
 compile_commands.json:
 	$(QUIET_GEN)sed -e '1s/^/[/' -e '$$s/,$$/]/' $(compdb_dir)/*.o.json > $@+
@@ -3050,6 +3117,7 @@ HCC = $(HCO:hco=hcc)
 	@echo '#include "git-compat-util.h"' >$@
 	@echo '#include "$<"' >>$@
 
+$(HCO): $(COMMON_GENERATED_H)
 $(HCO): %.hco: %.hcc FORCE
 	$(QUIET_HDR)$(CC) $(ALL_CFLAGS) -o /dev/null -c -xc $<
 
@@ -3371,13 +3439,14 @@ clean: profile-clean coverage-clean cocciclean
 	$(RM) -r .build
 	$(RM) *.res
 	$(RM) $(OBJECTS)
+	$(RM) $(OBJECTS_S)
 	$(RM) $(LIB_FILE) $(XDIFF_LIB) $(REFTABLE_LIB) $(REFTABLE_TEST_LIB)
 	$(RM) $(ALL_PROGRAMS) $(SCRIPT_LIB) $(BUILT_INS) git$X
 	$(RM) $(TEST_PROGRAMS)
 	$(RM) $(FUZZ_PROGRAMS)
 	$(RM) $(SP_OBJ)
 	$(RM) $(HCC)
-	$(RM) -r bin-wrappers $(dep_dirs) $(compdb_dir) compile_commands.json
+	$(RM) -r bin-wrappers $(compdb_dir) compile_commands.json
 	$(RM) -r po/build/
 	$(RM) -r perl/build/
 	$(RM) *.pyc *.pyo */*.pyc */*.pyo $(GENERATED_H) $(ETAGS_TARGET) tags cscope*
@@ -3425,8 +3494,17 @@ ALL_COMMANDS += git-gui
 ALL_COMMANDS += gitk
 ALL_COMMANDS += gitweb
 
+### Check if files are sorted
+CHECK_SORTED_CMP = $(GIT_TEST_CMP)
+ifndef GIT_TEST_CMP
+CHECK_SORTED_CMP = diff -u
+endif
+
+ADVICE_TXT = Documentation/config/advice.txt
+$(eval $(call check-sorted-file-rule,check-advice-docs,grep '^[^a-z].*::',$(ADVICE_TXT),$(CHECK_SORTED_CMP)))
+
 .PHONY: check-docs
-check-docs::
+check-docs:: check-advice-docs
 	$(MAKE) -C Documentation lint-docs
 
 ### Make sure built-ins do not have dups and listed in git.c

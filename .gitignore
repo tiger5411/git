@@ -189,6 +189,8 @@
 /gitweb/gitweb.cgi
 /gitweb/static/gitweb.js
 /gitweb/static/gitweb.min.*
+/advice-config.h
+/advice-type.h
 /config-list.h
 /command-list.h
 /hook-list.h
@@ -217,6 +219,7 @@
 /config.mak.autogen
 /config.mak.append
 /configure
+/.build/
 /.vscode/
 /tags
 /TAGS

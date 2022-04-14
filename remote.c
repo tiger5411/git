@@ -1219,7 +1219,7 @@ static void show_push_unqualified_ref_name_error(const char *dst_value,
 		"Neither worked, so we gave up. You must fully qualify the ref."),
 	      dst_value, matched_src_name);
 
-	if (!advice_enabled(ADVICE_PUSH_UNQUALIFIED_REF_NAME))
+	if (!advice_enabled(ADVICE_PUSH_UNQUALIFIED_REFNAME))
 		return;
 
 	if (get_oid(matched_src_name, &oid))
