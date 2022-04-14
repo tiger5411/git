@@ -391,9 +391,9 @@ test_expect_success 'no segfaults for reflog containing non-commit sha1s' '
 	git reflog refs/tests/tree-in-reflog
 '
 
-test_expect_failure 'reflog with non-commit entries displays all entries' '
+test_expect_todo 'reflog with non-commit entries displays all entries' '
 	git reflog refs/tests/tree-in-reflog >actual &&
-	test_line_count = 3 actual
+	test_todo test_line_count --want "= 3" --expect "= 2" -- actual
 '
 
 # This test takes a lock on an individual ref; this is not supported in

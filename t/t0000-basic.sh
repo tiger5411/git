@@ -189,6 +189,8 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	test_expect_failure "pretend we have a known breakage" "false"
 	test_expect_failure "pretend we have a known breakage" "false"
 	test_expect_failure "pretend we have fixed a known breakage" "true"
+	test_expect_todo "pretend we have a known TODO" "true"
+	test_expect_todo "pretend we have a bad TODO" "false"
 	test_done
 	EOF
 	check_sub_test_lib_test mixed-results2 <<-\EOF
@@ -205,10 +207,50 @@ test_expect_success 'subtest: mixed results: a mixture of all possible results' 
 	> not ok 8 - pretend we have a known breakage # TODO known breakage
 	> not ok 9 - pretend we have a known breakage # TODO known breakage
 	> ok 10 - pretend we have fixed a known breakage # TODO known breakage vanished
+	> not ok 11 - pretend we have a known TODO # TODO known breakage
+	> not ok 12 - pretend we have a bad TODO (broken '\''test_expect_todo'\''!)
+	> #	false
 	> # 1 known breakage(s) vanished; please update test(s)
-	> # still have 2 known breakage(s)
-	> # failed 3 among remaining 7 test(s)
-	> 1..10
+	> # still have 3 known breakage(s)
+	> # failed 4 among remaining 8 test(s)
+	> 1..12
+	EOF
+'
+
+test_expect_success 'subtest: test_expect_todo with test_todo' '
+	write_and_run_sub_test_lib_test test-expect-todo <<-\EOF &&
+	test_expect_todo "command not implemented yet" "
+		test_todo \
+			--want \"git unimplemented\" \
+			--expect \"test_must_fail git unimplemented\"
+	"
+	test_done
+	EOF
+	check_sub_test_lib_test test-expect-todo <<-\EOF
+	> not ok 1 - command not implemented yet # TODO known breakage
+	> # still have 1 known breakage(s)
+	> 1..1
+	EOF
+'
+
+test_expect_success 'subtest: test_expect_todo with test_todo: prefix + suffix arguments' '
+	write_and_run_sub_test_lib_test test-expect-todo-pfx <<-\EOF &&
+	test_expect_todo "prefix argument for test_todo" "
+		echo x >want &&
+		echo y >expect &&
+		cp expect actual &&
+		test_todo test_cmp \
+			--want want \
+			--expect expect \
+			-- \
+			actual
+	"
+	test_done
+	EOF
+	check_sub_test_lib_test test-expect-todo-pfx <<-\EOF
+	> not ok 1 - prefix argument for test_todo # TODO known breakage
+	> # still have 1 known breakage(s)
+	> 1..1
 	EOF
 '
 

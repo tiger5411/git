@@ -794,11 +794,13 @@ test_verify_prereq () {
 	BUG "'$test_prereq' does not look like a prereq"
 }
 
-test_expect_failure () {
+_test_expect_todo () {
+	local func=$1
+	shift
 	test_start_ "$@"
 	test "$#" = 3 && { test_prereq=$1; shift; } || test_prereq=
 	test "$#" = 2 ||
-	BUG "not 2 or 3 parameters to test-expect-failure"
+	BUG "not 2 or 3 parameters to $func"
 	test_verify_prereq
 	export test_prereq
 	if ! test_skip "$@"
@@ -806,12 +808,30 @@ test_expect_failure () {
 		say >&3 "checking known breakage of $TEST_NUMBER.$test_count '$1': $2"
 		if test_run_ "$2" expecting_failure
 		then
-			test_known_broken_ok_ "$1"
+			case "$func" in
+			test_expect_todo) test_known_broken_ok_ "$func" "$1" ;;
+			test_expect_failure) test_known_broken_ok_ "$func" "$1" ;;
+			esac
 		else
-			test_known_broken_failure_ "$1"
+			case "$func" in
+			test_expect_todo)
+				test_title_=$1
+				shift
+				test_failure_ "$test_title_ (broken 'test_expect_todo'!)" "$@"
+				;;
+			test_expect_failure) test_known_broken_failure_ "$func" "$1" ;;
+			esac
 		fi
 	fi
 	test_finish_
+}
+
+test_expect_failure () {
+	_test_expect_todo test_expect_failure "$@"
+}
+
+test_expect_todo () {
+	_test_expect_todo test_expect_todo "$@"
 }
 
 test_expect_success () {
@@ -1015,6 +1035,126 @@ test_path_is_missing () {
 	fi
 }
 
+# Usage: test_todo [<common-prefix>] <options> [-- <common-suffix>...]
+#	--want <want>
+#		The condition we'd like. Injected between
+#		<common-prefix> and <common-suffix> arguments.
+#	--expect <expect>
+#		The condition we have now. Injected in the same way as
+#		the arguments to --want.
+#	--reset <reset>
+#		A command to run between the <want> and <expect>
+#		conditions to reset the repository state. Used e.g. if
+#		both run a "git rm" command that might succeed.
+#
+# test_todo is a wrapper for use with "test_expect_todo". It declares
+# an outcome we want, and one we currently expect:
+#
+#	test_todo --want true --expect false
+#
+# It can also take a <common-prefix> prefix along with
+# <common-suffix>... parameters after a "--", e.g.:
+#
+#	# We want 1 line, not 2
+# 	test_todo test_line_count --want "= 1" --expect "= 2" -- actual
+#
+# Here both variants of the "test_line_count" will be run to assert
+# that the "want" variant doesn't pass yet, and that the "expect"
+# variant describes the current behavior.
+#
+# Because we run both neither of them can mutate the test
+# state. I.e. they must be read-only commands such as "wc -l", and not
+# a state-altering command such as "rm".
+#
+# To run a command that mutates the repository state supply a --reset
+# option, e.g. "git reset --hard" if you need to run "git rm".
+test_todo () {
+	local common_fn= &&
+	local reset= &&
+	local have_want= &&
+	local want= &&
+	local expect= &&
+	local have_expect= &&
+	while test $# != 0
+	do
+		case "$1" in
+		--want)
+			want="$2" &&
+			have_want=t &&
+			shift
+			;;
+		--expect)
+			expect="$2" &&
+			have_expect=t &&
+			shift
+			;;
+		--reset)
+			reset="$2" &&
+			shift
+			;;
+		--)
+			shift &&
+			break
+			;;
+		*)
+			if test -n "$common_fn"
+			then
+				BUG "the <common-fn> can only be given once" &&
+				return 1
+			fi &&
+			common_fn="$1"
+			;;
+		esac
+		shift
+	done &&
+	if test "$have_want$have_expect" != "tt"
+	then
+		BUG "test_todo must get a --want <want> and --expect <expect>"
+	fi &&
+
+	if $common_fn $want "$@"
+	then
+		BUG "a test_todo succeeded with --want ('$want').  Turn it into a test_expect_success + $@ $want?" &&
+		return 1
+	else
+		if test -n "$reset"
+		then
+			$reset
+		fi &&
+		if $common_fn $expect "$@"
+		then
+			say "a test_todo will succeed with --expect ('$expect'), we eventually want '$want' instead" >&3 &&
+			return 0
+		fi
+	fi &&
+	BUG "a test_todo didn't pass with either --want ('$want') or --expect ('$expect')"
+}
+
+# todo_test_path is a test_path_* for use in conjunction with
+# "test_expect_todo".
+#
+# It takes "want_fn" and "expect_fn" arguments of e.g. "is_file" or
+# "is_dir", which will be turned into corresponding "test_file_*"
+# calls. Use it like:
+#
+#	test_expect_todo 'foo should be a directory' '
+#		>foo &&
+#		todo_test_path is_dir is_file foo
+#	'
+todo_test_path () {
+	test "$#" -ne 3 && BUG "3 param, not $#"
+	local want_fn=$1
+	local expect_fn=$2
+	local path=$3 &&
+	shift 3 &&
+
+	test_todo \
+		--want "test_path_$want_fn" \
+		--expect "test_path_$expect_fn" \
+		-- \
+		"$path"
+}
+
 # test_line_count checks that a file has the number of lines it
 # ought to. For example:
 #
@@ -1106,7 +1246,7 @@ test_must_fail_acceptable () {
 	fi
 
 	case "$1" in
-	git|__git*|test-tool|test_terminal)
+	git|__git*|test-tool|test_*)
 		return 0
 		;;
 	*)
@@ -1240,6 +1380,28 @@ test_expect_code () {
 test_cmp () {
 	test "$#" -ne 2 && BUG "2 param"
 	eval "$GIT_TEST_CMP" '"$@"'
+}
+
+# todo_test_cmp is a "test_cmp" for use in conjunction with
+# "test_expect_todo".
+#
+# It takes a mandatory extra first argument of "want", indicating the
+# output we'd like to have once we turn that "test_expect_todo" into a
+# "test_expect_success":
+#
+#	test_expect_todo 'foo still doesn't work' '
+#		echo yay >want &&
+#		echo error >expect &&
+#		foo >actual &&
+#		test_cmp want expect actual
+#	'
+todo_test_cmp () {
+	test "$#" -ne 3 && BUG "3 param, not $#"
+	local want=$1 &&
+	local expect=$2 &&
+	local actual=$3 &&
+
+	test_todo test_cmp --want "$want" --expect "$expect" -- "$actual"
 }
 
 # Check that the given config key has the expected value.

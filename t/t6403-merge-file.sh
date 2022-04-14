@@ -82,13 +82,37 @@ test_expect_success "merge without conflict (--quiet)" '
 	git merge-file --quiet test.txt orig.txt new2.txt
 '
 
-test_expect_failure "merge without conflict (missing LF at EOF)" '
+test_expect_todo "merge without conflict (missing LF at EOF)" '
 	cp new1.txt test2.txt &&
-	git merge-file test2.txt orig.txt new4.txt
+	test_todo \
+		test_expect_code \
+		--expect 1 \
+		--want 0 \
+		-- \
+		git merge-file test2.txt orig.txt new4.txt
 '
 
-test_expect_failure "merge result added missing LF" '
-	test_cmp test.txt test2.txt
+test_expect_todo "merge result added missing LF" '
+	cat >expect <<-\EOF &&
+	Dominus regit me, et nihil mihi deerit.
+	In loco pascuae ibi me collocavit,
+	super aquam refectionis educavit me;
+	animam meam convertit,
+	deduxit me super semitas jusitiae,
+	<<<<<<< test2.txt
+	<<<<<<< test2.txt
+	propter nomen suum.
+	Nam et si ambulavero in medio umbrae mortis,
+	non timebo mala, quoniam tu mecum es:
+	virga tua et baculus tuus ipsa me consolata sunt.
+	=======
+	propter nomen suum.
+	>>>>>>> new4.txt
+	=======
+	propter nomen suum.
+	>>>>>>> new4.txt
+	EOF
+	todo_test_cmp test.txt expect test2.txt
 '
 
 test_expect_success "merge without conflict (missing LF at EOF, away from change in the other file)" '

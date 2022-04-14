@@ -442,77 +442,98 @@ test_expect_success 'grep --recurse-submodules with --cached ignores worktree mo
 	test_must_be_empty actual
 '
 
-test_expect_failure 'grep --textconv: superproject .gitattributes does not affect submodules' '
+test_expect_todo 'grep --textconv: superproject .gitattributes does not affect submodules' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 	echo "a diff=d2x" >.gitattributes &&
 
-	cat >expect <<-\EOF &&
+	cat >want <<-\EOF &&
 	a:(1|2)x(3|4)
 	EOF
+	cat >expect <<-\EOF &&
+	a:(1|2)x(3|4)
+	submodule/a:(1|2)x(3|4)
+	submodule/sub/a:(1|2)x(3|4)
+	EOF
 	git grep --textconv --recurse-submodules x >actual &&
-	test_cmp expect actual
+	todo_test_cmp want expect actual
 '
 
-test_expect_failure 'grep --textconv: superproject .gitattributes (from index) does not affect submodules' '
+test_expect_todo 'grep --textconv: superproject .gitattributes (from index) does not affect submodules' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 	echo "a diff=d2x" >.gitattributes &&
 	git add .gitattributes &&
 	rm .gitattributes &&
 
-	cat >expect <<-\EOF &&
+	cat >want <<-\EOF &&
 	a:(1|2)x(3|4)
 	EOF
+	cat >expect <<-\EOF &&
+	a:(1|2)x(3|4)
+	submodule/a:(1|2)x(3|4)
+	submodule/sub/a:(1|2)x(3|4)
+	EOF
 	git grep --textconv --recurse-submodules x >actual &&
-	test_cmp expect actual
+	todo_test_cmp want expect actual
 '
 
-test_expect_failure 'grep --textconv: superproject .git/info/attributes does not affect submodules' '
+test_expect_todo 'grep --textconv: superproject .git/info/attributes does not affect submodules' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 	super_attr="$(git rev-parse --git-path info/attributes)" &&
 	test_when_finished "rm -f \"$super_attr\"" &&
 	echo "a diff=d2x" >"$super_attr" &&
 
-	cat >expect <<-\EOF &&
+	cat >want <<-\EOF &&
 	a:(1|2)x(3|4)
 	EOF
+	cat >expect <<-\EOF &&
+	a:(1|2)x(3|4)
+	submodule/a:(1|2)x(3|4)
+	submodule/sub/a:(1|2)x(3|4)
+	EOF
 	git grep --textconv --recurse-submodules x >actual &&
-	test_cmp expect actual
+	todo_test_cmp want expect actual
 '
 
 # Note: what currently prevents this test from passing is not that the
 # .gitattributes file from "./submodule" is being ignored, but that it is being
 # propagated to the nested "./submodule/sub" files.
 #
-test_expect_failure 'grep --textconv correctly reads submodule .gitattributes' '
+test_expect_todo 'grep --textconv correctly reads submodule .gitattributes' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 	echo "a diff=d2x" >submodule/.gitattributes &&
 
-	cat >expect <<-\EOF &&
+	cat >want <<-\EOF &&
 	submodule/a:(1|2)x(3|4)
 	EOF
+	cat >expect <<-\EOF &&
+	submodule/a:(1|2)x(3|4)
+	submodule/sub/a:(1|2)x(3|4)
+	EOF
 	git grep --textconv --recurse-submodules x >actual &&
-	test_cmp expect actual
+	todo_test_cmp want expect actual
 '
 
-test_expect_failure 'grep --textconv correctly reads submodule .gitattributes (from index)' '
+test_expect_todo 'grep --textconv correctly reads submodule .gitattributes (from index)' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 	echo "a diff=d2x" >submodule/.gitattributes &&
 	git -C submodule add .gitattributes &&
 	rm submodule/.gitattributes &&
 
-	cat >expect <<-\EOF &&
+	cat >want <<-\EOF &&
 	submodule/a:(1|2)x(3|4)
 	EOF
-	git grep --textconv --recurse-submodules x >actual &&
-	test_cmp expect actual
+	>expect &&
+
+	test_might_fail git grep --textconv --recurse-submodules x >actual &&
+	todo_test_cmp want expect actual
 '
 
-test_expect_failure 'grep --textconv correctly reads submodule .git/info/attributes' '
+test_expect_todo 'grep --textconv correctly reads submodule .git/info/attributes' '
 	reset_and_clean &&
 	test_config_global diff.d2x.textconv "sed -e \"s/d/x/\"" &&
 
@@ -520,14 +541,15 @@ test_expect_failure 'grep --textconv correctly reads submodule .git/info/attribu
 	test_when_finished "rm -f \"$submodule_attr\"" &&
 	echo "a diff=d2x" >"$submodule_attr" &&
 
-	cat >expect <<-\EOF &&
+	cat >want <<-\EOF &&
 	submodule/a:(1|2)x(3|4)
 	EOF
-	git grep --textconv --recurse-submodules x >actual &&
-	test_cmp expect actual
+	>expect &&
+	test_might_fail git grep --textconv --recurse-submodules x >actual &&
+	todo_test_cmp want expect actual
 '
 
-test_expect_failure 'grep saves textconv cache in the appropriate repository' '
+test_expect_todo 'grep saves textconv cache in the appropriate repository' '
 	reset_and_clean &&
 	test_config_global diff.d2x_cached.textconv "sed -e \"s/d/x/\"" &&
 	test_config_global diff.d2x_cached.cachetextconv true &&
@@ -540,8 +562,8 @@ test_expect_failure 'grep saves textconv cache in the appropriate repository' '
 	super_textconv_cache="$(git rev-parse --git-path refs/notes/textconv/d2x_cached)" &&
 	sub_textconv_cache="$(git -C submodule rev-parse \
 			--path-format=absolute --git-path refs/notes/textconv/d2x_cached)" &&
-	test_path_is_missing "$super_textconv_cache" &&
-	test_path_is_file "$sub_textconv_cache"
+	todo_test_path is_missing is_file "$super_textconv_cache" &&
+	todo_test_path is_file is_missing "$sub_textconv_cache"
 '
 
 test_expect_success 'grep partially-cloned submodule' '
