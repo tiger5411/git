@@ -1668,10 +1668,16 @@ static struct ref *do_fetch_pack_v2(struct fetch_pack_args *args,
 			/* Filter 'ref' by 'sought' and those that aren't local */
 			mark_complete_and_common_ref(negotiator, args, &ref);
 			filter_refs(args, &ref, sought, nr_sought);
-			if (!args->refetch && everything_local(args, &ref))
-				state = FETCH_DONE;
-			else
+			if (args->refetch) {
+				print_verbose(args, _("have --refetch, doing a forced refetch"));
 				state = FETCH_SEND_REQUEST;
+			} else if (!everything_local(args, &ref)) {
+				print_verbose(args, _("have non-local, need to fetch"));
+				state = FETCH_SEND_REQUEST;
+			} else {
+				print_verbose(args, _("everything is local, disconnecting"));
+				state = FETCH_DONE;
+			}
 
 			mark_tips(negotiator, args->negotiation_tips);
 			for_each_cached_alternate(negotiator,
