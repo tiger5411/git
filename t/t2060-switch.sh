@@ -121,8 +121,8 @@ test_expect_success 'not switching when something is in progress' '
 test_expect_success 'tracking info copied with autoSetupMerge=inherit' '
 	# default config does not copy tracking info
 	git switch -c foo-no-inherit foo &&
-	test_cmp_config "" --default "" branch.foo-no-inherit.remote &&
-	test_cmp_config "" --default "" branch.foo-no-inherit.merge &&
+	test_expect_code 1 git config branch.foo-no-inherit.remote &&
+	test_expect_code 1 git config branch.foo-no-inherit.merge &&
 	# with --track=inherit, we copy tracking info from foo
 	git switch --track=inherit -c foo2 foo &&
 	test_cmp_config origin branch.foo2.remote &&
@@ -142,8 +142,8 @@ test_expect_success 'tracking info copied with autoSetupMerge=inherit' '
 	test_cmp_config refs/heads/foo branch.foo5.merge &&
 	# no tracking info to inherit from main
 	git switch -c main2 main &&
-	test_cmp_config "" --default "" branch.main2.remote &&
-	test_cmp_config "" --default "" branch.main2.merge
+	test_expect_code 1 git config branch.main2.remote &&
+	test_expect_code 1 git config branch.main2.merge
 '
 
 test_done

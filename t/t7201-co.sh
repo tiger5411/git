@@ -662,8 +662,8 @@ test_expect_success 'tracking info copied with autoSetupMerge=inherit' '
 	git reset --hard main &&
 	# default config does not copy tracking info
 	git checkout -b foo-no-inherit koala/bear &&
-	test_cmp_config "" --default "" branch.foo-no-inherit.remote &&
-	test_cmp_config "" --default "" branch.foo-no-inherit.merge &&
+	test_expect_code 1 git config branch.foo-no-inherit.remote &&
+	test_expect_code 1 git config branch.foo-no-inherit.merge &&
 	# with autoSetupMerge=inherit, we copy tracking info from koala/bear
 	test_config branch.autoSetupMerge inherit &&
 	git checkout -b foo koala/bear &&
@@ -671,8 +671,8 @@ test_expect_success 'tracking info copied with autoSetupMerge=inherit' '
 	test_cmp_config refs/heads/koala/bear branch.foo.merge &&
 	# no tracking info to inherit from main
 	git checkout -b main2 main &&
-	test_cmp_config "" --default "" branch.main2.remote &&
-	test_cmp_config "" --default "" branch.main2.merge
+	test_expect_code 1 git config branch.main2.remote &&
+	test_expect_code 1 git config branch.main2.merge
 '
 
 test_done

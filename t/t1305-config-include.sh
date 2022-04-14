@@ -103,12 +103,10 @@ test_expect_success 'config modification does not affect includes' '
 	echo 1 >expect &&
 	git config -f one test.one >actual &&
 	test_cmp expect actual &&
-	cat >expect <<-\EOF &&
+	test_cmp_config test.one <<-\EOF
 	1
 	2
 	EOF
-	git config --get-all test.one >actual &&
-	test_cmp expect actual
 '
 
 test_expect_success 'missing include files are ignored' '
