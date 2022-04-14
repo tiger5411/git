@@ -44,7 +44,7 @@ static int need_large_offset(off_t offset, const struct pack_idx_option *opts)
  */
 const char *write_idx_file(const char *index_name, struct pack_idx_entry **objects,
 			   int nr_objects, const struct pack_idx_option *opts,
-			   const unsigned char *sha1)
+			   const unsigned char *sha1, int verify)
 {
 	struct hashfile *f;
 	struct pack_idx_entry **sorted_by_sha, **list, **last;
@@ -65,7 +65,7 @@ const char *write_idx_file(const char *index_name, struct pack_idx_entry **objec
 	else
 		sorted_by_sha = list = last = NULL;
 
-	if (opts->flags & WRITE_IDX_VERIFY) {
+	if (verify) {
 		assert(index_name);
 		f = hashfd_check(index_name);
 	} else {
@@ -117,7 +117,7 @@ const char *write_idx_file(const char *index_name, struct pack_idx_entry **objec
 		if (index_version < 2)
 			hashwrite_be32(f, obj->offset);
 		hashwrite(f, obj->oid.hash, the_hash_algo->rawsz);
-		if ((opts->flags & WRITE_IDX_STRICT) &&
+		if (opts->write_idx_strict &&
 		    (i && oideq(&list[-2]->oid, &obj->oid)))
 			die("The same object %s appears twice in the pack",
 			    oid_to_hex(&obj->oid));
@@ -159,9 +159,10 @@ const char *write_idx_file(const char *index_name, struct pack_idx_entry **objec
 	}
 
 	hashwrite(f, sha1, the_hash_algo->rawsz);
+
 	finalize_hashfile(f, NULL, FSYNC_COMPONENT_PACK_METADATA,
 			  CSUM_HASH_IN_STREAM | CSUM_CLOSE |
-			  ((opts->flags & WRITE_IDX_VERIFY) ? 0 : CSUM_FSYNC));
+			  (verify ? 0 : CSUM_FSYNC));
 	return index_name;
 }
 
@@ -216,14 +217,11 @@ const char *write_rev_file(const char *rev_name,
 			   struct pack_idx_entry **objects,
 			   uint32_t nr_objects,
 			   const unsigned char *hash,
-			   unsigned flags)
+			   int verify)
 {
 	uint32_t *pack_order;
 	uint32_t i;
 	const char *ret;
-
-	if (!(flags & WRITE_REV) && !(flags & WRITE_REV_VERIFY))
-		return NULL;
 
 	ALLOC_ARRAY(pack_order, nr_objects);
 	for (i = 0; i < nr_objects; i++)
@@ -231,7 +229,7 @@ const char *write_rev_file(const char *rev_name,
 	QSORT_S(pack_order, nr_objects, pack_order_cmp, objects);
 
 	ret = write_rev_file_order(rev_name, pack_order, nr_objects, hash,
-				   flags);
+				   verify);
 
 	free(pack_order);
 
@@ -242,15 +240,12 @@ const char *write_rev_file_order(const char *rev_name,
 				 uint32_t *pack_order,
 				 uint32_t nr_objects,
 				 const unsigned char *hash,
-				 unsigned flags)
+				 int verify)
 {
 	struct hashfile *f;
 	int fd;
 
-	if ((flags & WRITE_REV) && (flags & WRITE_REV_VERIFY))
-		die(_("cannot both write and verify reverse index"));
-
-	if (flags & WRITE_REV) {
+	if (!verify) {
 		if (!rev_name) {
 			struct strbuf tmp_file = STRBUF_INIT;
 			fd = odb_mkstemp(&tmp_file, "pack/tmp_rev_XXXXXX");
@@ -260,7 +255,7 @@ const char *write_rev_file_order(const char *rev_name,
 			fd = xopen(rev_name, O_CREAT|O_EXCL|O_WRONLY, 0600);
 		}
 		f = hashfd(fd, rev_name);
-	} else if (flags & WRITE_REV_VERIFY) {
+	} else {
 		struct stat statbuf;
 		if (stat(rev_name, &statbuf)) {
 			if (errno == ENOENT) {
@@ -270,8 +265,7 @@ const char *write_rev_file_order(const char *rev_name,
 				die_errno(_("could not stat: %s"), rev_name);
 		}
 		f = hashfd_check(rev_name);
-	} else
-		return NULL;
+	}
 
 	write_rev_header(f);
 
@@ -283,7 +277,8 @@ const char *write_rev_file_order(const char *rev_name,
 
 	finalize_hashfile(f, NULL, FSYNC_COMPONENT_PACK_METADATA,
 			  CSUM_HASH_IN_STREAM | CSUM_CLOSE |
-			  ((flags & WRITE_IDX_VERIFY) ? 0 : CSUM_FSYNC));
+			  (verify ? 0 : CSUM_FSYNC));
+
 
 	return rev_name;
 }
@@ -494,12 +489,13 @@ void stage_tmp_packfiles(struct strbuf *name_buffer,
 		die_errno("unable to make temporary pack file readable");
 
 	*idx_tmp_name = (char *)write_idx_file(NULL, written_list, nr_written,
-					       pack_idx_opts, hash);
+					       pack_idx_opts, hash, 0);
 	if (adjust_shared_perm(*idx_tmp_name))
 		die_errno("unable to make temporary index file readable");
 
-	rev_tmp_name = write_rev_file(NULL, written_list, nr_written, hash,
-				      pack_idx_opts->flags);
+	if (pack_idx_opts->write_rev)
+		rev_tmp_name = write_rev_file(NULL, written_list, nr_written, hash,
+					      0);
 
 	rename_tmp_packfile(name_buffer, pack_tmp_name, "pack");
 	if (rev_tmp_name)

@@ -1588,12 +1588,9 @@ static int git_index_pack_config(const char *k, const char *v, void *cb)
 		}
 		return 0;
 	}
-	if (!strcmp(k, "pack.writereverseindex")) {
-		if (git_config_bool(k, v))
-			opts->flags |= WRITE_REV;
-		else
-			opts->flags &= ~WRITE_REV;
-	}
+	if (!strcmp(k, "pack.writereverseindex"))
+		opts->write_rev = git_config_bool(k, v);
+
 	return git_default_config(k, v, cb);
 }
 
@@ -1726,7 +1723,7 @@ static int fsck_error_cb_report_gitmodules(struct fsck_options *o,
 
 int cmd_index_pack(int argc, const char **argv, const char *prefix)
 {
-	int i, fix_thin_pack = 0, verify = 0, stat_only = 0, rev_index;
+	int i, fix_thin_pack = 0, verify = 0, stat_only = 0;
 	const char *curr_index;
 	const char *curr_rev_index = NULL;
 	const char *index_name = NULL, *pack_name = NULL, *rev_index_name = NULL;
@@ -1761,10 +1758,8 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	if (prefix && chdir(prefix))
 		die(_("Cannot come back to cwd"));
 
-	if (git_env_bool(GIT_TEST_WRITE_REV_INDEX, 0))
-		rev_index = 1;
-	else
-		rev_index = !!(opts.flags & (WRITE_REV_VERIFY | WRITE_REV));
+	opts.write_rev = git_env_bool(GIT_TEST_WRITE_REV_INDEX,
+				       opts.write_rev);
 
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
@@ -1849,9 +1844,9 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 					die(_("unknown hash algorithm '%s'"), arg);
 				repo_set_hash_algo(the_repository, hash_algo);
 			} else if (!strcmp(arg, "--rev-index")) {
-				rev_index = 1;
+				opts.write_rev = 1;
 			} else if (!strcmp(arg, "--no-rev-index")) {
-				rev_index = 0;
+				opts.write_rev = 0;
 			} else
 				usage(index_pack_usage);
 			continue;
@@ -1873,9 +1868,7 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	if (!index_name && pack_name)
 		index_name = derive_filename(pack_name, "pack", "idx", &index_name_buf);
 
-	opts.flags &= ~(WRITE_REV | WRITE_REV_VERIFY);
-	if (rev_index) {
-		opts.flags |= verify ? WRITE_REV_VERIFY : WRITE_REV;
+	if (opts.write_rev) {
 		if (index_name)
 			rev_index_name = derive_filename(index_name,
 							 "idx", "rev",
@@ -1886,10 +1879,9 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 		if (!index_name)
 			die(_("--verify with no packfile name given"));
 		read_idx_option(&opts, index_name);
-		opts.flags |= WRITE_IDX_VERIFY | WRITE_IDX_STRICT;
 	}
 	if (strict)
-		opts.flags |= WRITE_IDX_STRICT;
+		opts.write_idx_strict = 1;
 
 	if (HAVE_THREADS && !nr_threads) {
 		nr_threads = online_cpus();
@@ -1933,11 +1925,12 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
 	ALLOC_ARRAY(idx_objects, nr_objects);
 	for (i = 0; i < nr_objects; i++)
 		idx_objects[i] = &objects[i].idx;
-	curr_index = write_idx_file(index_name, idx_objects, nr_objects, &opts, pack_hash);
-	if (rev_index)
+	curr_index = write_idx_file(index_name, idx_objects, nr_objects, &opts,
+				    pack_hash, verify);
+	if (opts.write_rev)
 		curr_rev_index = write_rev_file(rev_index_name, idx_objects,
 						nr_objects, pack_hash,
-						opts.flags);
+						verify);
 	free(idx_objects);
 
 	if (!verify)

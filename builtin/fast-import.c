@@ -788,7 +788,7 @@ static const char *create_index(void)
 		die("internal consistency error creating the index");
 
 	tmpfile = write_idx_file(NULL, idx, object_count, &pack_idx_opts,
-				 pack_data->hash);
+				 pack_data->hash, 0);
 	free(idx);
 	return tmpfile;
 }

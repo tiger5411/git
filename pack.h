@@ -38,12 +38,8 @@ struct pack_header {
 #define PACK_IDX_SIGNATURE 0xff744f63	/* "\377tOc" */
 
 struct pack_idx_option {
-	unsigned flags;
-	/* flag bits */
-#define WRITE_IDX_VERIFY 01 /* verify only, do not write the idx file */
-#define WRITE_IDX_STRICT 02
-#define WRITE_REV 04
-#define WRITE_REV_VERIFY 010
+	unsigned int write_idx_strict:1,
+		     write_rev:1;
 
 	uint32_t version;
 	uint32_t off32_limit;
@@ -81,7 +77,11 @@ struct progress;
 /* Note, the data argument could be NULL if object type is blob */
 typedef int (*verify_fn)(const struct object_id *, enum object_type, unsigned long, void*, int*);
 
-const char *write_idx_file(const char *index_name, struct pack_idx_entry **objects, int nr_objects, const struct pack_idx_option *, const unsigned char *sha1);
+const char *write_idx_file(const char *index_name,
+			   struct pack_idx_entry **objects, int nr_objects,
+			   const struct pack_idx_option *opts,
+			   const unsigned char *sha1,
+			   int verify);
 int check_pack_crc(struct packed_git *p, struct pack_window **w_curs, off_t offset, off_t len, unsigned int nr);
 int verify_pack_index(struct packed_git *);
 int verify_pack(struct repository *, struct packed_git *, verify_fn fn, struct progress *, uint32_t);
@@ -93,8 +93,14 @@ struct ref;
 
 void write_promisor_file(const char *promisor_name, struct ref **sought, int nr_sought);
 
-const char *write_rev_file(const char *rev_name, struct pack_idx_entry **objects, uint32_t nr_objects, const unsigned char *hash, unsigned flags);
-const char *write_rev_file_order(const char *rev_name, uint32_t *pack_order, uint32_t nr_objects, const unsigned char *hash, unsigned flags);
+const char *write_rev_file(const char *rev_name,
+			   struct pack_idx_entry **objects,
+			   uint32_t nr_objects,
+			   const unsigned char *hash, int verify);
+const char *write_rev_file_order(const char *rev_name, uint32_t *pack_order,
+				 uint32_t nr_objects,
+				 const unsigned char *hash,
+				 int verify);
 
 /*
  * The "hdr" output buffer should be at least this big, which will handle sizes
