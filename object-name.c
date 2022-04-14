@@ -234,9 +234,8 @@ static int disambiguate_committish_only(struct repository *r,
 					void *cb_data_unused)
 {
 	struct object *obj;
-	int kind;
+	enum object_type kind = oid_object_info(r, oid, NULL);
 
-	kind = oid_object_info(r, oid, NULL);
 	if (kind == OBJ_COMMIT)
 		return 1;
 	if (kind != OBJ_TAG)
@@ -253,7 +252,7 @@ static int disambiguate_tree_only(struct repository *r,
 				  const struct object_id *oid,
 				  void *cb_data_unused)
 {
-	int kind = oid_object_info(r, oid, NULL);
+	enum object_type kind = oid_object_info(r, oid, NULL);
 	return kind == OBJ_TREE;
 }
 
@@ -262,7 +261,7 @@ static int disambiguate_treeish_only(struct repository *r,
 				     void *cb_data_unused)
 {
 	struct object *obj;
-	int kind;
+	enum object_type kind;
 
 	kind = oid_object_info(r, oid, NULL);
 	if (kind == OBJ_TREE || kind == OBJ_COMMIT)
@@ -281,7 +280,7 @@ static int disambiguate_blob_only(struct repository *r,
 				  const struct object_id *oid,
 				  void *cb_data_unused)
 {
-	int kind = oid_object_info(r, oid, NULL);
+	enum object_type kind = oid_object_info(r, oid, NULL);
 	return kind == OBJ_BLOB;
 }
 
@@ -364,7 +363,7 @@ static int show_ambiguous_object(const struct object_id *oid, void *data)
 	const struct disambiguate_state *ds = state->ds;
 	struct strbuf *advice = &state->advice;
 	struct strbuf *sb = &state->sb;
-	int type;
+	enum object_type type;
 	const char *hash;
 
 	if (ds->fn && !ds->fn(ds->repo, oid, ds->cb_data))
@@ -483,10 +482,12 @@ static int repo_collect_ambiguous(struct repository *r,
 static int sort_ambiguous(const void *a, const void *b, void *ctx)
 {
 	struct repository *sort_ambiguous_repo = ctx;
-	int a_type = oid_object_info(sort_ambiguous_repo, a, NULL);
-	int b_type = oid_object_info(sort_ambiguous_repo, b, NULL);
-	int a_type_sort;
-	int b_type_sort;
+	enum object_type a_type = oid_object_info(sort_ambiguous_repo, a, NULL);
+	enum object_type b_type = oid_object_info(sort_ambiguous_repo, b, NULL);
+	enum object_type a_type_sort;
+	enum object_type b_type_sort;
+	const enum object_type tag_type_offs = OBJ_TAG - OBJ_NONE;
+	assert(tag_type_offs == 4);
 
 	/*
 	 * Sorts by hash within the same object type, just as
@@ -504,8 +505,8 @@ static int sort_ambiguous(const void *a, const void *b, void *ctx)
 	 * cleverly) do that with modulus, since the enum assigns 1 to
 	 * commit, so tag becomes 0.
 	 */
-	a_type_sort = a_type % 4;
-	b_type_sort = b_type % 4;
+	a_type_sort = a_type % tag_type_offs;
+	b_type_sort = b_type % tag_type_offs;
 	return a_type_sort > b_type_sort ? 1 : -1;
 }
 

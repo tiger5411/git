@@ -33,13 +33,20 @@ const char *commit_type = "commit";
 struct commit *lookup_commit_reference_gently(struct repository *r,
 		const struct object_id *oid, int quiet)
 {
-	struct object *obj = deref_tag(r,
-				       parse_object(r, oid),
-				       NULL, 0);
+	struct object *tmp = parse_object(r, oid);
+	struct object *obj = deref_tag(r, tmp, NULL, 0);
 
 	if (!obj)
 		return NULL;
-	return object_as_type(obj, OBJ_COMMIT, quiet);
+
+	if (obj->type <= 0)
+		BUG("should have initialized obj->type = OBJ_{COMMIT,TREE,BLOB,TAG} from deref_tag()");
+	if (obj->type != OBJ_COMMIT) {
+		if (!quiet)
+			oid_is_type_or_error(oid, obj->type, OBJ_COMMIT);
+		return NULL;
+	}
+	return (struct commit *)obj;
 }
 
 struct commit *lookup_commit_reference(struct repository *r, const struct object_id *oid)
@@ -59,12 +66,30 @@ struct commit *lookup_commit_or_die(const struct object_id *oid, const char *ref
 	return c;
 }
 
-struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
+struct commit *create_commit(struct repository *r, const struct object_id *oid)
+{
+	return create_object(r, oid, alloc_commit_node(r));
+}
+
+struct commit *lookup_commit_type(struct repository *r,
+				  const struct object_id *oid,
+				  enum object_type type)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
-		return create_object(r, oid, alloc_commit_node(r));
-	return object_as_type(obj, OBJ_COMMIT, 0);
+		return create_commit(r, oid);
+	if (type != OBJ_NONE && obj->type != OBJ_NONE) {
+		if (oid_is_type_or_error(oid, OBJ_COMMIT, obj->type)) {
+			obj->type = OBJ_COMMIT;
+			return NULL;
+		}
+	}
+	return object_as_type(obj, OBJ_COMMIT);
+}
+
+struct commit *lookup_commit(struct repository *r, const struct object_id *oid)
+{
+	return lookup_commit_type(r, oid, OBJ_NONE);
 }
 
 struct commit *lookup_commit_reference_by_name(const char *name)
@@ -309,9 +334,7 @@ const void *repo_get_commit_buffer(struct repository *r,
 		if (!ret)
 			die("cannot read commit object %s",
 			    oid_to_hex(&commit->object.oid));
-		if (type != OBJ_COMMIT)
-			die("expected commit for %s, got %s",
-			    oid_to_hex(&commit->object.oid), type_name(type));
+		oid_is_type_or_die(&commit->object.oid, type, OBJ_COMMIT);
 		if (sizep)
 			*sizep = size;
 	}
@@ -496,10 +519,10 @@ int repo_parse_commit_internal(struct repository *r,
 		return quiet_on_missing ? -1 :
 			error("Could not read %s",
 			     oid_to_hex(&item->object.oid));
-	if (type != OBJ_COMMIT) {
+	ret = oid_is_type_or_error(&item->object.oid, type, OBJ_COMMIT);
+	if (ret) {
 		free(buffer);
-		return error("Object %s not a commit",
-			     oid_to_hex(&item->object.oid));
+		return ret;
 	}
 
 	ret = parse_commit_buffer(r, item, buffer, size, 0);

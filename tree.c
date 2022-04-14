@@ -102,12 +102,30 @@ int cmp_cache_name_compare(const void *a_, const void *b_)
 				  ce2->name, ce2->ce_namelen, ce_stage(ce2));
 }
 
-struct tree *lookup_tree(struct repository *r, const struct object_id *oid)
+static struct tree *create_tree(struct repository *r, const struct object_id *oid)
+{
+	return create_object(r, oid, alloc_tree_node(r));
+}
+
+struct tree *lookup_tree_type(struct repository *r,
+			      const struct object_id *oid,
+			      enum object_type type)
 {
 	struct object *obj = lookup_object(r, oid);
 	if (!obj)
-		return create_object(r, oid, alloc_tree_node(r));
-	return object_as_type(obj, OBJ_TREE, 0);
+		return create_tree(r, oid);
+	if (type != OBJ_NONE && obj->type != OBJ_NONE) {
+		if (oid_is_type_or_error(oid, OBJ_TREE, obj->type)) {
+			obj->type = OBJ_TREE;
+			return NULL;
+		}
+	}
+	return object_as_type(obj, OBJ_TREE);
+}
+
+struct tree *lookup_tree(struct repository *r, const struct object_id *oid)
+{
+	return lookup_tree_type(r, oid, OBJ_NONE);
 }
 
 int parse_tree_buffer(struct tree *item, void *buffer, unsigned long size)
@@ -123,9 +141,10 @@ int parse_tree_buffer(struct tree *item, void *buffer, unsigned long size)
 
 int parse_tree_gently(struct tree *item, int quiet_on_missing)
 {
-	 enum object_type type;
-	 void *buffer;
-	 unsigned long size;
+	enum object_type type;
+	void *buffer;
+	unsigned long size;
+	int ret;
 
 	if (item->object.parsed)
 		return 0;
@@ -134,10 +153,10 @@ int parse_tree_gently(struct tree *item, int quiet_on_missing)
 		return quiet_on_missing ? -1 :
 			error("Could not read %s",
 			     oid_to_hex(&item->object.oid));
-	if (type != OBJ_TREE) {
+	ret = oid_is_type_or_error(&item->object.oid, type, OBJ_TREE);
+	if (ret) {
 		free(buffer);
-		return error("Object %s not a tree",
-			     oid_to_hex(&item->object.oid));
+		return ret;
 	}
 	return parse_tree_buffer(item, buffer, size);
 }

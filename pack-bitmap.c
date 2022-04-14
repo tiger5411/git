@@ -1637,11 +1637,7 @@ static void test_bitmap_type(struct bitmap_test_data *tdata,
 		die("object %s does not have a unique type",
 		    oid_to_hex(&obj->oid));
 
-	if (bitmap_type != obj->type)
-		die("object %s: real type %s, expected: %s",
-		    oid_to_hex(&obj->oid),
-		    type_name(obj->type),
-		    type_name(bitmap_type));
+	oid_is_type_or_die(&obj->oid, obj->type, bitmap_type);
 }
 
 static void test_show_object(struct object *object, const char *name,

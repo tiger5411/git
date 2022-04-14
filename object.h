@@ -68,8 +68,8 @@ struct object {
 };
 
 const char *type_name(unsigned int type);
-int type_from_string_gently(const char *str, ssize_t, int gentle);
-#define type_from_string(str) type_from_string_gently(str, -1, 0)
+enum object_type type_from_string_gently(const char *str, size_t len);
+enum object_type type_from_string(const char *str);
 
 /*
  * Return the current number of buckets in the object hashmap.
@@ -97,7 +97,17 @@ struct object *lookup_object(struct repository *r, const struct object_id *oid);
 
 void *create_object(struct repository *r, const struct object_id *oid, void *obj);
 
-void *object_as_type(struct object *obj, enum object_type type, int quiet);
+void *object_as_type(struct object *obj, enum object_type type);
+
+void oid_is_type_or_die(const struct object_id *oid,
+			const enum object_type got,
+			const enum object_type want);
+int oid_is_type_or_error(const struct object_id *oid,
+			 const enum object_type got,
+			 const enum object_type want);
+char* oid_is_type_or_die_msg(const struct object_id *oid,
+			     const enum object_type got,
+			     const enum object_type want);
 
 /*
  * Returns the object, having parsed it to find out what it is.
