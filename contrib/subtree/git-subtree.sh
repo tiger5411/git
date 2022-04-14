@@ -817,6 +817,18 @@ cmd_add_repository () {
 	cmd_add_commit FETCH_HEAD
 }
 
+peel_committish () {
+	case "$1" in
+	:/*)
+		peeltmp=$(git rev-parse --verify "$1") &&
+		git rev-parse --verify "${peeltmp}^0"
+		;;
+	*)
+		git rev-parse --verify "${1}^0"
+		;;
+	esac
+}
+
 # Usage: cmd_add_commit REV
 cmd_add_commit () {
 	# The rev has already been validated by cmd_add(), we just

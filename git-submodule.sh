@@ -62,7 +62,7 @@ isnumber()
 sanitize_submodule_env()
 {
 	save_config=$GIT_CONFIG_PARAMETERS
-	clear_local_git_env
+	unset $(git rev-parse --local-env-vars)
 	GIT_CONFIG_PARAMETERS=$save_config
 	export GIT_CONFIG_PARAMETERS
 }
