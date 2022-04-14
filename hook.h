@@ -2,6 +2,7 @@
 #define HOOK_H
 #include "strvec.h"
 #include "run-command.h"
+#include "list.h"
 
 struct run_hooks_opt
 {
@@ -13,6 +14,9 @@ struct run_hooks_opt
 
 	/* Emit an error if the hook is missing */
 	unsigned int error_if_missing:1;
+
+	/* Is this hook safe to run in parallel? */
+	unsigned int parallel:1;
 
 	/**
 	 * An optional initial working directory for the hook,
@@ -64,8 +68,20 @@ struct run_hooks_opt
 	.args = STRVEC_INIT, \
 }
 
-struct hook_state {
-	unsigned int active;
+#define RUN_HOOKS_OPT_INIT_PARALLEL { \
+	.parallel = 1, \
+	.env = STRVEC_INIT, \
+	.args = STRVEC_INIT, \
+}
+
+struct hook {
+	struct list_head list;
+
+	/*
+	 * The friendly name of the hook. NULL indicates the hook is from the
+	 * hookdir.
+	 */
+	char *name;
 
 	/**
 	 * Use this to keep state for your feed_pipe_fn if you are using
@@ -78,10 +94,9 @@ struct hook_cb_data {
 	/* rc reflects the cumulative failure state */
 	int rc;
 	const char *hook_name;
-	const char *hook_path;
+	struct list_head *head;
 	struct hook *run_me;
 	struct run_hooks_opt *options;
-	struct hook_state *hook_state;
 };
 
 /*
@@ -92,9 +107,20 @@ struct hook_cb_data {
 const char *find_hook(const char *name);
 
 /**
- * A boolean version of find_hook()
+ * A boolean version of list_hooks()
  */
 int hook_exists(const char *hookname);
+
+/**
+ * Provides a linked list of 'struct hook' detailing commands which should run
+ * in response to the 'hookname' event, in execution order.
+ */
+struct list_head *list_hooks(const char *hookname);
+
+/**
+ * Clears a hook list returned by list_hooks().
+ */
+void clear_hook_list(struct list_head *head);
 
 /**
  * Takes a `hook_name`, resolves it to a path with find_hook(), and
@@ -121,6 +147,12 @@ int run_hooks(const char *hook_name);
  * hook. This function behaves like the old run_hook_le() API.
  */
 int run_hooks_l(const char *hook_name, ...);
+
+/**
+ * Like run_hooks_l(), but will run in parallel using the
+ * "RUN_HOOKS_OPT_INIT_PARALLEL" macro.
+ */
+int par_hooks_l(const char *hook_name, ...);
 
 /**
  * To specify a 'struct string_list', set 'run_hooks_opt.feed_pipe_ctx' to the
