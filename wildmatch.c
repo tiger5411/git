@@ -12,8 +12,6 @@
 #include "cache.h"
 #include "wildmatch.h"
 
-typedef unsigned char uchar;
-
 /* What character marks an inverted character class? */
 #define NEGATE_CLASS	'!'
 #define NEGATE_CLASS2	'^'
@@ -52,14 +50,15 @@ typedef unsigned char uchar;
 #define ISXDIGIT(c) (ISASCII(c) && isxdigit(c))
 
 /* Match pattern "p" against "text" */
-static int dowild(const uchar *p, const uchar *text, unsigned int flags)
+static int dowild(const unsigned char *p, const unsigned char *text,
+		  unsigned int flags)
 {
-	uchar p_ch;
-	const uchar *pattern = p;
+	unsigned char p_ch;
+	const unsigned char *pattern = p;
 
 	for ( ; (p_ch = *p) != '\0'; text++, p++) {
 		int matched, match_slash, negated;
-		uchar t_ch, prev_ch;
+		unsigned char t_ch, prev_ch;
 		if ((t_ch = *text) == '\0' && p_ch != '*')
 			return WM_ABORT_ALL;
 		if ((flags & WM_CASEFOLD) && ISUPPER(t_ch))
@@ -83,7 +82,7 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 			continue;
 		case '*':
 			if (*++p == '*') {
-				const uchar *prev_p = p - 2;
+				const unsigned char *prev_p = p - 2;
 				while (*++p == '*') {}
 				if (!(flags & WM_PATHNAME))
 					/* without WM_PATHNAME, '*' == '**' */
@@ -126,7 +125,7 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 				const char *slash = strchr((char*)text, '/');
 				if (!slash)
 					return WM_NOMATCH;
-				text = (const uchar*)slash;
+				text = (const unsigned char*)slash;
 				/* the slash is consumed by the top-level for loop */
 				break;
 			}
@@ -197,13 +196,13 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 					if (t_ch <= p_ch && t_ch >= prev_ch)
 						matched = 1;
 					else if ((flags & WM_CASEFOLD) && ISLOWER(t_ch)) {
-						uchar t_ch_upper = toupper(t_ch);
+						unsigned char t_ch_upper = toupper(t_ch);
 						if (t_ch_upper <= p_ch && t_ch_upper >= prev_ch)
 							matched = 1;
 					}
 					p_ch = 0; /* This makes "prev_ch" get set to 0. */
 				} else if (p_ch == '[' && p[1] == ':') {
-					const uchar *s;
+					const unsigned char *s;
 					int i;
 					for (s = p += 2; (p_ch = *p) && p_ch != ']'; p++) {} /*SHARED ITERATOR*/
 					if (!p_ch)
@@ -274,5 +273,8 @@ static int dowild(const uchar *p, const uchar *text, unsigned int flags)
 /* Match the "pattern" against the "text" string. */
 int wildmatch(const char *pattern, const char *text, unsigned int flags)
 {
-	return dowild((const uchar*)pattern, (const uchar*)text, flags);
+	const unsigned char *upattern = (const unsigned char*)pattern;
+	const unsigned char *utext = (const unsigned char*)text;
+
+	return dowild(upattern, utext, flags);
 }

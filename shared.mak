@@ -102,3 +102,32 @@ endif
 define mkdir_p_parent_template
 $(if $(wildcard $(@D)),,$(QUIET_MKDIR_P_PARENT)$(shell mkdir -p $(@D)))
 endef
+
+## Define $(GOAL_STANDALONE) if the goal is known to be a "standalone"
+## goal that doesn't need to include things, run $(shell) commands to
+## figure out what to feed to a $(CC) etc. Examples include "clean",
+## "lint-docs" etc. Also provides the inverse of
+## $(GOAL_NOT_STANDALONE) for convenience.
+
+# Assume that we're not standalone by default
+GOAL_NOT_STANDALONE = Assuming so, with goals: '$(MAKECMDGOALS)'
+ifeq ($(MAKECMDGOALS),)
+GOAL_NOT_STANDALONE = Yes, default target
+else
+# Default targets that don't need do do any compilation, in addition
+# to any defined before shared.mak was included.
+STANDALONE_TARGETS += clean
+STANDALONE_TARGETS += distclean
+
+GOALS_WITHOUT_STANDALONE = $(filter-out $(STANDALONE_TARGETS),$(MAKECMDGOALS))
+ifeq ($(GOALS_WITHOUT_STANDALONE),)
+GOAL_NOT_STANDALONE =
+endif
+endif
+# It was easier to define the inverse above, but provide
+# $(GOAL_STANDALONE) for use
+ifdef GOAL_NOT_STANDALONE
+GOAL_STANDALONE =
+else
+GOAL_STANDALONE = Had only stand-alone goals: '$(MAKECMDGOALS)'
+endif

@@ -1,6 +1,29 @@
 # The default target of this Makefile is...
 all::
 
+# Stand-alone targets, used by shared.mak to define $(GOAL_{NOT_,}STANDALONE)
+STANDALONE_TARGETS =
+STANDALONE_TARGETS += GIT-VERSION-FILE
+ifeq ($(findstring n,$(MAKEFLAGS)),n)
+STANDALONE_TARGETS += artifacts-tar
+endif
+STANDALONE_TARGETS += check-docs
+## Clean
+STANDALONE_TARGETS += profile-clean
+
+## Dispatch to Documentation/Makefile
+STANDALONE_DOC_TARGETS =
+STANDALONE_DOC_TARGETS += doc
+STANDALONE_DOC_TARGETS += html
+STANDALONE_DOC_TARGETS += info
+STANDALONE_DOC_TARGETS += man
+STANDALONE_DOC_TARGETS += man-perl
+STANDALONE_DOC_TARGETS += pdf
+
+STANDALONE_TARGETS += $(STANDALONE_DOC_TARGETS)
+STANDALONE_TARGETS += $(addprefix install-,$(STANDALONE_DOC_TARGETS))
+STANDALONE_TARGETS += $(addprefix quick-install-,$(STANDALONE_DOC_TARGETS))
+
 # Import tree-wide shared Makefile behavior and libraries
 include shared.mak
 
@@ -478,8 +501,7 @@ include shared.mak
 # `fsm_listen__*()` routines.
 #
 # Define DEVELOPER to enable more compiler warnings. Compiler version
-# and family are auto detected, but could be overridden by defining
-# COMPILER_FEATURES (see config.mak.dev). You can still set
+# and family are auto detected. You can still set
 # CFLAGS="..." in combination with DEVELOPER enables, whether that's
 # for tweaking something unrelated (e.g. optimization level), or for
 # selectively overriding something DEVELOPER or one of the DEVOPTS
@@ -507,7 +529,9 @@ include shared.mak
 
 GIT-VERSION-FILE: FORCE
 	@$(SHELL_PATH) ./GIT-VERSION-GEN
+ifndef GOAL_STANDALONE
 -include GIT-VERSION-FILE
+endif
 
 # Set our default configuration.
 #
@@ -840,6 +864,7 @@ generated-hdrs: $(GENERATED_H)
 
 ## Exhaustive lists of our source files, either dynamically generated,
 ## or hardcoded.
+ifndef GOAL_STANDALONE
 SOURCES_CMD = ( \
 	git ls-files \
 		'*.[hcS]' \
@@ -861,6 +886,7 @@ FOUND_SOURCE_FILES := $(shell $(SOURCES_CMD))
 
 FOUND_C_SOURCES = $(filter %.c,$(FOUND_SOURCE_FILES))
 FOUND_H_SOURCES = $(filter %.h,$(FOUND_SOURCE_FILES))
+endif
 
 COCCI_SOURCES = $(filter-out $(THIRD_PARTY_SOURCES),$(FOUND_C_SOURCES))
 
@@ -1006,6 +1032,8 @@ LIB_OBJS += pkt-line.o
 LIB_OBJS += preload-index.o
 LIB_OBJS += pretty.o
 LIB_OBJS += prio-queue.o
+LIB_OBJS += probe/compiler.o
+LIB_OBJS += probe/libc.o
 LIB_OBJS += progress.o
 LIB_OBJS += promisor-remote.o
 LIB_OBJS += prompt.o
@@ -1273,12 +1301,32 @@ SANITIZE_LEAK =
 SPATCH_FLAGS = --all-includes --patch .
 SPATCH_BATCH_SIZE = 1
 
+ifndef GOAL_STANDALONE
 include config.mak.uname
 -include config.mak.autogen
+endif
+
 -include config.mak
 
+COMMON_CFLAGS = $(CPPFLAGS) $(CFLAGS)
+PROBE_CFLAGS = $(BASIC_CFLAGS) $(COMMON_CFLAGS) -DPROBE_STANDALONE
+
+# Rules to build basic "configure" probes in probe/*
+PROBES_SRC = $(wildcard probe/*.c)
+PROBES = $(PROBES_SRC:%.c=%)
+PROBES_BIN = $(PROBES:%=.build/%)
+PROBES_MAK = $(PROBES:%=.build/%.mak)
+$(PROBES_BIN): .build/probe/%: probe/%.c GIT-CFLAGS probe/print.h
+	$(call mkdir_p_parent_template)
+	$(QUIET_CC)$(CC) $(PROBE_CFLAGS) -o $@ $<
+$(PROBES_MAK): %.mak: %
+	$(call mkdir_p_parent_template)
+	$(QUIET_GEN)./$< >$@
+
+ifndef GOAL_STANDALONE
 ifdef DEVELOPER
 include config.mak.dev
+endif
 endif
 
 # what 'all' will build and 'install' will install in gitexecdir,
@@ -1295,7 +1343,7 @@ ALL_COMMANDS_TO_INSTALL += git-upload-archive$(X)
 ALL_COMMANDS_TO_INSTALL += git-upload-pack$(X)
 endif
 
-ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(CPPFLAGS) $(CFLAGS)
+ALL_CFLAGS = $(DEVELOPER_CFLAGS) $(COMMON_CFLAGS)
 ALL_LDFLAGS = $(LDFLAGS)
 
 ifdef SANITIZE
@@ -1327,11 +1375,13 @@ COMPUTE_HEADER_DEPENDENCIES = auto
 endif
 
 ifeq ($(COMPUTE_HEADER_DEPENDENCIES),auto)
+ifndef GOAL_STANDALONE
 dep_check = $(shell $(CC) $(ALL_CFLAGS) \
 	-Wno-pedantic \
 	-c -MF /dev/null -MQ /dev/null -MMD -MP \
 	-x c /dev/null -o /dev/null 2>&1; \
 	echo $$?)
+endif
 ifeq ($(dep_check),0)
 override COMPUTE_HEADER_DEPENDENCIES = yes
 else
@@ -1353,11 +1403,13 @@ GENERATE_COMPILATION_DATABASE = no
 endif
 
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
+ifndef GOAL_STANDALONE
 compdb_check = $(shell $(CC) $(ALL_CFLAGS) \
 	-Wno-pedantic \
 	-c -MJ /dev/null \
 	-x c /dev/null -o /dev/null 2>&1; \
 	echo $$?)
+endif
 ifneq ($(compdb_check),0)
 override GENERATE_COMPILATION_DATABASE = no
 $(warning GENERATE_COMPILATION_DATABASE is set to "yes", but your compiler does not \
@@ -1476,7 +1528,9 @@ else
 	ifndef NO_EXPAT
 		PROGRAM_OBJS += http-push.o
 	endif
+ifndef GOAL_STANDALONE
 	curl_check := $(shell (echo 072200; $(CURL_CONFIG) --vernum | sed -e '/^70[BC]/s/^/0/') 2>/dev/null | sort -r | sed -ne 2p)
+endif
 	ifeq "$(curl_check)" "072200"
 		USE_CURL_FOR_IMAP_SEND = YesPlease
 	endif
@@ -2581,6 +2635,7 @@ $(C_OBJ): %.o: %.c GIT-CFLAGS $(missing_dep_dirs) $(missing_compdb_dir)
 %.s: %.c GIT-CFLAGS FORCE
 	$(QUIET_CC)$(CC) -o $@ -S $(ALL_CFLAGS) $(EXTRA_CPPFLAGS) $<
 
+ifndef GOAL_STANDALONE
 ifdef USE_COMPUTED_HEADER_DEPENDENCIES
 # Take advantage of gcc's on-the-fly dependency generation
 # See <http://gcc.gnu.org/gcc-3.0/features.html>.
@@ -2591,6 +2646,7 @@ endif
 else
 $(OBJECTS): $(LIB_H) $(GENERATED_H)
 endif
+endif # GOAL_STANDALONE
 
 ifeq ($(GENERATE_COMPILATION_DATABASE),yes)
 all:: compile_commands.json
@@ -3301,6 +3357,7 @@ cocciclean:
 	$(RM) contrib/coccinelle/*.cocci.patch*
 
 clean: profile-clean coverage-clean cocciclean
+	$(RM) -r .build
 	$(RM) *.res
 	$(RM) $(OBJECTS)
 	$(RM) $(LIB_FILE) $(XDIFF_LIB) $(REFTABLE_LIB) $(REFTABLE_TEST_LIB)
