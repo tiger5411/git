@@ -324,8 +324,18 @@ material (this may change in the future).
 --creation-factor=<percent>::
 	Used with `--range-diff`, tweak the heuristic which matches up commits
 	between the previous and current series of patches by adjusting the
-	creation/deletion cost fudge factor. See linkgit:git-range-diff[1])
-	for details.
+	creation/deletion cost fudge factor.
++
+For `format-patch` the default is set to `100`,
+linkgit:git-range-diff[1] has a lower default than that.
++
+With `format-patch` we assume that the `--range-diff` option will be
+used to compare two ranges known to you to be different verisons of
+the same work, as opposed to the more general case of comparing two
+arbitrary and possibly unrelated revisions.
++
+See linkgit:git-range-diff[1]) for details about what the creation
+factor number means.
 
 --notes[=<ref>]::
 --no-notes::

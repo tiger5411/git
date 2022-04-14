@@ -4,8 +4,6 @@
 #include "diff.h"
 #include "strvec.h"
 
-#define RANGE_DIFF_CREATION_FACTOR_DEFAULT 60
-
 struct range_diff_options {
 	int creation_factor;
 	unsigned dual_color:1;

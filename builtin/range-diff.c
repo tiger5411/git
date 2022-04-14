@@ -17,7 +17,7 @@ int cmd_range_diff(int argc, const char **argv, const char *prefix)
 	struct diff_options diffopt = { NULL };
 	struct strvec other_arg = STRVEC_INIT;
 	struct range_diff_options range_diff_opts = {
-		.creation_factor = RANGE_DIFF_CREATION_FACTOR_DEFAULT,
+		.creation_factor = 60,
 		.diffopt = &diffopt,
 		.other_arg = &other_arg
 	};
