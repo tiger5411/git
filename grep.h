@@ -81,9 +81,8 @@ struct grep_pat {
 	uint32_t pcre2_jit_on;
 	unsigned fixed:1;
 	unsigned is_fixed:1;
-	unsigned ignore_case:1;
-	unsigned word_regexp:1;
 };
+#define GREP_PAT_INIT { 0 }
 
 enum grep_expr_node {
 	GREP_NODE_ATOM,
@@ -120,19 +119,6 @@ struct grep_opt {
 	struct grep_pat *header_list;
 	struct grep_pat **header_tail;
 	struct grep_expr *pattern_expression;
-
-	/*
-	 * NEEDSWORK: See if we can remove this field, because the repository
-	 * should probably be per-source. That is, grep.c functions using this
-	 * field should probably start using "repo" in "struct grep_source"
-	 * instead.
-	 *
-	 * This is potentially the cause of at least one bug - "git grep"
-	 * using the textconv attributes from the superproject on the
-	 * submodules. See the failing "git grep --textconv" tests in
-	 * t7814-grep-recurse-submodules.sh for more information.
-	 */
-	struct repository *repo;
 
 	int linenum;
 	int columnnum;
@@ -195,18 +181,17 @@ struct grep_opt {
 	}, \
 	.only_matching = 0, \
 	.color = -1, \
-	.output = std_output, \
 }
 
 int grep_config(const char *var, const char *value, void *);
-void grep_init(struct grep_opt *, struct repository *repo);
 
 void append_grep_pat(struct grep_opt *opt, const char *pat, size_t patlen, const char *origin, int no, enum grep_pat_token t);
 void append_grep_pattern(struct grep_opt *opt, const char *pat, const char *origin, int no, enum grep_pat_token t);
 void append_header_grep_pattern(struct grep_opt *, enum grep_header_field, const char *);
 void compile_grep_patterns(struct grep_opt *opt);
 void free_grep_patterns(struct grep_opt *opt);
-int grep_buffer(struct grep_opt *opt, const char *buf, unsigned long size);
+int grep_buffer(struct repository *repo, struct grep_opt *opt,
+		const char *buf, unsigned long size);
 
 /* The field parameter is only used to filter header patterns
  * (where appropriate). If filtering isn't desirable
@@ -226,7 +211,7 @@ struct grep_source {
 		GREP_SOURCE_BUF,
 	} type;
 	void *identifier;
-	struct repository *repo; /* if GREP_SOURCE_OID */
+	struct repository *repo;
 
 	const char *buf;
 	unsigned long size;
@@ -236,7 +221,7 @@ struct grep_source {
 };
 
 void grep_source_init_file(struct grep_source *gs, const char *name,
-			   const char *path);
+			   const char *path, struct repository *repo);
 void grep_source_init_oid(struct grep_source *gs, const char *name,
 			  const char *path, const struct object_id *oid,
 			  struct repository *repo);
