@@ -1188,13 +1188,24 @@ static int get_one_entry(struct remote *remote, void *priv)
 	struct strbuf url_buf = STRBUF_INIT;
 	const char **url;
 	int i, url_nr;
+	int showed_push_url = 0;
 
-	if (remote->url_nr > 0) {
-		strbuf_addf(&url_buf, "%s (fetch)", remote->url[0]);
+	if (remote->url_nr) {
+		if (!remote->pushurl || (remote->pushurl_nr == 1 &&
+					 !strcmp(remote->url[0],
+						 remote->pushurl[0]))) {
+			showed_push_url = 1;
+			strbuf_addstr(&url_buf, remote->url[0]);
+		} else {
+			strbuf_addf(&url_buf, "%s (fetch)", remote->url[0]);
+		}
 		string_list_append(list, remote->name)->util =
 				strbuf_detach(&url_buf, NULL);
-	} else
-		string_list_append(list, remote->name)->util = NULL;
+	} else {
+		string_list_append(list, remote->name)->util = xstrdup("(no fetch URL)");
+	}
+	if (showed_push_url)
+		return 0;
 	if (remote->pushurl_nr) {
 		url = remote->pushurl;
 		url_nr = remote->pushurl_nr;
@@ -1216,8 +1227,17 @@ static int show_all(void)
 {
 	struct string_list list = STRING_LIST_INIT_DUP;
 	int result;
+	struct string_list_item *item;
+	size_t max_len = 0;
+	list.cmp = strcasecmp;
 
 	result = for_each_remote(get_one_entry, &list);
+
+	for_each_string_list_item(item, &list) {
+		size_t len = strlen(item->string);
+		if (len > max_len)
+			max_len = len;
+	}
 
 	if (!result) {
 		int i;
@@ -1225,10 +1245,12 @@ static int show_all(void)
 		string_list_sort(&list);
 		for (i = 0; i < list.nr; i++) {
 			struct string_list_item *item = list.items + i;
-			if (verbose)
-				printf("%s\t%s\n", item->string,
+			if (verbose) {
+				size_t padding = max_len - strlen(item->string);
+				printf("%s%*s\t%s\n", item->string,
+				       (int)(padding > 0 ? padding : 0), "",
 					item->util ? (const char *)item->util : "");
-			else {
+			} else {
 				if (i && !strcmp((item - 1)->string, item->string))
 					continue;
 				printf("%s\n", item->string);
