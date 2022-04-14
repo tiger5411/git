@@ -212,7 +212,7 @@ test_expect_success 'check label excluding other labels' '
 
 test_expect_success 'fail on multiple attr specifiers in one pathspec item' '
 	test_must_fail git ls-files . ":(attr:labelB,attr:labelC)" 2>actual &&
-	test_i18ngrep "Only one" actual
+	grep "Only one" actual
 '
 
 test_expect_success 'fail if attr magic is used places not implemented' '
@@ -222,7 +222,7 @@ test_expect_success 'fail if attr magic is used places not implemented' '
 	# though, but git-add is convenient as it has its own internal pathspec
 	# parsing.
 	test_must_fail git add ":(attr:labelB)" 2>actual &&
-	test_i18ngrep "magic not supported" actual
+	grep "magic not supported" actual
 '
 
 test_expect_success 'abort on giving invalid label on the command line' '
@@ -245,12 +245,12 @@ test_expect_success 'check attribute list' '
 
 test_expect_success 'backslash cannot be the last character' '
 	test_must_fail git ls-files ":(attr:label=foo\\ labelA=bar)" 2>actual &&
-	test_i18ngrep "not allowed as last character in attr value" actual
+	grep "not allowed as last character in attr value" actual
 '
 
 test_expect_success 'backslash cannot be used as a value' '
 	test_must_fail git ls-files ":(attr:label=f\\\oo)" 2>actual &&
-	test_i18ngrep "for value matching" actual
+	grep "for value matching" actual
 '
 
 test_done

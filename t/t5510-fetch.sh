@@ -444,9 +444,9 @@ test_expect_success 'fetch uses remote ref names to describe new refs' '
 	(
 		cd descriptive &&
 		git fetch o 2>actual &&
-		test_i18ngrep "new branch.* -> refs/crazyheads/descriptive-branch$" actual &&
-		test_i18ngrep "new tag.* -> descriptive-tag$" actual &&
-		test_i18ngrep "new ref.* -> crazy$" actual
+		grep "new branch.* -> refs/crazyheads/descriptive-branch$" actual &&
+		grep "new tag.* -> descriptive-tag$" actual &&
+		grep "new ref.* -> crazy$" actual
 	) &&
 	git checkout main
 '
@@ -1129,7 +1129,7 @@ test_expect_success 'fetching with auto-gc does not lock up' '
 		git config gc.autoPackLimit 1 &&
 		git config gc.autoDetach false &&
 		GIT_ASK_YESNO="$D/askyesno" git fetch --verbose >fetch.out 2>&1 &&
-		test_i18ngrep "Auto packing the repository" fetch.out &&
+		grep "Auto packing the repository" fetch.out &&
 		! grep "Should I try again" fetch.out
 	)
 '
@@ -1178,12 +1178,12 @@ test_expect_success '--no-show-forced-updates' '
 	(
 		cd forced-update-clone &&
 		git fetch --show-forced-updates origin 2>output &&
-		test_i18ngrep "(forced update)" output
+		grep "(forced update)" output
 	) &&
 	(
 		cd no-forced-update-clone &&
 		git fetch --no-show-forced-updates origin 2>output &&
-		test_i18ngrep ! "(forced update)" output
+		! grep "(forced update)" output
 	)
 '
 

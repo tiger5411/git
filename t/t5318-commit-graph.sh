@@ -51,7 +51,7 @@ test_expect_success 'exit with correct error on bad input to --stdin-packs' '
 	cd "$TRASH_DIRECTORY/full" &&
 	echo doesnotexist >in &&
 	test_expect_code 1 git commit-graph write --stdin-packs <in 2>stderr &&
-	test_i18ngrep "error adding pack" stderr
+	grep "error adding pack" stderr
 '
 
 test_expect_success 'create commits and repack' '
@@ -73,11 +73,11 @@ test_expect_success 'exit with correct error on bad input to --stdin-commits' '
 	# invalid, non-hex OID
 	echo HEAD >in &&
 	test_expect_code 1 git commit-graph write --stdin-commits <in 2>stderr &&
-	test_i18ngrep "unexpected non-hex object ID: HEAD" stderr &&
+	grep "unexpected non-hex object ID: HEAD" stderr &&
 	# non-existent OID
 	echo $ZERO_OID >in &&
 	test_expect_code 1 git commit-graph write --stdin-commits <in 2>stderr &&
-	test_i18ngrep "invalid object" stderr &&
+	grep "invalid object" stderr &&
 	# valid commit and tree OID
 	git rev-parse HEAD HEAD^{tree} >in &&
 	git commit-graph write --stdin-commits <in &&
@@ -155,7 +155,7 @@ test_expect_success 'commit-graph write --stdin-commits force progress on for st
 	cd "$TRASH_DIRECTORY/full" &&
 	git rev-parse commits/5 >in &&
 	GIT_PROGRESS_DELAY=0 git commit-graph write --stdin-commits --progress <in 2>err &&
-	test_i18ngrep "Collecting commits from input" err
+	grep "Collecting commits from input" err
 '
 
 test_expect_success 'commit-graph write --stdin-commits with the --no-progress option' '
@@ -415,13 +415,13 @@ test_expect_success 'warn on improper hash version' '
 		cd sha1 &&
 		mv ../cg-sha256 .git/objects/info/commit-graph &&
 		git log -1 2>err &&
-		test_i18ngrep "commit-graph hash version 2 does not match version 1" err
+		grep "commit-graph hash version 2 does not match version 1" err
 	) &&
 	(
 		cd sha256 &&
 		mv ../cg-sha1 .git/objects/info/commit-graph &&
 		git log -1 2>err &&
-		test_i18ngrep "commit-graph hash version 1 does not match version 2" err
+		grep "commit-graph hash version 1 does not match version 2" err
 	)
 '
 
@@ -504,7 +504,7 @@ corrupt_graph_verify() {
 	grepstr=$1
 	test_must_fail git commit-graph verify 2>test_err &&
 	grep -v "^+" test_err >err &&
-	test_i18ngrep "$grepstr" err &&
+	grep "$grepstr" err &&
 	if test "$2" != "no-copy"
 	then
 		cp $objdir/info/commit-graph commit-graph-pre-write-test
@@ -738,7 +738,7 @@ test_expect_success 'corrupt commit-graph write (broken parent)' '
 		git commit-tree -p "$broken" -m "good commit" "$empty" >good &&
 		test_must_fail git commit-graph write --stdin-commits \
 			<good 2>test_err &&
-		test_i18ngrep "unable to parse commit" test_err
+		grep "unable to parse commit" test_err
 	)
 '
 
@@ -759,7 +759,7 @@ test_expect_success 'corrupt commit-graph write (missing tree)' '
 		git commit-tree -p "$broken" -m "good" "$tree" >good &&
 		test_must_fail git commit-graph write --stdin-commits \
 			<good 2>test_err &&
-		test_i18ngrep "unable to parse commit" test_err
+		grep "unable to parse commit" test_err
 	)
 '
 

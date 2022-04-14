@@ -1733,7 +1733,7 @@ test_expect_success '--no-graph does not unset --parents' '
 
 test_expect_success '--reverse and --graph conflict' '
 	test_must_fail git log --reverse --graph 2>stderr &&
-	test_i18ngrep "cannot be used together" stderr
+	grep "cannot be used together" stderr
 '
 
 test_expect_success '--reverse --graph --no-graph works' '
@@ -1744,7 +1744,7 @@ test_expect_success '--reverse --graph --no-graph works' '
 
 test_expect_success '--show-linear-break and --graph conflict' '
 	test_must_fail git log --show-linear-break --graph 2>stderr &&
-	test_i18ngrep "cannot be used together" stderr
+	grep "cannot be used together" stderr
 '
 
 test_expect_success '--show-linear-break --graph --no-graph works' '
@@ -1755,7 +1755,7 @@ test_expect_success '--show-linear-break --graph --no-graph works' '
 
 test_expect_success '--no-walk and --graph conflict' '
 	test_must_fail git log --no-walk --graph 2>stderr &&
-	test_i18ngrep "cannot be used together" stderr
+	grep "cannot be used together" stderr
 '
 
 test_expect_success '--no-walk --graph --no-graph works' '
@@ -1766,8 +1766,8 @@ test_expect_success '--no-walk --graph --no-graph works' '
 
 test_expect_success '--walk-reflogs and --graph conflict' '
 	test_must_fail git log --walk-reflogs --graph 2>stderr &&
-	(test_i18ngrep "cannot combine" stderr ||
-		test_i18ngrep "cannot be used together" stderr)
+	(grep "cannot combine" stderr ||
+		grep "cannot be used together" stderr)
 '
 
 test_expect_success '--walk-reflogs --graph --no-graph works' '
@@ -2101,7 +2101,7 @@ test_expect_success 'log on empty repo fails' '
 	git init empty &&
 	test_when_finished "rm -rf empty" &&
 	test_must_fail git -C empty log 2>stderr &&
-	test_i18ngrep does.not.have.any.commits stderr
+	grep does.not.have.any.commits stderr
 '
 
 test_expect_success REFFILES 'log diagnoses bogus HEAD hash' '
@@ -2109,16 +2109,16 @@ test_expect_success REFFILES 'log diagnoses bogus HEAD hash' '
 	test_when_finished "rm -rf empty" &&
 	echo 1234abcd >empty/.git/refs/heads/main &&
 	test_must_fail git -C empty log 2>stderr &&
-	test_i18ngrep broken stderr
+	grep broken stderr
 '
 
 test_expect_success 'log diagnoses bogus HEAD symref' '
 	git init empty &&
 	git --git-dir empty/.git symbolic-ref HEAD refs/heads/invalid.lock &&
 	test_must_fail git -C empty log 2>stderr &&
-	test_i18ngrep broken stderr &&
+	grep broken stderr &&
 	test_must_fail git -C empty log --default totally-bogus 2>stderr &&
-	test_i18ngrep broken stderr
+	grep broken stderr
 '
 
 test_expect_success 'log does not default to HEAD when rev input is given' '

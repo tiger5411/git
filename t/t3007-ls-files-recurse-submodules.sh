@@ -296,13 +296,13 @@ test_expect_success '--recurse-submodules and relative paths' '
 
 test_expect_success '--recurse-submodules does not support --error-unmatch' '
 	test_must_fail git ls-files --recurse-submodules --error-unmatch 2>actual &&
-	test_i18ngrep "does not support --error-unmatch" actual
+	grep "does not support --error-unmatch" actual
 '
 
 test_incompatible_with_recurse_submodules () {
 	test_expect_success "--recurse-submodules and $1 are incompatible" "
 		test_must_fail git ls-files --recurse-submodules $1 2>actual &&
-		test_i18ngrep 'unsupported mode' actual
+		grep 'unsupported mode' actual
 	"
 }
 

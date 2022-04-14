@@ -40,7 +40,7 @@ test_expect_success PERL 'reset -p' '
 
 	git ls-files >actual &&
 	test_must_be_empty actual &&
-	test_i18ngrep "Unstage" output
+	grep "Unstage" output
 '
 
 test_expect_success 'reset --soft is a no-op' '

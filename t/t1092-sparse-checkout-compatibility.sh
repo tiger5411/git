@@ -292,8 +292,8 @@ test_expect_success 'status reports sparse-checkout' '
 	init_repos &&
 	git -C sparse-checkout status >full &&
 	git -C sparse-index status >sparse &&
-	test_i18ngrep "You are in a sparse checkout with " full &&
-	test_i18ngrep "You are in a sparse checkout." sparse
+	grep "You are in a sparse checkout with " full &&
+	grep "You are in a sparse checkout." sparse
 '
 
 test_expect_success 'add, commit, checkout' '
@@ -1054,7 +1054,7 @@ test_expect_success 'checkout-index outside sparse definition' '
 	# Without --ignore-skip-worktree-bits, outside-of-cone files will trigger
 	# an error
 	test_sparse_match test_must_fail git checkout-index -- folder1/a &&
-	test_i18ngrep "folder1/a has skip-worktree enabled" sparse-checkout-err &&
+	grep "folder1/a has skip-worktree enabled" sparse-checkout-err &&
 	test_path_is_missing folder1/a &&
 
 	# With --ignore-skip-worktree-bits, outside-of-cone files are checked out

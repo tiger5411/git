@@ -54,7 +54,7 @@ test_expect_success 'git p4 sync uninitialized repo' '
 	(
 		cd "$git" &&
 		test_must_fail git p4 sync 2>errs &&
-		test_i18ngrep "Perhaps you never did" errs
+		grep "Perhaps you never did" errs
 	)
 '
 
@@ -205,7 +205,7 @@ test_expect_success 'exit when p4 fails to produce marshaled output' '
 		export PATH &&
 		test_expect_code 1 git p4 clone --dest="$git" //depot >errs 2>&1
 	) &&
-	test_i18ngrep ! Traceback errs
+	! grep Traceback errs
 '
 
 # Hide a file from p4d, make sure we catch its complaint.  This won't fail in
@@ -216,7 +216,7 @@ test_expect_success 'exit gracefully for p4 server errors' '
 	mv "$db"/depot/file1,v "$db"/depot/file1,v,hidden &&
 	test_when_finished cleanup_git &&
 	test_expect_code 1 git p4 clone --dest="$git" //depot@1 >out 2>err &&
-	test_i18ngrep "Error from p4 print" err
+	grep "Error from p4 print" err
 '
 
 test_expect_success 'clone --bare should make a bare repository' '

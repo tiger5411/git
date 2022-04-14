@@ -33,11 +33,11 @@ test_systemd_analyze_verify () {
 
 test_expect_success 'help text' '
 	test_expect_code 129 git maintenance -h 2>err &&
-	test_i18ngrep "usage: git maintenance <subcommand>" err &&
+	grep "usage: git maintenance <subcommand>" err &&
 	test_expect_code 128 git maintenance barf 2>err &&
-	test_i18ngrep "invalid subcommand: barf" err &&
+	grep "invalid subcommand: barf" err &&
 	test_expect_code 129 git maintenance 2>err &&
-	test_i18ngrep "usage: git maintenance" err
+	grep "usage: git maintenance" err
 '
 
 test_expect_success 'run [--auto|--quiet]' '
@@ -129,12 +129,12 @@ test_expect_success 'commit-graph auto condition' '
 
 test_expect_success 'run --task=bogus' '
 	test_must_fail git maintenance run --task=bogus 2>err &&
-	test_i18ngrep "is not a valid task" err
+	grep "is not a valid task" err
 '
 
 test_expect_success 'run --task duplicate' '
 	test_must_fail git maintenance run --task=gc --task=gc 2>err &&
-	test_i18ngrep "cannot be selected multiple times" err
+	grep "cannot be selected multiple times" err
 '
 
 test_expect_success 'run --task=prefetch with no remotes' '
@@ -397,12 +397,12 @@ test_expect_success 'pack-refs task' '
 
 test_expect_success '--auto and --schedule incompatible' '
 	test_must_fail git maintenance run --auto --schedule=daily 2>err &&
-	test_i18ngrep "at most one" err
+	grep "at most one" err
 '
 
 test_expect_success 'invalid --schedule value' '
 	test_must_fail git maintenance run --schedule=annually 2>err &&
-	test_i18ngrep "unrecognized --schedule" err
+	grep "unrecognized --schedule" err
 '
 
 test_expect_success '--schedule inheritance weekly -> daily -> hourly' '
@@ -532,15 +532,15 @@ test_expect_success !MINGW 'register and unregister with regex metacharacters' '
 
 test_expect_success 'start --scheduler=<scheduler>' '
 	test_expect_code 129 git maintenance start --scheduler=foo 2>err &&
-	test_i18ngrep "unrecognized --scheduler argument" err &&
+	grep "unrecognized --scheduler argument" err &&
 
 	test_expect_code 129 git maintenance start --no-scheduler 2>err &&
-	test_i18ngrep "unknown option" err &&
+	grep "unknown option" err &&
 
 	test_expect_code 128 \
 		env GIT_TEST_MAINT_SCHEDULER="launchctl:true,schtasks:true" \
 		git maintenance start --scheduler=crontab 2>err &&
-	test_i18ngrep "fatal: crontab scheduler is not available" err
+	grep "fatal: crontab scheduler is not available" err
 '
 
 test_expect_success 'start from empty cron table' '

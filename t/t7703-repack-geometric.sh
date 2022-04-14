@@ -16,7 +16,7 @@ test_expect_success '--geometric with no packs' '
 		cd geometric &&
 
 		git repack --write-midx --geometric 2 >out &&
-		test_i18ngrep "Nothing new to pack" out
+		grep "Nothing new to pack" out
 	)
 '
 
@@ -31,7 +31,7 @@ test_expect_success '--geometric with one pack' '
 
 		git repack --geometric 2 >out &&
 
-		test_i18ngrep "Nothing new to pack" out
+		grep "Nothing new to pack" out
 	)
 '
 

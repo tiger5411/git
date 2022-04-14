@@ -46,7 +46,7 @@ basic_bitmap_tests
 test_expect_success 'incremental repack fails when bitmaps are requested' '
 	test_commit more-1 &&
 	test_must_fail git repack -d 2>err &&
-	test_i18ngrep "Incremental repacks are incompatible with bitmap" err
+	grep "Incremental repacks are incompatible with bitmap" err
 '
 
 test_expect_success 'incremental repack can disable bitmaps' '
@@ -262,7 +262,7 @@ test_expect_success 'truncated bitmap fails gracefully (ewah)' '
 	mv -f $bitmap.tmp $bitmap &&
 	git rev-list --use-bitmap-index --count --all >actual 2>stderr &&
 	test_cmp expect actual &&
-	test_i18ngrep corrupt.ewah.bitmap stderr
+	grep corrupt.ewah.bitmap stderr
 '
 
 test_expect_success 'truncated bitmap fails gracefully (cache)' '
@@ -274,7 +274,7 @@ test_expect_success 'truncated bitmap fails gracefully (cache)' '
 	mv -f $bitmap.tmp $bitmap &&
 	git rev-list --use-bitmap-index --count --all >actual 2>stderr &&
 	test_cmp expect actual &&
-	test_i18ngrep corrupted.bitmap.index stderr
+	grep corrupted.bitmap.index stderr
 '
 
 # Create a state of history with these properties:
