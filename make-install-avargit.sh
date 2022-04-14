@@ -673,15 +673,16 @@ do
 done <$series_list
 test -n "$only_merge" && exit
 
-# Configure with prefix & cflags, and a non-fake "version" for release
-rm version
-~/g/git.meta/config.mak.sh --do-release --prefix "$prefix" --cflags "-O2 -g"
-
 # Compile, unless we were doing it in the merge loop
 if test -z "$merge_full_tests"
 then
 	test_compile full
 fi
+
+# Configure with prefix & cflags, and a non-fake "version" for release
+rm version
+~/g/git.meta/config.mak.sh --do-release --prefix "$prefix" --cflags "-O2 -g"
+make
 
 # Abort before installation?
 test -n "$no_install" && exit
