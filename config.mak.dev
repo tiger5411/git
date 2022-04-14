@@ -134,5 +134,26 @@ $(eval $(call fn_disable_analyzer, \
 	fsmonitor-settings \
 ))
 
+## HOTIFX for avar/private (TODO: fix)
+### -Wno-error=analyzer-use-of-uninitialized-value: post-gcc12
+ifneq ($(filter gcc12,$(COMPILER_FEATURES)),)
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-use-of-uninitialized-value, \
+	http-fetch \
+))
+endif
+### -Wno-error=analyzer-possible-null-argument
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-possible-null-argument, \
+	reftable/publicbasics \
+))
+### -Wno-error=analyzer-null-dereference
+$(eval $(call fn_disable_analyzer, \
+	-Wno-error=analyzer-null-dereference, \
+	builtin/index-pack \
+	reftable/reader \
+	t/helper/test-progress \
+))
+
 endif
 endif

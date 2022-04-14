@@ -302,7 +302,16 @@ void strbuf_add(struct strbuf *sb, const void *data, size_t len);
  */
 static inline void strbuf_addstr(struct strbuf *sb, const char *s)
 {
+#ifdef __clang__
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-null-argument"
+#endif
 	strbuf_add(sb, s, strlen(s));
+#ifdef __clang__
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 }
 
 /**
