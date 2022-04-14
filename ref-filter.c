@@ -648,18 +648,15 @@ struct ref_formatting_state {
 };
 
 struct atom_value {
-	const char *s;
-	ssize_t s_size;
+	struct strbuf buf;
 	int (*handler)(struct atom_value *atomv, struct ref_formatting_state *state,
 		       struct strbuf *err);
 	uintmax_t value; /* used for sorting when not FIELD_STR */
 	struct used_atom *atom;
 };
 
-#define ATOM_SIZE_UNSPECIFIED (-1)
-
 #define ATOM_VALUE_INIT { \
-	.s_size = ATOM_SIZE_UNSPECIFIED \
+	.buf = STRBUF_INIT, \
 }
 
 /*
@@ -745,29 +742,23 @@ static int parse_ref_filter_atom(struct ref_format *format,
 	return at;
 }
 
-static void quote_formatting(struct strbuf *s, const char *str, ssize_t len, int quote_style)
+static void quote_formatting(struct strbuf *s, struct strbuf *buf, int quote_style)
 {
 	switch (quote_style) {
 	case QUOTE_NONE:
-		if (len < 0)
-			strbuf_addstr(s, str);
-		else
-			strbuf_add(s, str, len);
+		strbuf_addbuf(s, buf);
 		break;
 	case QUOTE_SHELL:
-		sq_quote_buf(s, str);
+		sq_quote_buf(s, buf->buf);
 		break;
 	case QUOTE_PERL:
-		if (len < 0)
-			perl_quote_buf(s, str);
-		else
-			perl_quote_buf_with_len(s, str, len);
+		perl_quote_buf(s, buf->buf, buf->len);
 		break;
 	case QUOTE_PYTHON:
-		python_quote_buf(s, str);
+		python_quote_buf(s, buf->buf, buf->len);
 		break;
 	case QUOTE_TCL:
-		tcl_quote_buf(s, str);
+		tcl_quote_buf(s, buf->buf, buf->len);
 		break;
 	}
 }
@@ -782,11 +773,9 @@ static int append_atom(struct atom_value *v, struct ref_formatting_state *state,
 	 * encountered.
 	 */
 	if (!state->stack->prev)
-		quote_formatting(&state->stack->output, v->s, v->s_size, state->quote_style);
-	else if (v->s_size < 0)
-		strbuf_addstr(&state->stack->output, v->s);
+		quote_formatting(&state->stack->output, &v->buf, state->quote_style);
 	else
-		strbuf_add(&state->stack->output, v->s, v->s_size);
+		strbuf_addbuf(&state->stack->output, &v->buf);
 	return 0;
 }
 
@@ -974,7 +963,7 @@ static int end_atom_handler(struct atom_value *atomv, struct ref_formatting_stat
 	 * only on the topmost supporting atom.
 	 */
 	if (!current->prev->prev) {
-		quote_formatting(&s, current->output.buf, current->output.len, state->quote_style);
+		quote_formatting(&s, &current->output, state->quote_style);
 		strbuf_swap(&current->output, &s);
 	}
 	strbuf_release(&s);
@@ -1069,7 +1058,7 @@ static int grab_oid(const char *name, const char *field, const struct object_id 
 		    struct atom_value *v, struct used_atom *atom)
 {
 	if (starts_with(name, field)) {
-		v->s = xstrdup(do_grab_oid(field, oid, atom));
+		strbuf_addstr(&v->buf, do_grab_oid(field, oid, atom));
 		return 1;
 	}
 	return 0;
@@ -1089,17 +1078,17 @@ static void grab_common_values(struct atom_value *val, int deref, struct expand_
 		if (deref)
 			name++;
 		if (atom_type == ATOM_OBJECTTYPE)
-			v->s = xstrdup(type_name(oi->type));
+			strbuf_addstr(&v->buf, type_name(oi->type));
 		else if (atom_type == ATOM_OBJECTSIZE) {
 			if (used_atom[i].u.objectsize.option == O_SIZE_DISK) {
 				v->value = oi->disk_size;
-				v->s = xstrfmt("%"PRIuMAX, (uintmax_t)oi->disk_size);
+				strbuf_addf(&v->buf, "%"PRIuMAX, (uintmax_t)oi->disk_size);
 			} else if (used_atom[i].u.objectsize.option == O_SIZE) {
 				v->value = oi->size;
-				v->s = xstrfmt("%"PRIuMAX , (uintmax_t)oi->size);
+				strbuf_addf(&v->buf, "%"PRIuMAX , (uintmax_t)oi->size);
 			}
 		} else if (atom_type == ATOM_DELTABASE)
-			v->s = xstrdup(oid_to_hex(&oi->delta_base_oid));
+			strbuf_addstr(&v->buf, oid_to_hex(&oi->delta_base_oid));
 		else if (atom_type == ATOM_OBJECTNAME && deref)
 			grab_oid(name, "objectname", &oi->oid, v, &used_atom[i]);
 	}
@@ -1120,11 +1109,11 @@ static void grab_tag_values(struct atom_value *val, int deref, struct object *ob
 		if (deref)
 			name++;
 		if (atom_type == ATOM_TAG)
-			v->s = xstrdup(tag->tag);
+			strbuf_addstr(&v->buf, tag->tag);
 		else if (atom_type == ATOM_TYPE && tag->tagged)
-			v->s = xstrdup(type_name(tag->tagged->type));
+			strbuf_addstr(&v->buf, type_name(tag->tagged->type));
 		else if (atom_type == ATOM_OBJECT && tag->tagged)
-			v->s = xstrdup(oid_to_hex(&tag->tagged->oid));
+			strbuf_addstr(&v->buf, oid_to_hex(&tag->tagged->oid));
 	}
 }
 
@@ -1147,18 +1136,16 @@ static void grab_commit_values(struct atom_value *val, int deref, struct object 
 			continue;
 		if (atom_type == ATOM_NUMPARENT) {
 			v->value = commit_list_count(commit->parents);
-			v->s = xstrfmt("%lu", (unsigned long)v->value);
+			strbuf_addf(&v->buf, "%lu", (unsigned long)v->value);
 		}
 		else if (atom_type == ATOM_PARENT) {
 			struct commit_list *parents;
-			struct strbuf s = STRBUF_INIT;
 			for (parents = commit->parents; parents; parents = parents->next) {
 				struct object_id *oid = &parents->item->object.oid;
 				if (parents != commit->parents)
-					strbuf_addch(&s, ' ');
-				strbuf_addstr(&s, do_grab_oid("parent", oid, &used_atom[i]));
+					strbuf_addch(&v->buf, ' ');
+				strbuf_addstr(&v->buf, do_grab_oid("parent", oid, &used_atom[i]));
 			}
-			v->s = strbuf_detach(&s, NULL);
 		}
 	}
 }
@@ -1181,28 +1168,30 @@ static const char *find_wholine(const char *who, int wholen, const char *buf)
 	return "";
 }
 
-static const char *copy_line(const char *buf)
+static void copy_line(struct strbuf *buf, const char *src)
 {
-	const char *eol = strchrnul(buf, '\n');
-	return xmemdupz(buf, eol - buf);
+	const char *eol = strchrnul(src, '\n');
+	strbuf_add(buf, src, eol - src);
 }
 
-static const char *copy_name(const char *buf)
+static void copy_name(struct strbuf *buf, const char *src)
 {
 	const char *cp;
-	for (cp = buf; *cp && *cp != '\n'; cp++) {
-		if (!strncmp(cp, " <", 2))
-			return xmemdupz(buf, cp - buf);
+	for (cp = src; *cp && *cp != '\n'; cp++) {
+		if (!strncmp(cp, " <", 2)) {
+			strbuf_add(buf, src, cp - src);
+			return;
+		}
 	}
-	return xstrdup("");
 }
 
-static const char *copy_email(const char *buf, struct used_atom *atom)
+static void copy_email(struct strbuf *buf, const char *src,
+		       struct used_atom *atom)
 {
-	const char *email = strchr(buf, '<');
+	const char *email = strchr(src, '<');
 	const char *eoemail;
 	if (!email)
-		return xstrdup("");
+		return;
 	switch (atom->u.email_option.option) {
 	case EO_RAW:
 		eoemail = strchr(email, '>');
@@ -1224,25 +1213,23 @@ static const char *copy_email(const char *buf, struct used_atom *atom)
 	}
 
 	if (!eoemail)
-		return xstrdup("");
-	return xmemdupz(email, eoemail - email);
+		return;
+	strbuf_add(buf, email, eoemail - email);
 }
 
-static char *copy_subject(const char *buf, unsigned long len)
+static void copy_subject(struct strbuf *buf, const char *src, size_t len)
 {
-	struct strbuf sb = STRBUF_INIT;
-	int i;
+	size_t i;
 
 	for (i = 0; i < len; i++) {
-		if (buf[i] == '\r' && i + 1 < len && buf[i + 1] == '\n')
+		if (src[i] == '\r' && i + 1 < len && src[i + 1] == '\n')
 			continue; /* ignore CR in CRLF */
 
-		if (buf[i] == '\n')
-			strbuf_addch(&sb, ' ');
+		if (src[i] == '\n')
+			strbuf_addch(buf, ' ');
 		else
-			strbuf_addch(&sb, buf[i]);
+			strbuf_addch(buf, src[i]);
 	}
-	return strbuf_detach(&sb, NULL);
 }
 
 static void grab_date(const char *buf, struct atom_value *v, const char *atomname)
@@ -1274,12 +1261,11 @@ static void grab_date(const char *buf, struct atom_value *v, const char *atomnam
 	tz = strtol(zone, NULL, 10);
 	if ((tz == LONG_MIN || tz == LONG_MAX) && errno == ERANGE)
 		goto bad;
-	v->s = xstrdup(show_date(timestamp, tz, &date_mode));
+	strbuf_addstr(&v->buf, show_date(timestamp, tz, &date_mode));
 	v->value = timestamp;
 	date_mode_release(&date_mode);
 	return;
  bad:
-	v->s = xstrdup("");
 	v->value = 0;
 }
 
@@ -1309,11 +1295,11 @@ static void grab_person(const char *who, struct atom_value *val, int deref, void
 		if (!wholine)
 			return; /* no point looking for it */
 		if (name[wholen] == 0)
-			v->s = copy_line(wholine);
+			copy_line(&v->buf, wholine);
 		else if (!strcmp(name + wholen, "name"))
-			v->s = copy_name(wholine);
+			copy_name(&v->buf, wholine);
 		else if (starts_with(name + wholen, "email"))
-			v->s = copy_email(wholine, &used_atom[i]);
+			copy_email(&v->buf, wholine, &used_atom[i]);
 		else if (starts_with(name + wholen, "date"))
 			grab_date(wholine, v, name);
 	}
@@ -1340,7 +1326,7 @@ static void grab_person(const char *who, struct atom_value *val, int deref, void
 		if (atom_type == ATOM_CREATORDATE)
 			grab_date(wholine, v, name);
 		else if (atom_type == ATOM_CREATOR)
-			v->s = copy_line(wholine);
+			copy_line(&v->buf, wholine);
 	}
 }
 
@@ -1444,12 +1430,10 @@ static void grab_sub_body_contents(struct atom_value *val, int deref, struct exp
 		if (atom_type == ATOM_RAW) {
 			unsigned long buf_size = data->size;
 
-			if (atom->u.raw_data.option == RAW_BARE) {
-				v->s = xmemdupz(buf, buf_size);
-				v->s_size = buf_size;
-			} else if (atom->u.raw_data.option == RAW_LENGTH) {
-				v->s = xstrfmt("%"PRIuMAX, (uintmax_t)buf_size);
-			}
+			if (atom->u.raw_data.option == RAW_BARE)
+				strbuf_add(&v->buf, buf, buf_size);
+			else if (atom->u.raw_data.option == RAW_LENGTH)
+				strbuf_addf(&v->buf, "%"PRIuMAX, (uintmax_t)buf_size);
 			continue;
 		}
 
@@ -1467,52 +1451,30 @@ static void grab_sub_body_contents(struct atom_value *val, int deref, struct exp
 				    &sigpos, &siglen);
 
 		if (atom->u.contents.option == C_SUB)
-			v->s = copy_subject(subpos, sublen);
-		else if (atom->u.contents.option == C_SUB_SANITIZE) {
-			struct strbuf sb = STRBUF_INIT;
-			format_sanitized_subject(&sb, subpos, sublen);
-			v->s = strbuf_detach(&sb, NULL);
-		} else if (atom->u.contents.option == C_BODY_DEP)
-			v->s = xmemdupz(bodypos, bodylen);
+			copy_subject(&v->buf, subpos, sublen);
+		else if (atom->u.contents.option == C_SUB_SANITIZE)
+			format_sanitized_subject(&v->buf, subpos, sublen);
+		else if (atom->u.contents.option == C_BODY_DEP)
+			strbuf_add(&v->buf, bodypos, bodylen);
 		else if (atom->u.contents.option == C_LENGTH)
-			v->s = xstrfmt("%"PRIuMAX, (uintmax_t)strlen(subpos));
+			strbuf_addf(&v->buf, "%"PRIuMAX, (uintmax_t)strlen(subpos));
 		else if (atom->u.contents.option == C_BODY)
-			v->s = xmemdupz(bodypos, nonsiglen);
+			strbuf_add(&v->buf, bodypos, nonsiglen);
 		else if (atom->u.contents.option == C_SIG)
-			v->s = xmemdupz(sigpos, siglen);
-		else if (atom->u.contents.option == C_LINES) {
-			struct strbuf s = STRBUF_INIT;
-			const char *contents_end = bodypos + nonsiglen;
-
+			strbuf_add(&v->buf, sigpos, siglen);
+		else if (atom->u.contents.option == C_LINES)
 			/*  Size is the length of the message after removing the signature */
-			append_lines(&s, subpos, contents_end - subpos, atom->u.contents.nlines);
-			v->s = strbuf_detach(&s, NULL);
-		} else if (atom->u.contents.option == C_TRAILERS) {
-			struct strbuf s = STRBUF_INIT;
-
+			append_lines(&v->buf, subpos,
+				     (bodypos + nonsiglen) - subpos,
+				     atom->u.contents.nlines);
+		else if (atom->u.contents.option == C_TRAILERS)
 			/* Format the trailer info according to the trailer_opts given */
-			format_trailers_from_commit(&s, subpos, &atom->u.contents.trailer_opts);
-
-			v->s = strbuf_detach(&s, NULL);
-		} else if (atom->u.contents.option == C_BARE)
-			v->s = xstrdup(subpos);
+			format_trailers_from_commit(&v->buf, subpos, &atom->u.contents.trailer_opts);
+		else if (atom->u.contents.option == C_BARE)
+			strbuf_addstr(&v->buf, subpos);
 
 	}
 	free((void *)sigpos);
-}
-
-/*
- * We want to have empty print-string for field requests
- * that do not apply (e.g. "authordate" for a tag object)
- */
-static void fill_missing_values(struct atom_value *val)
-{
-	int i;
-	for (i = 0; i < used_atom_cnt; i++) {
-		struct atom_value *v = &val[i];
-		if (v->s == NULL)
-			v->s = xstrdup("");
-	}
 }
 
 /*
@@ -1629,116 +1591,129 @@ static const char *rstrip_ref_components(const char *refname, int len)
 	return start;
 }
 
-static const char *show_ref(struct refname_atom *atom, const char *refname)
+static void show_ref(struct strbuf *buf, struct refname_atom *atom,
+		     const char *refname)
 {
-	if (atom->option == R_SHORT)
-		return shorten_unambiguous_ref(refname, warn_ambiguous_refs);
-	else if (atom->option == R_LSTRIP)
-		return lstrip_ref_components(refname, atom->lstrip);
-	else if (atom->option == R_RSTRIP)
-		return rstrip_ref_components(refname, atom->rstrip);
-	else
-		return xstrdup(refname);
+	const char *str;
+	size_t len;
+
+	if (atom->option == R_SHORT) {
+		str = shorten_unambiguous_ref(refname,
+					      warn_ambiguous_refs);
+		goto attach;
+	} else if (atom->option == R_LSTRIP) {
+		str = lstrip_ref_components(refname, atom->lstrip);
+		goto attach;
+	} else if (atom->option == R_RSTRIP) {
+		str = rstrip_ref_components(refname, atom->rstrip);
+		goto attach;
+	}
+	strbuf_addstr(buf, refname);
+	return;
+attach:
+	len = strlen(str);
+	strbuf_attach(buf, (void *)str, len, len);
+	return;
 }
 
 static void fill_remote_ref_details(struct used_atom *atom, const char *refname,
-				    struct branch *branch, const char **s)
+				    struct branch *branch, struct strbuf *buf)
 {
 	int num_ours, num_theirs;
 	if (atom->u.remote_ref.option == RR_REF)
-		*s = show_ref(&atom->u.remote_ref.refname, refname);
+		show_ref(buf, &atom->u.remote_ref.refname, refname);
 	else if (atom->u.remote_ref.option == RR_TRACK) {
 		if (stat_tracking_info(branch, &num_ours, &num_theirs,
 				       NULL, atom->u.remote_ref.push,
-				       AHEAD_BEHIND_FULL) < 0) {
-			*s = xstrdup(msgs.gone);
-		} else if (!num_ours && !num_theirs)
-			*s = xstrdup("");
+				       AHEAD_BEHIND_FULL) < 0)
+			strbuf_addstr(buf, msgs.gone);
+		else if (!num_ours && !num_theirs)
+			;
 		else if (!num_ours)
-			*s = xstrfmt(msgs.behind, num_theirs);
+			strbuf_addf(buf, msgs.behind, num_theirs);
 		else if (!num_theirs)
-			*s = xstrfmt(msgs.ahead, num_ours);
+			strbuf_addf(buf, msgs.ahead, num_ours);
 		else
-			*s = xstrfmt(msgs.ahead_behind,
-				     num_ours, num_theirs);
-		if (!atom->u.remote_ref.nobracket && *s[0]) {
-			const char *to_free = *s;
-			*s = xstrfmt("[%s]", *s);
-			free((void *)to_free);
+			strbuf_addf(buf, msgs.ahead_behind,
+				    num_ours, num_theirs);
+		if (!atom->u.remote_ref.nobracket && buf->len) {
+			/* Change <str> to [<str>] */
+			strbuf_insert(buf, 0, "[", 1);
+			strbuf_addch(buf, ']');
 		}
 	} else if (atom->u.remote_ref.option == RR_TRACKSHORT) {
 		if (stat_tracking_info(branch, &num_ours, &num_theirs,
 				       NULL, atom->u.remote_ref.push,
-				       AHEAD_BEHIND_FULL) < 0) {
-			*s = xstrdup("");
+				       AHEAD_BEHIND_FULL) < 0)
 			return;
-		}
 		if (!num_ours && !num_theirs)
-			*s = xstrdup("=");
+			strbuf_addch(buf, '=');
 		else if (!num_ours)
-			*s = xstrdup("<");
+			strbuf_addch(buf, '<');
 		else if (!num_theirs)
-			*s = xstrdup(">");
+			strbuf_addch(buf, '>');
 		else
-			*s = xstrdup("<>");
+			strbuf_addstr(buf, "<>");
 	} else if (atom->u.remote_ref.option == RR_REMOTE_NAME) {
 		int explicit;
 		const char *remote = atom->u.remote_ref.push ?
 			pushremote_for_branch(branch, &explicit) :
 			remote_for_branch(branch, &explicit);
-		*s = xstrdup(explicit ? remote : "");
+		if (explicit)
+			strbuf_addstr(buf, remote);
 	} else if (atom->u.remote_ref.option == RR_REMOTE_REF) {
 		const char *merge;
 
 		merge = remote_ref_for_branch(branch, atom->u.remote_ref.push);
-		*s = xstrdup(merge ? merge : "");
+		if (merge)
+			strbuf_addstr(buf, merge);
 	} else
 		BUG("unhandled RR_* enum");
 }
 
-char *get_head_description(void)
+static void get_head_description_buf(struct strbuf *buf)
 {
-	struct strbuf desc = STRBUF_INIT;
 	struct wt_status_state state;
+
 	memset(&state, 0, sizeof(state));
 	wt_status_get_state(the_repository, &state, 1);
 	if (state.rebase_in_progress ||
 	    state.rebase_interactive_in_progress) {
 		if (state.branch)
-			strbuf_addf(&desc, _("(no branch, rebasing %s)"),
+			strbuf_addf(buf, _("(no branch, rebasing %s)"),
 				    state.branch);
 		else
-			strbuf_addf(&desc, _("(no branch, rebasing detached HEAD %s)"),
+			strbuf_addf(buf, _("(no branch, rebasing detached HEAD %s)"),
 				    state.detached_from);
 	} else if (state.bisect_in_progress)
-		strbuf_addf(&desc, _("(no branch, bisect started on %s)"),
+		strbuf_addf(buf, _("(no branch, bisect started on %s)"),
 			    state.branch);
 	else if (state.detached_from) {
 		if (state.detached_at)
-			strbuf_addf(&desc, _("(HEAD detached at %s)"),
+			strbuf_addf(buf, _("(HEAD detached at %s)"),
 				state.detached_from);
 		else
-			strbuf_addf(&desc, _("(HEAD detached from %s)"),
+			strbuf_addf(buf, _("(HEAD detached from %s)"),
 				state.detached_from);
 	} else
-		strbuf_addstr(&desc, _("(no branch)"));
+		strbuf_addstr(buf, _("(no branch)"));
+}
 
+char *get_head_description(void)
+{
+	struct strbuf desc = STRBUF_INIT;
+
+	get_head_description_buf(&desc);
 	return strbuf_detach(&desc, NULL);
 }
 
-static const char *get_symref(struct used_atom *atom, struct ref_array_item *ref)
-{
-	if (!ref->symref)
-		return xstrdup("");
-	else
-		return show_ref(&atom->u.refname, ref->symref);
-}
-
-static const char *get_refname(struct used_atom *atom, struct ref_array_item *ref)
+static void get_refname(struct strbuf *buf, struct used_atom *atom,
+			struct ref_array_item *ref)
 {
 	if (ref->kind & FILTER_REFS_DETACHED_HEAD)
-		return get_head_description();
-	return show_ref(&atom->u.refname, ref->refname);
+		get_head_description_buf(buf);
+	else
+		show_ref(buf, &atom->u.refname, ref->refname);
 }
 
 static int get_object(struct ref_array_item *ref, int deref, struct object **obj,
@@ -1802,7 +1777,9 @@ static void lazy_init_worktree_map(void)
 	populate_worktree_map(&(ref_to_worktree_map.map), ref_to_worktree_map.worktrees);
 }
 
-static char *get_worktree_path(const struct used_atom *atom, const struct ref_array_item *ref)
+static void get_worktree_path(struct strbuf *buf,
+			       const struct used_atom *atom,
+			       const struct ref_array_item *ref)
 {
 	struct hashmap_entry entry, *e;
 	struct ref_to_worktree_entry *lookup_result;
@@ -1813,11 +1790,11 @@ static char *get_worktree_path(const struct used_atom *atom, const struct ref_ar
 	e = hashmap_get(&(ref_to_worktree_map.map), &entry, ref->refname);
 
 	if (!e)
-		return xstrdup("");
+		return;
 
 	lookup_result = container_of(e, struct ref_to_worktree_entry, ent);
 
-	return xstrdup(lookup_result->wt->path);
+	strbuf_addstr(buf, lookup_result->wt->path);
 }
 
 /*
@@ -1831,12 +1808,9 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 
 	CALLOC_ARRAY(ref->value, used_atom_cnt);
 
-	if (need_symref && (ref->flag & REF_ISSYMREF) && !ref->symref) {
+	if (need_symref && (ref->flag & REF_ISSYMREF) && !ref->symref)
 		ref->symref = resolve_refdup(ref->refname, RESOLVE_REF_READING,
 					     NULL, NULL);
-		if (!ref->symref)
-			ref->symref = xstrdup("");
-	}
 
 	/* Fill in specials first */
 	for (i = 0; i < used_atom_cnt; i++) {
@@ -1845,10 +1819,10 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 		const char *name = used_atom[i].name;
 		struct atom_value *v = &ref->value[i];
 		int deref = 0;
-		const char *refname;
 		struct branch *branch = NULL;
+		const struct atom_value blank = ATOM_VALUE_INIT;
 
-		v->s_size = ATOM_SIZE_UNSPECIFIED;
+		memcpy(v, &blank, sizeof(*v));
 		v->handler = append_atom;
 		v->atom = atom;
 
@@ -1857,122 +1831,111 @@ static int populate_value(struct ref_array_item *ref, struct strbuf *err)
 			name++;
 		}
 
-		if (atom_type == ATOM_REFNAME)
-			refname = get_refname(atom, ref);
-		else if (atom_type == ATOM_WORKTREEPATH) {
+		switch (atom_type) {
+		case ATOM_REFNAME:
+			get_refname(&v->buf, atom, ref);
+			if (deref)
+				strbuf_addstr(&v->buf, "^{}");
+			break;
+		case ATOM_SYMREF:
+			if (!ref->symref)
+				break;
+			show_ref(&v->buf, &atom->u.refname, ref->symref);
+			if (deref)
+				strbuf_addstr(&v->buf, "^{}");
+			break;
+		case ATOM_WORKTREEPATH:
 			if (ref->kind == FILTER_REFS_BRANCHES)
-				v->s = get_worktree_path(atom, ref);
-			else
-				v->s = xstrdup("");
-			continue;
-		}
-		else if (atom_type == ATOM_SYMREF)
-			refname = get_symref(atom, ref);
-		else if (atom_type == ATOM_UPSTREAM) {
+				get_worktree_path(&v->buf, atom, ref);
+			break;
+		case ATOM_UPSTREAM:
+		{
+			const char *str;
 			const char *branch_name;
+
 			/* only local branches may have an upstream */
 			if (!skip_prefix(ref->refname, "refs/heads/",
-					 &branch_name)) {
-				v->s = xstrdup("");
-				continue;
-			}
+					 &branch_name))
+				break;
 			branch = branch_get(branch_name);
 
-			refname = branch_get_upstream(branch, NULL);
-			if (refname)
-				fill_remote_ref_details(atom, refname, branch, &v->s);
-			else
-				v->s = xstrdup("");
-			continue;
-		} else if (atom_type == ATOM_PUSH && atom->u.remote_ref.push) {
+			str = branch_get_upstream(branch, NULL);
+			if (str)
+				fill_remote_ref_details(atom, str, branch, &v->buf);
+			break;
+		}
+		case ATOM_PUSH:
+		{
+			const char *str;
 			const char *branch_name;
-			v->s = xstrdup("");
+
+			if (!atom->u.remote_ref.push)
+				break;
 			if (!skip_prefix(ref->refname, "refs/heads/",
 					 &branch_name))
-				continue;
+				break;
 			branch = branch_get(branch_name);
 
 			if (atom->u.remote_ref.push_remote)
-				refname = NULL;
+				str = NULL;
 			else {
-				refname = branch_get_push(branch, NULL);
-				if (!refname)
-					continue;
+				str = branch_get_push(branch, NULL);
+				if (!str)
+					break;
 			}
 			/* We will definitely re-init v->s on the next line. */
-			free((char *)v->s);
-			fill_remote_ref_details(atom, refname, branch, &v->s);
-			continue;
-		} else if (atom_type == ATOM_COLOR) {
-			v->s = xstrdup(atom->u.color);
-			continue;
-		} else if (atom_type == ATOM_FLAG) {
+			fill_remote_ref_details(atom, str, branch, &v->buf);
+			break;
+		}
+		case ATOM_COLOR:
+			strbuf_addstr(&v->buf, atom->u.color);
+			break;
+		case ATOM_FLAG:
+		{
 			char buf[256], *cp = buf;
 			if (ref->flag & REF_ISSYMREF)
 				cp = copy_advance(cp, ",symref");
 			if (ref->flag & REF_ISPACKED)
 				cp = copy_advance(cp, ",packed");
-			if (cp == buf)
-				v->s = xstrdup("");
-			else {
+			if (cp != buf) {
 				*cp = '\0';
-				v->s = xstrdup(buf + 1);
+				strbuf_addstr(&v->buf, buf + 1);
 			}
-			continue;
-		} else if (!deref && atom_type == ATOM_OBJECTNAME &&
-			   grab_oid(name, "objectname", &ref->objectname, v, atom)) {
-				continue;
-		} else if (atom_type == ATOM_HEAD) {
+			break;
+		}
+		case ATOM_OBJECTNAME:
+			if (!deref)
+				grab_oid(name, "objectname", &ref->objectname, v, atom);
+			break;
+		case ATOM_HEAD:
 			if (atom->u.head && !strcmp(ref->refname, atom->u.head))
-				v->s = xstrdup("*");
+				strbuf_addstr(&v->buf, "*");
 			else
-				v->s = xstrdup(" ");
-			continue;
-		} else if (atom_type == ATOM_ALIGN) {
+				strbuf_addstr(&v->buf, " ");
+			break;
+		case ATOM_ALIGN:
 			v->handler = align_atom_handler;
-			v->s = xstrdup("");
-			continue;
-		} else if (atom_type == ATOM_END) {
+			break;
+		case ATOM_END:
 			v->handler = end_atom_handler;
-			v->s = xstrdup("");
-			continue;
-		} else if (atom_type == ATOM_IF) {
-			const char *s;
-			if (skip_prefix(name, "if:", &s))
-				v->s = xstrdup(s);
-			else
-				v->s = xstrdup("");
+			break;
+		case ATOM_IF:
 			v->handler = if_atom_handler;
-			continue;
-		} else if (atom_type == ATOM_THEN) {
+			break;
+		case ATOM_THEN:
 			v->handler = then_atom_handler;
-			v->s = xstrdup("");
-			continue;
-		} else if (atom_type == ATOM_ELSE) {
+			break;
+		case ATOM_ELSE:
 			v->handler = else_atom_handler;
-			v->s = xstrdup("");
-			continue;
-		} else if (atom_type == ATOM_REST) {
+			break;
+		case ATOM_REST:
 			if (ref->rest)
-				v->s = xstrdup(ref->rest);
-			else
-				v->s = xstrdup("");
-			continue;
-		} else
-			continue;
+				strbuf_addstr(&v->buf, ref->rest);
+			break;
+		default:
+			break;
+		}
 
-		if (!deref)
-			v->s = xstrdup(refname);
-		else
-			v->s = xstrfmt("%s^{}", refname);
-		free((char *)refname);
-	}
-
-	for (i = 0; i < used_atom_cnt; i++) {
-		struct atom_value *v = &ref->value[i];
-		if (v->s == NULL && used_atom[i].source == SOURCE_NONE)
-			return strbuf_addf_ret(err, -1, _("missing object %s for %s"),
-					       oid_to_hex(&ref->objectname), ref->refname);
 	}
 
 	if (need_tagged)
@@ -2018,7 +1981,6 @@ static int get_ref_atom_value(struct ref_array_item *ref, int atom,
 	if (!ref->value) {
 		if (populate_value(ref, err))
 			return -1;
-		fill_missing_values(ref->value);
 	}
 	*v = &ref->value[atom];
 	return 0;
@@ -2304,7 +2266,7 @@ static void free_array_item(struct ref_array_item *item)
 	if (item->value) {
 		int i;
 		for (i = 0; i < used_atom_cnt; i++)
-			free((char *)item->value[i].s);
+			strbuf_release(&item->value[i].buf);
 		free(item->value);
 	}
 	free(item);
@@ -2497,30 +2459,21 @@ static int cmp_ref_sorting(struct ref_sorting *s, struct ref_array_item *a, stru
 		cmp = compare_detached_head(a, b);
 		cmp_detached_head = 1;
 	} else if (s->sort_flags & REF_SORTING_VERSION) {
-		cmp = versioncmp(va->s, vb->s);
+		cmp = versioncmp(va->buf.buf, vb->buf.buf);
 	} else if (cmp_type == FIELD_STR) {
-		if (va->s_size < 0 && vb->s_size < 0) {
-			int (*cmp_fn)(const char *, const char *);
-			cmp_fn = s->sort_flags & REF_SORTING_ICASE
-				? strcasecmp : strcmp;
-			cmp = cmp_fn(va->s, vb->s);
-		} else {
-			size_t a_size = va->s_size < 0 ?
-					strlen(va->s) : va->s_size;
-			size_t b_size = vb->s_size < 0 ?
-					strlen(vb->s) : vb->s_size;
-			int (*cmp_fn)(const void *, const void *, size_t);
-			cmp_fn = s->sort_flags & REF_SORTING_ICASE
-				? memcasecmp : memcmp;
+		size_t a_size = va->buf.len;
+		size_t b_size = vb->buf.len;
+		int (*cmp_fn)(const void *, const void *, size_t);
+		cmp_fn = s->sort_flags & REF_SORTING_ICASE
+			? memcasecmp : memcmp;
 
-			cmp = cmp_fn(va->s, vb->s, b_size > a_size ?
-				     a_size : b_size);
-			if (!cmp) {
-				if (a_size > b_size)
-					cmp = 1;
-				else if (a_size < b_size)
-					cmp = -1;
-			}
+		cmp = cmp_fn(va->buf.buf, vb->buf.buf, b_size > a_size ?
+			     a_size : b_size);
+		if (!cmp) {
+			if (a_size > b_size)
+				cmp = 1;
+			else if (a_size < b_size)
+				cmp = -1;
 		}
 	} else {
 		if (va->value < vb->value)
@@ -2621,7 +2574,7 @@ int format_ref_array_item(struct ref_array_item *info,
 	}
 	if (format->need_color_reset_at_eol) {
 		struct atom_value resetv = ATOM_VALUE_INIT;
-		resetv.s = GIT_COLOR_RESET;
+		strbuf_addstr(&resetv.buf, GIT_COLOR_RESET);
 		if (append_atom(&resetv, &state, error_buf)) {
 			pop_stack_element(&state.stack);
 			return -1;

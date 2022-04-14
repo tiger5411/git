@@ -21,26 +21,31 @@ static inline int need_bs_quote(char c)
  *  a'b      ==> a'\''b    ==> 'a'\''b'
  *  a!b      ==> a'\!'b    ==> 'a'\!'b'
  */
-void sq_quote_buf(struct strbuf *dst, const char *src)
+void sq_quote_buf_len(struct strbuf *sb, const char *src, size_t len)
 {
-	char *to_free = NULL;
+	const char sq = '\'';
+	const char bq = '\\';
+	const char *c = src;
+	const char *end = src + len;
 
-	if (dst->buf == src)
-		to_free = strbuf_detach(dst, NULL);
-
-	strbuf_addch(dst, '\'');
-	while (*src) {
-		size_t len = strcspn(src, "'!");
-		strbuf_add(dst, src, len);
-		src += len;
-		while (need_bs_quote(*src)) {
-			strbuf_addstr(dst, "'\\");
-			strbuf_addch(dst, *src++);
-			strbuf_addch(dst, '\'');
+	strbuf_addch(sb, sq);
+	while (c != end) {
+		if (!need_bs_quote(*c)) {
+			strbuf_addch(sb, *c);
+		} else {
+			strbuf_addch(sb, sq);
+			strbuf_addch(sb, bq);
+			strbuf_addch(sb, *c);
+			strbuf_addch(sb, sq);
 		}
+		c++;
 	}
-	strbuf_addch(dst, '\'');
-	free(to_free);
+	strbuf_addch(sb, sq);
+}
+
+void sq_quote_buf(struct strbuf *sb, const char *src)
+{
+	sq_quote_buf_len(sb, src, strlen(src));
 }
 
 void sq_quote_buf_pretty(struct strbuf *dst, const char *src)
@@ -74,7 +79,7 @@ void sq_quotef(struct strbuf *dst, const char *fmt, ...)
 	strbuf_vaddf(&src, fmt, ap);
 	va_end(ap);
 
-	sq_quote_buf(dst, src.buf);
+	sq_quote_buf_len(dst, src.buf, src.len);
 	strbuf_release(&src);
 }
 
@@ -454,75 +459,58 @@ int unquote_c_style(struct strbuf *sb, const char *quoted, const char **endp)
 	return -1;
 }
 
-/* quoting as a string literal for other languages */
-
-void perl_quote_buf(struct strbuf *sb, const char *src)
+static void perlthon_quote_buf(struct strbuf *sb, const char *src, size_t len,
+			       int quote_nl)
 {
 	const char sq = '\'';
 	const char bq = '\\';
-	char c;
-
-	strbuf_addch(sb, sq);
-	while ((c = *src++)) {
-		if (c == sq || c == bq)
-			strbuf_addch(sb, bq);
-		strbuf_addch(sb, c);
-	}
-	strbuf_addch(sb, sq);
-}
-
-void perl_quote_buf_with_len(struct strbuf *sb, const char *src, size_t len)
-{
-	const char sq = '\'';
-	const char bq = '\\';
+	const char nl = '\n';
 	const char *c = src;
 	const char *end = src + len;
 
 	strbuf_addch(sb, sq);
 	while (c != end) {
-		if (*c == sq || *c == bq)
+		if (quote_nl && *c == nl) {
 			strbuf_addch(sb, bq);
-		strbuf_addch(sb, *c);
+			strbuf_addch(sb, 'n');
+		} else if (*c == sq || *c == bq) {
+			strbuf_addch(sb, bq);
+			strbuf_addch(sb, *c);
+		} else {
+			strbuf_addch(sb, *c);
+		}
 		c++;
 	}
 	strbuf_addch(sb, sq);
+
 }
 
-void python_quote_buf(struct strbuf *sb, const char *src)
+/* quoting as a string literal for other languages */
+void python_quote_buf(struct strbuf *sb, const char *src, size_t len)
 {
-	const char sq = '\'';
-	const char bq = '\\';
-	const char nl = '\n';
-	char c;
-
-	strbuf_addch(sb, sq);
-	while ((c = *src++)) {
-		if (c == nl) {
-			strbuf_addch(sb, bq);
-			strbuf_addch(sb, 'n');
-			continue;
-		}
-		if (c == sq || c == bq)
-			strbuf_addch(sb, bq);
-		strbuf_addch(sb, c);
-	}
-	strbuf_addch(sb, sq);
+	perlthon_quote_buf(sb, src, len, 1);
 }
 
-void tcl_quote_buf(struct strbuf *sb, const char *src)
+void perl_quote_buf(struct strbuf *sb, const char *src, size_t len)
 {
-	char c;
+	perlthon_quote_buf(sb, src, len, 0);
+}
+
+void tcl_quote_buf(struct strbuf *sb, const char *src, size_t len)
+{
+	const char *c = src;
+	const char *end = src + len;
 
 	strbuf_addch(sb, '"');
-	while ((c = *src++)) {
-		switch (c) {
+	while (c != end) {
+		switch (*c) {
 		case '[': case ']':
 		case '{': case '}':
 		case '$': case '\\': case '"':
 			strbuf_addch(sb, '\\');
 			/* fallthrough */
 		default:
-			strbuf_addch(sb, c);
+			strbuf_addch(sb, *c);
 			break;
 		case '\f':
 			strbuf_addstr(sb, "\\f");
@@ -540,6 +528,7 @@ void tcl_quote_buf(struct strbuf *sb, const char *src)
 			strbuf_addstr(sb, "\\v");
 			break;
 		}
+		c++;
 	}
 	strbuf_addch(sb, '"');
 }

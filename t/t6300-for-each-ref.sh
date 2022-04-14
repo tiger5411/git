@@ -136,6 +136,8 @@ test_atom head object ''
 test_atom head type ''
 test_atom head raw "$(git cat-file commit refs/heads/main)
 "
+test_atom head '*refname' 'refs/heads/main^{}'
+test_atom head '*symref' ''
 test_atom head '*objectname' ''
 test_atom head '*objecttype' ''
 test_atom head author 'A U Thor <author@example.com> 1151968724 +0200'

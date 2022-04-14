@@ -26,9 +26,13 @@ struct strbuf;
  * will return the number of characters that would have been written
  * excluding the final null regardless of the buffer size.
  *
+ * sq_quote_buf_len() quotes a buffer of a given length. Internally
+ * sq_quote_buf() is a wrapper for it which calls strlen()>
+ *
  * sq_quotef() quotes the entire formatted string as a single result.
  */
 
+void sq_quote_buf_len(struct strbuf *sb, const char *src, size_t len);
 void sq_quote_buf(struct strbuf *, const char *src);
 void sq_quote_argv(struct strbuf *, const char **argv);
 __attribute__((format (printf, 2, 3)))
@@ -94,10 +98,9 @@ char *quote_path(const char *in, const char *prefix, struct strbuf *out, unsigne
 #define QUOTE_PATH_QUOTE_SP 01
 
 /* quoting as a string literal for other languages */
-void perl_quote_buf(struct strbuf *sb, const char *src);
-void perl_quote_buf_with_len(struct strbuf *sb, const char *src, size_t len);
-void python_quote_buf(struct strbuf *sb, const char *src);
-void tcl_quote_buf(struct strbuf *sb, const char *src);
+void perl_quote_buf(struct strbuf *sb, const char *src, size_t len);
+void python_quote_buf(struct strbuf *sb, const char *src, size_t len);
+void tcl_quote_buf(struct strbuf *sb, const char *src, size_t len);
 void basic_regex_quote_buf(struct strbuf *sb, const char *src);
 
 #endif
