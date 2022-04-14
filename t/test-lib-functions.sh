@@ -1236,12 +1236,6 @@ test_stdout_line_count () {
 	test_line_count "$ops" "$val" "$trashdir/output"
 }
 
-
-test_file_size () {
-	test "$#" -ne 1 && BUG "1 param"
-	test-tool path-utils file-size "$1"
-}
-
 # Returns success if a comma separated string of keywords ($1) contains a
 # given keyword ($2).
 # Examples:
