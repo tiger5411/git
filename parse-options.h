@@ -226,6 +226,9 @@ struct option {
 	OPT_CALLBACK(s, l, v, a, h, &parse_opt_string_list)
 #define OPT_UYN(s, l, v, h) OPT_CALLBACK_F(s, l, v, NULL, h, PARSE_OPT_NOARG, \
 					   &parse_opt_tertiary)
+#define OPT_STRVEC(s, l, v, a, h) \
+				    { OPTION_CALLBACK, (s), (l), (v), (a), \
+				      (h), 0, &parse_opt_strvec }
 #define OPT_EXPIRY_DATE(s, l, v, h) \
 	OPT_CALLBACK_F(s, l, v, N_("expiry-date"), h, 0, \
 		       parse_opt_expiry_date_cb)
@@ -357,10 +360,13 @@ int parse_opt_verbosity_cb(const struct option *, const char *, int);
 int parse_opt_object_name(const struct option *, const char *, int);
 /* value is struct object_id* */
 int parse_opt_object_id(const struct option *, const char *, int);
+/* value is struct object_id* */
+int parse_opt_object_id_hex(const struct option *, const char *, int);
 int parse_opt_commits(const struct option *, const char *, int);
 int parse_opt_commit(const struct option *, const char *, int);
 int parse_opt_tertiary(const struct option *, const char *, int);
 int parse_opt_string_list(const struct option *, const char *, int);
+int parse_opt_strvec(const struct option *, const char *, int);
 int parse_opt_noop_cb(const struct option *, const char *, int);
 enum parse_opt_result parse_opt_unknown_cb(struct parse_opt_ctx_t *ctx,
 					   const struct option *,
