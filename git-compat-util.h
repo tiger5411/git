@@ -332,7 +332,25 @@ static inline int setitimer(int which, const struct itimerval *value, struct iti
 #endif
 
 #ifndef NO_LIBGEN_H
+/*
+ * FreeBSD's libgen.h inadvertently requires C11 features, due to its
+ * sys/cdefs.h using _Generic() if
+ * __has_extension(c_generic_selections) is true, regardless of
+ * __STDC_VERSION__....
+ */
+#if defined(__FreeBSD__) && __STDC_VERSION__ - 0 < 201112L
+#include <sys/cdefs.h>
+#ifdef __generic
+#define __fbsd_generic __generic
+#endif
+#undef __generic
+#endif
 #include <libgen.h>
+/* ...continue FreeBSD-specific hack above */
+#ifdef __fbsd_generic
+#define __generic __fbsd_generic
+#undef __fbsd_generic
+#endif
 #else
 #define basename gitbasename
 char *gitbasename(char *);
