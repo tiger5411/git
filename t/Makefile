@@ -21,10 +21,8 @@ TEST_LINT ?= test-lint
 
 ifdef TEST_OUTPUT_DIRECTORY
 TEST_RESULTS_DIRECTORY = $(TEST_OUTPUT_DIRECTORY)/test-results
-CHAINLINTTMP = $(TEST_OUTPUT_DIRECTORY)/chainlinttmp
 else
 TEST_RESULTS_DIRECTORY = test-results
-CHAINLINTTMP = chainlinttmp
 endif
 
 # Shell quote;
@@ -32,13 +30,11 @@ SHELL_PATH_SQ = $(subst ','\'',$(SHELL_PATH))
 TEST_SHELL_PATH_SQ = $(subst ','\'',$(TEST_SHELL_PATH))
 PERL_PATH_SQ = $(subst ','\'',$(PERL_PATH))
 TEST_RESULTS_DIRECTORY_SQ = $(subst ','\'',$(TEST_RESULTS_DIRECTORY))
-CHAINLINTTMP_SQ = $(subst ','\'',$(CHAINLINTTMP))
 
 T = $(sort $(wildcard t[0-9][0-9][0-9][0-9]-*.sh))
 TGITWEB = $(sort $(wildcard t95[0-9][0-9]-*.sh))
 THELPERS = $(sort $(filter-out $(T),$(wildcard *.sh)))
 TPERF = $(sort $(wildcard perf/p[0-9][0-9][0-9][0-9]-*.sh))
-CHAINLINTTESTS = $(sort $(patsubst chainlint/%.test,%,$(wildcard chainlint/*.test)))
 CHAINLINT = sed -f chainlint.sed
 
 all: $(DEFAULT_TEST_TARGET)
@@ -62,7 +58,7 @@ $(T):
 pre-clean:
 	$(RM) -r '$(TEST_RESULTS_DIRECTORY_SQ)'
 
-clean-except-prove-cache: clean-chainlint
+clean-except-prove-cache:
 	$(RM) -r 'trash directory'.* '$(TEST_RESULTS_DIRECTORY_SQ)'
 	$(RM) -r valgrind/bin
 
@@ -70,14 +66,34 @@ clean: clean-except-prove-cache
 	$(RM) .prove
 
 clean-chainlint:
-	$(RM) -r '$(CHAINLINTTMP_SQ)'
+	$(RM) -r .build/chainlint
 
-check-chainlint:
-	@mkdir -p '$(CHAINLINTTMP_SQ)' && \
-	sed -e '/^# LINT: /d' $(patsubst %,chainlint/%.test,$(CHAINLINTTESTS)) >'$(CHAINLINTTMP_SQ)'/tests && \
-	sed -e '/^[ 	]*$$/d' $(patsubst %,chainlint/%.expect,$(CHAINLINTTESTS)) >'$(CHAINLINTTMP_SQ)'/expect && \
-	$(CHAINLINT) '$(CHAINLINTTMP_SQ)'/tests | grep -v '^[	]*$$' >'$(CHAINLINTTMP_SQ)'/actual && \
-	diff -u '$(CHAINLINTTMP_SQ)'/expect '$(CHAINLINTTMP_SQ)'/actual
+CHAINLINT_TESTS = $(wildcard chainlint/*.test)
+
+CHAINLINT_GEN = $(CHAINLINT_TESTS:%.test=.build/%)
+
+define CHAINLINT_rule
+.PRECIOUS: $$(CHAINLINT_GEN:%=%/$(1))
+.build/chainlint/%/$(1): $(2)
+	$$(call mkdir_p_parent_template)
+	$(3) <$$< >$$@
+endef
+define CHAINLINT_dep
+$(call CHAINLINT_rule,$(1),$(2),$$(QUIET_CHAINLINT_DEP)$(3))
+endef
+$(eval $(call CHAINLINT_dep,test,chainlint/%.test,\
+	sed -e '/^# LINT: /d'))
+$(eval $(call CHAINLINT_dep,chainlint,.build/chainlint/%/test,\
+	$$(CHAINLINT)))
+$(eval $(call CHAINLINT_dep,expect,chainlint/%.expect,\
+	sed -e '/^[ 	]*$$$$/d'))
+$(eval $(call CHAINLINT_dep,actual,.build/chainlint/%/chainlint,\
+	grep -v '^[   ]*$$$$'))
+$(eval $(call CHAINLINT_rule,ok,\
+	.build/chainlint/%/actual .build/chainlint/%/expect,\
+	$$(QUIET_CHAINLINT)diff -u $$(@D)/expect $$(@D)/actual))
+
+check-chainlint: $(CHAINLINT_GEN:%=%/ok)
 
 test-lint: test-lint-duplicates test-lint-executable test-lint-shell-syntax \
 	test-lint-filenames
