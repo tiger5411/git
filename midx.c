@@ -1931,7 +1931,7 @@ int midx_repack(struct repository *r, const char *object_dir, size_t batch_size,
 
 	strbuf_addstr(&base_name, object_dir);
 	strbuf_addstr(&base_name, "/pack/pack");
-	strvec_push(&cmd.args, base_name.buf);
+	strvec_push_nodup(&cmd.args, strbuf_detach(&base_name, NULL));
 
 	if (delta_base_offset)
 		strvec_push(&cmd.args, "--delta-base-offset");
@@ -1942,8 +1942,6 @@ int midx_repack(struct repository *r, const char *object_dir, size_t batch_size,
 		strvec_push(&cmd.args, "--progress");
 	else
 		strvec_push(&cmd.args, "-q");
-
-	strbuf_release(&base_name);
 
 	cmd.git_cmd = 1;
 	cmd.in = cmd.out = -1;

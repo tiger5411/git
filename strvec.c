@@ -10,7 +10,7 @@ void strvec_init(struct strvec *array)
 	memcpy(array, &blank, sizeof(*array));
 }
 
-static void strvec_push_nodup(struct strvec *array, const char *value)
+const char *strvec_push_nodup(struct strvec *array, const char *value)
 {
 	if (array->v == empty_strvec)
 		array->v = NULL;
@@ -18,12 +18,12 @@ static void strvec_push_nodup(struct strvec *array, const char *value)
 	ALLOC_GROW(array->v, array->nr + 2, array->alloc);
 	array->v[array->nr++] = value;
 	array->v[array->nr] = NULL;
+	return array->v[array->nr - 1];
 }
 
 const char *strvec_push(struct strvec *array, const char *value)
 {
-	strvec_push_nodup(array, xstrdup(value));
-	return array->v[array->nr - 1];
+	return strvec_push_nodup(array, xstrdup(value));
 }
 
 const char *strvec_pushf(struct strvec *array, const char *fmt, ...)

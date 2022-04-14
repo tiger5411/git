@@ -665,7 +665,7 @@ static int run_am(struct rebase_options *opts)
 	if (opts->git_format_patch_opt.len)
 		strvec_split(&format_patch.args,
 			     opts->git_format_patch_opt.buf);
-	strvec_push(&format_patch.args, revisions.buf);
+	strvec_push_nodup(&format_patch.args, strbuf_detach(&revisions, NULL));
 	if (opts->restrict_revision)
 		strvec_pushf(&format_patch.args, "^%s",
 			     oid_to_hex(&opts->restrict_revision->object.oid));
@@ -688,10 +688,8 @@ static int run_am(struct rebase_options *opts)
 			"As a result, git cannot rebase them."),
 		      opts->revisions);
 
-		strbuf_release(&revisions);
 		return status;
 	}
-	strbuf_release(&revisions);
 
 	am.in = open(rebased_patches, O_RDONLY);
 	if (am.in < 0) {

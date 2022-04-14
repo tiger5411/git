@@ -1690,10 +1690,10 @@ static int get_next_submodule(struct child_process *cp, struct strbuf *err,
 		strbuf_addf(&submodule_prefix, "%s%s/",
 						spf->prefix,
 						task->sub->path);
-		strvec_push(&cp->args, submodule_prefix.buf);
+		strvec_push_nodup(&cp->args, strbuf_detach(&submodule_prefix,
+							   NULL));
 		*task_cb = task;
 
-		strbuf_release(&submodule_prefix);
 		string_list_insert(&spf->seen_submodule_names, task->sub->name);
 		return 1;
 	}
@@ -1716,7 +1716,7 @@ static int get_next_submodule(struct child_process *cp, struct strbuf *err,
 		strvec_pushv(&cp->args, spf->args.v);
 		strvec_push(&cp->args, "on-demand");
 		strvec_push(&cp->args, "--submodule-prefix");
-		strvec_push(&cp->args, submodule_prefix.buf);
+		strvec_push_nodup(&cp->args, strbuf_detach(&submodule_prefix, NULL));
 
 		/* NEEDSWORK: have get_default_remote from submodule--helper */
 		strvec_push(&cp->args, "origin");
@@ -1724,7 +1724,6 @@ static int get_next_submodule(struct child_process *cp, struct strbuf *err,
 					  append_oid_to_argv, &cp->args);
 
 		*task_cb = task;
-		strbuf_release(&submodule_prefix);
 		return 1;
 	}
 

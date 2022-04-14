@@ -1435,14 +1435,13 @@ struct child_process *git_connect(int fd[2], const char *url,
 					     version);
 			}
 		}
-		strvec_push(&conn->args, cmd.buf);
+		strvec_push_nodup(&conn->args, strbuf_detach(&cmd, NULL));
 
 		if (start_command(conn))
 			die(_("unable to fork"));
 
 		fd[0] = conn->out; /* read from child's stdout */
 		fd[1] = conn->in;  /* write to child's stdin */
-		strbuf_release(&cmd);
 	}
 	free(hostandport);
 	free(path);
