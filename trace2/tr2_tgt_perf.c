@@ -155,16 +155,33 @@ static void perf_io_write_fl(const char *file, int line, const char *event_name,
 	strbuf_release(&buf_line);
 }
 
+__attribute__((format (printf, 8, 9)))
+static void perf_io_write_fl_fmt(const char *file, int line, const char *event_name,
+				 const struct repository *repo,
+				 uint64_t *p_us_elapsed_absolute,
+				 uint64_t *p_us_elapsed_relative,
+				 const char *category,
+				 const char *fmt, ...)
+{
+	va_list ap;
+	struct strbuf sb = STRBUF_INIT;
+
+	va_start(ap, fmt);
+	strbuf_vaddf(&sb, fmt, ap);
+	va_end(ap);
+
+	perf_io_write_fl(file, line, event_name, repo, p_us_elapsed_absolute,
+			 p_us_elapsed_relative, category, &sb);
+
+	strbuf_release(&sb);
+}
+
 static void fn_version_fl(const char *file, int line)
 {
 	const char *event_name = "version";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addstr(&buf_payload, git_version_string);
-
-	perf_io_write_fl(file, line, event_name, NULL, NULL, NULL, NULL,
-			 &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, NULL, NULL, NULL,
+			     "%s", git_version_string);
 }
 
 static void fn_start_fl(const char *file, int line,
@@ -184,37 +201,25 @@ static void fn_exit_fl(const char *file, int line, uint64_t us_elapsed_absolute,
 		       int code)
 {
 	const char *event_name = "exit";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "code:%d", code);
-
-	perf_io_write_fl(file, line, event_name, NULL, &us_elapsed_absolute,
-			 NULL, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, &us_elapsed_absolute,
+			     NULL, NULL, "code:%d", code);
 }
 
 static void fn_signal(uint64_t us_elapsed_absolute, int signo)
 {
 	const char *event_name = "signal";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "signo:%d", signo);
-
-	perf_io_write_fl(__FILE__, __LINE__, event_name, NULL,
-			 &us_elapsed_absolute, NULL, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(__FILE__, __LINE__, event_name, NULL,
+			 &us_elapsed_absolute, NULL, NULL, "signo:%d", signo);
 }
 
 static void fn_atexit(uint64_t us_elapsed_absolute, int code)
 {
 	const char *event_name = "atexit";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "code:%d", code);
-
-	perf_io_write_fl(__FILE__, __LINE__, event_name, NULL,
-			 &us_elapsed_absolute, NULL, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(__FILE__, __LINE__, event_name, NULL,
+			 &us_elapsed_absolute, NULL, NULL, "code:%d", code);
 }
 
 static void maybe_append_string_va(struct strbuf *buf, const char *fmt,
@@ -246,13 +251,9 @@ static void fn_error_va_fl(const char *file, int line, const char *fmt,
 static void fn_command_path_fl(const char *file, int line, const char *pathname)
 {
 	const char *event_name = "cmd_path";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addstr(&buf_payload, pathname);
-
-	perf_io_write_fl(file, line, event_name, NULL, NULL, NULL, NULL,
-			 &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, NULL, NULL, NULL,
+			     "%s", pathname);
 }
 
 static void fn_command_ancestry_fl(const char *file, int line, const char **parent_names)
@@ -288,13 +289,9 @@ static void fn_command_name_fl(const char *file, int line, const char *name,
 static void fn_command_mode_fl(const char *file, int line, const char *mode)
 {
 	const char *event_name = "cmd_mode";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addstr(&buf_payload, mode);
-
-	perf_io_write_fl(file, line, event_name, NULL, NULL, NULL, NULL,
-			 &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, NULL, NULL, NULL,
+			     "%s", mode);
 }
 
 static void fn_alias_fl(const char *file, int line, const char *alias,
@@ -353,13 +350,10 @@ static void fn_child_exit_fl(const char *file, int line,
 			     int code, uint64_t us_elapsed_child)
 {
 	const char *event_name = "child_exit";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "[ch%d] pid:%d code:%d", cid, pid, code);
-
-	perf_io_write_fl(file, line, event_name, NULL, &us_elapsed_absolute,
-			 &us_elapsed_child, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, &us_elapsed_absolute,
+			     &us_elapsed_child, NULL, "[ch%d] pid:%d code:%d",
+			     cid, pid, code);
 }
 
 static void fn_child_ready_fl(const char *file, int line,
@@ -367,24 +361,19 @@ static void fn_child_ready_fl(const char *file, int line,
 			      const char *ready, uint64_t us_elapsed_child)
 {
 	const char *event_name = "child_ready";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "[ch%d] pid:%d ready:%s", cid, pid, ready);
-
-	perf_io_write_fl(file, line, event_name, NULL, &us_elapsed_absolute,
-			 &us_elapsed_child, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, &us_elapsed_absolute,
+			     &us_elapsed_child, NULL,
+			     "[ch%d] pid:%d ready:%s", cid, pid, ready);
 }
 
 static void fn_thread_start_fl(const char *file, int line,
 			       uint64_t us_elapsed_absolute)
 {
 	const char *event_name = "thread_start";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	perf_io_write_fl(file, line, event_name, NULL, &us_elapsed_absolute,
-			 NULL, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, &us_elapsed_absolute,
+			     NULL, NULL, "%s", ""); /* TODO: No payload, support NULL? */
 }
 
 static void fn_thread_exit_fl(const char *file, int line,
@@ -392,11 +381,9 @@ static void fn_thread_exit_fl(const char *file, int line,
 			      uint64_t us_elapsed_thread)
 {
 	const char *event_name = "thread_exit";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	perf_io_write_fl(file, line, event_name, NULL, &us_elapsed_absolute,
-			 &us_elapsed_thread, NULL, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, &us_elapsed_absolute,
+			     &us_elapsed_thread, NULL, "%s", ""); /* TODO: No payload, support NULL ? */
 }
 
 static void fn_exec_fl(const char *file, int line, uint64_t us_elapsed_absolute,
@@ -440,13 +427,9 @@ static void fn_param_fl(const char *file, int line, const char *param,
 			const char *value)
 {
 	const char *event_name = "def_param";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "%s:%s", param, value);
-
-	perf_io_write_fl(file, line, event_name, NULL, NULL, NULL, NULL,
-			 &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, NULL, NULL, NULL, NULL,
+			     "%s:%s", param, value);
 }
 
 static void fn_repo_fl(const char *file, int line,
@@ -527,13 +510,10 @@ static void fn_data_json_fl(const char *file, int line,
 			    const struct json_writer *value)
 {
 	const char *event_name = "data_json";
-	struct strbuf buf_payload = STRBUF_INIT;
 
-	strbuf_addf(&buf_payload, "%s:%s", key, value->json.buf);
-
-	perf_io_write_fl(file, line, event_name, repo, &us_elapsed_absolute,
-			 &us_elapsed_region, category, &buf_payload);
-	strbuf_release(&buf_payload);
+	perf_io_write_fl_fmt(file, line, event_name, repo, &us_elapsed_absolute,
+			     &us_elapsed_region, category,
+			     "%s:%s", key, value->json.buf);
 }
 
 static void fn_printf_va_fl(const char *file, int line,
