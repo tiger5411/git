@@ -360,19 +360,15 @@ test_expect_success 'progress generates traces: stop without start' '
 	! grep region_leave.*progress trace-stop.event
 '
 
-test_expect_success 'progress generates traces: start with active progress bar (no stops)' '
+test_expect_success 'BUG: start with active progress bar (no stops)' '
 	cat >in <<-\EOF &&
 	start 0 One
 	start 0 Two
 	EOF
 
-	GIT_TRACE2_EVENT="$PWD/trace-2start.event" \
-	LSAN_OPTIONS=detect_leaks=0 \
-	test-tool progress \
+	test_must_fail test-tool progress \
 		<in 2>stderr &&
-	grep region_enter.*progress.*One trace-2start.event &&
-	grep region_enter.*progress.*Two trace-2start.event &&
-	! grep region_leave trace-2start.event
+	grep "^BUG: .*'\''One'\'' progress still active when trying to start '\''Two'\''$" stderr
 '
 
 test_done
