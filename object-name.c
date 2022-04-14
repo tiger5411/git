@@ -1389,7 +1389,8 @@ struct grab_nth_branch_switch_cbdata {
 };
 
 static int grab_nth_branch_switch(struct object_id *ooid, struct object_id *noid,
-				  const char *email, timestamp_t timestamp, int tz,
+				  const char *author, const char *email,
+				  timestamp_t timestamp, int tz,
 				  const char *message, void *cb_data)
 {
 	struct grab_nth_branch_switch_cbdata *cb = cb_data;
