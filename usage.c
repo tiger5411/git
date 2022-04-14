@@ -5,6 +5,7 @@
  */
 #include "git-compat-util.h"
 #include "cache.h"
+#include "config.h"
 
 enum usage_kind {
 	USAGE_USAGE,
@@ -14,6 +15,7 @@ enum usage_kind {
 	USAGE_BUG,
 };
 
+static int dying;
 static void vreportf(enum usage_kind kind,
 		     const char *file, int line,
 		     const char *err, va_list params)
@@ -23,6 +25,27 @@ static void vreportf(enum usage_kind kind,
 	char msg[4096];
 	char *p, *pend = msg + sizeof(msg);
 	size_t len;
+	static int addln = -1;
+
+	if (addln < 0 && dying <= 1) {
+		struct repository *r = the_repository;
+
+		prepare_repo_settings(r);
+		addln = r->settings.usage_add_source;
+	} else if (addln < 0 && dying) {
+		const char *v;
+
+		/*
+		 * We're already dying when trying to read our config,
+		 * presumably via prepare_repo_settings(). Do a
+		 * last-ditch effort of trying to get it from the
+		 * environment.
+		 */
+		v = getenv("GIT_TEST_USAGE_ADD_SOURCE");
+		addln = v ? git_parse_maybe_bool(v) : 0;
+		if (addln < 1)
+			addln = 0;
+	}
 
 	switch (kind) {
 	case USAGE_USAGE:
@@ -45,7 +68,7 @@ static void vreportf(enum usage_kind kind,
 	}
 
 	/* truncation via snprintf is OK here */
-	if (kind == USAGE_BUG)
+	if (kind == USAGE_BUG || addln)
 		len = snprintf(prefix, sizeof(prefix), "%s%s:%d: ", prefix_i18n, file, line);
 	else
 		len = snprintf(prefix, sizeof(prefix), "%s", prefix_i18n);
@@ -124,7 +147,6 @@ static void warning_builtin(const char *file, int line, const char *warn, va_lis
 
 static int die_is_recursing_builtin(void)
 {
-	static int dying;
 	/*
 	 * Just an arbitrary number X where "a < x < b" where "a" is
 	 * "maximum number of pthreads we'll ever plausibly spawn" and

@@ -11,6 +11,15 @@ static void repo_cfg_bool(struct repository *r, const char *key, int *dest,
 		*dest = def;
 }
 
+static void repo_cfg_bool_env(struct repository *r, const char *env,
+			      const char *key, int *dest, int def)
+{
+	*dest = git_env_bool(env, -1);
+	if (*dest != -1)
+		return;
+	repo_cfg_bool(r, key, dest, def);
+}
+
 void prepare_repo_settings(struct repository *r)
 {
 	int experimental;
@@ -19,7 +28,7 @@ void prepare_repo_settings(struct repository *r)
 	int manyfiles;
 
 	if (!r->gitdir)
-		BUG("Cannot add settings for uninitialized repository");
+		return;
 
 	if (r->settings.initialized++)
 		return;
@@ -49,6 +58,8 @@ void prepare_repo_settings(struct repository *r)
 	repo_cfg_bool(r, "fetch.writecommitgraph", &r->settings.fetch_write_commit_graph, 0);
 	repo_cfg_bool(r, "pack.usesparse", &r->settings.pack_use_sparse, 1);
 	repo_cfg_bool(r, "core.multipackindex", &r->settings.core_multi_pack_index, 1);
+	repo_cfg_bool_env(r, "GIT_TEST_USAGE_ADD_SOURCE", "core.usageaddsource",
+			  &r->settings.usage_add_source, 0);
 	repo_cfg_bool(r, "index.sparse", &r->settings.sparse_index, 0);
 
 	/*

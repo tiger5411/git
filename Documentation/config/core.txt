@@ -133,6 +133,13 @@ core.untrackedCache::
 	`feature.manyFiles` is enabled which sets this setting to
 	`true` by default.
 
+core.usageAddSource::
+	Adds the source "<file>:<line>" numbers to usage messages
+	("usage:", "fatal:", "error:", "warning:"). This setting is
+	primarily intended for those debugging or developing git
+	itself, or to compose a bug report against git itself (see
+	linkgit:git-bugreport[1]).
+
 core.checkStat::
 	When missing or is set to `default`, many fields in the stat
 	structure are checked to detect if a file has been modified
