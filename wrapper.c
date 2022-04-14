@@ -61,9 +61,6 @@ static void *do_xmalloc(size_t size, int gentle)
 			return NULL;
 		}
 	}
-#ifdef XMALLOC_POISON
-	memset(ret, 0xA5, size);
-#endif
 	return ret;
 }
 
