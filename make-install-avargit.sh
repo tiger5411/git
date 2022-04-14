@@ -673,6 +673,21 @@ do
 done <$series_list
 test -n "$only_merge" && exit
 
+# Check it with -fanalyzer + avar/add-DEVOPTS-analyzer. Hacks around a
+# semantic conflict with avar/support-DEVELOPER-with-xlc and the
+# COMPILATION_DATABASE change in
+# avar/generate-advice-h-add-missing-docs not making it through some
+# merge... (TODO: fix that?)
+prev=$(git rev-parse HEAD)
+src=avar/add-DEVOPTS-analyzer-plus-avar/private
+git checkout $src -- config.mak.dev detect-compiler
+git commit -m"(ab)use of $src"
+git cherry-pick $src || git commit -v --no-edit
+## Twice on on failure, to bundle errors at the end...
+make -k DEVELOPER=1 DEVOPTS=analyzer CC='ccache gcc' GENERATE_COMPILATION_DATABASE=yes compdb_args= ||
+make -k DEVELOPER=1 DEVOPTS=analyzer CC='ccache gcc' GENERATE_COMPILATION_DATABASE=yes compdb_args=
+git reset --hard $prev
+
 # Compile, unless we were doing it in the merge loop
 if test -z "$merge_full_tests"
 then
