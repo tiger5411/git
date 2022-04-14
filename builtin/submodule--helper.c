@@ -275,9 +275,9 @@ static char *get_up_path(const char *path)
 static int module_list(int argc, const char **argv, const char *prefix)
 {
 	int i;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
-
+	int ret = 0;
 	struct option module_list_options[] = {
 		OPT_STRING(0, "prefix", &prefix,
 			   N_("path"),
@@ -293,8 +293,10 @@ static int module_list(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, module_list_options,
 			     git_submodule_helper_usage, 0);
 
-	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0)
-		return 1;
+	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0) {
+		ret = 1;
+		goto cleanup;
+	}
 
 	for (i = 0; i < list.nr; i++) {
 		const struct cache_entry *ce = list.entries[i];
@@ -308,7 +310,11 @@ static int module_list(int argc, const char **argv, const char *prefix)
 
 		fprintf(stdout, "%s\n", ce->name);
 	}
-	return 0;
+
+cleanup:
+	clear_pathspec(&pathspec);
+	free(list.entries);
+	return ret;
 }
 
 static void for_each_listed_submodule(const struct module_list *list,
@@ -433,9 +439,9 @@ cleanup:
 static int module_foreach(int argc, const char **argv, const char *prefix)
 {
 	struct foreach_cb info = FOREACH_CB_INIT;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
-
+	int ret = 0;
 	struct option module_foreach_options[] = {
 		OPT__QUIET(&info.quiet, N_("suppress output of entering each submodule command")),
 		OPT_BOOL(0, "recursive", &info.recursive,
@@ -451,8 +457,10 @@ static int module_foreach(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, module_foreach_options,
 			     git_submodule_helper_usage, 0);
 
-	if (module_list_compute(0, NULL, prefix, &pathspec, &list) < 0)
-		return 1;
+	if (module_list_compute(0, NULL, prefix, &pathspec, &list) < 0) {
+		ret = 1;
+		goto cleanup;
+	}
 
 	info.argc = argc;
 	info.argv = argv;
@@ -460,7 +468,10 @@ static int module_foreach(int argc, const char **argv, const char *prefix)
 
 	for_each_listed_submodule(&list, runcommand_in_submodule_cb, &info);
 
-	return 0;
+cleanup:
+	clear_pathspec(&pathspec);
+	free(list.entries);
+	return ret;
 }
 
 static int starts_with_dot_slash(const char *const path)
@@ -572,10 +583,10 @@ static void init_submodule_cb(const struct cache_entry *list_item, void *cb_data
 static int module_init(int argc, const char **argv, const char *prefix)
 {
 	struct init_cb info = INIT_CB_INIT;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
 	int quiet = 0;
-
+	int ret = 0;
 	struct option module_init_options[] = {
 		OPT__QUIET(&quiet, N_("suppress output for initializing a submodule")),
 		OPT_END()
@@ -589,8 +600,10 @@ static int module_init(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, module_init_options,
 			     git_submodule_helper_usage, 0);
 
-	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0)
-		return 1;
+	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0) {
+		ret = 1;
+		goto cleanup;
+	}
 
 	/*
 	 * If there are no path args and submodule.active is set then,
@@ -605,7 +618,10 @@ static int module_init(int argc, const char **argv, const char *prefix)
 
 	for_each_listed_submodule(&list, init_submodule_cb, &info);
 
-	return 0;
+cleanup:
+	clear_pathspec(&pathspec);
+	free(list.entries);
+	return ret;
 }
 
 struct status_cb {
@@ -750,9 +766,10 @@ static void status_submodule_cb(const struct cache_entry *list_item,
 static int module_status(int argc, const char **argv, const char *prefix)
 {
 	struct status_cb info = STATUS_CB_INIT;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
 	int quiet = 0;
+	int ret = 0;
 
 	struct option module_status_options[] = {
 		OPT__QUIET(&quiet, N_("suppress submodule status output")),
@@ -769,8 +786,10 @@ static int module_status(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, module_status_options,
 			     git_submodule_helper_usage, 0);
 
-	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0)
-		return 1;
+	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0) {
+		ret = 1;
+		goto cleanup;
+	}
 
 	info.prefix = prefix;
 	if (quiet)
@@ -778,7 +797,10 @@ static int module_status(int argc, const char **argv, const char *prefix)
 
 	for_each_listed_submodule(&list, status_submodule_cb, &info);
 
-	return 0;
+cleanup:
+	clear_pathspec(&pathspec);
+	free(list.entries);
+	return ret;
 }
 
 static int module_name(int argc, const char **argv, const char *prefix)
@@ -1336,10 +1358,11 @@ static void sync_submodule_cb(const struct cache_entry *list_item, void *cb_data
 static int module_sync(int argc, const char **argv, const char *prefix)
 {
 	struct sync_cb info = SYNC_CB_INIT;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
 	int quiet = 0;
 	int recursive = 0;
+	int ret = 0;
 
 	struct option module_sync_options[] = {
 		OPT__QUIET(&quiet, N_("suppress output of synchronizing submodule url")),
@@ -1356,8 +1379,10 @@ static int module_sync(int argc, const char **argv, const char *prefix)
 	argc = parse_options(argc, argv, prefix, module_sync_options,
 			     git_submodule_helper_usage, 0);
 
-	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0)
-		return 1;
+	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0) {
+		ret = 1;
+		goto cleanup;
+	}
 
 	info.prefix = prefix;
 	if (quiet)
@@ -1367,7 +1392,10 @@ static int module_sync(int argc, const char **argv, const char *prefix)
 
 	for_each_listed_submodule(&list, sync_submodule_cb, &info);
 
-	return 0;
+cleanup:
+	clear_pathspec(&pathspec);
+	free(list.entries);
+	return ret;
 }
 
 struct deinit_cb {
@@ -1474,12 +1502,12 @@ static void deinit_submodule_cb(const struct cache_entry *list_item,
 static int module_deinit(int argc, const char **argv, const char *prefix)
 {
 	struct deinit_cb info = DEINIT_CB_INIT;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
 	int quiet = 0;
 	int force = 0;
 	int all = 0;
-
+	int ret = 0;
 	struct option module_deinit_options[] = {
 		OPT__QUIET(&quiet, N_("suppress submodule status output")),
 		OPT__FORCE(&force, N_("remove submodule working trees even if they contain local changes"), 0),
@@ -1504,8 +1532,10 @@ static int module_deinit(int argc, const char **argv, const char *prefix)
 	if (!argc && !all)
 		die(_("Use '--all' if you really want to deinitialize all submodules"));
 
-	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0)
-		return 1;
+	if (module_list_compute(argc, argv, prefix, &pathspec, &list) < 0) {
+		ret = 1;
+		goto cleanup;
+	}
 
 	info.prefix = prefix;
 	if (quiet)
@@ -1515,7 +1545,10 @@ static int module_deinit(int argc, const char **argv, const char *prefix)
 
 	for_each_listed_submodule(&list, deinit_submodule_cb, &info);
 
-	return 0;
+cleanup:
+	clear_pathspec(&pathspec);
+	free(list.entries);
+	return ret;
 }
 
 struct module_clone_data {
@@ -1754,7 +1787,7 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 {
 	int dissociate = 0, quiet = 0, progress = 0, require_init = 0;
 	struct module_clone_data clone_data = MODULE_CLONE_DATA_INIT;
-	struct list_objects_filter_options filter_options;
+	struct list_objects_filter_options filter_options = { 0 };
 
 	struct option module_clone_options[] = {
 		OPT_STRING(0, "prefix", &clone_data.prefix,
@@ -1796,7 +1829,6 @@ static int module_clone(int argc, const char **argv, const char *prefix)
 		NULL
 	};
 
-	memset(&filter_options, 0, sizeof(filter_options));
 	argc = parse_options(argc, argv, prefix, module_clone_options,
 			     git_submodule_helper_usage, 0);
 
@@ -2175,18 +2207,24 @@ static int is_tip_reachable(const char *path, struct object_id *oid)
 	struct child_process cp = CHILD_PROCESS_INIT;
 	struct strbuf rev = STRBUF_INIT;
 	char *hex = oid_to_hex(oid);
+	int ret = 1;
+	char *to_free;
 
 	cp.git_cmd = 1;
-	cp.dir = xstrdup(path);
+	cp.dir = to_free = xstrdup(path);
 	cp.no_stderr = 1;
 	strvec_pushl(&cp.args, "rev-list", "-n", "1", hex, "--not", "--all", NULL);
 
 	prepare_submodule_repo_env(&cp.env);
 
-	if (capture_command(&cp, &rev, GIT_MAX_HEXSZ + 1) || rev.len)
-		return 0;
+	if (capture_command(&cp, &rev, GIT_MAX_HEXSZ + 1) || rev.len) {
+		ret = 0;
+		goto cleanup;
+	}
 
-	return 1;
+cleanup:
+	free(to_free);
+	return ret;
 }
 
 static int fetch_in_submodule(const char *module_path, int depth, int quiet, struct object_id *oid)
@@ -2576,9 +2614,9 @@ cleanup:
 
 static int module_update(int argc, const char **argv, const char *prefix)
 {
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct update_data opt = UPDATE_DATA_INIT;
-	struct list_objects_filter_options filter_options;
+	struct list_objects_filter_options filter_options = { 0 };
 	int ret;
 
 	struct option module_update_options[] = {
@@ -2636,7 +2674,6 @@ static int module_update(int argc, const char **argv, const char *prefix)
 	update_clone_config_from_gitmodules(&opt.max_jobs);
 	git_config(git_update_clone_config, &opt.max_jobs);
 
-	memset(&filter_options, 0, sizeof(filter_options));
 	argc = parse_options(argc, argv, prefix, module_update_options,
 			     git_submodule_helper_usage, 0);
 
@@ -2653,8 +2690,8 @@ static int module_update(int argc, const char **argv, const char *prefix)
 			die(_("bad value for update parameter"));
 
 	if (module_list_compute(argc, argv, prefix, &pathspec, &opt.list) < 0) {
-		list_objects_filter_release(&filter_options);
-		return 1;
+		ret = 1;
+		goto cleanup;
 	}
 
 	if (pathspec.nr)
@@ -2684,7 +2721,9 @@ static int module_update(int argc, const char **argv, const char *prefix)
 	}
 
 	ret = update_submodules(&opt);
+cleanup:
 	list_objects_filter_release(&filter_options);
+	clear_pathspec(&pathspec);
 	return ret;
 }
 
@@ -2768,7 +2807,7 @@ static int push_check(int argc, const char **argv, const char *prefix)
 static int absorb_git_dirs(int argc, const char **argv, const char *prefix)
 {
 	int i;
-	struct pathspec pathspec;
+	struct pathspec pathspec = { 0 };
 	struct module_list list = MODULE_LIST_INIT;
 	unsigned flags = ABSORB_GITDIR_RECURSE_SUBMODULES;
 
@@ -2795,6 +2834,8 @@ static int absorb_git_dirs(int argc, const char **argv, const char *prefix)
 	for (i = 0; i < list.nr; i++)
 		absorb_git_dir_into_superproject(list.entries[i]->name, flags);
 
+	clear_pathspec(&pathspec);
+	free(list.entries);
 	return 0;
 }
 
@@ -3031,6 +3072,7 @@ static int add_submodule(const struct add_data *add_data)
 {
 	char *submod_gitdir_path;
 	struct module_clone_data clone_data = MODULE_CLONE_DATA_INIT;
+	int ret = 0;
 
 	/* perhaps the path already exists and is already a git repo, else clone it */
 	if (is_directory(add_data->sm_path)) {
@@ -3092,8 +3134,10 @@ static int add_submodule(const struct add_data *add_data)
 		if (add_data->depth >= 0)
 			clone_data.depth = xstrfmt("%d", add_data->depth);
 
-		if (clone_submodule(&clone_data))
-			return -1;
+		if (clone_submodule(&clone_data)) {
+			ret = -1;
+			goto cleanup;
+		}
 
 		prepare_submodule_repo_env(&cp.env);
 		cp.git_cmd = 1;
@@ -3112,7 +3156,10 @@ static int add_submodule(const struct add_data *add_data)
 		if (run_command(&cp))
 			die(_("unable to checkout submodule '%s'"), add_data->sm_path);
 	}
-	return 0;
+
+cleanup:
+	free((char *)clone_data.path);
+	return ret;
 }
 
 static int config_submodule_in_gitmodules(const char *name, const char *var, const char *value)

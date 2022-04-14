@@ -34,6 +34,8 @@ struct batch_options {
 	const char *format;
 };
 
+static struct object_context obj_context;
+
 static const char *force_path;
 
 static int filter_object(const char *path, unsigned mode,
@@ -75,7 +77,6 @@ static int cat_one_file(int opt, const char *exp_type, const char *obj_name,
 	enum object_type type;
 	char *buf;
 	unsigned long size;
-	struct object_context obj_context;
 	struct object_info oi = OBJECT_INFO_INIT;
 	struct strbuf sb = STRBUF_INIT;
 	unsigned flags = OBJECT_INFO_LOOKUP_REPLACE;
@@ -419,12 +420,11 @@ static void batch_one_object(const char *obj_name,
 			     struct batch_options *opt,
 			     struct expand_data *data)
 {
-	struct object_context ctx;
 	int flags = opt->follow_symlinks ? GET_OID_FOLLOW_SYMLINKS : 0;
 	enum get_oid_result result;
 
 	result = get_oid_with_context(the_repository, obj_name,
-				      flags, &data->oid, &ctx);
+				      flags, &data->oid, &obj_context);
 	if (result != FOUND) {
 		switch (result) {
 		case MISSING_OBJECT:
@@ -454,10 +454,10 @@ static void batch_one_object(const char *obj_name,
 		return;
 	}
 
-	if (ctx.mode == 0) {
+	if (obj_context.mode == 0) {
 		printf("symlink %"PRIuMAX"\n%s\n",
-		       (uintmax_t)ctx.symlink_path.len,
-		       ctx.symlink_path.buf);
+		       (uintmax_t)obj_context.symlink_path.len,
+		       obj_context.symlink_path.buf);
 		fflush(stdout);
 		return;
 	}
