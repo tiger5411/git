@@ -283,8 +283,7 @@ static int do_interactive_rebase(struct rebase_options *opts, unsigned flags)
 			     oid_to_hex(&opts->restrict_revision->object.oid));
 
 	ret = sequencer_make_script(the_repository, &todo_list.buf,
-				    make_script_args.nr, make_script_args.v,
-				    flags);
+				    &make_script_args, flags);
 
 	if (ret)
 		error(_("could not generate todo list"));
@@ -1149,7 +1148,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 			 N_("apply all changes, even those already present upstream")),
 		OPT_END(),
 	};
-	int i;
+	size_t i;
+	unsigned int j;
 
 	if (argc == 2 && !strcmp(argv[1], "-h"))
 		usage_with_options(builtin_rebase_usage,
@@ -1381,8 +1381,8 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 		}
 	}
 
-	for (i = 0; i < exec.nr; i++)
-		if (check_exec_cmd(exec.items[i].string))
+	for (j = 0; j < exec.nr; j++)
+		if (check_exec_cmd(exec.items[j].string))
 			exit(1);
 
 	if (!(options.flags & REBASE_NO_QUIET))
@@ -1476,16 +1476,14 @@ int cmd_rebase(int argc, const char **argv, const char *prefix)
 
 	if (options.git_am_opts.nr || options.type == REBASE_APPLY) {
 		/* all am options except -q are compatible only with --apply */
-		for (i = options.git_am_opts.nr - 1; i >= 0; i--)
-			if (strcmp(options.git_am_opts.v[i], "-q"))
-				break;
-
-		if (i >= 0) {
-			if (is_merge(&options))
-				die(_("apply options and merge options "
-					  "cannot be used together"));
-			else
+		for (i = 0; i < options.git_am_opts.nr; i++) {
+			if (strcmp(options.git_am_opts.v[i], "-q")) {
+				if (is_merge(&options))
+					die(_("apply options and merge options "
+					      "cannot be used together"));
 				options.type = REBASE_APPLY;
+				break;
+			}
 		}
 	}
 

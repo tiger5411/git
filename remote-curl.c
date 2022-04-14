@@ -1276,10 +1276,9 @@ static void parse_fetch(struct strbuf *buf)
 	strbuf_reset(buf);
 }
 
-static int push_dav(int nr_spec, const char **specs)
+static int push_dav(struct strvec *specs)
 {
 	struct child_process child = CHILD_PROCESS_INIT;
-	size_t i;
 
 	child.git_cmd = 1;
 	strvec_push(&child.args, "http-push");
@@ -1289,18 +1288,18 @@ static int push_dav(int nr_spec, const char **specs)
 	if (options.verbosity > 1)
 		strvec_push(&child.args, "--verbose");
 	strvec_push(&child.args, url.buf);
-	for (i = 0; i < nr_spec; i++)
-		strvec_push(&child.args, specs[i]);
+	strvec_pushv(&child.args, specs->v);
 
 	if (run_command(&child))
 		die(_("git-http-push failed"));
 	return 0;
 }
 
-static int push_git(struct discovery *heads, int nr_spec, const char **specs)
+static int push_git(struct discovery *heads, struct strvec *specs)
 {
 	struct rpc_state rpc;
-	int i, err;
+	size_t i;
+	int err;
 	struct strvec args;
 	struct string_list_item *cas_option;
 	struct strbuf preamble = STRBUF_INIT;
@@ -1336,8 +1335,8 @@ static int push_git(struct discovery *heads, int nr_spec, const char **specs)
 		strvec_push(&args, "--force-if-includes");
 
 	strvec_push(&args, "--stdin");
-	for (i = 0; i < nr_spec; i++)
-		packet_buf_write(&preamble, "%s\n", specs[i]);
+	for (i = 0; i < specs->nr; i++)
+		packet_buf_write(&preamble, "%s\n", specs->v[i]);
 	packet_buf_flush(&preamble);
 
 	memset(&rpc, 0, sizeof(rpc));
@@ -1352,15 +1351,15 @@ static int push_git(struct discovery *heads, int nr_spec, const char **specs)
 	return err;
 }
 
-static int push(int nr_spec, const char **specs)
+static int push(struct strvec *specs)
 {
 	struct discovery *heads = discover_refs("git-receive-pack", 1);
 	int ret;
 
 	if (heads->proto_git)
-		ret = push_git(heads, nr_spec, specs);
+		ret = push_git(heads, specs);
 	else
-		ret = push_dav(nr_spec, specs);
+		ret = push_dav(specs);
 	free_discovery(heads);
 	return ret;
 }
@@ -1384,7 +1383,7 @@ static void parse_push(struct strbuf *buf)
 			break;
 	} while (1);
 
-	ret = push(specs.nr, specs.v);
+	ret = push(&specs);
 	printf("\n");
 	fflush(stdout);
 

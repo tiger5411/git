@@ -921,7 +921,7 @@ static char *get_author(const char *message)
 
 static const char *author_date_from_env(const struct strvec *env)
 {
-	int i;
+	size_t i;
 	const char *date;
 
 	for (i = 0; i < env->nr; i++)
@@ -5340,8 +5340,8 @@ static int make_script_with_merges(struct pretty_print_context *pp,
 	return 0;
 }
 
-int sequencer_make_script(struct repository *r, struct strbuf *out, int argc,
-			  const char **argv, unsigned flags)
+int sequencer_make_script(struct repository *r, struct strbuf *out,
+			  struct strvec *args, unsigned flags)
 {
 	char *format = NULL;
 	struct pretty_print_context pp = {0};
@@ -5375,7 +5375,7 @@ int sequencer_make_script(struct repository *r, struct strbuf *out, int argc,
 	pp.fmt = revs.commit_format;
 	pp.output_encoding = get_log_output_encoding();
 
-	if (setup_revisions(argc, argv, &revs, NULL) > 1)
+	if (setup_revisions(args->nr, args->v, &revs, NULL) > 1)
 		return error(_("make_script: unhandled options"));
 
 	if (prepare_revision_walk(&revs) < 0)

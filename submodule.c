@@ -1815,7 +1815,7 @@ int fetch_submodules(struct repository *r,
 		     int default_option,
 		     int quiet, int max_parallel_jobs)
 {
-	int i;
+	size_t i;
 	struct submodule_parallel_fetch spf = SPF_INIT;
 
 	spf.r = r;

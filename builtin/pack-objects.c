@@ -3718,7 +3718,7 @@ static void mark_bitmap_preferred_tips(void)
 	}
 }
 
-static void get_object_list(struct rev_info *revs, int ac, const char **av)
+static void get_object_list(struct rev_info *revs, struct strvec *rp)
 {
 	struct setup_revision_opt s_r_opt = {
 		.allow_exclude_promisor_objects = 1,
@@ -3728,7 +3728,7 @@ static void get_object_list(struct rev_info *revs, int ac, const char **av)
 	int save_warning;
 
 	save_commit_buffer = 0;
-	setup_revisions(ac, av, revs, &s_r_opt);
+	setup_revisions(rp->nr, rp->v, revs, &s_r_opt);
 
 	/* make sure shallows are read */
 	is_repository_shallow(the_repository);
@@ -4172,12 +4172,12 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
 	} else if (!use_internal_rev_list) {
 		read_object_list_from_stdin();
 	} else if (pfd.have_revs) {
-		get_object_list(&pfd.revs, rp.nr, rp.v);
+		get_object_list(&pfd.revs, &rp);
 	} else {
 		struct rev_info revs;
 
 		repo_init_revisions(the_repository, &revs, NULL);
-		get_object_list(&revs, rp.nr, rp.v);
+		get_object_list(&revs, &rp);
 	}
 	cleanup_preferred_base();
 	if (include_tag && nr_result)
