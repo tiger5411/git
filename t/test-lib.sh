@@ -312,7 +312,7 @@ fi
 if test -n "$valgrind_only"
 then
 	test -z "$valgrind" && valgrind=memcheck
-	test -z "$verbose" && verbose_only="$valgrind_only"
+	test -z "$verbose$verbose_log" && verbose_only="$valgrind_only"
 elif test -n "$valgrind"
 then
 	test -z "$verbose_log" && verbose=t

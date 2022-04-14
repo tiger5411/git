@@ -250,6 +250,9 @@ jobs:
             pool: ubuntu-latest
           - jobname: linux-leaks
             pool: ubuntu-latest
+          - jobname: linux-valgrind
+            cc: gcc
+            pool: ubuntu-latest
     env:
       jobname: ${{matrix.vector.jobname}}
       runs_on_pool: ${{matrix.vector.pool}}

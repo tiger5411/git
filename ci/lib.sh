@@ -271,6 +271,10 @@ linux-leaks)
 	MAKEFLAGS="$MAKEFLAGS SANITIZE=leak"
 	setenv --test GIT_TEST_PASSING_SANITIZE_LEAK true
 	;;
+linux-valgrind)
+	GIT_TEST_OPTS="$GIT_TEST_OPTS --valgrind-only=1"
+	export GIT_TEST_OPTS
+	;;
 esac
 
 MAKEFLAGS="$MAKEFLAGS${CC:+ CC=$CC}"

@@ -110,6 +110,9 @@ pedantic)
 	dnf -yq update >/dev/null &&
 	dnf -yq install make gcc findutils diffutils perl python3 gettext zlib-devel expat-devel openssl-devel curl-devel pcre2-devel >/dev/null
 	;;
+linux-valgrind)
+	sudo apt-get -q -y install valgrind
+	;;
 esac
 
 if type p4d >/dev/null && type p4 >/dev/null
