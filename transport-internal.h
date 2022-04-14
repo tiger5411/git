@@ -5,6 +5,7 @@ struct ref;
 struct transport;
 struct strvec;
 struct transport_ls_refs_options;
+struct string_list;
 
 struct transport_vtable {
 	/**
@@ -25,6 +26,13 @@ struct transport_vtable {
 	 **/
 	struct ref *(*get_refs_list)(struct transport *transport, int for_push,
 				     struct transport_ls_refs_options *transport_options);
+
+	/**
+	 * Populates the remote side's bundle-uri under protocol v2,
+	 * if the "bundle-uri" capability was advertised. Returns 0 if
+	 * OK, negative values on error.
+	 */
+	int (*get_bundle_uri)(struct transport *transport);
 
 	/**
 	 * Fetch the objects for the given refs. Note that this gets
@@ -51,6 +59,14 @@ struct transport_vtable {
 	 * process involved generating new commits.
 	 **/
 	int (*push_refs)(struct transport *transport, struct ref *refs, int flags);
+
+	/**
+	 * get_features() requests a list of recommended features and
+	 * populates the given string_list with those 'key=value' pairs.
+	 */
+	int (*get_features)(struct transport *transport,
+			    struct string_list *list);
+
 	int (*connect)(struct transport *connection, const char *name,
 		       const char *executable, int fd[2]);
 

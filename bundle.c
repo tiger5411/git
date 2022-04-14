@@ -67,8 +67,8 @@ static int parse_bundle_signature(struct bundle_header *header, const char *line
 	return -1;
 }
 
-static int parse_bundle_header(int fd, struct bundle_header *header,
-			       const char *report_path)
+int read_bundle_header_fd(int fd, struct bundle_header *header,
+			  const char *report_path)
 {
 	struct strbuf buf = STRBUF_INIT;
 	int status = 0;
@@ -144,7 +144,7 @@ int read_bundle_header(const char *path, struct bundle_header *header)
 
 	if (fd < 0)
 		return error(_("could not open '%s'"), path);
-	return parse_bundle_header(fd, header, path);
+	return read_bundle_header_fd(fd, header, path);
 }
 
 int is_bundle(const char *path, int quiet)
@@ -154,7 +154,7 @@ int is_bundle(const char *path, int quiet)
 
 	if (fd < 0)
 		return 0;
-	fd = parse_bundle_header(fd, &header, quiet ? NULL : path);
+	fd = read_bundle_header_fd(fd, &header, quiet ? NULL : path);
 	if (fd >= 0)
 		close(fd);
 	bundle_header_release(&header);
@@ -637,4 +637,25 @@ int unbundle(struct repository *r, struct bundle_header *header,
 	if (run_command(&ip))
 		return error(_("index-pack died"));
 	return 0;
+}
+
+int fetch_bundle_uri(const char *bundle_uri,
+		     const char *filter)
+{
+	int res = 0;
+	struct strvec args = STRVEC_INIT;
+
+	strvec_pushl(&args, "bundle", "fetch", NULL);
+
+	if (filter)
+		strvec_pushf(&args, "--filter=%s", filter);
+	strvec_push(&args, bundle_uri);
+
+	if (run_command_v_opt(args.v, RUN_GIT_CMD)) {
+		warning(_("failed to download bundle from uri '%s'"), bundle_uri);
+		res = 1;
+	}
+
+	strvec_clear(&args);
+	return res;
 }

@@ -15,6 +15,7 @@
 #include "version.h"
 #include "protocol.h"
 #include "alias.h"
+#include "bundle-uri.h"
 
 static char *server_capabilities_v1;
 static struct strvec server_capabilities_v2 = STRVEC_INIT;
@@ -473,22 +474,9 @@ void check_stateless_delimiter(int stateless_rpc,
 		die("%s", error);
 }
 
-struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
-			     struct ref **list, int for_push,
-			     struct transport_ls_refs_options *transport_options,
-			     const struct string_list *server_options,
-			     int stateless_rpc)
+static void send_capabilities(int fd_out, struct packet_reader *reader)
 {
-	size_t i;
 	const char *hash_name;
-	struct strvec *ref_prefixes = transport_options ?
-		&transport_options->ref_prefixes : NULL;
-	const char **unborn_head_target = transport_options ?
-		&transport_options->unborn_head_target : NULL;
-	*list = NULL;
-
-	if (server_supports_v2("ls-refs", 1))
-		packet_write_fmt(fd_out, "command=ls-refs\n");
 
 	if (server_supports_v2("agent", 0))
 		packet_write_fmt(fd_out, "agent=%s", git_user_agent_sanitized());
@@ -502,6 +490,72 @@ struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
 	} else {
 		reader->hash_algo = &hash_algos[GIT_HASH_SHA1];
 	}
+}
+
+int get_remote_bundle_uri(int fd_out, struct packet_reader *reader,
+			  struct string_list *bundle_uri, int stateless_rpc)
+{
+	int line_nr = 1;
+
+	/* Assert bundle-uri support */
+	server_supports_v2("bundle-uri", 1);
+
+	/* (Re-)send capabilities */
+	send_capabilities(fd_out, reader);
+
+	/* Send command */
+	packet_write_fmt(fd_out, "command=bundle-uri\n");
+	packet_delim(fd_out);
+
+	/* Send options */
+	if (git_env_bool("GIT_TEST_PROTOCOL_BAD_BUNDLE_URI", 0))
+		packet_write_fmt(fd_out, "test-bad-client\n");
+	packet_flush(fd_out);
+
+	/* Process response from server */
+	while (packet_reader_read(reader) == PACKET_READ_NORMAL) {
+		const char *line = reader->line;
+		line_nr++;
+
+		if (!bundle_uri_parse_line(bundle_uri, line))
+			continue;
+
+		return error(_("error on bundle-uri response line %d: %s"),
+			     line_nr, line);
+	}
+
+	if (reader->status != PACKET_READ_FLUSH)
+		return error(_("expected flush after bundle-uri listing"));
+
+	/*
+	 * Might die(), but obscure enough that that's OK, e.g. in
+	 * serve.c we'll call BUG() on its equivalent (the
+	 * PACKET_READ_RESPONSE_END check).
+	 */
+	check_stateless_delimiter(stateless_rpc, reader,
+				  _("expected response end packet after ref listing"));
+
+	return 0;
+}
+
+struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
+			     struct ref **list, int for_push,
+			     struct transport_ls_refs_options *transport_options,
+			     const struct string_list *server_options,
+			     int stateless_rpc)
+{
+	int i;
+	struct strvec *ref_prefixes = transport_options ?
+		&transport_options->ref_prefixes : NULL;
+	const char **unborn_head_target = transport_options ?
+		&transport_options->unborn_head_target : NULL;
+	*list = NULL;
+
+	if (server_supports_v2("ls-refs", 1))
+		packet_write_fmt(fd_out, "command=ls-refs\n");
+
+	/* Send capabilities */
+	send_capabilities(fd_out, reader);
 
 	if (server_options && server_options->nr &&
 	    server_supports_v2("server-option", 1))
@@ -535,6 +589,42 @@ struct ref **get_remote_refs(int fd_out, struct packet_reader *reader,
 				  _("expected response end packet after ref listing"));
 
 	return list;
+}
+
+int get_recommended_features(int fd_out, struct packet_reader *reader,
+			     struct string_list *list, int stateless_rpc)
+{
+	int line_nr = 1;
+
+	server_supports_v2("features", 1);
+
+	/* (Re-)send capabilities */
+	send_capabilities(fd_out, reader);
+
+	/* Send command */
+	packet_write_fmt(fd_out, "command=features\n");
+	packet_delim(fd_out);
+	packet_flush(fd_out);
+
+	/* Process response from server */
+	while (packet_reader_read(reader) == PACKET_READ_NORMAL) {
+		const char *line = reader->line;
+		line_nr++;
+
+		string_list_append(list, line);
+	}
+
+	if (reader->status != PACKET_READ_FLUSH)
+		return error(_("expected flush after features listing"));
+
+	/*
+	 * Might die(), but obscure enough that that's OK, e.g. in
+	 * serve.c, we'll call BUG() on its equivalent (the
+	 * PACKET_READ_RESPONSE_END check).
+	 */
+	check_stateless_delimiter(stateless_rpc, reader,
+		_("expected response end packet after features listing"));
+	return 0;
 }
 
 const char *parse_feature_value(const char *feature_list, const char *feature, int *lenp, int *offset)

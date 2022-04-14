@@ -22,6 +22,7 @@
 #include "protocol.h"
 #include "object-store.h"
 #include "color.h"
+#include "bundle-uri.h"
 
 static int transport_use_color = -1;
 static char transport_colors[][COLOR_MAXLEN] = {
@@ -197,11 +198,26 @@ struct git_transport_data {
 	struct git_transport_options options;
 	struct child_process *conn;
 	int fd[2];
+	unsigned got_advertisement : 1;
 	unsigned got_remote_heads : 1;
 	enum protocol_version version;
 	struct oid_array extra_have;
 	struct oid_array shallow;
 };
+
+static int get_features(struct transport *transport,
+		      struct string_list *list)
+{
+	struct git_transport_data *data = transport->data;
+	struct packet_reader reader;
+
+	packet_reader_init(&reader, data->fd[0], NULL, 0,
+			   PACKET_READ_CHOMP_NEWLINE |
+			   PACKET_READ_GENTLE_ON_EOF);
+
+	return get_recommended_features(data->fd[1], &reader, list,
+					transport->stateless_rpc);
+}
 
 static int set_git_option(struct git_transport_options *opts,
 			  const char *name, const char *value)
@@ -345,6 +361,7 @@ static struct ref *handshake(struct transport *transport, int for_push,
 		BUG("unknown protocol version");
 	}
 	data->got_remote_heads = 1;
+	data->got_advertisement = 1;
 	transport->hash_algo = reader.hash_algo;
 
 	if (reader.line_peeked)
@@ -357,6 +374,48 @@ static struct ref *get_refs_via_connect(struct transport *transport, int for_pus
 					struct transport_ls_refs_options *options)
 {
 	return handshake(transport, for_push, options, 1);
+}
+
+static int get_bundle_uri(struct transport *transport)
+{
+	struct git_transport_data *data = transport->data;
+	struct packet_reader reader;
+	int stateless_rpc = transport->stateless_rpc;
+	string_list_init_dup(&transport->bundle_uri);
+
+	if (!data->got_advertisement) {
+		struct ref *refs;
+		struct git_transport_data *data = transport->data;
+		enum protocol_version version;
+
+		refs = handshake(transport, 0, NULL, 0);
+		version = data->version;
+
+		switch (version) {
+		case protocol_v2:
+			assert(!refs);
+			break;
+		case protocol_v0:
+		case protocol_v1:
+		case protocol_unknown_version:
+			assert(refs);
+			break;
+		}
+	}
+
+	/*
+	 * "Support" protocol v0 and v2 without bundle-uri support by
+	 * silently degrading to a NOOP.
+	 */
+	if (!server_supports_v2("bundle-uri", 0))
+		return 0;
+
+	packet_reader_init(&reader, data->fd[0], NULL, 0,
+			   PACKET_READ_CHOMP_NEWLINE |
+			   PACKET_READ_GENTLE_ON_EOF);
+
+	return get_remote_bundle_uri(data->fd[1], &reader,
+				     &transport->bundle_uri, stateless_rpc);
 }
 
 static int fetch_refs_via_pack(struct transport *transport,
@@ -392,6 +451,7 @@ static int fetch_refs_via_pack(struct transport *transport,
 	args.server_options = transport->server_options;
 	args.negotiation_tips = data->options.negotiation_tips;
 	args.reject_shallow_remote = transport->smart_options->reject_shallow;
+	args.bundle_uri = &transport->bundle_uri;
 
 	if (!data->got_remote_heads) {
 		int i;
@@ -899,8 +959,10 @@ static int disconnect_git(struct transport *transport)
 
 static struct transport_vtable taken_over_vtable = {
 	.get_refs_list	= get_refs_via_connect,
+	.get_bundle_uri = get_bundle_uri,
 	.fetch_refs	= fetch_refs_via_pack,
 	.push_refs	= git_transport_push,
+	.get_features	= get_features,
 	.disconnect	= disconnect_git
 };
 
@@ -1052,8 +1114,10 @@ static struct transport_vtable bundle_vtable = {
 
 static struct transport_vtable builtin_smart_vtable = {
 	.get_refs_list	= get_refs_via_connect,
+	.get_bundle_uri = get_bundle_uri,
 	.fetch_refs	= fetch_refs_via_pack,
 	.push_refs	= git_transport_push,
+	.get_features	= get_features,
 	.connect	= connect_git,
 	.disconnect	= disconnect_git
 };
@@ -1065,6 +1129,7 @@ struct transport *transport_get(struct remote *remote, const char *url)
 
 	ret->progress = isatty(2);
 	string_list_init_dup(&ret->pack_lockfiles);
+	string_list_init_dup(&ret->bundle_uri);
 
 	if (!remote)
 		BUG("No remote provided to transport_get()");
@@ -1473,6 +1538,76 @@ int transport_fetch_refs(struct transport *transport, struct ref *refs)
 	return rc;
 }
 
+struct bundle_config_cb {
+	struct transport *transport;
+	int configured;
+	int ret;
+	int disabled;
+};
+
+static int bundle_uri_config(const char *var, const char *value, void *data)
+{
+	struct bundle_config_cb *cb = data;
+	struct transport *transport = cb->transport;
+	struct string_list *uri = &transport->bundle_uri;
+
+	if (!strcmp(var, "transfer.bundleuri")) {
+		cb->disabled = !git_config_bool(var, value);
+		if (cb->disabled)
+			bundle_uri_string_list_clear(uri);
+		return 0;
+	}
+
+	if (!cb->disabled &&
+	    !strcmp(var, "transfer.injectbundleuri")) {
+		cb->configured = 1;
+		if (!value)
+			cb->ret = error(_("bad (empty) transfer.injectBundleURI"));
+		else if (bundle_uri_parse_line(uri, value) < 0)
+			cb->ret = error(_("bad transfer.injectBundleURI: '%s'"),
+					value);
+		return 0;
+	}
+	return 0;
+}
+
+int transport_get_remote_bundle_uri(struct transport *transport, int quiet)
+{
+	const struct transport_vtable *vtable = transport->vtable;
+	struct bundle_config_cb cb = {
+		.transport = transport,
+	};
+
+	/* Lazily configured */
+	if (transport->got_remote_bundle_uri++)
+		return 0;
+
+	git_config(bundle_uri_config, &cb);
+
+	/* Don't use bundle-uri at all */
+	if (cb.disabled)
+		return 0;
+
+	/* Our own config can fake it up with transport.injectBundleURI */
+	if (cb.configured)
+		return cb.ret;
+
+	/*
+	 * This is intentionally below the transport.injectBundleURI,
+	 * we want to be able to inject into protocol v0, or into the
+	 * dialog of a server who doesn't support this.
+	 */
+	if (!vtable->get_bundle_uri) {
+		if (quiet)
+			return -1;
+		return error(_("bundle-uri operation not supported by protocol"));
+	}
+
+	if (vtable->get_bundle_uri(transport) < 0)
+		return error(_("could not retrieve server-advertised bundle-uri list"));
+	return 0;
+}
+
 void transport_unlock_pack(struct transport *transport, unsigned int flags)
 {
 	int in_signal_handler = !!(flags & TRANSPORT_UNLOCK_PACK_IN_SIGNAL_HANDLER);
@@ -1485,6 +1620,28 @@ void transport_unlock_pack(struct transport *transport, unsigned int flags)
 			unlink_or_warn(transport->pack_lockfiles.items[i].string);
 	if (!in_signal_handler)
 		string_list_clear(&transport->pack_lockfiles, 0);
+}
+
+struct string_list *transport_remote_features(struct transport *transport)
+{
+	const struct transport_vtable *vtable = transport->vtable;
+	struct string_list *list = NULL;
+
+	if (!server_supports_v2("features", 0))
+		return NULL;
+
+	if (!vtable->get_features) {
+		warning(_("'features' not supported by this remote"));
+		return NULL;
+	}
+
+	CALLOC_ARRAY(list, 1);
+	string_list_init_dup(list);
+
+	if (vtable->get_features(transport, list))
+		warning(_("failed to get recommended features from remote"));
+
+	return list;
 }
 
 int transport_connect(struct transport *transport, const char *name,
@@ -1503,6 +1660,7 @@ int transport_disconnect(struct transport *transport)
 		ret = transport->vtable->disconnect(transport);
 	if (transport->got_remote_refs)
 		free_refs((void *)transport->remote_refs);
+	bundle_uri_string_list_clear(&transport->bundle_uri);
 	free(transport);
 	return ret;
 }

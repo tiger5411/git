@@ -12,6 +12,7 @@ SYNOPSIS
 'git bundle' create [-q | --quiet | --progress | --all-progress] [--all-progress-implied]
 		    [--version=<version>] <file> <git-rev-list-args>
 'git bundle' verify [-q | --quiet] <file>
+'git bundle' fetch [--filter=<spec>] <uri>
 'git bundle' list-heads <file> [<refname>...]
 'git bundle' unbundle [--progress] <file> [<refname>...]
 

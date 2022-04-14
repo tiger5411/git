@@ -238,6 +238,12 @@
 #include <sys/sysctl.h>
 #endif
 
+/* Used by compat/win32/path-utils.h, and more */
+static inline int is_xplatform_dir_sep(int c)
+{
+	return c == '/' || c == '\\';
+}
+
 #if defined(__CYGWIN__)
 #include "compat/win32/path-utils.h"
 #endif
@@ -418,11 +424,11 @@ static inline int git_skip_dos_drive_prefix(char **path)
 #define skip_dos_drive_prefix git_skip_dos_drive_prefix
 #endif
 
-#ifndef is_dir_sep
 static inline int git_is_dir_sep(int c)
 {
 	return c == '/';
 }
+#ifndef is_dir_sep
 #define is_dir_sep git_is_dir_sep
 #endif
 

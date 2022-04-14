@@ -24,6 +24,8 @@ void bundle_header_release(struct bundle_header *header);
 
 int is_bundle(const char *path, int quiet);
 int read_bundle_header(const char *path, struct bundle_header *header);
+int read_bundle_header_fd(int fd, struct bundle_header *header,
+			  const char *report_path);
 int create_bundle(struct repository *r, const char *path,
 		  int argc, const char **argv, struct strvec *pack_options,
 		  int version);
@@ -43,5 +45,14 @@ int unbundle(struct repository *r, struct bundle_header *header,
 	     int bundle_fd, struct strvec *extra_index_pack_args);
 int list_bundle_refs(struct bundle_header *header,
 		int argc, const char **argv);
+
+struct list_objects_filter_options;
+/**
+ * Fetch bundles from the given URI with the given filter.
+ *
+ * Uses 'git bundle fetch' as a subprocess.
+ */
+int fetch_bundle_uri(const char *bundle_uri,
+		     const char *filter);
 
 #endif

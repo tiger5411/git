@@ -27,6 +27,7 @@
 #include "iterator.h"
 #include "sigchain.h"
 #include "branch.h"
+#include "connect.h"
 #include "remote.h"
 #include "run-command.h"
 #include "connected.h"
@@ -78,6 +79,7 @@ static int option_filter_submodules = -1;    /* unspecified */
 static int config_filter_submodules = -1;    /* unspecified */
 static struct string_list server_options = STRING_LIST_INIT_NODUP;
 static int option_remote_submodules;
+static const char *bundle_uri;
 
 static int recurse_submodules_cb(const struct option *opt,
 				 const char *arg, int unset)
@@ -167,6 +169,8 @@ static struct option builtin_clone_options[] = {
 		    N_("any cloned submodules will use their remote-tracking branch")),
 	OPT_BOOL(0, "sparse", &option_sparse_checkout,
 		    N_("initialize sparse-checkout file to include only files at root")),
+	OPT_STRING(0, "bundle-uri", &bundle_uri,
+		   N_("uri"), N_("a URI for downloading bundles before fetching from origin remote")),
 	OPT_END()
 };
 
@@ -893,6 +897,7 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 	int err = 0, complete_refs_before_fetch = 1;
 	int submodule_progress;
 	int filter_submodules = 0;
+	struct string_list *feature_list = NULL;
 
 	struct transport_ls_refs_options transport_ls_refs_options =
 		TRANSPORT_LS_REFS_OPTIONS_INIT;
@@ -931,6 +936,11 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 
 	if (option_no_template != -1 && option_template)
 		die(_("--no-template and --template are incompatible."));
+
+	if (bundle_uri) {
+		if (deepen)
+			die(_("--bundle-uri is incompatible with --depth, --shallow-since, and --shallow-exclude"));
+	}
 
 	repo_name = argv[0];
 
@@ -1244,8 +1254,55 @@ int cmd_clone(int argc, const char **argv, const char *prefix)
 
 	refs = transport_get_remote_refs(transport, &transport_ls_refs_options);
 
+	feature_list = transport_remote_features(transport);
+
+	if (feature_list) {
+		struct string_list_item *item;
+		for_each_string_list_item(item, feature_list) {
+			char *value;
+			char *equals = strchr(item->string, '=');
+
+			if (!equals)
+				continue;
+			*equals = '\0';
+			value = equals + 1;
+
+			if (!strcmp(item->string, "bundleuri"))
+				bundle_uri = value;
+		}
+	}
+
+	/*
+	 * Before fetching from the remote, download and install bundle
+	 * data from the --bundle-uri option.
+	 */
+	if (bundle_uri) {
+		const char *filter = NULL;
+
+		if (filter_options.filter_spec.nr)
+			filter = expand_list_objects_filter_spec(&filter_options);
+		/*
+		 * Set the config for fetching from this bundle URI in the
+		 * future, but do it before fetch_bundle_uri() which might
+		 * un-set it (for instance, if there is no table of contents).
+		 */
+		git_config_set("fetch.bundleuri", bundle_uri);
+		if (filter)
+			git_config_set("fetch.bundlefilter", filter);
+
+		if (fetch_bundle_uri(bundle_uri, filter))
+			warning(_("failed to fetch objects from bundle URI '%s'"),
+				bundle_uri);
+	}
+
 	if (refs)
 		mapped_refs = wanted_peer_refs(refs, &remote->fetch);
+
+	/*
+	 * Populate transport->got_remote_bundle_uri and
+	 * transport->bundle_uri. We might get nothing.
+	 */
+	transport_get_remote_bundle_uri(transport, 1);
 
 	if (mapped_refs) {
 		int hash_algo = hash_algo_by_ptr(transport_get_hash_algo(transport));

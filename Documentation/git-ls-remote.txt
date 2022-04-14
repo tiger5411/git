@@ -121,6 +121,7 @@ include::config/url/base.insteadOf.txt[]
 
 SEE ALSO
 --------
+linkgit:git-ls-remote-bundle-uri[1].
 linkgit:git-check-ref-format[1].
 
 GIT

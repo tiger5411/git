@@ -8,6 +8,7 @@
 #include "protocol-caps.h"
 #include "serve.h"
 #include "upload-pack.h"
+#include "bundle-uri.h"
 
 static int advertise_sid = -1;
 static int client_hash_algo = GIT_HASH_SHA1;
@@ -16,6 +17,24 @@ static int always_advertise(struct repository *r,
 			    struct strbuf *value)
 {
 	return 1;
+}
+
+static int key_serve_prefix(const char *key, const char *value, void *data)
+{
+	int *signal = data;
+	if (!strncmp(key, "serve.", 6)) {
+		*signal = 1;
+		return 1;
+	}
+	return 0;
+}
+
+static int has_serve_config(struct repository *r,
+			    struct strbuf *value)
+{
+	int signal = 0;
+	repo_config(r, key_serve_prefix, &signal);
+	return signal;
 }
 
 static int agent_advertise(struct repository *r,
@@ -113,6 +132,11 @@ static struct protocol_capability capabilities[] = {
 		.command = ls_refs,
 	},
 	{
+		.name = "features",
+		.advertise = has_serve_config,
+		.command = cap_features,
+	},
+	{
 		.name = "fetch",
 		.advertise = upload_pack_advertise,
 		.command = upload_pack_v2,
@@ -135,6 +159,11 @@ static struct protocol_capability capabilities[] = {
 		.name = "object-info",
 		.advertise = always_advertise,
 		.command = cap_object_info,
+	},
+	{
+		.name = "bundle-uri",
+		.advertise = bundle_uri_advertise,
+		.command = bundle_uri_command,
 	},
 };
 
