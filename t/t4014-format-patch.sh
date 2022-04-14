@@ -390,7 +390,8 @@ check_headers () {
 			}" \
 		-e "/^Message-Id: / {
 			s/<cover\.[0-9]\+\./<cover.[EPOCH]./;
-			s/<[0-9a-f]\{$hexsz\}\.[0-9]\{10,\}\+\./<[OID].[EPOCH]./;
+			s/<[0-9a-f]\{$hexsz\}\.[0-9]\{10,\}\./<[OID].[EPOCH]./;
+			s/<\(RFC-\)*\([pc][ao][tv][ce][hr]\)-\([^-]*-\)*\([^-]*\)-[0-9a-f]\{7,15\}-[0-9]\{8\}T[0-9]\{6\}Z-/<\1\2-\3\4-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-/;
 			p;
 		}" \
 	<patches >actual &&
@@ -399,14 +400,14 @@ check_headers () {
 
 test_expect_success 'basic headers: default' '
 	check_headers main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH]
 	EOF
 '
 
 test_expect_success 'basic headers: --subject-prefix same as the default' '
 	check_headers --subject-prefix=PATCH main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH]
 	EOF
 '
@@ -420,14 +421,14 @@ test_expect_success 'basic headers: --subject-prefix eats REV argument' '
 
 test_expect_success 'basic headers: --subject-prefix without =' '
 	check_headers --subject-prefix ARGUMENT main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [ARGUMENT]
 	EOF
 '
 
 test_expect_success 'basic headers: --subject-prefix="SOME LONG SUBJECT" same as the default' '
 	check_headers --subject-prefix="SOME LONG SUBJECT" main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [SOME LONG SUBJECT]
 	EOF
 '
@@ -435,7 +436,7 @@ test_expect_success 'basic headers: --subject-prefix="SOME LONG SUBJECT" same as
 test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix config' '
 	test_config format.subjectPrefix "CONFIG PREFIX" &&
 	check_headers main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [CONFIG PREFIX]
 	EOF
 '
@@ -443,14 +444,14 @@ test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix co
 test_expect_success 'basic headers: --subject-prefix and format.subjectPrefix config priority' '
 	test_config format.subjectPrefix "CONFIG PREFIX" &&
 	check_headers --subject-prefix="CLI PREFIX" main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [CLI PREFIX]
 	EOF
 '
 
 test_expect_success 'basic headers: --rfc option' '
 	check_headers --rfc main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <RFC-patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [RFC PATCH]
 	EOF
 '
@@ -464,108 +465,121 @@ test_expect_success 'basic headers: --rfc=ARGUMENT' '
 	test_cmp err.expect err
 '
 
-test_expect_success 'basic headers: --subject-prefix=RFC/PATCH --rfc (--subject-prefix wins)' '
-	check_headers --subject-prefix=RFC/PATCH --rfc main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
-	Subject: [RFC PATCH]
-	EOF
-'
-
-test_expect_success 'basic headers: --rfc --subject-prefix=RFC/PATCH (--subject-prefix wins)' '
-	check_headers --subject-prefix="RFC/PATCH" --rfc main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
-	Subject: [RFC PATCH]
-	EOF
+test_expect_success 'basic headers usage: --subject-prefix combined with --rfc' '
+	test_expect_code 129 git format-patch --subject-prefix="RFC PATCH" --rfc
 '
 
 test_expect_success 'basic headers: --rfc and format.subjectPrefix config priority' '
 	test_config format.subjectPrefix "CONFIG PREFIX" &&
 	check_headers --rfc main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <RFC-patch-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [RFC PATCH]
 	EOF
 '
 
 test_expect_success 'basic headers: --subject-prefix with --v<N>' '
 	check_headers --subject-prefix=PREFIX -v1 main~..main <<-\EOF &&
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v1-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PREFIX v1]
 	EOF
 	check_headers -v1 --subject-prefix=PREFIX main~..main <<-\EOF
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v1-1.1-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PREFIX v1]
 	EOF
 '
 
 test_expect_success 'reroll count' '
 	check_headers --cover-letter --reroll-count 4 main..side <<-\EOF
-	Message-Id: <cover.[EPOCH].git.committer@example.com>
+	Message-Id: <cover-v4-0.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 0/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v4-1.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 1/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v4-2.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 2/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v4-3.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 3/3]
 	EOF
 '
 
 test_expect_success 'reroll count (-v)' '
 	check_headers --cover-letter -v4 main..side <<-\EOF
-	Message-Id: <cover.[EPOCH].git.committer@example.com>
+	Message-Id: <cover-v4-0.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 0/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v4-1.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 1/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v4-2.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 2/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-v4-3.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4 3/3]
 	EOF
 '
 
 test_expect_success 'reroll count (-v) with a fractional number' '
 	check_headers --cover-letter -v4.4 main..side <<-\EOF
-	Message-Id: <cover.[EPOCH].git.committer@example.com>
+	Message-Id: <cover-0.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4.4 0/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4.4 1/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-2.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4.4 2/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-3.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4.4 3/3]
 	EOF
 '
 
 test_expect_success 'reroll (-v) count with a non number' '
 	check_headers --cover-letter -v4rev2 main..side <<-\EOF
-	Message-Id: <cover.[EPOCH].git.committer@example.com>
+	Message-Id: <cover-0.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4rev2 0/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4rev2 1/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-2.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4rev2 2/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-3.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4rev2 3/3]
 	EOF
 '
 
 test_expect_success 'reroll (-v) count with a non-pathname character' '
 	check_headers --cover-letter -v4---..././../--1/.2//  main..side <<-\EOF
-	Message-Id: <cover.[EPOCH].git.committer@example.com>
+	Message-Id: <cover-0.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 0/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-1.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 1/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-2.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 2/3]
-	Message-Id: <[OID].[EPOCH].git.committer@example.com>
+	Message-Id: <patch-3.3-[SHORT OID]-[YYYYMMDDTHHMMSSZ]-committer@example.com>
 	Subject: [PATCH v4---..././../--1/.2// 3/3]
 	EOF
 '
+
+check_message_id () {
+	cat >expect &&
+	git format-patch --stdout "$@" >patch &&
+	perl -ne '
+		if (/^(message-id)/i) {
+			s/(<(?:RFC-)?(?:patch|cover)-.*?-)[0-9a-f]{7,}-[0-9]{8}T[0-9]{6}Z-/$1-OID-YYYYMMDDTHHMMSSZ-/g;
+			print;
+		}
+	' <patch >actual &&
+	test_cmp expect actual &&
+
+	cat >expect <&3 &&
+	perl -ne '
+		if (s/^Subject: //) {
+			s/^\[(.*?)\].*/$1/;
+			print;
+		}
+	' <patch >actual &&
+	test_cmp expect actual
+
+}
 
 check_threading () {
 	expect="$1" &&
 	shift &&
 	git format-patch --stdout "$@" >patch &&
+
 	# Prints everything between the Message-ID and In-Reply-To,
 	# and replaces all Message-ID-lookalikes by a sequence number
 	perl -ne '
@@ -2465,6 +2479,112 @@ test_expect_success 'interdiff: solo-patch' '
 	grep "^Interdiff:$" 0001-fleep.patch &&
 	sed "1,/^  @@ /d; /^$/q" 0001-fleep.patch >actual &&
 	test_cmp expect actual
+'
+
+test_expect_success 'format-patch Message-ID format, one patch' '
+	check_message_id --thread=shallow HEAD~.. <<-EOF 3<<-\EOF_SUBJ
+	Message-Id: <patch-1.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	PATCH
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, two patch series' '
+	check_message_id --thread=shallow HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	PATCH 1/2
+	PATCH 2/2
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, one patch with cover letter' '
+	check_message_id --thread=shallow --cover-letter HEAD~.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <cover-0.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-1.1--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	PATCH 0/1
+	PATCH 1/1
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, two patch series with cover letter' '
+	check_message_id --thread=shallow --cover-letter HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	PATCH 0/2
+	PATCH 1/2
+	PATCH 2/2
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, padded numbers' '
+	check_message_id --thread=shallow --cover-letter side~11..side <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <cover-00.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-01.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-02.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-03.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-04.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-05.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-06.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-07.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-08.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-09.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-10.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <patch-11.11--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	PATCH 00/11
+	PATCH 01/11
+	PATCH 02/11
+	PATCH 03/11
+	PATCH 04/11
+	PATCH 05/11
+	PATCH 06/11
+	PATCH 07/11
+	PATCH 08/11
+	PATCH 09/11
+	PATCH 10/11
+	PATCH 11/11
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, --rfc' '
+	check_message_id --thread=shallow --cover-letter --rfc HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <RFC-cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	RFC PATCH 0/2
+	RFC PATCH 1/2
+	RFC PATCH 2/2
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, --rfc -vN' '
+	check_message_id --thread=shallow --cover-letter --rfc -v9 HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <RFC-cover-v9-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-v9-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-v9-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	RFC PATCH v9 0/2
+	RFC PATCH v9 1/2
+	RFC PATCH v9 2/2
+	EOF_SUBJ
+'
+
+test_expect_success 'format-patch Message-ID format, --rfc -vN where N != int' '
+	check_message_id --thread=shallow --cover-letter --rfc -v9.1 HEAD~2.. <<-\EOF 3<<-\EOF_SUBJ
+	Message-Id: <RFC-cover-0.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-1.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	Message-Id: <RFC-patch-2.2--OID-YYYYMMDDTHHMMSSZ-committer@example.com>
+	EOF
+	RFC PATCH v9.1 0/2
+	RFC PATCH v9.1 1/2
+	RFC PATCH v9.1 2/2
+	EOF_SUBJ
 '
 
 test_done

@@ -375,7 +375,8 @@ void fmt_output_subject(struct strbuf *filename,
 	int start_len = filename->len;
 	int max_len = start_len + info->patch_name_max - (strlen(suffix) + 1);
 
-	if (info->reroll_count) {
+	if (info->reroll_count &&
+	    info->reroll_count_filename) {
 		struct strbuf temp = STRBUF_INIT;
 
 		strbuf_addf(&temp, "v%s", info->reroll_count);
@@ -404,15 +405,18 @@ void fmt_output_commit(struct strbuf *filename,
 
 void fmt_output_email_subject(struct strbuf *sb, struct rev_info *opt)
 {
+	const char *subject_prefix = opt->custom_subject_prefix ?
+		opt->custom_subject_prefix : "PATCH";
+
 	if (opt->total > 0) {
 		strbuf_addf(sb, "Subject: [%s%s%0*d/%d] ",
-			    opt->subject_prefix,
-			    *opt->subject_prefix ? " " : "",
+			    subject_prefix,
+			    *subject_prefix ? " " : "",
 			    digits_in_number(opt->total),
 			    opt->nr, opt->total);
-	} else if (opt->total == 0 && opt->subject_prefix && *opt->subject_prefix) {
+	} else if (opt->total == 0 && *subject_prefix) {
 		strbuf_addf(sb, "Subject: [%s] ",
-			    opt->subject_prefix);
+			    subject_prefix);
 	} else {
 		strbuf_addstr(sb, "Subject: ");
 	}
